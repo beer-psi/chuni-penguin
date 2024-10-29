@@ -7,13 +7,12 @@ on:
       - trunk
     paths:
       - ".github/workflows/test_creating_db.yaml"
-      - "utils/config.py"  # Contains default value for DB path
+      - "utils/config.py" # Contains default value for DB path
       - "database/**"
       - "dbutils/**"
       - "pyproject.toml"
       - "requirements.lock"
       - "requirements-dev.lock"
-
 
 jobs:
   deploy:
@@ -34,8 +33,8 @@ jobs:
 
       - name: Configuration
         run: |
-           cp bot.example.ini bot.ini
-           sed -i 's/# chunirec_token = <token>/chunirec_token = ${{ secrets.CHUNIREC_TOKEN }}/' bot.ini
+          cp bot.example.ini bot.ini
+          sed -i 's/# chunirec_token = <token>/chunirec_token = ${{ secrets.CHUNIREC_TOKEN }}/' bot.ini
 
       - name: Create database from schema
         run: rye run python -m dbutils create
@@ -48,6 +47,9 @@ jobs:
 
       - name: Update database aliases
         run: rye run python -m dbutils update alias
+
+      - name: Update song jacket lookup
+        run: rye run python -m dbutils update jackets
 
       - name: Upload created database
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32

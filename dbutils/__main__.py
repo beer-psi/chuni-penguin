@@ -17,6 +17,7 @@ from utils.logging import setup_logging
 
 from .aliases import update_aliases
 from .chunirec import update_db
+from .jackets import update_jackets
 from .merge_options import merge_options
 from .sdvxin import update_sdvxin
 
@@ -35,7 +36,9 @@ async def main():
     update = subparsers.add_parser(
         "update", help="Fill the database with data from various sources"
     )
-    update.add_argument("source", choices=["chunirec", "sdvxin", "alias", "dump"])
+    update.add_argument(
+        "source", choices=["chunirec", "sdvxin", "jackets", "alias", "dump"]
+    )
     update.add_argument(
         "--data-dir",
         required=False,
@@ -65,6 +68,8 @@ async def main():
         async_session = async_sessionmaker(engine, expire_on_commit=False)
         if args.source == "chunirec":
             await update_db(logger, async_session)
+        if args.source == "jackets":
+            await update_jackets(logger, async_session)
         if args.source == "sdvxin":
             await update_sdvxin(logger, async_session)
         if args.source == "alias":
