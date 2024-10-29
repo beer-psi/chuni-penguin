@@ -85,6 +85,10 @@ class RecordsCog(commands.Cog, name="Records"):
         user's score to compare with that instead. If there are multiple scores in
         said message, you will be prompted to select one.
 
+        **Tip**: This command also works with some other bots (<@986651489529397279> and <@604641359416131585>
+        to name a few). However, you will need to explicitly reply to those other bots' messages.
+        If you don't reply, only recent scores *from this bot* will be checked.
+
         Parameters
         ----------
         user: Optional[discord.User | discord.Member]
