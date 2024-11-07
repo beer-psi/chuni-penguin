@@ -124,6 +124,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 avg_rating = f"{total_rating / len(recordsr10)} (Estimated due to lack of constants)"
             
             image = await self.generate_image(player_name, rating, recordsb30, recordsr10, avg_rating)
+            
+            if not os.path.exists("tempgenphoto"):
+                os.makedirs("tempgenphoto")
+
             image_path = f"tempgenphoto/IMG_{user.id if user else ctx.author.id}.png"
             image.save(image_path)
 
