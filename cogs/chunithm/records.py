@@ -7,7 +7,6 @@ import os
 from argparse import ArgumentError
 from io import BytesIO
 from functools import wraps
-from sqlalchemy import select
 from typing import TYPE_CHECKING, Literal, Optional, cast
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timedelta
