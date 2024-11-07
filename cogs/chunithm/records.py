@@ -1,7 +1,16 @@
+import asyncio
 import contextlib
+import httpx
 import itertools
+import os
+
 from argparse import ArgumentError
+from io import BytesIO
+from functools import wraps
+from sqlalchemy import select
 from typing import TYPE_CHECKING, Literal, Optional, cast
+from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime, timedelta
 
 import discord
 from discord import app_commands
@@ -18,8 +27,13 @@ from chunithm_net.consts import (
     KEY_OVERPOWER_BASE,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
+    KEY_SONG_ID,
 )
-from chunithm_net.models.enums import Difficulty, Genres, Rank
+from chunithm_net.models.enums import ComboType, ClearType, Difficulty, Genres, Rank
+from chunithm_net.models.record import (
+    Record, 
+    MusicRecord
+)
 from database.models import SongJacket
 from utils import did_you_mean_text, shlex_split
 from utils.argparse import DiscordArguments
@@ -32,12 +46,201 @@ if TYPE_CHECKING:
     from cogs.autocompleters import AutocompletersCog
     from cogs.botutils import UtilsCog
 
+rank_image_paths = {
+    Rank.SSSp: "./photo/icon_rank_13.png",
+    Rank.SSS: "./photo/icon_rank_12.png",
+    Rank.SSp: "./photo/icon_rank_11.png",
+    Rank.SS: "./photo/icon_rank_10.png",
+    Rank.Sp: "./photo/icon_rank_9.png",
+    Rank.S: "./photo/icon_rank_8.png",
+    Rank.AAA: "./photo/icon_rank_7.png",
+    Rank.AA: "./photo/icon_rank_6.png",
+    Rank.A: "./photo/icon_rank_5.png",
+    Rank.BBB: "./photo/icon_rank_4.png",
+    Rank.BB: "./photo/icon_rank_3.png",
+    Rank.B: "./photo/icon_rank_2.png",
+    Rank.C: "./photo/icon_rank_1.png",
+    Rank.D: "./photo/icon_rank_0.png",
+}
+
+icon_image_paths = {
+    ClearType.CLEAR: "./photo/icon_clear.png",
+    ClearType.HARD: "./photo/icon_hard.png",
+    ClearType.ABSOLUTE: "./photo/icon_absolute.png",
+    ClearType.ABSOLUTE_PLUS: "./photo/icon_absolutep.png",
+    ClearType.CATASTROPHY: "./photo/icon_catastrophy.png",
+}
+
+difficulty_image_paths = {
+    Difficulty.BASIC: "./photo/basic.png",
+    Difficulty.ADVANCED: "./photo/advanced.png",
+    Difficulty.EXPERT: "./photo/expert.png",
+    Difficulty.MASTER: "./photo/master.png",
+    Difficulty.ULTIMA: "./photo/ultima.png",
+}
 
 class RecordsCog(commands.Cog, name="Records"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
-        self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
+        self.utils: "UtilsCog" = self.bot.get_cog("Utils") # type: ignore[reportGeneralTypeIssues]
+        self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters") # type: ignore[reportGeneralTypeIssues]
+
+    @commands.hybrid_command(name="generate", aliases=["gen"])
+    async def generate(
+        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
+    ):
+        """Generate an image of the user's best 30 songs and recent 10 songs. (This have to use some time to generate the image.)
+
+        Parameters
+        ----------
+        user: Optional[discord.User | discord.Member]
+            The user to generate the image for. Defaults to the author.
+        """
+        async with ctx.typing(), self.utils.chuninet(
+            ctx if user is None else user.id
+        ) as client:
+
+            recordsb30 = await client.best30()
+            recordsr10 = await client.recent10()
+            recordsb30 = await self.utils.hydrate_records(recordsb30)
+            recordsr10 = await self.utils.hydrate_records(recordsr10)
+            profile = await client.player_data()
+            player_name = profile.name
+            rating = profile.rating
+
+            for record in recordsb30:
+                song_id = record.extras.get(KEY_SONG_ID)
+                music_record = await client.music_record(song_id)
+                music_record = [x for x in music_record if x.difficulty == record.difficulty]
+
+                record.combo_lamp = music_record[0].combo_lamp
+                record.clear_lamp = music_record[0].clear_lamp
+
+            total_rating = 0
+            for record in recordsr10:
+                total_rating += record.extras.get(KEY_PLAY_RATING)
+            if len(recordsr10) > 0:
+                avg_rating = total_rating / len(recordsr10)
+            else:
+                avg_rating = f"{total_rating / len(recordsr10)} (Estimated due to lack of constants)"
+            
+            image = await self.generate_image(player_name, rating, recordsb30, recordsr10, avg_rating)
+            image_path = f"tempgenphoto/IMG_{user.id if user else ctx.author.id}.png"
+            image.save(image_path)
+
+            await ctx.reply(f"Image of {player_name}'s Best 30 and Recent 10 songs.",file=discord.File(image_path), mention_author=False)
+
+            os.remove(image_path)
+
+    async def generate_image(self, player_name, rating, records, records2, avg_rating):
+        bg_image = Image.open("./photo/BG.png")
+        draw = ImageDraw.Draw(bg_image)
+        font_path = "./fonts/ArialUnicodeMS.ttf"
+        font_path_bold = "./fonts/ArialUnicodeBold.ttf"
+        font = ImageFont.truetype(font_path, size=15)
+        font_info = ImageFont.truetype(font_path_bold, size=50)
+        font_score_scoreinfo = ImageFont.truetype(font_path_bold, size=45)
+        font_score_info = ImageFont.truetype(font_path_bold, size=30)
+        font_score_name_info = ImageFont.truetype(font_path_bold, size=22)
+        font_score_const_info = ImageFont.truetype(font_path_bold, size=20)
+        font_score_place_info = ImageFont.truetype(font_path_bold, size=16)
+        now_utc = datetime.utcnow()
+        now_jst = now_utc + timedelta(hours=9)
+        date_time_str = now_jst.strftime("%Y-%m-%d")
+
+        draw.text((602, 181), f"{player_name}", font=font_info, fill="black")
+        draw.text((1280, 181), f"{rating.current:.2f} (MAX: {rating.max:.2f})", font=font_info, fill="black")
+        draw.text((602, 1892), f"{avg_rating:.2f}", font=font_info, fill="black")
+        draw.text((2150, 40), f"Generated: {date_time_str}\n Image generated by chuninewbot.", font=font_info, fill="black")
+
+        x_offset = 50
+        y_offset = 386
+        max_columns = 5
+        padding = 65
+        image_width = 470 
+        image_height = 170
+
+        async with httpx.AsyncClient() as client:
+            tasks = []
+            for i, record in enumerate(records, start=1):
+                tasks.append(self.process_record("B30", record, i, client, draw, bg_image, x_offset, y_offset, max_columns, padding, image_width, image_height, font_score_place_info, font_score_name_info, font_score_const_info, font_score_scoreinfo))
+
+            await asyncio.gather(*tasks)
+
+            x_offset = 50
+            y_offset = 2057
+            tasks = []
+            for i, record2 in enumerate(records2, start=1):
+                tasks.append(self.process_record("R10", record2, i, client, draw, bg_image, x_offset, y_offset, max_columns, padding, image_width, image_height, font_score_place_info, font_score_name_info, font_score_const_info, font_score_scoreinfo))
+
+            await asyncio.gather(*tasks)
+
+        return bg_image
+
+    async def process_record(self, recordname, record, i, client, draw, bg_image, x_offset, y_offset, max_columns, padding, image_width, image_height, font_score_place_info, font_score_name_info, font_score_const_info, font_score_scoreinfo):
+        difficulty = record.difficulty
+        internal_level = record.extras.get(KEY_INTERNAL_LEVEL)
+        rating = record.extras.get(KEY_PLAY_RATING)
+        rating_str = f"{rating:.3f}"[:5] if rating >= 10 else f"{rating:.3f}"[:4]
+
+        difficulty_image = difficulty_image_paths.get(difficulty) 
+        
+        try:
+            song_image = Image.open(difficulty_image)
+        except:
+            song_image = Image.open("./photo/ERROR.png")
+
+        try:
+            response = await client.get(record.jacket)
+            song_jacket = Image.open(BytesIO(response.content))
+            song_jacket = song_jacket.resize((135, 135))
+        except:
+            song_jacket = Image.open("./photo/JACKETERROR.png")
+            song_jacket = song_jacket.resize((135, 135))
+
+        song_draw = ImageDraw.Draw(song_image)
+        song_image.paste(song_jacket, (17, 17))
+        song_draw.text((2, -4), f"#{i}", font=font_score_place_info, fill="white")
+        song_draw.text((166, 35), f"{record.title}", font=font_score_name_info, fill="white")
+        song_draw.text((166, 4), f"Const {internal_level}", font=font_score_const_info, fill="white")
+        song_draw.text((346, 4), f"Rating {rating_str}", font=font_score_const_info, fill="white")
+        song_draw.text((165, 55), f"{record.score:,}", font=font_score_scoreinfo, fill="white")
+
+        rank_image = rank_image_paths.get(record.rank)
+        rank_image = Image.open(rank_image)
+        rank_image = rank_image.resize((96, 27))
+
+        if recordname == "B30":
+            song_image.paste(rank_image, (264, 125))
+        else:
+            song_image.paste(rank_image, (166, 125))
+
+        if record.combo_lamp != ComboType.NONE:
+            if record.combo_lamp == ComboType.FULL_COMBO:
+                icon_image = "./photo/icon_fullcombo.png"
+            elif record.combo_lamp == ComboType.ALL_JUSTICE:
+                icon_image = "./photo/icon_alljustice.png"
+            elif record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
+                icon_image = "./photo/icon_alljusticecritical.png"
+            else:
+                raise ArgumentError(None, "Invalid combo lamp")
+
+            icon_image = Image.open(icon_image)
+            icon_image = icon_image.resize((96, 27))
+            song_image.paste(icon_image, (362, 125))
+
+        if record.clear_lamp != ClearType.FAILED:
+            clear_image = icon_image_paths.get(record.clear_lamp)
+            clear_image = Image.open(clear_image)
+            clear_image = clear_image.resize((96, 27))
+            song_image.paste(clear_image, (166, 125))
+
+        col = (i - 1) % max_columns
+        row = (i - 1) // max_columns
+        x = x_offset + col * (image_width + padding)
+        y = y_offset + row * (image_height + padding)
+
+        bg_image.paste(song_image, (x, y))
 
     @commands.hybrid_command(name="recent", aliases=["rs"])
     async def recent(
