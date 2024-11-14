@@ -1,6 +1,8 @@
 from decimal import Decimal
 from typing import Optional
 
+from utils import floor_to_ndp
+
 
 def calculate_rating(score: int, internal_level: Optional[float]) -> Decimal:
     level_base = Decimal(str(internal_level or 0)) * 10000
@@ -29,7 +31,7 @@ def calculate_rating(score: int, internal_level: Optional[float]) -> Decimal:
     if rating100 < 0 and internal_level is not None and internal_level > 0:
         rating100 = Decimal(0)
 
-    return rating100 / 10000
+    return floor_to_ndp(rating100 / 10000, 2)
 
 
 def calculate_score_for_rating(rating: float, internal_level: float) -> Optional[int]:
