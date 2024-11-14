@@ -31,7 +31,12 @@ def calculate_overpower_base(score: int, internal_level: float) -> Decimal:
     if rating100 < 0:
         rating100 = Decimal(0)
 
-    return Decimal(floor_to_ndp(rating100 / 2_000, 2))
+    # For rank S and above, OP is floored to the nearest 0.005
+    if score >= 975_000:
+        return Decimal(floor_to_ndp(rating100 / 1_000, 2) / 2)
+
+    # Otherwise, OP is floored to the nearest 0.05
+    return Decimal(floor_to_ndp(rating100 / 10_000, 2) * 5)
 
 
 def calculate_overpower_max(internal_level: float) -> Decimal:

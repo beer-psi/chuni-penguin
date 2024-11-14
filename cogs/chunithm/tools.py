@@ -213,7 +213,9 @@ class ToolsCog(commands.Cog, name="Tools"):
         await ctx.reply(res, mention_author=False)
 
     @commands.hybrid_command("rating")
-    async def rating(self, ctx: Context, rating: Range[float, 1.0, 17.55]):
+    async def rating(
+        self, ctx: Context, rating: Range[float, 1.0, MAX_DIFFICULTY + 2.15]
+    ):
         """Calculate score required to achieve the specified play rating.
 
         Parameters
