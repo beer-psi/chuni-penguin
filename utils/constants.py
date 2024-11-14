@@ -3,7 +3,7 @@ SIMILARITY_THRESHOLD = 65
 
 # Chart constant of the hardest song in the game.
 # Probably not the best way to implement this but whatever.
-MAX_DIFFICULTY = 15.4
+MAX_DIFFICULTY = 15.5
 
 # The version names are just my favorite CHUNITHM songs
 # in no particular order.
