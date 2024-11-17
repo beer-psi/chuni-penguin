@@ -27,17 +27,17 @@ though uptime is sometimes flaky.
 
 ### Setup instructions
 
-0. Install Python 3.11 or newer and
-   [Poetry](https://python-poetry.org/docs/#installation)
+0. Install [Rye](https://rye.astral.sh/guide/installation/)
 1. Copy `bot.example.ini` to `bot.ini` and fill in values based on the comments.
-2. `poetry install` and `poetry shell`
-3. Run `python dbutils.py create` to create the database.
-4. Run `python dbutils.py update chunirec` to populate the song database. For
+2. Run `rye sync` to install dependencies.
+3. Run `python dbutils.py create` to create the database. You may need to activate the virtualenv first
+   if you had a previous Python installation not managed by rye.
+5. Run `python dbutils.py update chunirec` to populate the song database. For
    this to work, `credentials.chunirec_token` **must** be set in `bot.ini`. A
    pre-populated database is also provided
    [here](https://nightly.link/beer-psi/chuninewbot/workflows/test_creating_db.yaml/trunk/database.zip),
    for your convenience.
-5. `python bot.py`
+6. `python bot.py`
 
 ### Credits
 
