@@ -28,14 +28,13 @@ class B30View(PaginationView):
     ):
         super().__init__(ctx, items, per_page)
 
-        self.average = floor_to_ndp(
-            sum(item.extras[KEY_PLAY_RATING] for item in items) / len(items), 4
+        total_rating = sum(
+            (item.extras[KEY_PLAY_RATING] for item in items), start=Decimal(0)
         )
-        self.reachable = floor_to_ndp(
-            Decimal(sum(item.extras[KEY_PLAY_RATING] for item in items) / 40)
-            + Decimal(max(item.extras[KEY_PLAY_RATING] for item in items) / 4),
-            4,
-        )
+        max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in items)
+
+        self.average = floor_to_ndp(total_rating / len(items), 4)
+        self.reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
         self.has_estimated_play_rating = any(
             item.extras.get(KEY_INTERNAL_LEVEL) is None for item in items
         )

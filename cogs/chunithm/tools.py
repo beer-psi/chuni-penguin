@@ -60,23 +60,23 @@ class ToolsCog(commands.Cog, name="Tools"):
             Note value, for example 16 means 1/16 notes (16 notes = 1 measure).
         """
 
-        note_distance = 240000 / bpm / note_density
-        crit_overlap = max(66.667 - note_distance, 0)
-        jus_overlap = max(133.333 - note_distance, 0)
-        res = f"At **{bpm}** BPM, the distance between two **1/{note_density}** notes is `{floor_to_ndp(note_distance, 1)}ms`."
-        res += f"\n• The JUSTICE CRITICAL overlap duration is `{floor_to_ndp(crit_overlap, 1)}ms`"
-        res += f"\n• The JUSTICE overlap duration is `{floor_to_ndp(jus_overlap, 1)}ms`"
+        note_distance_1000 = int(240000 * 1000 / bpm / note_density)
+        crit_overlap_1000 = max(66667 - note_distance_1000, 0)
+        jus_overlap_1000 = max(133333 - note_distance_1000, 0)
+        res = f"At **{bpm}** BPM, the distance between two **1/{note_density}** notes is `{note_distance_1000 // 100 / 10}ms`."
+        res += f"\n• The JUSTICE CRITICAL overlap duration is `{crit_overlap_1000 // 100 / 10}ms`"
+        res += f"\n• The JUSTICE overlap duration is `{jus_overlap_1000 // 100 / 10}ms`"
 
-        if crit_overlap > 0:
+        if crit_overlap_1000 > 0:
             res += "\n\n:white_check_mark: If these notes appear vertically, you can rub the ground slider and will not get JUSTICE and below."
-        elif jus_overlap > 0:
+        elif jus_overlap_1000 > 0:
             res += "\n\n:warning: If these notes appear vertically and you rub the ground slider, you will not get ATTACK but you might get JUSTICE."
         else:
             res += "\n\n:x: If these notes appear vertically, you might get ATTACK if you rub the ground slider."
 
-        if crit_overlap > 16.667:
+        if crit_overlap_1000 > 16667:
             res += '\n:white_check_mark: If these notes appear in different lanes, you can tap both of them at the same time ("anmitsu" technique) and get JUSTICE CRITICAL for both notes during the JUSTICE CRITICAL overlap duration.'
-        elif jus_overlap > 16.667:
+        elif jus_overlap_1000 > 16667:
             res += "\n:warning: If these notes appear in different lanes and you tap both of them at the same time, you are very likely to get JUSTICE or ATTACK therefore it is not recommended."
         else:
             res += "\n:x: If these notes appear in different lanes, you should tap them individually since the notes are too far from each other."
@@ -119,21 +119,37 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         res = f"A score of **{score}**{const_text} will give:"
         res += f"\n• Rating: **{sign}{floor_to_ndp(rating, 2)}**"
+
         if chart_constant is not None:
             overpower_max = calculate_overpower_max(chart_constant)
+            overpower_max_floored = floor_to_ndp(overpower_max, 2)
+
             if score == 1010000:
-                res += f"\n• OVER POWER: **{floor_to_ndp(overpower_max, 2)} / {floor_to_ndp(overpower_max, 2)} (100.00%)**"
+                res += f"\n• OVER POWER: **{overpower_max_floored} / {overpower_max_floored} (100.00%)**"
             elif score < 500000:
-                res += f"\n• OVER POWER: **0.00 / {floor_to_ndp(overpower_max, 2)} (0.00%)**"
+                res += f"\n• OVER POWER: **0.00 / {overpower_max_floored} (0.00%)**"
             else:
                 overpower_base = calculate_overpower_base(score, chart_constant)
+
                 res += "\n• OVER POWER:"
+
                 if score >= 1000000:
                     overpower = overpower_base + Decimal(1)
-                    res += f"\n▸ AJ: **{floor_to_ndp(overpower, 2)} / {floor_to_ndp(overpower_max, 2)} ({floor_to_ndp(overpower / overpower_max * 100, 2)}%)**"
+                    overpower_fc_percentage = floor_to_ndp(
+                        overpower / overpower_max * 100, 2
+                    )
+                    res += f"\n▸ AJ: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+
                 overpower = overpower_base + Decimal(0.5)
-                res += f"\n▸ FC: **{floor_to_ndp(overpower, 2)} / {floor_to_ndp(overpower_max, 2)} ({floor_to_ndp(overpower / overpower_max * 100, 2)}%)**"
-                res += f"\n▸ Non-FC: **{floor_to_ndp(overpower_base, 2)} / {floor_to_ndp(overpower_max, 2)} ({floor_to_ndp(overpower_base / overpower_max * 100, 2)}%)**"
+                overpower_fc_percentage = floor_to_ndp(
+                    overpower / overpower_max * 100, 2
+                )
+                overpower_base_percentage = floor_to_ndp(
+                    overpower_base / overpower_max * 100, 2
+                )
+
+                res += f"\n▸ FC: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+                res += f"\n▸ Non-FC: **{floor_to_ndp(overpower_base, 2)} / {overpower_max_floored} ({overpower_base_percentage}%)**"
 
         await ctx.reply(res, mention_author=False)
 
@@ -213,7 +229,9 @@ class ToolsCog(commands.Cog, name="Tools"):
         await ctx.reply(res, mention_author=False)
 
     @commands.hybrid_command("rating")
-    async def rating(self, ctx: Context, rating: Range[float, 1.0, 17.55]):
+    async def rating(
+        self, ctx: Context, rating: Range[float, 1.0, MAX_DIFFICULTY + 2.15]
+    ):
         """Calculate score required to achieve the specified play rating.
 
         Parameters
@@ -224,15 +242,16 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         res = f"Score required to achieve **{rating}** play rating:"
         res += "\n```Const |   Score\n---------------"
-        chart_constant = floor_to_ndp(rating - 3, 0)
+
+        chart_constant = int(rating - 3)
+
         if chart_constant < 1:
             chart_constant = 1
         while chart_constant <= rating and chart_constant <= MAX_DIFFICULTY:
             required_score = calculate_score_for_rating(rating, chart_constant)
+
             if required_score is not None and required_score >= Rank.S.min_score:
-                res += (
-                    f"\n {chart_constant:>4.1f} | {floor_to_ndp(required_score, 0):>7}"
-                )
+                res += f"\n {chart_constant:>4.1f} | {int(required_score):>7}"
             if chart_constant >= 10:
                 chart_constant += 0.1
             elif chart_constant >= 7:

@@ -72,10 +72,15 @@ def shlex_split(s: str) -> list[str]:
     return result
 
 
-def floor_to_ndp(number: "T", dp: int) -> "T":
+# rounding a decimal should be safe.
+def floor_to_ndp(number: decimal.Decimal, dp: int) -> decimal.Decimal:
+    if not isinstance(number, decimal.Decimal):
+        msg = "Flooring an arbitrary floating point number will cause inaccuracies. Use the Decimal class."
+        raise TypeError(msg)
+
     with decimal.localcontext() as ctx:
         ctx.rounding = decimal.ROUND_FLOOR
-        return type(number)(round(decimal.Decimal(number), dp))
+        return round(decimal.Decimal(number), dp)
 
 
 def round_to_nearest(number: "T", value: int) -> "T":
