@@ -1,14 +1,14 @@
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, overload
 
+KT = TypeVar("KT")
 T = TypeVar("T")
-VT = TypeVar("VT")
 
 
-class TypePairedDictKey(Generic[T]):
+class TypePairedDictKey(Generic[KT]):
     pass
 
 
-class TypePairedDict(dict):
+class TypePairedDict(dict[TypePairedDictKey[KT], KT]):
     """
     A `dict` subclass that types values based on their keys. The intended usage is
     something like this:
@@ -23,11 +23,22 @@ class TypePairedDict(dict):
     ```
     """
 
-    def __getitem__(self, __key: TypePairedDictKey[T]) -> T:
-        return super().__getitem__(__key)
+    def __getitem__(self, key: TypePairedDictKey[KT]) -> KT:
+        return super().__getitem__(key)
 
-    def __setitem__(self, __key: TypePairedDictKey[T], __value: T) -> None:
-        return super().__setitem__(__key, __value)
+    def __setitem__(self, key: TypePairedDictKey[KT], value: KT) -> None:
+        return super().__setitem__(key, value)
 
-    def get(self, __key: TypePairedDictKey[T]) -> T | None:  # type: ignore[reportInconsistentOverload]
-        return super().get(__key)
+    @overload
+    def get(self, key: TypePairedDictKey[KT]) -> KT | None: ...
+
+    @overload
+    def get(self, key: TypePairedDictKey[KT], default: KT) -> KT: ...
+
+    @overload
+    def get(self, key: TypePairedDictKey[KT], default: T) -> T | KT: ...
+
+    def get(
+        self, key: TypePairedDictKey[KT], default: T | KT | None = None
+    ) -> T | KT | None:
+        return super().get(key)
