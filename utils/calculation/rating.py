@@ -32,7 +32,7 @@ def calculate_rating(score: int, internal_level: Optional[float]) -> Decimal:
     if rating10000 < 0 and internal_level is not None and internal_level > 0:
         rating10000 = 0
 
-    return Decimal(rating10000) / 10000
+    return Decimal(rating10000 // 100) / 100
 
 
 def calculate_score_for_rating(rating: float, internal_level: float) -> Optional[int]:
