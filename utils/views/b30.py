@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import discord
@@ -23,22 +24,32 @@ class B30View(PaginationView):
         per_page: int = 3,
         *,
         show_average: bool = True,
+        show_reachable: bool = True,
     ):
         super().__init__(ctx, items, per_page)
 
-        self.average = floor_to_ndp(
-            sum(item.extras[KEY_PLAY_RATING] for item in items) / len(items), 2
+        total_rating = sum(
+            (item.extras[KEY_PLAY_RATING] for item in items), start=Decimal(0)
         )
+        max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in items)
+
+        self.average = floor_to_ndp(total_rating / len(items), 4)
+        self.reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
         self.has_estimated_play_rating = any(
             item.extras.get(KEY_INTERNAL_LEVEL) is None for item in items
         )
         self.show_average = show_average
+        self.show_reachable = show_reachable
 
     def format_content(self) -> str:
-        return (f"Average: **{self.average}**" if self.show_average else "") + (
-            "\nPlay ratings marked with asterisks are estimated (due to lack of chart constants)."
-            if self.has_estimated_play_rating
-            else ""
+        return (
+            (f"Average: **{self.average}**" if self.show_average else "")
+            + (f"\nReachable: **{self.reachable}**" if self.show_reachable else "")
+            + (
+                "\nPlay ratings marked with asterisks are estimated (due to lack of chart constants)."
+                if self.has_estimated_play_rating
+                else ""
+            )
         )
 
     def format_page(

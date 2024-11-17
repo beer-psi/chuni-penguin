@@ -95,9 +95,9 @@ class ChartCardEmbed(discord.Embed):
             border_jus_sp = tolerance_sp - border_atk_sp * 51 - border_miss_sp * 101
             border_jus_s = tolerance_s - border_atk_s * 51 - border_miss_s * 101
 
-            deduction_jus = floor_to_ndp(10_000 / chart.maxcombo, 2)
-            deduction_atk = floor_to_ndp(510_000 / chart.maxcombo, 2)
-            deduction_miss = floor_to_ndp(1_010_000 / chart.maxcombo, 2)
+            deduction_jus = int(10_000 * 100 / chart.maxcombo) / 100
+            deduction_atk = int(510_000 * 100 / chart.maxcombo) / 100
+            deduction_miss = int(1_010_000 * 100 / chart.maxcombo) / 100
 
             self.add_field(
                 name="Note Count",

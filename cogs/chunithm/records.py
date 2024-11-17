@@ -373,7 +373,7 @@ class RecordsCog(commands.Cog, name="Records"):
             recent10 = await client.recent10()
             recent10 = await self.utils.hydrate_records(recent10)
 
-            view = B30View(ctx, recent10)
+            view = B30View(ctx, recent10, show_reachable=False)
             view.message = await ctx.reply(
                 content=view.format_content(),
                 embeds=view.format_page(view.items[: view.per_page]),
@@ -489,7 +489,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 raise commands.BadArgument(msg)
 
             ctx = await Context.from_interaction(interaction)
-            view = B30View(ctx, records, show_average=False)
+            view = B30View(ctx, records, show_average=False, show_reachable=False)
             view.message = await ctx.reply(
                 content=view.format_content(),
                 embeds=view.format_page(view.items[: view.per_page]),
@@ -695,7 +695,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     if r.extras.get(KEY_INTERNAL_LEVEL) == internal_level
                 ]
 
-            view = B30View(ctx, records, show_average=False)
+            view = B30View(ctx, records, show_average=False, show_reachable=False)
             view.message = await ctx.reply(
                 content=view.format_content(),
                 embeds=view.format_page(view.items[: view.per_page]),
