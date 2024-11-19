@@ -11,5 +11,5 @@ VERSION_NAMES = {
     "v0.2.1": "Ray of Hope",
     "v0.2.2": "parvorbital",
     "v0.2.3": "Spider's Thread",
-    "v0.2.4": "Shattered Memories",
+    "v0.3.0": "Shattered Memories",
 }

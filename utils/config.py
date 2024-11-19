@@ -22,7 +22,7 @@ class BotConfig:
     def db_connection_string(self) -> str:
         return self.__section.get(
             "db_connection_string",
-            fallback="sqlite+aiosqlite:///database/database.sqlite3",
+            fallback="sqlite+aiosqlite:///data/database.sqlite3",
         )
 
     @property

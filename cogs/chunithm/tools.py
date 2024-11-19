@@ -243,21 +243,25 @@ class ToolsCog(commands.Cog, name="Tools"):
         res = f"Score required to achieve **{rating}** play rating:"
         res += "\n```Const |   Score\n---------------"
 
-        chart_constant = int(rating - 3)
+        chart_constant_10 = int(rating - 3) * 10
+        rating_10 = rating * 10
+        max_10 = MAX_DIFFICULTY * 10
 
-        if chart_constant < 1:
-            chart_constant = 1
-        while chart_constant <= rating and chart_constant <= MAX_DIFFICULTY:
-            required_score = calculate_score_for_rating(rating, chart_constant)
+        if chart_constant_10 < 1:
+            chart_constant_10 = 1
+        while chart_constant_10 <= rating_10 and chart_constant_10 <= max_10:
+            required_score = calculate_score_for_rating(
+                rating_10 / 10, chart_constant_10 / 10
+            )
 
             if required_score is not None and required_score >= Rank.S.min_score:
-                res += f"\n {chart_constant:>4.1f} | {int(required_score):>7}"
-            if chart_constant >= 10:
-                chart_constant += 0.1
-            elif chart_constant >= 7:
-                chart_constant += 0.5
+                res += f"\n {chart_constant_10:>4.1f} | {int(required_score):>7}"
+            if chart_constant_10 >= 100:
+                chart_constant_10 += 1
+            elif chart_constant_10 >= 70:
+                chart_constant_10 += 5
             else:
-                chart_constant += 1
+                chart_constant_10 += 10
         res += "```"
 
         await ctx.reply(res, mention_author=False)
