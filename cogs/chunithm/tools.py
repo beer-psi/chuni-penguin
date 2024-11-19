@@ -255,7 +255,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             )
 
             if required_score is not None and required_score >= Rank.S.min_score:
-                res += f"\n {chart_constant_10:>4.1f} | {int(required_score):>7}"
+                res += f"\n {chart_constant_10 / 10:>4.1f} | {int(required_score):>7}"
             if chart_constant_10 >= 100:
                 chart_constant_10 += 1
             elif chart_constant_10 >= 70:
