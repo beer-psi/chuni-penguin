@@ -460,13 +460,16 @@ class RecordsCog(commands.Cog, name="Records"):
             "updated once the distribution is known.*"
         )
 
-        view = B30View(ctx, new10, show_reachable=False)
-        view.message = await message.edit(
-            content=content,
-            embeds=view.format_page(view.items[: view.per_page]),
-            view=view,
-            allowed_mentions=AllowedMentions.none(),
-        )
+        if len(new10) == 0:
+            await message.edit(content=content, allowed_mentions=AllowedMentions.none())
+        else:
+            view = B30View(ctx, new10, show_reachable=False)
+            view.message = await message.edit(
+                content=content,
+                embeds=view.format_page(view.items[: view.per_page]),
+                view=view,
+                allowed_mentions=AllowedMentions.none(),
+            )
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(
