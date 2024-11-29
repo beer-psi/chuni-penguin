@@ -18,6 +18,7 @@ from chunithm_net.consts import (
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
     KEY_SONG_ID,
+    KEY_SONG_VERSION,
     KEY_TOTAL_COMBO,
 )
 from chunithm_net.models.enums import Rank
@@ -196,9 +197,14 @@ class UtilsCog(commands.Cog, name="Utils"):
                 raise MissingDetailedParams
 
             if song is None:
-                logger.warn(f"Missing song data for song title {record.title}")
+                logger.warning(f"Missing song data for song title {record.title}")
                 hydrated_records.append(record)
                 continue
+
+            if song_id is None:
+                record.extras[KEY_SONG_ID] = song.id
+
+            record.extras[KEY_SONG_VERSION] = song.version
 
             if record.jacket is None:
                 record.jacket = get_jacket_url(song)

@@ -5,6 +5,12 @@ SIMILARITY_THRESHOLD = 65
 # Probably not the best way to implement this but whatever.
 MAX_DIFFICULTY = 15.5
 
+# This is a temporary variable to split new records from old
+# records. Will probably not be needed once CHUNITHM VERSE
+# drops in international and we can just get the n15 list
+# directly from the web UI.
+CURRENT_CHUNITHM_VERSION = "LUMINOUS PLUS"
+
 # The version names are just my favorite CHUNITHM songs
 # in no particular order.
 VERSION_NAMES = {

@@ -8,6 +8,7 @@ INTERNATIONAL_JACKET_BASE = "https://chunithm-net-eng.com/mobile/img"
 
 _KEY_DETAILED_PARAMS = TypePairedDictKey[DetailedParams]()
 KEY_SONG_ID = TypePairedDictKey[int]()
+KEY_SONG_VERSION = TypePairedDictKey[str]()
 KEY_LEVEL = TypePairedDictKey[str]()
 KEY_INTERNAL_LEVEL = TypePairedDictKey[float]()
 KEY_PLAY_RATING = TypePairedDictKey[Decimal]()

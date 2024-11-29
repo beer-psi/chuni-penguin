@@ -1,10 +1,11 @@
 import contextlib
 import itertools
 from argparse import ArgumentError
+from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Optional, cast
 
 import discord
-from discord import app_commands
+from discord import AllowedMentions, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
@@ -18,17 +19,19 @@ from chunithm_net.consts import (
     KEY_OVERPOWER_BASE,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
+    KEY_SONG_VERSION,
 )
 from chunithm_net.models.enums import Difficulty, Genres, Rank
 from database.models import SongJacket
-from utils import did_you_mean_text, shlex_split
+from utils import did_you_mean_text, floor_to_ndp, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
-from utils.constants import SIMILARITY_THRESHOLD
+from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
 from utils.views import B30View, CompareView, RecentRecordsView, SelectToCompareView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
+    from chunithm_net.models.record import Record
     from cogs.autocompleters import AutocompletersCog
     from cogs.botutils import UtilsCog
 
@@ -380,6 +383,84 @@ class RecordsCog(commands.Cog, name="Records"):
                 view=view,
                 mention_author=False,
             )
+
+    @commands.hybrid_command("new10", aliases=["n10"])
+    async def new10(
+        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
+    ):
+        """View your best scores from the latest version of the game, and calculate
+        your rating in the new CHUNITHM VERSE system (with the latest version set to
+        LUMINOUS PLUS).
+
+        Parameters
+        ----------
+        user: Optional[discord.User | discord.Member]
+            The user to get scores for.
+        """
+
+        ctx_or_id = ctx if user is None else user.id
+        message = await ctx.reply("Fetching scores...", mention_author=False)
+        all_records: list[Record] = []
+
+        async with self.utils.chuninet(ctx_or_id) as client:
+            for difficulty in Difficulty:
+                if difficulty == Difficulty.WORLDS_END:
+                    continue
+
+                await message.edit(
+                    content=f"Fetching {difficulty} scores...",
+                    allowed_mentions=AllowedMentions.none(),
+                )
+
+                all_records.extend(
+                    await client.music_record_by_folder(difficulty=difficulty)
+                )
+
+        hydrated_records = await self.utils.hydrate_records(all_records)
+        old_records = [
+            x
+            for x in hydrated_records
+            if x.extras.get(KEY_SONG_VERSION) != CURRENT_CHUNITHM_VERSION
+        ]
+        new_records = [
+            x
+            for x in hydrated_records
+            if x.extras.get(KEY_SONG_VERSION) == CURRENT_CHUNITHM_VERSION
+        ]
+
+        old_records.sort(
+            key=lambda x: (x.extras.get(KEY_PLAY_RATING), x.score), reverse=True
+        )
+        new_records.sort(
+            key=lambda x: (x.extras.get(KEY_PLAY_RATING), x.score), reverse=True
+        )
+
+        best30 = old_records[:30]
+        best30_total = sum(
+            (item.extras[KEY_PLAY_RATING] for item in best30), Decimal(0)
+        )
+        best30_avg = floor_to_ndp(best30_total / len(best30), 4)
+
+        new10 = new_records[:10]
+        new10_total = sum((item.extras[KEY_PLAY_RATING] for item in new10), Decimal(0))
+        new10_avg = floor_to_ndp(new10_total / len(new10), 4)
+
+        content = (
+            f"**Best 30 average**: {best30_avg}\n"
+            f"**New 10 average**: {new10_avg}\n"
+            f"**Rating**: {floor_to_ndp((best30_total + new10_total) / 50, 2)}\n"
+            "*This is a prediction of the new rating system and does not reflect "
+            "the actual distribution between old/new in CHUNITHM VERSE. The bot will be "
+            "updated once the distribution is known.*"
+        )
+
+        view = B30View(ctx, new10, show_reachable=False)
+        view.message = await ctx.reply(
+            content=content,
+            embeds=view.format_page(view.items[: view.per_page]),
+            view=view,
+            mention_author=False,
+        )
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(

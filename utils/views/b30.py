@@ -68,7 +68,7 @@ class B30View(PaginationView):
         begin = self.page * self.per_page
         end = (self.page + 1) * self.per_page
         await interaction.response.edit_message(
-            content=self.format_content(),
+            # content=self.format_content(),
             embeds=self.format_page(self.items[begin:end], begin),
             view=self,
         )

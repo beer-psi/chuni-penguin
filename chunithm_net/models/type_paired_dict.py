@@ -8,7 +8,7 @@ class TypePairedDictKey(Generic[KT]):
     pass
 
 
-class TypePairedDict(dict[TypePairedDictKey[KT], KT]):
+class TypePairedDict(dict):
     """
     A `dict` subclass that types values based on their keys. The intended usage is
     something like this:
