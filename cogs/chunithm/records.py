@@ -448,7 +448,7 @@ class RecordsCog(commands.Cog, name="Records"):
         content = (
             f"**Best 30 average**: {best30_avg}\n"
             f"**New 10 average**: {new10_avg}\n"
-            f"**Rating**: {floor_to_ndp((best30_total + new10_total) / 50, 2)}\n"
+            f"**Rating**: {floor_to_ndp((best30_total + new10_total) / 40, 2)}\n"
             "*This is a prediction of the new rating system and does not reflect "
             "the actual distribution between old/new in CHUNITHM VERSE. The bot will be "
             "updated once the distribution is known.*"
