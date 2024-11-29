@@ -455,11 +455,11 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
         view = B30View(ctx, new10, show_reachable=False)
-        view.message = await ctx.reply(
+        view.message = await message.edit(
             content=content,
             embeds=view.format_page(view.items[: view.per_page]),
             view=view,
-            mention_author=False,
+            allowed_mentions=AllowedMentions.none(),
         )
 
     @app_commands.command(name="top", description="View your best scores for a level.")
