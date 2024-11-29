@@ -439,11 +439,17 @@ class RecordsCog(commands.Cog, name="Records"):
         best30_total = sum(
             (item.extras[KEY_PLAY_RATING] for item in best30), Decimal(0)
         )
-        best30_avg = floor_to_ndp(best30_total / len(best30), 4)
+        best30_avg = (
+            floor_to_ndp(best30_total / len(best30), 4)
+            if len(best30) > 0
+            else Decimal(0)
+        )
 
         new10 = new_records[:10]
         new10_total = sum((item.extras[KEY_PLAY_RATING] for item in new10), Decimal(0))
-        new10_avg = floor_to_ndp(new10_total / len(new10), 4)
+        new10_avg = (
+            floor_to_ndp(new10_total / len(new10), 4) if len(new10) > 0 else Decimal(0)
+        )
 
         content = (
             f"**Best 30 average**: {best30_avg}\n"
