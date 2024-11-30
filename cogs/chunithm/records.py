@@ -584,12 +584,12 @@ class RecordsCog(commands.Cog, name="Records"):
 
         **Parameters**:
         `user`: The user to get scores for.
-        `-c, --classic`: View your b30 using Discord embeds instead of generating
-        an image.
+        `-i, --image`: Render an image of your best 30 scores instead of viewing
+        with Discord embeds
         """
 
         parser = DiscordArguments()
-        parser.add_argument("-c", "--classic", action="store_true")
+        parser.add_argument("-i", "--image", action="store_true")
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
@@ -604,7 +604,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     user = await converter().convert(ctx, rest[0])
                     break
 
-        classic = cast(bool, args.classic)
+        image = cast(bool, args.image)
 
         async with ctx.typing():
             async with self.utils.chuninet(ctx if user is None else user.id) as client:
@@ -612,7 +612,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 best30 = await client.best30()
                 best30 = await self.utils.hydrate_records(best30)
 
-            if classic:
+            if not image:
                 view = B30View(ctx, best30)
                 view.message = await ctx.reply(
                     content=view.format_content(),
