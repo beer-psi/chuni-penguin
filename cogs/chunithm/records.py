@@ -111,7 +111,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
         font=INTER_32,
     )
 
-    updated_text = f"Generated at {datetime.now(UTC).strftime("%Y-%m-%d")}"
+    updated_text = f"Generated at {datetime.now(UTC).strftime('%Y-%m-%d')}"
     updated_length = b30_draw.textlength(updated_text, INTER_32)
 
     b30_draw.text(
