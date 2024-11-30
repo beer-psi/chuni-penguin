@@ -124,6 +124,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
         font=INTER_32,
     )
 
+    # best30
     for i, record in enumerate(records):
         x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
         y = 30 + (b30_image.height * 12 // 100) + (i // 5) * (B30_ENTRY_HEIGHT + 15)
@@ -547,31 +548,30 @@ class RecordsCog(commands.Cog, name="Records"):
 
         classic = cast(bool, args.classic)
 
-        async with ctx.typing(), self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
-            player_data = await client.player_data()
-            best30 = await client.best30()
-            best30 = await self.utils.hydrate_records(best30)
+        async with ctx.typing():
+            async with self.utils.chuninet(ctx if user is None else user.id) as client:
+                player_data = await client.player_data()
+                best30 = await client.best30()
+                best30 = await self.utils.hydrate_records(best30)
 
-        if classic:
-            view = B30View(ctx, best30)
-            view.message = await ctx.reply(
-                content=view.format_content(),
-                embeds=view.format_page(view.items[: view.per_page]),
-                view=view,
+            if classic:
+                view = B30View(ctx, best30)
+                view.message = await ctx.reply(
+                    content=view.format_content(),
+                    embeds=view.format_page(view.items[: view.per_page]),
+                    view=view,
+                    mention_author=False,
+                )
+                return
+
+            b30_image = await asyncio.to_thread(render_b30, player_data, best30)
+            generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+            await ctx.reply(
+                file=discord.File(
+                    b30_image, filename=f"chuni-penguin-b30-{generation_timestamp}.png"
+                ),
                 mention_author=False,
             )
-            return
-
-        b30_image = await asyncio.to_thread(render_b30, player_data, best30)
-        generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
-        await ctx.reply(
-            file=discord.File(
-                b30_image, filename=f"chuni-penguin-b30-{generation_timestamp}.png"
-            ),
-            mention_author=False,
-        )
 
     @commands.hybrid_command("recent10", aliases=["r10"])
     async def recent10(
