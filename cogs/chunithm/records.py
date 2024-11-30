@@ -170,7 +170,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
                 jacket = (
                     ImageEnhance.Brightness(jacket)
                     .enhance(0.4)
-                    .filter(ImageFilter.GaussianBlur)
+                    .filter(ImageFilter.GaussianBlur(4))
                 )
         except (FileNotFoundError, ValueError):
             # fallback to a black background if anything fails
