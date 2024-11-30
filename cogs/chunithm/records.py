@@ -47,8 +47,8 @@ ASSETS_DIR = Path(__file__).parent.parent.parent / "assets"
 NOTO_SANS_JP_80 = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 80
 )
-NOTO_SANS_JP_24 = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 24
+NOTO_SANS_JP_28 = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 28
 )
 NOTO_SANS_JP_32_BOLD = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 32
@@ -60,11 +60,62 @@ B30_ENTRY_WIDTH = 350
 B30_ENTRY_HEIGHT = 180
 
 
+def drop_shadow(
+    image: Image.Image,
+    offset: tuple[int, int] = (5, 5),
+    background: str | float | tuple[float, ...] = 0xFFFFFF,
+    shadow: str | float | tuple[float, ...] = 0x444444,
+    border: int = 8,
+    iterations: int = 3,
+):
+    """
+    Add a gaussian blur drop shadow to an image.
+    image       - The image to overlay on top of the shadow.
+    offset      - Offset of the shadow from the image as an (x,y) tuple.
+                  Can be positive or negative.
+    background  - Background colour behind the image.
+    shadow      - Shadow colour (darkness).
+    border      - Width of the border around the image.  This must be wide
+                enough to account for the blurring of the shadow.
+    iterations  - Number of times to apply the filter.  More iterations
+                produce a more blurred shadow, but increase processing time.
+    """
+    # Create the backdrop image -- a box in the background colour with a
+    # shadow on it.
+    total_width = image.size[0] + abs(offset[0]) + 2 * border
+    total_height = image.size[1] + abs(offset[1]) + 2 * border
+    back = Image.new("RGBA", (total_width, total_height), background)
+    # Place the shadow, taking into account the offset from the image
+    shadow_left = border + max(offset[0], 0)
+    shadow_top = border + max(offset[1], 0)
+    back.paste(
+        shadow,
+        (
+            shadow_left,
+            shadow_top,
+            shadow_left + image.size[0],
+            shadow_top + image.size[1],
+        ),
+    )
+    # Apply the filter to blur the edges of the shadow.  Since a small kernel
+    # is used, the filter must be applied repeatedly to get a decent blur.
+    n = 0
+    while n < iterations:
+        back = back.filter(ImageFilter.BLUR)
+        n += 1
+    # Paste the input image onto the shadow backdrop
+    image_left = border - min(offset[0], 0)
+    image_top = border - min(offset[1], 0)
+    back.paste(image, (image_left, image_top))
+    return back
+
+
 def render_b30(player_data: PlayerData, records: list[Record]):
-    b30_image = Image.new("RGB", size=(1872, 1784), color="#FFFFFF")
+    b30_image = Image.new("RGBA", size=(1872, 1784), color="#FFFFFF")
     b30_draw = ImageDraw.Draw(b30_image)
 
     with Image.open(ASSETS_DIR / "b30_bg.png") as im:
+        im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
         b30_image.paste(im.filter(ImageFilter.GaussianBlur(8)))
 
     # header: player name and credits
@@ -195,8 +246,23 @@ def render_b30(player_data: PlayerData, records: list[Record]):
             ),
         )
 
+        # add a gaussian blurred shadow onto the jacket
+        jacket_shadow = Image.new("RGBA", (jacket.width + 20, jacket.height + 20))
+        jacket_shadow.paste(
+            (0, 0, 0, 180), (5, 5, jacket.width + 15, jacket.height + 15)
+        )
+
+        for _ in range(5):
+            jacket_shadow = jacket_shadow.filter(ImageFilter.GaussianBlur)
+
+        jacket_shadow.paste(jacket, (10, 10))
+
+        jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
+        jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
+
         # finally, paste the edited jacket onto the image.
-        b30_image.paste(jacket, (x, y))
+        b30_image = Image.alpha_composite(b30_image, jacket_padded)
+        b30_draw = ImageDraw.Draw(b30_image)
 
         # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
         title = record.title
@@ -229,19 +295,11 @@ def render_b30(player_data: PlayerData, records: list[Record]):
                 + 10
                 + b30_draw.textlength(f"{record.score:,}", NOTO_SANS_JP_32_BOLD)
                 + 10,
-                y + 53,
+                y + 50,
             ),
             f"[{record.rank}]",
             fill="#FFFFFF",
-            font=NOTO_SANS_JP_24,
-        )
-
-        # draw the internal level and rating value
-        b30_draw.text(
-            (x + 10, y + 92),
-            f"Rating: {record.extras.get(KEY_INTERNAL_LEVEL)} > {record.extras.get(KEY_PLAY_RATING)}",
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_24,
+            font=NOTO_SANS_JP_28,
         )
 
         # draw the rank of the b30 entry
@@ -250,6 +308,17 @@ def render_b30(player_data: PlayerData, records: list[Record]):
             f"#{i + 1}",
             fill="#FFFFFF",
             font=NOTO_SANS_JP_32_BOLD,
+        )
+
+        # draw the internal level and rating value
+        b30_draw.text(
+            (
+                x + 10 + b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_32_BOLD) + 10,
+                y + 128,
+            ),
+            f"({record.extras.get(KEY_INTERNAL_LEVEL)} > {record.extras.get(KEY_PLAY_RATING)})",
+            fill="#FFFFFF",
+            font=NOTO_SANS_JP_28,
         )
 
     # crop any extra bits we don't need, however we might need them later...
