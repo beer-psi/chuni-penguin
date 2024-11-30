@@ -60,56 +60,6 @@ B30_ENTRY_WIDTH = 350
 B30_ENTRY_HEIGHT = 180
 
 
-def drop_shadow(
-    image: Image.Image,
-    offset: tuple[int, int] = (5, 5),
-    background: str | float | tuple[float, ...] = 0xFFFFFF,
-    shadow: str | float | tuple[float, ...] = 0x444444,
-    border: int = 8,
-    iterations: int = 3,
-):
-    """
-    Add a gaussian blur drop shadow to an image.
-    image       - The image to overlay on top of the shadow.
-    offset      - Offset of the shadow from the image as an (x,y) tuple.
-                  Can be positive or negative.
-    background  - Background colour behind the image.
-    shadow      - Shadow colour (darkness).
-    border      - Width of the border around the image.  This must be wide
-                enough to account for the blurring of the shadow.
-    iterations  - Number of times to apply the filter.  More iterations
-                produce a more blurred shadow, but increase processing time.
-    """
-    # Create the backdrop image -- a box in the background colour with a
-    # shadow on it.
-    total_width = image.size[0] + abs(offset[0]) + 2 * border
-    total_height = image.size[1] + abs(offset[1]) + 2 * border
-    back = Image.new("RGBA", (total_width, total_height), background)
-    # Place the shadow, taking into account the offset from the image
-    shadow_left = border + max(offset[0], 0)
-    shadow_top = border + max(offset[1], 0)
-    back.paste(
-        shadow,
-        (
-            shadow_left,
-            shadow_top,
-            shadow_left + image.size[0],
-            shadow_top + image.size[1],
-        ),
-    )
-    # Apply the filter to blur the edges of the shadow.  Since a small kernel
-    # is used, the filter must be applied repeatedly to get a decent blur.
-    n = 0
-    while n < iterations:
-        back = back.filter(ImageFilter.BLUR)
-        n += 1
-    # Paste the input image onto the shadow backdrop
-    image_left = border - min(offset[0], 0)
-    image_top = border - min(offset[1], 0)
-    back.paste(image, (image_left, image_top))
-    return back
-
-
 def render_b30(player_data: PlayerData, records: list[Record]):
     b30_image = Image.new("RGBA", size=(1872, 1784), color="#FFFFFF")
     b30_draw = ImageDraw.Draw(b30_image)
