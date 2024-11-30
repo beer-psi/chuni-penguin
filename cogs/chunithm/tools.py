@@ -1,5 +1,6 @@
 import itertools
 from decimal import Decimal
+import random
 from typing import TYPE_CHECKING, Literal, Optional, Sequence
 
 import discord
@@ -306,11 +307,14 @@ class ToolsCog(commands.Cog, name="Tools"):
                 chart.song.id for chart in charts if chart.difficulty == "MAS"
             ]
 
-            if 2035 in master_song_ids:
+            if XL_TECHNO_JUMPSCARE in master_song_ids:
                 await ctx.reply(XL_TECHNO_JUMPSCARE, mention_author=False)
                 return
-            if 625 in master_song_ids:
+            if VOLCANIC_SONG_ID in master_song_ids:
                 await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
+                return
+            if FORSAKEN_TALE_SONG_ID in master_song_ids and random.random() < 0.5:
+                await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
                 return
 
             embeds: list[discord.Embed] = [ChartCardEmbed(chart) for chart in charts]
@@ -458,6 +462,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             return None
 
 
+XL_TECHNO_SONG_ID = 2035
 XL_TECHNO_JUMPSCARE = """恐怖！XL TECHNO -More Dance Remix-
 
            —
@@ -478,6 +483,7 @@ XL_TECHNO_JUMPSCARE = """恐怖！XL TECHNO -More Dance Remix-
                     —
 """  # noqa: RUF001
 
+VOLCANIC_SONG_ID = 625
 VOLCANIC_JUMPSCARE = """🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨
@@ -488,6 +494,15 @@ VOLCANIC_JUMPSCARE = """🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨 
 🟨🟨🟥🟨🟨
 """  # noqa: W291, RUF001
+
+FORSAKEN_TALE_SONG_ID = 2652
+FORSAKEN_TALE_JUMPSCARE = """恐怖！Forsaken Tale！
+😡     😡     😡
+     😡     😡
+😡     😡     😡
+     😡     😡
+          😠
+"""  # noqa: RUF001
 
 
 async def setup(bot: "ChuniBot"):
