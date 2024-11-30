@@ -10,3 +10,6 @@ bot.ini
 **/.pre-commit-config.yaml
 **/bot.example.ini
 **/README.md
+
+# mount this into docker
+assets
