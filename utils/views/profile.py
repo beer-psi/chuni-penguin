@@ -98,13 +98,12 @@ class ProfileView(discord.ui.View):
         utils: "UtilsCog" = cast(
             "UtilsCog", cast("ChuniBot", interaction.client).get_cog("Utils")
         )
+        ctx = utils.chuninet(interaction.user.id)
 
         try:
-            ctx = utils.chuninet(interaction.user.id)
             client = await ctx.__aenter__()
 
             await client.send_friend_request(friend_code)
-            await ctx.__aexit__(None, None, None)
 
             embed.title = "Success"
             embed.description = f"Sent a friend request to {self.profile.name}."
@@ -117,5 +116,7 @@ class ProfileView(discord.ui.View):
             embed.description = f"CHUNITHM-NET error {e.code}: {e.description}"
         except commands.BadArgument as e:
             embed.description = str(e)
+        finally:
+            await ctx.__aexit__(None, None, None)
 
         await interaction.followup.send(embed=embed, ephemeral=True)
