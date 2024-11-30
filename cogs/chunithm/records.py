@@ -132,7 +132,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
 
         try:
             with Image.open(jacket_path) as jacket:
-                jacket = jacket.resize(
+                jacket = jacket.convert("RGB").resize(
                     (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
                 )
                 jacket = jacket.crop(
