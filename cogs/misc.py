@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 import tomllib
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands import Context, Greedy
 from discord.utils import oauth_url
 from sqlalchemy import delete, func, select
 
-from database.models import Cookie, Prefix
+from database.models import Cookie, Prefix, Song
 from utils.config import config
 from utils.constants import VERSION_NAMES
 
@@ -25,6 +25,12 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
         self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+
+    async def cog_load(self) -> None:
+        self.listening.start()
+
+    async def cog_unload(self) -> None:
+        self.listening.stop()
 
     @commands.command("treesync", hidden=True, invoke_without_command=True)
     @commands.is_owner()
@@ -156,7 +162,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         embed.add_field(name="Uptime", value=f"<t:{int(self.bot.launch_time)}:R>")
         embed.add_field(name="Total servers", value=len(self.bot.guilds))
         embed.add_field(name="Total users", value=str(users))
-        embed.add_field(name="\u200B", value="\u200B")
+        embed.add_field(name="\u200b", value="\u200b")
 
         await ctx.reply(embed=embed, mention_author=False)
 
@@ -237,6 +243,31 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
             embed=embed,
             mention_author=False,
         )
+
+    @tasks.loop(minutes=3)
+    async def listening(self):
+        async with self.bot.begin_db_session() as session:
+            query = (
+                select(Song)
+                .where(Song.genre == "ORIGINAL")
+                .order_by(func.random())
+                .limit(1)
+            )
+            song = await session.scalar(query)
+
+            if song is None:
+                return
+
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name=f"{song.artist} - {song.title}",
+            )
+        )
+
+    @listening.before_loop
+    async def before_listening(self):
+        await self.bot.wait_until_ready()
 
 
 async def setup(bot: "ChuniBot") -> None:

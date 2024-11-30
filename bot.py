@@ -91,7 +91,7 @@ class ChuniBot(commands.Bot):
                 kamaitachi_client_id=config.credentials.kamaitachi_client_id,
                 kamaitachi_client_secret=config.credentials.kamaitachi_client_secret,
             )
-            _ = asyncio.ensure_future(
+            _ = asyncio.ensure_future(  # noqa: RUF006
                 web._run_app(
                     self.app,
                     port=config.web.port,
