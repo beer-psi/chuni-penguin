@@ -4,7 +4,7 @@ from typing import cast
 from bs4.element import ResultSet, Tag
 from zoneinfo import ZoneInfo
 
-from .models.enums import ClearType, ComboType, Difficulty, Rank
+from .models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
 
 
 def chuni_int(s: str) -> int:
@@ -52,7 +52,7 @@ def difficulty_from_imgurl(url: str) -> Difficulty:
             raise ValueError(msg)
 
 
-def get_rank_and_lamps(soup: Tag) -> tuple[Rank, ClearType, ComboType]:
+def get_rank_and_lamps(soup: Tag) -> tuple[Rank, ClearType, ComboType, ChainType]:
     if (rank_img_elem := soup.select_one("img[src*=_rank_]")) is not None:
         rank_img_url = cast(str, rank_img_elem["src"])
         rank = Rank(int(extract_last_part(rank_img_url)))
@@ -72,7 +72,38 @@ def get_rank_and_lamps(soup: Tag) -> tuple[Rank, ClearType, ComboType]:
     else:
         clear_type = ClearType.FAILED
 
+    if soup.select_one("img[src*=fullchain2]") is not None:
+        chain_type = ChainType.FULL_CHAIN
+    elif soup.select_one("img[src*=fullchain]") is not None:
+        chain_type = ChainType.FULL_CHAIN_PLUS
+    else:
+        chain_type = ChainType.NONE
+
     # FC and AJ should override all other lamps.
+    if soup.select_one("img[src*=fullcombo]") is not None:
+        combo_type = ComboType.FULL_COMBO
+    elif soup.select_one("img[src*=alljusticecritical]") is not None:
+        combo_type = ComboType.ALL_JUSTICE_CRITICAL
+    elif soup.select_one("img[src*=alljustice]") is not None:
+        combo_type = ComboType.ALL_JUSTICE
+    else:
+        combo_type = ComboType.NONE
+
+    return rank, clear_type, combo_type, chain_type
+
+
+def get_course_rank_and_lamps(soup: Tag):
+    if (rank_img_elem := soup.select_one("img[src*=_rank_]")) is not None:
+        rank_img_url = cast(str, rank_img_elem["src"])
+        rank = Rank(int(extract_last_part(rank_img_url)))
+    else:
+        rank = Rank.D
+
+    if soup.select_one("img[src*=course_clear]") is not None:
+        clear_type = ClearType.CLEAR
+    else:
+        clear_type = ClearType.FAILED
+
     if soup.select_one("img[src*=fullcombo]") is not None:
         combo_type = ComboType.FULL_COMBO
     elif soup.select_one("img[src*=alljusticecritical]") is not None:

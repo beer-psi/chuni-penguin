@@ -87,14 +87,11 @@ class EventsCog(commands.Cog, name="Events"):
             else:
                 fmt = " or ".join(to_string)
             embed.description = f"`{exc.param.displayed_name or exc.param.name}` must be one of {fmt}, received {exc.argument!r}"
-        if isinstance(
+        if isinstance(exc, commands.CommandError) and not isinstance(
             exc,
             (
-                commands.BadArgument,
-                commands.BadUnionArgument,
-                commands.MissingRequiredArgument,
-                commands.MaxConcurrencyReached,
-                commands.CheckFailure,
+                commands.CommandNotFound,
+                commands.ConversionError,
             ),
         ):
             embed.description = str(error)

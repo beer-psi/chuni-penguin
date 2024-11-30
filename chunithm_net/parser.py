@@ -4,7 +4,15 @@ from typing import cast
 from bs4 import BeautifulSoup, Tag
 
 from .consts import _KEY_DETAILED_PARAMS, KEY_SONG_ID
-from .models.enums import ClearType, ComboType, Possession, Rank, SkillClass
+from .models.enums import (
+    ChainType,
+    ClearType,
+    ComboType,
+    CourseClass,
+    Possession,
+    Rank,
+    SkillClass,
+)
 from .models.player_data import (
     Currency,
     Nameplate,
@@ -15,6 +23,7 @@ from .models.player_data import (
     UserAvatar,
 )
 from .models.record import (
+    CourseRecord,
     DetailedParams,
     DetailedRecentRecord,
     Judgements,
@@ -28,6 +37,7 @@ from .utils import (
     chuni_int,
     difficulty_from_imgurl,
     extract_last_part,
+    get_course_rank_and_lamps,
     get_rank_and_lamps,
     parse_player_rating,
     parse_time,
@@ -174,11 +184,12 @@ def parse_basic_recent_record(record: Tag) -> RecentRecord:
     new_record = record.select_one(".play_musicdata_score_img") is not None
 
     if (rank_elem := record.select_one(".play_musicdata_icon")) is not None:
-        rank, clear_lamp, combo_lamp = get_rank_and_lamps(rank_elem)
+        rank, clear_lamp, combo_lamp, chain_lamp = get_rank_and_lamps(rank_elem)
     else:
         rank = Rank.D
         clear_lamp = ClearType.FAILED
         combo_lamp = ComboType.NONE
+        chain_lamp = ChainType.NONE
 
     score = RecentRecord(
         track=track,
@@ -192,6 +203,7 @@ def parse_basic_recent_record(record: Tag) -> RecentRecord:
         rank=rank,
         clear_lamp=clear_lamp,
         combo_lamp=combo_lamp,
+        chain_lamp=chain_lamp,
         new_record=new_record,
     )
     score.extras[_KEY_DETAILED_PARAMS] = detailed
@@ -215,9 +227,12 @@ def parse_music_record(soup: BeautifulSoup, song_id: int) -> list[MusicRecord]:
     records = []
     for block in soup.select(".music_box"):
         if (musicdata := block.select_one(".play_musicdata_icon")) is not None:
-            rank, clear_lamp, combo_lamp = get_rank_and_lamps(musicdata)
+            rank, clear_lamp, combo_lamp, chain_lamp = get_rank_and_lamps(musicdata)
         else:
-            rank, clear_lamp, combo_lamp = Rank.D, ClearType.FAILED, ComboType.NONE
+            rank = Rank.D
+            clear_lamp = ClearType.FAILED
+            combo_lamp = ComboType.NONE
+            chain_lamp = ChainType.NONE
 
         score = MusicRecord(
             title=title,
@@ -232,6 +247,7 @@ def parse_music_record(soup: BeautifulSoup, song_id: int) -> list[MusicRecord]:
             rank=rank,
             clear_lamp=clear_lamp,
             combo_lamp=combo_lamp,
+            chain_lamp=chain_lamp,
             play_count=chuni_int(
                 elem.get_text().replace("times", "")
                 if (
@@ -259,9 +275,12 @@ def parse_music_for_rating(soup: BeautifulSoup) -> list[Record]:
             continue
 
         if (musicdata := x.select_one(".play_musicdata_icon")) is not None:
-            rank, clear_lamp, combo_lamp = get_rank_and_lamps(musicdata)
+            rank, clear_lamp, combo_lamp, chain_lamp = get_rank_and_lamps(musicdata)
         else:
-            rank, clear_lamp, combo_lamp = Rank.D, ClearType.FAILED, ComboType.NONE
+            rank = Rank.D
+            clear_lamp = ClearType.FAILED
+            combo_lamp = ComboType.NONE
+            chain_lamp = ChainType.NONE
 
         div = x.select_one(".w388.musiclist_box")
         score = Record(
@@ -271,6 +290,7 @@ def parse_music_for_rating(soup: BeautifulSoup) -> list[Record]:
             rank=rank,
             clear_lamp=clear_lamp,
             combo_lamp=combo_lamp,
+            chain_lamp=chain_lamp,
         )
         score.extras[KEY_SONG_ID] = int(
             str(x.select_one("form input[name=idx]")["value"])
@@ -323,3 +343,52 @@ def parse_detailed_recent_record(soup: BeautifulSoup) -> DetailedRecentRecord:
         str(soup.select_one("form input[name=idx]")["value"])
     )
     return record
+
+
+def parse_course_list(soup: BeautifulSoup):
+    courses: list[CourseRecord] = []
+
+    for x in soup.select("form:has(.w388.musiclist_box)"):
+        if (score_elem := x.select_one(".play_musicdata_highscore .text_b")) is None:
+            continue
+
+        if (musicdata_icon := x.select_one(".play_musicdata_icon")) is not None:
+            rank, clear_lamp, combo_lamp = get_course_rank_and_lamps(musicdata_icon)
+        else:
+            rank = Rank.D
+            clear_lamp = ClearType.FAILED
+            combo_lamp = ComboType.NONE
+
+        cls = extract_last_part(" ".join(x.select_one(".w388.musiclist_box")["class"]))
+
+        if cls == "class10":
+            course_cls = CourseClass.I
+        elif cls == "class11":
+            course_cls = CourseClass.II
+        elif cls == "class12":
+            course_cls = CourseClass.III
+        elif cls == "class13":
+            course_cls = CourseClass.IV
+        elif cls == "class14":
+            course_cls = CourseClass.V
+        elif cls == "class20":
+            course_cls = CourseClass.INFINITE
+        elif cls == "class22":
+            course_cls = CourseClass.EXTRA
+        else:
+            msg = f"Unknown course class: {cls}"
+            raise ValueError(msg)
+
+        course = CourseRecord(
+            id=int(str(x.select_one("form input[name=idx]")["value"])),
+            cls=course_cls,
+            name=x.select_one(".music_title").get_text(),
+            score=chuni_int(score_elem.get_text()),
+            rank=rank,
+            clear_lamp=clear_lamp,
+            combo_lamp=combo_lamp,
+        )
+
+        courses.append(course)
+
+    return courses

@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 class Difficulty(Enum):
@@ -110,6 +110,17 @@ class ComboType(Enum):
     def __str__(self):
         if self.value == 3:
             return "AJC"
+        return self.name.replace("_", " ")
+
+
+class ChainType(IntEnum):
+    NONE = 0
+    FULL_CHAIN = 1
+    FULL_CHAIN_PLUS = 2
+
+    def __str__(self):
+        if self.value == 2:
+            return "FULL CHAIN+"
         return self.name.replace("_", " ")
 
 
@@ -236,6 +247,21 @@ class SkillClass(Enum):
     IV = 4
     V = 5
     INFINITE = 6
+
+    def __str__(self):
+        if self.value == 6:
+            return "∞"
+        return self.name
+
+
+class CourseClass(IntEnum):
+    I = 1  # noqa: E741
+    II = 2
+    III = 3
+    IV = 4
+    V = 5
+    INFINITE = 6
+    EXTRA = 7
 
     def __str__(self):
         if self.value == 6:

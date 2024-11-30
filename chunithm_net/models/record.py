@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-from .enums import ClearType, ComboType, Difficulty, Rank
+from .enums import ChainType, ClearType, ComboType, CourseClass, Difficulty, Rank
 from .type_paired_dict import TypePairedDict
 
 
@@ -44,6 +44,7 @@ class Record:
     rank: Rank = Rank.D
     clear_lamp: ClearType = ClearType.FAILED
     combo_lamp: ComboType = ComboType.NONE
+    chain_lamp: ChainType = ChainType.NONE
 
     jacket: Optional[str] = None
 
@@ -89,3 +90,14 @@ class DetailedRecentRecord(RecentRecord):
             judgements=Judgements(0, 0, 0, 0),
             note_type=NoteType(0, 0, 0, 0, 0),
         )
+
+
+@dataclass(kw_only=True)
+class CourseRecord:
+    id: int
+    cls: CourseClass
+    name: str
+    score: int
+    rank: Rank
+    clear_lamp: ClearType
+    combo_lamp: ComboType

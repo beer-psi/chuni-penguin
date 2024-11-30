@@ -3,7 +3,7 @@ import importlib.util
 import pytest
 from bs4 import BeautifulSoup
 
-from chunithm_net.models.enums import ClearType, ComboType, Difficulty, Rank
+from chunithm_net.models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
 from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
 
 
@@ -19,7 +19,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_9.png">
             </div>
             """,
-            (Rank.Sp, ClearType.CLEAR, ComboType.NONE),
+            (Rank.Sp, ClearType.CLEAR, ComboType.NONE, ChainType.NONE),
         ),
         (
             """
@@ -28,7 +28,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_9.png">
             </div>
             """,
-            (Rank.Sp, ClearType.FAILED, ComboType.NONE),
+            (Rank.Sp, ClearType.FAILED, ComboType.NONE, ChainType.NONE),
         ),
         (
             """
@@ -37,7 +37,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_clear.png">
             </div>
             """,
-            (Rank.D, ClearType.CLEAR, ComboType.NONE),
+            (Rank.D, ClearType.CLEAR, ComboType.NONE, ChainType.NONE),
         ),
         (
             """
@@ -45,7 +45,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <!-- ◆クリア -->
             </div>
             """,
-            (Rank.D, ClearType.FAILED, ComboType.NONE),
+            (Rank.D, ClearType.FAILED, ComboType.NONE, ChainType.NONE),
         ),
         (
             """
@@ -57,7 +57,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_alljustice.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.CLEAR, ComboType.ALL_JUSTICE),
+            (Rank.SSSp, ClearType.CLEAR, ComboType.ALL_JUSTICE, ChainType.NONE),
         ),
         (
             """
@@ -69,7 +69,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_fullcombo.png">
             </div>
             """,
-            (Rank.SSS, ClearType.CLEAR, ComboType.FULL_COMBO),
+            (Rank.SSS, ClearType.CLEAR, ComboType.FULL_COMBO, ChainType.NONE),
         ),
         (
             """
@@ -80,7 +80,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.ABSOLUTE_PLUS, ComboType.NONE),
+            (Rank.SSSp, ClearType.ABSOLUTE_PLUS, ComboType.NONE, ChainType.NONE),
         ),
         (
             """
@@ -91,7 +91,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.ABSOLUTE, ComboType.NONE),
+            (Rank.SSSp, ClearType.ABSOLUTE, ComboType.NONE, ChainType.NONE),
         ),
         (
             """
@@ -102,7 +102,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.HARD, ComboType.NONE),
+            (Rank.SSSp, ClearType.HARD, ComboType.NONE, ChainType.NONE),
         ),
         (
             """
@@ -113,7 +113,7 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.CATASTROPHY, ComboType.NONE),
+            (Rank.SSSp, ClearType.CATASTROPHY, ComboType.NONE, ChainType.NONE),
         ),
     ],
 )

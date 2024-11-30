@@ -18,6 +18,7 @@ from .models.enums import Difficulty, Genres, Rank
 from .models.record import MusicRecord, RecentRecord, Record
 from .parser import (
     parse_basic_recent_record,
+    parse_course_list,
     parse_detailed_recent_record,
     parse_music_for_rating,
     parse_music_record,
@@ -235,6 +236,11 @@ class ChuniNet:
             raise ValueError(msg)
 
         return parse_music_for_rating(soup)
+
+    async def course_record(self):
+        soup = await self._request_soup("GET", "mobile/record/courseList/")
+
+        return parse_course_list(soup)
 
     async def change_player_name(self, new_name: str) -> bool:
         resp = await self._request(

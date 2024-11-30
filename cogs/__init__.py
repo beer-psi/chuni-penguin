@@ -7,6 +7,7 @@ COG_LIST: list[str] = [
     "cogs.hotreload",
     "cogs.misc",
     "cogs.chunithm.auth",
+    "cogs.chunithm.chunirec",
     "cogs.chunithm.kamaitachi",
     "cogs.chunithm.profile",
     "cogs.chunithm.records",
