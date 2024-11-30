@@ -1,3 +1,15 @@
+## Development is paused
+
+Personally, this bot is feature complete, and I don't feel like spending my time
+working on a project for almost no monetary gain **and** no appreciation from
+anyone.
+
+The bot will stay alive for the foreseeable future, songs and charts will be
+updated, but don't expect any new features. Bugfixes may be considered if I keep
+being annoyed in my logs.
+
+---
+
 ## chuninewbot
 
 [![Deploy](https://github.com/beer-psi/chuninewbot/actions/workflows/deploy.yaml/badge.svg)](https://github.com/beer-psi/chuninewbot/actions/workflows/deploy.yaml)
@@ -30,14 +42,15 @@ though uptime is sometimes flaky.
 0. Install [Rye](https://rye.astral.sh/guide/installation/)
 1. Copy `bot.example.ini` to `bot.ini` and fill in values based on the comments.
 2. Run `rye sync` to install dependencies.
-3. Run `python dbutils.py create` to create the database. You may need to activate the virtualenv first
-   if you had a previous Python installation not managed by rye.
-5. Run `python dbutils.py update chunirec` to populate the song database. For
+3. Run `python dbutils.py create` to create the database. You may need to
+   activate the virtualenv first if you had a previous Python installation not
+   managed by rye.
+4. Run `python dbutils.py update chunirec` to populate the song database. For
    this to work, `credentials.chunirec_token` **must** be set in `bot.ini`. A
    pre-populated database is also provided
    [here](https://nightly.link/beer-psi/chuninewbot/workflows/test_creating_db.yaml/trunk/database.zip),
    for your convenience.
-6. `python bot.py`
+5. `python bot.py`
 
 ### Credits
 
@@ -63,11 +76,14 @@ took part.
     <summary>Donation</summary>
 
 chuninewbot is entirely free (as in both free beer and free speech), but you can
-monetarily support its development by donating through [Ko-fi](https://ko-fi.com/beerpsi_)
-or directly if you live in Vietnam:
+monetarily support its development by donating through
+[Ko-fi](https://ko-fi.com/beerpsi_) or directly if you live in Vietnam:
+
 - Bank: Vietcombank
 - Account: beerpsi
 
 Thank you to everyone who donated:
+
 - [Tukkun](https://github.com/tukkun1995)
+
 </details>
