@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional, overload
 from xml.etree import ElementTree
 
+from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -31,16 +32,15 @@ VERSIONS = [
     "LUMINOUS",
     "LUMINOUS PLUS",
 ]
+ASSETS_DIR = Path(__file__).parent.parent / "assets"
 
 
 @overload
-def gettext(p: ElementTree.Element, path: str) -> Optional[str]:
-    ...
+def gettext(p: ElementTree.Element, path: str) -> Optional[str]: ...
 
 
 @overload
-def gettext(p: ElementTree.Element, path: str, default: str) -> str:
-    ...
+def gettext(p: ElementTree.Element, path: str, default: str) -> str: ...
 
 
 def gettext(
@@ -56,7 +56,12 @@ async def merge_options(
     async_session: async_sessionmaker[AsyncSession],
     data_dir: Path,
     option_dir: Optional[Path],
+    *,
+    extract_jackets: bool,
 ):
+    if extract_jackets:
+        (ASSETS_DIR / "jackets").mkdir(exist_ok=True, parents=True)
+
     xml_paths = data_dir.glob("**/music/**/Music.xml")
 
     if option_dir is not None:
@@ -93,6 +98,16 @@ async def merge_options(
             continue
 
         logger.debug("Reading music ID %s", song_id)
+
+        if extract_jackets and int(song_id) < 8000:
+            with Image.open(
+                xml_path.parent / f"CHU_UI_Jacket_{song_id.zfill(4)}.dds"
+            ) as im:
+                im.save(
+                    ASSETS_DIR / "jackets" / f"{int(song_id)}.png",
+                    format="PNG",
+                    optimize=True,
+                )
 
         if we_tag_name != "Invalid":
             genre = "WORLD'S END"

@@ -51,6 +51,11 @@ async def main():
         type=Path,
         help="If updating from data, provide path to the `option` folder.",
     )
+    update.add_argument(
+        "--extract-jackets",
+        action="store_true",
+        help="If updating from data, extract song jackets to assets/jackets/",
+    )
 
     args = parser.parse_args()
 
@@ -79,7 +84,13 @@ async def main():
                 update.print_help()
                 exit(1)
 
-            await merge_options(logger, async_session, args.data_dir, args.option_dir)
+            await merge_options(
+                logger,
+                async_session,
+                args.data_dir,
+                args.option_dir,
+                extract_jackets=args.extract_jackets,
+            )
 
     await engine.dispose()
 
