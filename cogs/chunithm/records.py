@@ -27,7 +27,7 @@ from chunithm_net.consts import (
     KEY_SONG_ID,
     KEY_SONG_VERSION,
 )
-from chunithm_net.models.enums import ClearType, ComboType, Difficulty, Genres, Rank
+from chunithm_net.models.enums import Difficulty, Genres, Rank
 from chunithm_net.models.player_data import PlayerData
 from chunithm_net.models.record import Record
 from database.models import SongJacket
@@ -130,7 +130,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
 
         jacket_path = ASSETS_DIR / "jackets" / f"{record.extras[KEY_SONG_ID]}.png"
 
-        if jacket_path.exists():
+        try:
             with Image.open(jacket_path) as jacket:
                 jacket = jacket.resize(
                     (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
@@ -148,7 +148,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
                     .enhance(0.4)
                     .filter(ImageFilter.GaussianBlur)
                 )
-        else:
+        except (FileNotFoundError, ValueError):
             jacket = Image.new("RGB", (B30_ENTRY_WIDTH, B30_ENTRY_HEIGHT), 0)
 
         difficulty_color = record.difficulty.color()
