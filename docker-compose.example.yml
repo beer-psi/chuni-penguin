@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   bot:
-    container_name: chuninewbot
+    container_name: chuni-penguin
     build:
       dockerfile: Dockerfile
     volumes:

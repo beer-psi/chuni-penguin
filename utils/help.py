@@ -31,7 +31,7 @@ class HelpCommand(commands.HelpCommand):
                 icon_url=bot.user.avatar.url if bot.user.avatar else None,
             )
             .set_footer(  # type: ignore[reportGeneralTypeIssues]
-                text=f"Use {prefix}help <command> for more info on a command.\nSource code: https://github.com/beer-psi/chuninewbot"
+                text=f"Use {prefix}help <command> for more info on a command.\nSource code: https://github.com/beer-psi/chuni-penguin"
             )
         )
         description = ""

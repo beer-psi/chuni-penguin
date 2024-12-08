@@ -28,7 +28,7 @@ router = web.RouteTableDef()
 @router.get("/")
 async def index(request: web.Request) -> web.Response:
     return web.Response(
-        body="https://github.com/beer-psi/chuninewbot",
+        body="https://github.com/beer-psi/chuni-penguin",
         content_type="text/plain",
     )
 
@@ -163,7 +163,7 @@ async def login(request: web.Request) -> web.Response:
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>chuninewbot login</title>
+        <title>chuni penguin login</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta charset="utf-8">
         {goatcounter_tag}
