@@ -59,10 +59,6 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
     async with bot.begin_db_session() as db_session:
         stmt = select(Cookie).where(Cookie.discord_id == discord_id)
         cookie = (await db_session.execute(stmt)).scalar_one_or_none()
-        if cookie is None:
-            raise web.HTTPUnauthorized(
-                reason="You are not logged in to the bot. Please login with `c>login` first."
-            )
 
     async with session.post(
         "https://kamai.tachi.ac/api/v1/oauth/token",
@@ -92,9 +88,13 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
     if not whoami_data["success"]:
         raise web.HTTPInternalServerError
 
-    cookie.kamaitachi_token = token
     async with bot.begin_db_session() as db_session, db_session.begin():
-        await db_session.merge(cookie)
+        if cookie is None:
+            cookie = Cookie(discord_id=discord_id, cookie="", kamaitachi_token=token)
+            db_session.add(cookie)
+        else:
+            cookie.kamaitachi_token = token
+            await db_session.merge(cookie)
 
     return web.Response(
         text="Your accounts are now linked! You can close this page and use the bot now.",
@@ -217,7 +217,7 @@ def init_app(
     session = ClientSession()
     session.headers.add(
         "User-Agent",
-        f"ChuniBot (https://github.com/Rapptz/discord.py {discord.__version__}) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",
+        f"chuni-penguin (+https://github.com/beer-psi/chuni-penguin) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",
     )
 
     app["bot"] = bot

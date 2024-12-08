@@ -17,6 +17,7 @@ Revises: ac60aaf138a1
 Create Date: 2023-09-28 23:06:08.860074
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
