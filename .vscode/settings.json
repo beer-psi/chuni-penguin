@@ -4,5 +4,6 @@
     "python.analysis.typeCheckingMode": "off",
     "python.languageServer": "None",
     "basedpyright.disableLanguageServices": false,
-    "mypy.enabled": false
+    "mypy.enabled": false,
+    "python.REPL.enableREPLSmartSend": false
 }

@@ -57,6 +57,7 @@ class PlayerData:
     possession: Possession = Possession.NONE
 
     character: Optional[str] = None
+    character_frame: Optional[str] = None
     avatar: UserAvatar
 
     name: str

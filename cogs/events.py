@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, cast
 import aiohttp
 import discord
 import httpx
-from discord import Webhook
+from discord import Webhook, app_commands
+from discord.app_commands import AppCommandError
 from discord.ext import commands
 from discord.ext.commands import Context
 
@@ -26,9 +27,49 @@ class EventsCog(commands.Cog, name="Events"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_command(self, ctx: Context):
-        pass
+    async def cog_load(self) -> None:
+        self._old_tree_error = self.bot.tree.on_error
+        self.bot.tree.on_error = self.tree_on_error
+
+    async def cog_unload(self) -> None:
+        self.bot.tree.on_error = self._old_tree_error
+
+    async def tree_on_error(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        error: AppCommandError,
+    ):
+        exc: Exception = error
+
+        while hasattr(exc, "original"):
+            exc = cast(Exception, exc.original)
+
+        embed, _ = await self._construct_error_embed("/", exc)
+
+        if embed.description is not None:
+            await interaction.edit_original_response(embed=embed)
+            return
+
+        logger.exception(
+            "Unhandled exception in app command %s",
+            interaction.command.name if interaction.command else "unknown",
+            exc_info=exc,
+        )
+
+        # fmt: off
+        embed.description = (
+            "An unhandled error occurred. It dropped this message:\n"
+            "```python\n"
+            f"{''.join(traceback.format_exception_only(exc))}\n"
+            "```\n"
+            "The error has been logged. Please try again later."
+        )
+        # fmt: on
+
+        await interaction.edit_original_response(embed=embed)
+        await self._submit_error_to_webhook(interaction.command, exc)
+
+        return
 
     @commands.Cog.listener()
     async def on_command_error(
@@ -40,27 +81,67 @@ class EventsCog(commands.Cog, name="Events"):
             return None
 
         exc = error
-        while hasattr(exc, "original"):
-            exc = exc.original  # type: ignore[reportGeneralTypeIssues]
 
+        while hasattr(exc, "original"):
+            exc = cast(Exception, exc.original)
+
+        embed, delete_after = await self._construct_error_embed(ctx.prefix or "c>", exc)
+
+        if embed.description is not None:
+            return await ctx.reply(
+                embed=embed,
+                mention_author=False,
+                delete_after=delete_after,  # type: ignore[reportCallIssue, reportArgumentType]
+            )
+
+        logger.exception("Unhandled exception in command %s", ctx.command, exc_info=exc)
+
+        # fmt: off
+        embed.description = (
+            "An unhandled error occurred. It dropped this message:\n"
+            "```python\n"
+            f"{''.join(traceback.format_exception_only(exc))}\n"
+            "```\n"
+            "The error has been logged. Please try again later."
+        )
+        # fmt: on
+
+        await ctx.reply(embed=embed, mention_author=False)
+        await self._submit_error_to_webhook(ctx.command, exc)
+
+        return None
+
+    async def _construct_error_embed(self, prefix: str, exc: Exception):
         embed = discord.Embed(
             color=discord.Color.red(),
             title="Error",
         )
-        delete_after = None
+        delete_after: float | None = None
 
         if isinstance(exc, MaintenanceException):
             embed.description = "CHUNITHM-NET is currently undergoing maintenance. Please try again later."
         elif isinstance(exc, ChuniNetError):
             embed.description = f"CHUNITHM-NET error {exc.code}: {exc.description}"
         elif isinstance(exc, InvalidTokenException):
-            embed.description = f"The token has expired. Please log in again with `{ctx.prefix}login` in my DMs."
+            embed.description = (
+                f"The token has expired. Please log in again with `{prefix}login` in my DMs.\n"
+                "\n"
+                "To prevent being logged out constantly:\n"
+                "- Don't quickly switch between using the bot and visiting CHUNITHM-NET directly\n"
+                "- Log in using a separate incognito session\n"
+                "- Use SEGA ID instead of social media login (especially Twitter)"
+            )
         elif isinstance(exc, InvalidFriendCode):
             embed.description = "Could not find anyone with this friend code. Please double-check and try again."
         elif isinstance(exc, ChuniNetException):
-            embed.description = "An error occurred while communicating with CHUNITHM-NET. Please try again later (or re-login)."
-            if self.bot.dev:
-                embed.description += f"\nDetailed error: {exc}"
+            embed.description = (
+                "An error occurred while communicating with CHUNITHM-NET. Please try again later (or re-login).\n"
+                "\n"
+                "Detailed error:\n"
+                "```python\n"
+                f"{traceback.format_exception_only(exc)}\n"
+                "```"
+            )
 
         if isinstance(exc, commands.errors.CommandOnCooldown):
             embed.description = (
@@ -94,50 +175,53 @@ class EventsCog(commands.Cog, name="Events"):
                 commands.ConversionError,
             ),
         ):
-            embed.description = str(error)
+            embed.description = str(exc)
 
         if isinstance(exc, httpx.TimeoutException):
             embed.description = "Timed out trying to connect to CHUNITHM-NET."
 
         if isinstance(exc, httpx.TransportError):
             embed.description = (
-                "An unknown network error occured trying to connect to CHUNITHM-NET."
+                "An unknown network error occured trying to connect to CHUNITHM-NET.\n"
+                "\n"
+                "Detailed error:\n"
+                "```python\n"
+                f"{traceback.format_exception_only(exc)}\n"
+                "```"
             )
 
-        if embed.description is not None:
-            return await ctx.reply(
-                embed=embed,
-                mention_author=False,
-                delete_after=delete_after,  # type: ignore[reportCallIssue, reportArgumentType]
+        return embed, delete_after
+
+    async def _submit_error_to_webhook(
+        self,
+        command: commands.Command
+        | app_commands.Command
+        | app_commands.ContextMenu
+        | None,
+        exc: Exception,
+    ):
+        if (webhook_url := config.bot.error_reporting_webhook) is None:
+            return
+
+        command_name = command.name if command else None
+
+        async with aiohttp.ClientSession() as session:
+            webhook = Webhook.from_url(webhook_url, session=session)
+
+            content = (
+                f"## Exception in command {command_name}\n\n"
+                "```python\n"
+                f"{(''.join(traceback.format_exception(exc)))[-1961 + len(str(command_name)):]}"
+                "```"
             )
 
-        logger.error("Exception in command %s", ctx.command, exc_info=exc)
-        embed.description = (
-            "Something really terrible happened. "
-            f"The owner <@{self.bot.owner_id}> has been notified.\n"
-            "Please try again in a couple of hours."
-        )
-        await ctx.reply(embed=embed, mention_author=False)
-
-        if webhook_url := config.bot.error_reporting_webhook:
-            async with aiohttp.ClientSession() as session:
-                webhook = Webhook.from_url(webhook_url, session=session)
-
-                content = (
-                    f"## Exception in command {ctx.command}\n\n"
-                    "```python\n"
-                    f"{(''.join(traceback.format_exception(exc)))[-1961 + len(str(ctx.command)):]}"
-                    "```"
-                )
-
-                client_user = cast(discord.ClientUser, self.bot.user)
-                await webhook.send(
-                    username=client_user.display_name,
-                    avatar_url=client_user.display_avatar.url,
-                    content=content,
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
-        return None
+            client_user = cast(discord.ClientUser, self.bot.user)
+            await webhook.send(
+                username=client_user.display_name,
+                avatar_url=client_user.display_avatar.url,
+                content=content,
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
 
 
 async def setup(bot: "ChuniBot"):

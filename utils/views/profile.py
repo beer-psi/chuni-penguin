@@ -30,6 +30,9 @@ class ProfileView(discord.ui.View):
         self.friend_code_visible = False
         self.send_friend_request_button = None
 
+        if not self.profile.friend_code:
+            self.clear_items()
+
     async def on_timeout(self) -> None:
         for item in self.children:
             if hasattr(item, "disabled"):

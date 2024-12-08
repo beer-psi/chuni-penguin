@@ -41,9 +41,9 @@ class LoginFlowView(PaginationView):
         ]
 
         if code is None or server is None:
-            items[
-                2
-            ] += "The website will display the login command. Copy it and paste it in the bot's DMs."
+            items[2] += (
+                "The website will display the login command. Copy it and paste it in the bot's DMs."
+            )
         else:
             items[2] += (
                 f"If the website asks for a passcode, enter **{code}**.\n"

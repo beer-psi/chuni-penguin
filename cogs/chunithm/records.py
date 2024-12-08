@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import itertools
+import urllib.parse
 from argparse import ArgumentError
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -9,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, cast
 
 import discord
-from discord import AllowedMentions, app_commands
+from discord import AllowedMentions, Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
@@ -27,14 +28,18 @@ from chunithm_net.consts import (
     KEY_SONG_ID,
     KEY_SONG_VERSION,
 )
-from chunithm_net.models.enums import Difficulty, Genres, Rank
-from chunithm_net.models.player_data import PlayerData
-from chunithm_net.models.record import Record
+from chunithm_net.models.enums import ComboType, Difficulty, Genres, Rank
+from chunithm_net.models.record import (
+    DetailedRecentRecord,
+    RecentRecord,
+    Record,
+)
 from database.models import SongJacket
 from utils import did_you_mean_text, floor_to_ndp, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
+from utils.kamaitachi import convert_kt_pbs_to_records, convert_kt_scores_to_records
 from utils.views import B30View, CompareView, RecentRecordsView, SelectToCompareView
 
 if TYPE_CHECKING:
@@ -47,20 +52,34 @@ ASSETS_DIR = Path(__file__).parent.parent.parent / "assets"
 NOTO_SANS_JP_80 = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 80
 )
-NOTO_SANS_JP_28 = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 28
+NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Medium.ttf", 28
 )
 NOTO_SANS_JP_32_BOLD = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 32
 )
-INTER_24 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_24pt-Regular.ttf", 24)
 INTER_32 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Regular.ttf", 32)
-INTER_36_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 36)
 B30_ENTRY_WIDTH = 350
 B30_ENTRY_HEIGHT = 180
 
 
-def render_b30(player_data: PlayerData, records: list[Record]):
+class reversor:
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __eq__(self, other):
+        return other.obj == self.obj
+
+    def __lt__(self, other):
+        return other.obj < self.obj
+
+
+def render_b30(
+    player_name: str,
+    records: list[Record],
+    current_rating: float | None = None,
+    max_rating: float | None = None,
+):
     b30_image = Image.new("RGBA", size=(1872, 1784), color="#FFFFFF")
     b30_draw = ImageDraw.Draw(b30_image)
 
@@ -75,7 +94,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
     )
 
     # draw the player name
-    b30_draw.text((20, 0), player_data.name, fill="#000000", font=NOTO_SANS_JP_80)
+    b30_draw.text((20, 0), player_name, fill="#000000", font=NOTO_SANS_JP_80)
 
     # determine the width/height of the credits text to right-align it with Math
     credits_bbox = b30_draw.multiline_textbbox(
@@ -113,9 +132,17 @@ def render_b30(player_data: PlayerData, records: list[Record]):
         fill="#F2D0F0",
     )
     # draw the rating information in the subheader
+    rating_text = f"AVERAGE {average:.4f} / REACHABLE {reachable:.4f}"
+
+    if max_rating is not None:
+        rating_text = f"MAX {max_rating:.2f} / {rating_text}"
+
+    if current_rating is not None:
+        rating_text = f"RATING {current_rating:.2f} / {rating_text}"
+
     b30_draw.text(
         (30, b30_image.height * 8.5 // 100),
-        f"RATING {player_data.rating.current} / MAX {player_data.rating.max} / AVERAGE {average} / REACHABLE {reachable}",
+        rating_text,
         fill="#000000",
         font=INTER_32,
     )
@@ -135,6 +162,18 @@ def render_b30(player_data: PlayerData, records: list[Record]):
     )
 
     # best30
+    # add a gaussian blurred shadow onto the jacket
+    # generate the base shadow here so we can just copy it for each jacket later
+    jacket_shadow_base = Image.new(
+        "RGBA", (B30_ENTRY_WIDTH + 20, B30_ENTRY_HEIGHT + 20)
+    )
+    jacket_shadow_base.paste(
+        (0, 0, 0, 200), (5, 5, B30_ENTRY_WIDTH + 15, B30_ENTRY_HEIGHT + 15)
+    )
+
+    for _ in range(5):
+        jacket_shadow_base = jacket_shadow_base.filter(ImageFilter.GaussianBlur)
+
     for i, record in enumerate(records):
         # top left corner of each b30 entry
         # - the initial 30 is left/top margin
@@ -169,7 +208,7 @@ def render_b30(player_data: PlayerData, records: list[Record]):
                 # darken the image and blur it
                 jacket = (
                     ImageEnhance.Brightness(jacket)
-                    .enhance(0.4)
+                    .enhance(0.45)
                     .filter(ImageFilter.GaussianBlur(4))
                 )
         except (FileNotFoundError, ValueError):
@@ -197,17 +236,12 @@ def render_b30(player_data: PlayerData, records: list[Record]):
         )
 
         # add a gaussian blurred shadow onto the jacket
-        jacket_shadow = Image.new("RGBA", (jacket.width + 20, jacket.height + 20))
-        jacket_shadow.paste(
-            (0, 0, 0, 180), (5, 5, jacket.width + 15, jacket.height + 15)
-        )
-
-        for _ in range(5):
-            jacket_shadow = jacket_shadow.filter(ImageFilter.GaussianBlur)
+        jacket_shadow = jacket_shadow_base.copy()
 
         jacket_shadow.paste(jacket, (10, 10))
 
         jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
+
         jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
 
         # finally, paste the edited jacket onto the image.
@@ -239,6 +273,15 @@ def render_b30(player_data: PlayerData, records: list[Record]):
         )
 
         # draw the rank, next to the score
+        lamps = f"[{record.rank}]"
+
+        if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
+            lamps += " [AJC]"
+        elif record.combo_lamp == ComboType.ALL_JUSTICE:
+            lamps += " [AJ]"
+        elif record.combo_lamp == ComboType.FULL_COMBO:
+            lamps += " [FC]"
+
         b30_draw.text(
             (
                 x
@@ -247,10 +290,19 @@ def render_b30(player_data: PlayerData, records: list[Record]):
                 + 10,
                 y + 50,
             ),
-            f"[{record.rank}]",
+            lamps,
             fill="#FFFFFF",
-            font=NOTO_SANS_JP_28,
+            font=NOTO_SANS_JP_28_MEDIUM,
         )
+
+        # draw judgements, if they're available
+        if isinstance(record, DetailedRecentRecord):
+            b30_draw.text(
+                (x + 10, y + 89),
+                f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f} | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}",  # noqa: RUF001
+                fill="#FFFFFF",
+                font=NOTO_SANS_JP_28_MEDIUM,
+            )
 
         # draw the rank of the b30 entry
         b30_draw.text(
@@ -261,15 +313,48 @@ def render_b30(player_data: PlayerData, records: list[Record]):
         )
 
         # draw the internal level and rating value
+        if isinstance(record, DetailedRecentRecord):
+            rating_text = f"({record.extras.get(KEY_PLAY_RATING)})"
+        else:
+            rating_text = f"({record.extras.get(KEY_INTERNAL_LEVEL):.1f} > {record.extras.get(KEY_PLAY_RATING)})"
+
         b30_draw.text(
             (
                 x + 10 + b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_32_BOLD) + 10,
                 y + 128,
             ),
-            f"({record.extras.get(KEY_INTERNAL_LEVEL)} > {record.extras.get(KEY_PLAY_RATING)})",
+            rating_text,
             fill="#FFFFFF",
-            font=NOTO_SANS_JP_28,
+            font=NOTO_SANS_JP_28_MEDIUM,
         )
+
+        # draw the timestamp
+        if isinstance(record, RecentRecord) and record.date.timestamp() > 0:
+            difference = datetime.now(UTC) - record.date
+
+            if difference.days >= 365:
+                delta = f"{difference.days // 365}y"
+            elif difference.days >= 30:
+                delta = f"{difference.days // 30}mo"
+            elif difference.days >= 1:
+                delta = f"{difference.days}d"
+            elif difference.seconds >= 3600:
+                delta = f"{difference.seconds // 3600}h"
+            elif difference.seconds >= 60:
+                delta = f"{difference.seconds // 60}m"
+            elif difference.seconds >= 1:
+                delta = f"{difference.seconds}s"
+            else:
+                delta = "0s"
+
+            delta_length = b30_draw.textlength(delta, NOTO_SANS_JP_28_MEDIUM)
+
+            b30_draw.text(
+                (int(x + B30_ENTRY_WIDTH - delta_length - 10), y + 128),
+                delta,
+                fill="#FFFFFF",
+                font=NOTO_SANS_JP_28_MEDIUM,
+            )
 
     # crop any extra bits we don't need, however we might need them later...
     b30_image = b30_image.crop((0, 0, b30_image.width, 1429))
@@ -288,20 +373,55 @@ class RecordsCog(commands.Cog, name="Records"):
         self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
         self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
 
-    @commands.hybrid_command(name="recent", aliases=["rs"])
-    async def recent(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
+    async def _recent_inner(
+        self,
+        ctx: Context,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
     ):
-        """View your recent scores.
-
-        Parameters
-        ----------
-        user: Optional[discord.User | discord.Member]
-            The user to view recent scores for. Defaults to the author.
-        """
+        target_id = ctx.author.id if user is None else user.id
 
         async with ctx.typing():
-            ctxmgr = self.utils.chuninet(ctx if user is None else user.id)
+            if kamaitachi:
+                async with self.utils.kamaitachi_client(target_id) as client:
+                    resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
+                    data = resp.json()
+
+                    if not data["success"]:
+                        msg = f"Could not get user information from Kamaitachi: {data['success']}"
+                        raise commands.CommandError(msg)
+
+                    username = data["body"]["username"]
+
+                    resp = await client.get(
+                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/scores/recent"
+                    )
+                    data = resp.json()
+
+                    if not data["success"]:
+                        msg = f"Could not retrieve recent scores from Kamaitachi: {data['description']}"
+                        raise commands.CommandError(msg)
+
+                    recents = convert_kt_scores_to_records(data["body"])
+                    recents = await self.utils.hydrate_records(recents)
+
+                    view = B30View(
+                        ctx,
+                        recents,
+                        show_average=False,
+                        show_reachable=False,
+                        show_lamps=True,
+                    )
+                    view.message = await ctx.reply(
+                        content=f"Most recent scores for {username} on Kamaitachi:",
+                        embeds=view.format_page(view.items[: view.per_page]),
+                        view=view,
+                        mention_author=False,
+                    )
+                    return
+
+            ctxmgr = self.utils.chuninet(target_id)
             client = await ctxmgr.__aenter__()
             userinfo = await client.authenticate()
             recents = await client.recent_record()
@@ -324,29 +444,60 @@ class RecordsCog(commands.Cog, name="Records"):
                 mention_author=False,
             )
 
-    @commands.hybrid_command("compare", aliases=["c"])
-    async def compare(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
-    ):
-        """Compare your best score with another score.
+    @commands.command(name="recent", aliases=["rs"])
+    async def recent(self, ctx: Context, *, query: str = ""):
+        """View your recent scores.
 
-        By default, it's the most recently posted score. You can reply to another
-        user's score to compare with that instead. If there are multiple scores in
-        said message, you will be prompted to select one.
-
-        **Tip**: This command also works with some other bots (<@986651489529397279> and <@604641359416131585>
-        to name a few). However, you will need to explicitly reply to those other bots' messages.
-        If you don't reply, only recent scores *from this bot* will be checked.
-
-        Parameters
-        ----------
-        user: Optional[discord.User | discord.Member]
-            The user to compare with. Defaults to the author.
+        **Parameters**:
+        `user`: The user to get scores for.
+        `-k, --kamaitachi`: Get recent scores from Kamaitachi, if the user has that linked.
         """
 
-        async with ctx.typing(), self.bot.begin_db_session() as session, self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
+        parser = DiscordArguments()
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
+
+        try:
+            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+        except ArgumentError as e:
+            raise commands.BadArgument(str(e)) from e
+
+        user = None
+
+        if len(rest) > 0:
+            for converter in [commands.MemberConverter, commands.UserConverter]:
+                with contextlib.suppress(commands.BadArgument):
+                    user = await converter().convert(ctx, rest[0])
+                    break
+
+        await self._recent_inner(ctx, user, kamaitachi=args.kamaitachi)
+
+    @app_commands.command(name="recent", description="View recent scores")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.describe(
+        user="The user to get recent scores for",
+        kamaitachi="Get recent scores from Kamaitachi, if linked",
+    )
+    async def recent_slash(
+        self,
+        interaction: Interaction,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        ctx = await Context.from_interaction(interaction)
+
+        return await self._recent_inner(ctx, user, kamaitachi=kamaitachi)
+
+    async def _compare_inner(
+        self,
+        ctx: Context,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        target_id = ctx.author.id if user is None else user.id
+
+        async with ctx.typing(), self.bot.begin_db_session() as session:
             if ctx.message.reference is not None:
                 message = await ctx.channel.fetch_message(
                     cast(int, ctx.message.reference.message_id)
@@ -413,7 +564,9 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 if view.value is None:
                     await compare_message.edit(
-                        content="Timed out before selecting a score.", view=None
+                        content="Timed out before selecting a score.",
+                        view=None,
+                        allowed_mentions=AllowedMentions.none(),
                     )
                     return
 
@@ -424,23 +577,83 @@ class RecordsCog(commands.Cog, name="Records"):
                 jacket = jackets[0]
                 song = jacket.song
 
-            song.raise_if_not_available()
+            if not kamaitachi:
+                song.raise_if_not_available()
 
             embed = next(
                 x
                 for x in message.embeds
                 if jacket.jacket_url in {x.thumbnail.url, x.image.url}
             )
-            userinfo = await client.authenticate()
-            records = await client.music_record(song.id)
 
-            if len(records) == 0:
-                await ctx.reply(
-                    f"No records found for {userinfo.name}.", mention_author=False
-                )
-                return
+            if kamaitachi:
+                if song.genre == "WORLD'S END":
+                    embed = discord.Embed(
+                        title="Error",
+                        description="Kamaitachi does not support WORLD'S END charts.",
+                        color=discord.Color.red(),
+                    )
 
-            records = await self.utils.hydrate_records(records)
+                    if compare_message is not None:
+                        await compare_message.edit(
+                            content=None,
+                            embed=embed,
+                            allowed_mentions=AllowedMentions.none(),
+                        )
+                        return
+
+                    await ctx.reply(embed=embed, mention_author=False)
+                    return
+
+                async with self.utils.kamaitachi_client(target_id) as client:
+                    resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
+                    data = resp.json()
+
+                    if not data["success"]:
+                        msg = f"Could not get user information from Kamaitachi: {data['success']}"
+                        raise commands.CommandError(msg)
+
+                    username = data["body"]["username"]
+
+                    resp = await client.get(
+                        f"https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs?search={urllib.parse.quote(song.title)}"
+                    )
+                    data = resp.json()
+
+                    if not data["success"]:
+                        msg = f"Could not get scores from Kamaitachi: {data['success']}"
+                        raise commands.CommandError(msg)
+
+                    raw_records = convert_kt_pbs_to_records(data["body"])
+
+                    if len(raw_records) == 0:
+                        await ctx.reply(
+                            f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi.",
+                            mention_author=False,
+                        )
+                        return
+
+                    network = " on Kamaitachi"
+                    records = [
+                        pb for pb in raw_records if pb.extras[KEY_SONG_ID] == song.id
+                    ]
+                    records = await self.utils.hydrate_records(records)
+                    records.sort(key=lambda r: r.difficulty.value)
+            else:
+                async with self.utils.chuninet(target_id) as client:
+                    userinfo = await client.authenticate()
+                    username = userinfo.name
+                    network = ""
+                    records = await client.music_record(song.id)
+
+                    if len(records) == 0:
+                        await ctx.reply(
+                            f"No records found for {userinfo.name}.",
+                            mention_author=False,
+                        )
+                        return
+
+                    records = await self.utils.hydrate_records(records)
 
             page = 0
             try:
@@ -459,47 +672,95 @@ class RecordsCog(commands.Cog, name="Records"):
             except ValueError:
                 pass
 
-            view = CompareView(ctx, userinfo, records)
+            view = CompareView(ctx, records)
             view.page = page
 
             if compare_message is not None:
                 view.message = compare_message
                 await compare_message.edit(
-                    content=f"Top play for {userinfo.name}",
+                    content=f"Top play for {username}{network}:",
                     embed=ScoreCardEmbed(view.items[view.page]),
                     view=view,
+                    allowed_mentions=AllowedMentions.none(),
                 )
                 return
             view.message = await ctx.reply(
-                content=f"Top play for {userinfo.name}",
+                content=f"Top play for {username}{network}:",
                 embed=ScoreCardEmbed(view.items[view.page]),
                 view=view,
                 mention_author=False,
             )
             return
 
+    @commands.command("compare", aliases=["c"])
+    async def compare(self, ctx: Context, *, query: str = ""):
+        """Compare your best score with another score.
+
+        By default, it's the most recently posted score. You can reply to another
+        user's score to compare with that instead. If there are multiple scores in
+        said message, you will be prompted to select one.
+
+        **Tip**: This command also works with some other bots (<@986651489529397279> and <@604641359416131585>
+        to name a few). However, you will need to explicitly reply to those other bots' messages.
+        If you don't reply, only recent scores *from this bot* will be checked.
+
+        **Parameters**
+        user: The user to compare with (defaults to you).
+        `-k, --kamaitachi`: Get scores from Kamaitachi, if the target user has a linked account.
+        """
+
+        parser = DiscordArguments()
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
+
+        try:
+            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+        except ArgumentError as e:
+            raise commands.BadArgument(str(e)) from e
+
+        user = None
+
+        if len(rest) > 0:
+            for converter in [commands.MemberConverter, commands.UserConverter]:
+                with contextlib.suppress(commands.BadArgument):
+                    user = await converter().convert(ctx, rest[0])
+                    break
+
+        await self._compare_inner(ctx, user, kamaitachi=args.kamaitachi)
+
+    @app_commands.command(
+        name="compare", description="Compare your best score with another score."
+    )
+    @app_commands.describe(
+        user="The user to compare with (defaults to you)",
+        kamaitachi="Get scores from Kamaitachi, if the target user has a linked account",
+    )
+    async def compare_slash(
+        self,
+        interaction: discord.Interaction,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        ctx = await Context.from_interaction(interaction)
+
+        await self._compare_inner(ctx, user, kamaitachi=kamaitachi)
+
     async def song_title_autocomplete(
         self, interaction: discord.Interaction, current: str
     ) -> list[app_commands.Choice[str]]:
         return await self.autocompleters.song_title_autocomplete(interaction, current)
 
-    @commands.hybrid_command("scores")
-    @app_commands.describe(
-        query="Song title to search for. You don't have to be exact; try things out!",
-        user="Check scores of this Discord user. Yourself, if not provided.",
-    )
-    @app_commands.autocomplete(query=song_title_autocomplete)
-    async def scores(
+    async def _scores_inner(
         self,
         ctx: Context,
-        user: Optional[discord.User | discord.Member] = None,
-        *,
         query: str,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
     ):
-        """Get a player's scores for a specific song."""
-        async with ctx.typing(), self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
+        target_id = ctx.author.id if user is None else user.id
+
+        async with ctx.typing():
             guild_id = ctx.guild.id if ctx.guild else None
             result = await self.utils.find_songs(
                 query, guild_id=guild_id, load_charts=True
@@ -511,7 +772,16 @@ class RecordsCog(commands.Cog, name="Records"):
                     mention_author=False,
                 )
 
-            songs = [x for x in result.songs if x.available]
+            # if we're fetching scores from Kamaitachi, we don't need to care about whether
+            # the song is available in CHUNITHM International.
+            #
+            # However, we need to keep in mind that Kamaitachi does not support WORLD'S END.
+            songs = [
+                x
+                for x in result.songs
+                if (kamaitachi and x.genre != "WORLD'S END")
+                or (not kamaitachi and x.available)
+            ]
 
             if len(songs) > 1:
                 options = []
@@ -537,7 +807,9 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 if view.value is None:
                     await select_message.edit(
-                        content="Timed out before selecting a song.", view=None
+                        content="Timed out before selecting a song.",
+                        view=None,
+                        allowed_mentions=AllowedMentions.none(),
                     )
                     return None
 
@@ -549,47 +821,93 @@ class RecordsCog(commands.Cog, name="Records"):
                 msg = f"No songs currently available in CHUNITHM International matches the search criteria. Closest match was **{escape_markdown(result.songs[0].title)}**."
                 raise commands.BadArgument(msg)
 
-            userinfo = await client.authenticate()
-            records = await client.music_record(song.id)
+            if kamaitachi:
+                async with self.utils.kamaitachi_client(target_id) as client:
+                    resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
+                    data = resp.json()
 
-            if len(records) == 0:
-                await ctx.reply(
-                    f"No records found for {userinfo.name} on **{escape_markdown(song.title)}**.",
-                    mention_author=False,
-                )
-                return None
+                    if not data["success"]:
+                        msg = f"Could not get user information from Kamaitachi: {data['success']}"
+                        raise commands.CommandError(msg)
 
-            records = await self.utils.hydrate_records(records)
+                    username = data["body"]["username"]
 
-            view = CompareView(ctx, userinfo, records)
+                    resp = await client.get(
+                        f"https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs?search={urllib.parse.quote(song.title)}"
+                    )
+                    data = resp.json()
+
+                    if not data["success"]:
+                        msg = f"Could not get scores from Kamaitachi: {data['success']}"
+                        raise commands.CommandError(msg)
+
+                    raw_records = convert_kt_pbs_to_records(data["body"])
+
+                    if len(raw_records) == 0:
+                        await ctx.reply(
+                            f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi.",
+                            mention_author=False,
+                        )
+                        return None
+
+                    network = " on Kamaitachi"
+                    records = [
+                        pb for pb in raw_records if pb.extras[KEY_SONG_ID] == song.id
+                    ]
+                    records = await self.utils.hydrate_records(records)
+                    records.sort(key=lambda r: r.difficulty.value)
+            else:
+                async with self.utils.chuninet(target_id) as client:
+                    user_info = await client.authenticate()
+                    username = user_info.name
+                    network = ""
+                    records = await client.music_record(song.id)
+
+                    if len(records) == 0:
+                        await ctx.reply(
+                            f"No records found for {user_info.name} on **{escape_markdown(song.title)}**.",
+                            mention_author=False,
+                        )
+                        return None
+
+                    records = await self.utils.hydrate_records(records)
+
+            view = CompareView(ctx, records)
 
             if select_message is None:
                 view.message = await ctx.reply(
-                    content=f"Top play for {userinfo.name}",
+                    content=f"Top play for {username}{network}:",
                     embed=ScoreCardEmbed(view.items[view.page]),
                     view=view,
                     mention_author=False,
                 )
             else:
                 view.message = await select_message.edit(
-                    content=f"Top play for {userinfo.name}",
+                    content=f"Top play for {username}{network}:",
                     embed=ScoreCardEmbed(view.items[view.page]),
                     view=view,
+                    allowed_mentions=AllowedMentions.none(),
                 )
+
             return None
 
-    @commands.hybrid_command("best30", aliases=["b30"])
-    async def best30(self, ctx: Context, *, query: str = ""):
-        """View top plays
+    @commands.command("scores")
+    async def scores(
+        self,
+        ctx: Context,
+        *,
+        query: str = "",
+    ):
+        """Get a player's scores for a specific song.
 
         **Parameters**:
-        `user`: The user to get scores for.
-        `-i, --image`: Render an image of your best 30 scores instead of viewing
-        with Discord embeds
+        `user` (not required): The user to get scores for. Must go first if specified.
+        `query` (required): The song to search for. You don't have to be exact; try things out!
+        `-k, --kamaitachi`: Get scores from Kamaitachi, if the user has that linked.
         """
 
         parser = DiscordArguments()
-        parser.add_argument("-i", "--image", action="store_true")
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
@@ -604,13 +922,79 @@ class RecordsCog(commands.Cog, name="Records"):
                     user = await converter().convert(ctx, rest[0])
                     break
 
-        image = cast(bool, args.image)
+        if user is not None:
+            if len(rest) < 2:
+                msg = "You have not specified a song to search for."
+                raise commands.BadArgument(msg)
+            query = " ".join(rest[1:])
+        else:
+            query = " ".join(rest)
+
+        await self._scores_inner(ctx, query, user, kamaitachi=args.kamaitachi)
+
+    @app_commands.command(
+        name="scores",
+        description="Get personal bests for a specific song",
+    )
+    @app_commands.describe(
+        query="The song to search for. You don't have to be exact; try things out!",
+        user="The user to get scores for.",
+        kamaitachi="Get scores from Kamaitachi, if the user has that linked.",
+    )
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.autocomplete(query=song_title_autocomplete)
+    async def scores_slash(
+        self,
+        interaction: discord.Interaction,
+        query: str,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        ctx = await Context.from_interaction(interaction)
+
+        await self._scores_inner(ctx, query, user, kamaitachi=kamaitachi)
+
+    async def _best30_inner(
+        self,
+        ctx: Context,
+        user: discord.User | discord.Member | None = None,
+        *,
+        image: bool = False,
+        kamaitachi: bool = False,
+    ):
+        target_id = ctx.author.id if user is None else user.id
 
         async with ctx.typing():
-            async with self.utils.chuninet(ctx if user is None else user.id) as client:
-                player_data = await client.player_data()
-                best30 = await client.best30()
+            if kamaitachi:
+                async with self.utils.kamaitachi_client(target_id) as client:
+                    resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
+                    data = resp.json()
+                    player_name = data["body"]["username"]
+
+                    resp = await client.get(
+                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                    )
+                    data = resp.json()
+
+                if not data["success"]:
+                    msg = f"Could not retrieve your best scores from Kamaitachi: {data['description']}"
+                    raise commands.CommandError(msg)
+
+                pbs = convert_kt_pbs_to_records(data["body"])
+                best30 = pbs[:30]
+                current_rating = None
+                max_rating = None
+
                 best30 = await self.utils.hydrate_records(best30)
+            else:
+                async with self.utils.chuninet(target_id) as client:
+                    player_data = await client.player_data()
+                    player_name = player_data.name
+                    current_rating = player_data.rating.current
+                    max_rating = player_data.rating.max
+                    best30 = await client.best30()
+                    best30 = await self.utils.hydrate_records(best30)
 
             if not image:
                 view = B30View(ctx, best30)
@@ -622,7 +1006,13 @@ class RecordsCog(commands.Cog, name="Records"):
                 )
                 return
 
-            b30_image = await asyncio.to_thread(render_b30, player_data, best30)
+            b30_image = await asyncio.to_thread(
+                render_b30,
+                player_name,
+                best30,
+                current_rating=current_rating,
+                max_rating=max_rating,
+            )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
             await ctx.reply(
                 file=discord.File(
@@ -630,6 +1020,58 @@ class RecordsCog(commands.Cog, name="Records"):
                 ),
                 mention_author=False,
             )
+
+    @commands.command("best30", aliases=["b30"])
+    async def best30(self, ctx: Context, *, query: str = ""):
+        """View top 30 scores of you or another player.
+
+        **Parameters**:
+        `user`: The user to get scores for.
+        `-i, --image`: Render an image of your best 30 scores instead of viewing
+        with Discord embeds
+        `-k, --kamaitachi`: Get the best 30 scores from Kamaitachi, if the user
+        has that linked.
+        """
+
+        parser = DiscordArguments()
+        parser.add_argument("-i", "--image", action="store_true")
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
+
+        try:
+            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+        except ArgumentError as e:
+            raise commands.BadArgument(str(e)) from e
+
+        user = None
+
+        if len(rest) > 0:
+            for converter in [commands.MemberConverter, commands.UserConverter]:
+                with contextlib.suppress(commands.BadArgument):
+                    user = await converter().convert(ctx, rest[0])
+                    break
+
+        await self._best30_inner(
+            ctx, user, image=args.image, kamaitachi=args.kamaitachi
+        )
+
+    @app_commands.command(name="best30", description="View top plays")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.describe(
+        user="The user to get best30 for",
+        image="Render an image of your best 30 scores",
+        kamaitachi="Get your best 30 from Kamaitachi if linked",
+    )
+    async def best30_slash(
+        self,
+        interaction: Interaction,
+        user: discord.User | discord.Member | None = None,
+        *,
+        image: bool = False,
+        kamaitachi: bool = False,
+    ):
+        ctx = await Context.from_interaction(interaction)
+
+        await self._best30_inner(ctx, user, image=image, kamaitachi=kamaitachi)
 
     @commands.hybrid_command("recent10", aliases=["r10"])
     async def recent10(
@@ -661,8 +1103,7 @@ class RecordsCog(commands.Cog, name="Records"):
     async def new10(
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
     ):
-        """View your best scores from the latest version of the game, and calculate
-        your rating in the new CHUNITHM VERSE system (with the latest version set to
+        """Calculate your rating in the new CHUNITHM VERSE system (latest version is
         LUMINOUS PLUS).
 
         Parameters

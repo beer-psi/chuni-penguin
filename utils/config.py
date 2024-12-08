@@ -26,6 +26,10 @@ class BotConfig:
         )
 
     @property
+    def db_encryption_key(self) -> str | None:
+        return self.__section.get("db_encryption_key")
+
+    @property
     def error_reporting_webhook(self) -> Optional[str]:
         return self.__section.get("error_reporting_webhook")
 

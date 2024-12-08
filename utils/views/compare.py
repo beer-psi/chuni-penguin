@@ -9,19 +9,16 @@ from utils.components import ScoreCardEmbed
 from ._pagination import PaginationView
 
 if TYPE_CHECKING:
-    from chunithm_net.models.player_data import PlayerData
-    from chunithm_net.models.record import MusicRecord
+    from chunithm_net.models.record import Record
 
 
 class CompareView(PaginationView):
     def __init__(
         self,
         ctx: Context,
-        player_data: "PlayerData",
-        items: Sequence["MusicRecord"],
+        items: Sequence["Record"],
         per_page: int = 1,
     ):
-        self.player_data = player_data
         super().__init__(ctx, items, per_page)
 
     async def callback(self, interaction: discord.Interaction):

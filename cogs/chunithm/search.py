@@ -330,6 +330,7 @@ class SearchCog(commands.Cog, name="Search"):
         return await self.autocompleters.song_title_autocomplete(interaction, current)
 
     @app_commands.command(name="info", description="Search for a song.")
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
         query="Song title to search for. You don't have to be exact; try things out!",
         detailed="Display detailed chart information (note counts and designer name)",

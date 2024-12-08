@@ -52,8 +52,7 @@ class PaginationView(discord.ui.View):
         )
 
     @abstractmethod
-    async def callback(self, interaction: discord.Interaction):
-        ...
+    async def callback(self, interaction: discord.Interaction): ...
 
     @discord.ui.button(label="<<", style=discord.ButtonStyle.grey, disabled=True)
     async def to_first_page(

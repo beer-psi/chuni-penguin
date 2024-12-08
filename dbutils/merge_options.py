@@ -99,10 +99,13 @@ async def merge_options(
 
         logger.debug("Reading music ID %s", song_id)
 
-        if extract_jackets and int(song_id) < 8000:
-            with Image.open(
-                xml_path.parent / f"CHU_UI_Jacket_{song_id.zfill(4)}.dds"
-            ) as im:
+        if extract_jackets:
+            jacket_file = gettext(root, "./jaketFile/path")
+
+            if not jacket_file:
+                continue
+
+            with Image.open(xml_path.parent / jacket_file) as im:
                 im.save(
                     ASSETS_DIR / "jackets" / f"{int(song_id)}.png",
                     format="PNG",

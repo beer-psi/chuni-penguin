@@ -13,10 +13,13 @@ from chunithm_net.models.enums import ClearType, ComboType, Difficulty, SkillCla
 from database.models import Cookie
 from utils import json_dumps, json_loads
 from utils.config import config
+from utils.logging import logger as root_logger
 
 if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.botutils import UtilsCog
+
+logger = root_logger.getChild(__name__)
 
 
 def to_tachi_class(cls: SkillClass) -> str:
@@ -92,12 +95,6 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
 
-        if cookie is None:
-            return await ctx.reply(
-                content="Please login with `c>login` first before linking with Kamaitachi.",
-                mention_author=False,
-            )
-
         channel = (
             ctx.author.dm_channel
             if ctx.author.dm_channel
@@ -108,7 +105,12 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             if token is not None:
                 try:
                     await ctx.message.delete()
-                except discord.errors.Forbidden:
+                except (discord.errors.Forbidden, discord.errors.NotFound):
+                    logger.warning(
+                        "Could not delete message %d (guild %d) with token sent in public channel",
+                        ctx.message.id,
+                        -1 if ctx.guild is None else ctx.guild.id,
+                    )
                     please_delete_message = "Please delete the original command. Why are you exposing your API keys?"
 
             await ctx.send(
@@ -120,9 +122,15 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             if result is not None:
                 raise commands.BadArgument(result)
 
-            cookie.kamaitachi_token = token
             async with self.bot.begin_db_session() as session, session.begin():
-                await session.merge(cookie)
+                if cookie is None:
+                    cookie = Cookie(
+                        discord_id=ctx.author.id, cookie="", kamaitachi_token=token
+                    )
+                    session.add(cookie)
+                else:
+                    cookie.kamaitachi_token = token
+                    await session.merge(cookie)
 
             return await ctx.reply(
                 content=(
@@ -252,12 +260,12 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     score_data["identifier"] = str(song_id)
 
                     score_data["judgements"]["jcrit"] = detailed_recent.judgements.jcrit
-                    score_data["judgements"][
-                        "justice"
-                    ] = detailed_recent.judgements.justice
-                    score_data["judgements"][
-                        "attack"
-                    ] = detailed_recent.judgements.attack
+                    score_data["judgements"]["justice"] = (
+                        detailed_recent.judgements.justice
+                    )
+                    score_data["judgements"]["attack"] = (
+                        detailed_recent.judgements.attack
+                    )
                     score_data["judgements"]["miss"] = detailed_recent.judgements.miss
 
                     if (

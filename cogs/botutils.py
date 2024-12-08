@@ -1,9 +1,11 @@
 import contextlib
 import io
+import sys
 from dataclasses import dataclass
 from http.cookiejar import LWPCookieJar
 from typing import TYPE_CHECKING, Optional, Sequence, TypeVar
 
+import httpx
 from discord.ext import commands
 from discord.ext.commands import Context
 from rapidfuzz import fuzz, process
@@ -127,7 +129,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             stmt = select(Cookie).where(Cookie.discord_id == id)
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
-        if cookie is None:
+        if cookie is None or not cookie.cookie.startswith("#LWP-Cookies-2.0"):
             return None
 
         jar = LWPCookieJar()
@@ -155,6 +157,30 @@ class UtilsCog(commands.Cog, name="Utils"):
                 await db_session.commit()
 
             await session.close()
+
+    @contextlib.asynccontextmanager
+    async def kamaitachi_client(self, ctx_or_id: Context | int):
+        id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
+
+        async with self.bot.begin_db_session() as session:
+            cookie = await session.scalar(select(Cookie).where(Cookie.discord_id == id))
+
+            if cookie is None or cookie.kamaitachi_token is None:
+                msg = "You have not linked your Kamaitachi account. Please send `c>kamaitachi link` in my DMs to get started."
+                raise commands.CommandError(msg)
+
+        client = httpx.AsyncClient(
+            timeout=httpx.Timeout(60.0),
+            follow_redirects=True,
+            transport=httpx.AsyncHTTPTransport(retries=5),
+        )
+        client.headers["Authorization"] = f"Bearer {cookie.kamaitachi_token}"
+        client.headers["User-Agent"] = (
+            f"chuni-penguin (+https://github.com/beer-psi/chuni-penguin) Python/{sys.version_info[0]}.{sys.version_info[1]} httpx/{httpx.__version__}"
+        )
+
+        async with client:
+            yield client
 
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
         song_ids = set()
@@ -204,7 +230,8 @@ class UtilsCog(commands.Cog, name="Utils"):
             if song_id is None:
                 record.extras[KEY_SONG_ID] = song.id
 
-            record.extras[KEY_SONG_VERSION] = song.version
+            if KEY_SONG_VERSION not in record.extras:
+                record.extras[KEY_SONG_VERSION] = song.version
 
             if record.jacket is None:
                 record.jacket = get_jacket_url(song)
@@ -219,33 +246,42 @@ class UtilsCog(commands.Cog, name="Utils"):
             )
 
             if chart is None:
-                logger.warn(
+                logger.warning(
                     f"Missing chart data for song ID {song.id}, difficulty {record.difficulty}"
                 )
                 hydrated_records.append(record)
                 continue
 
-            record.extras[KEY_LEVEL] = chart.level
+            if KEY_LEVEL not in record.extras:
+                record.extras[KEY_LEVEL] = chart.level
 
-            if chart.const is None:
-                try:
-                    internal_level = record.extras[KEY_INTERNAL_LEVEL] = float(
-                        chart.level.replace("+", ".5")
-                    )
-                except ValueError:
-                    internal_level = record.extras[KEY_INTERNAL_LEVEL] = 0
-            else:
-                internal_level = record.extras[KEY_INTERNAL_LEVEL] = chart.const
+            if (internal_level := record.extras.get(KEY_INTERNAL_LEVEL)) is None:
+                if chart.const is None:
+                    try:
+                        internal_level = record.extras[KEY_INTERNAL_LEVEL] = float(
+                            chart.level.replace("+", ".5")
+                        )
+                    except ValueError:
+                        internal_level = record.extras[KEY_INTERNAL_LEVEL] = 0
+                else:
+                    internal_level = record.extras[KEY_INTERNAL_LEVEL] = chart.const
 
-            record.extras[KEY_PLAY_RATING] = calculate_rating(
-                record.score, internal_level
-            )
-            record.extras[KEY_OVERPOWER_BASE] = calculate_overpower_base(
-                record.score, internal_level
-            )
-            record.extras[KEY_OVERPOWER_MAX] = calculate_overpower_max(internal_level)
+            if KEY_PLAY_RATING not in record.extras:
+                record.extras[KEY_PLAY_RATING] = calculate_rating(
+                    record.score, internal_level
+                )
 
-            if chart.maxcombo is not None:
+            if KEY_OVERPOWER_BASE not in record.extras:
+                record.extras[KEY_OVERPOWER_BASE] = calculate_overpower_base(
+                    record.score, internal_level
+                )
+
+            if KEY_OVERPOWER_MAX not in record.extras:
+                record.extras[KEY_OVERPOWER_MAX] = calculate_overpower_max(
+                    internal_level
+                )
+
+            if KEY_TOTAL_COMBO not in record.extras and chart.maxcombo is not None:
                 record.extras[KEY_TOTAL_COMBO] = chart.maxcombo
 
             if record.rank == Rank.D:

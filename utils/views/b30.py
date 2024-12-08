@@ -25,6 +25,7 @@ class B30View(PaginationView):
         *,
         show_average: bool = True,
         show_reachable: bool = True,
+        show_lamps: bool = False,
     ):
         super().__init__(ctx, items, per_page)
 
@@ -40,6 +41,7 @@ class B30View(PaginationView):
         )
         self.show_average = show_average
         self.show_reachable = show_reachable
+        self.show_lamps = show_lamps
 
     def format_content(self) -> str:
         return (
@@ -56,7 +58,9 @@ class B30View(PaginationView):
         self, items: Sequence["Record"], start_index: int = 0
     ) -> Sequence[discord.Embed]:
         embeds: list[discord.Embed] = [
-            ScoreCardEmbed(item, index=start_index + idx + 1, show_lamps=False)
+            ScoreCardEmbed(
+                item, index=start_index + idx + 1, show_lamps=self.show_lamps
+            )
             for idx, item in enumerate(items)
         ]
         embeds.append(

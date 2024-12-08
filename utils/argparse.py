@@ -13,7 +13,6 @@ This module is a patch of the original argparse module, modifications being:
     - Does not exit on error, instead raises an exception.
 """
 
-
 import contextlib
 import sys
 from argparse import (
@@ -140,7 +139,7 @@ class DiscordArguments(ArgumentParser):
         async def consume_optional(start_index):
             # get the optional identified at this index
             option_tuple = option_string_indices[start_index]
-            action, option_string, explicit_arg, _ = option_tuple
+            action, option_string, explicit_arg, __ = option_tuple
 
             # identify additional optionals in the same arg string
             # (e.g. -xyz is the same as -x -y -z if no args are required)

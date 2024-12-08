@@ -75,36 +75,61 @@ class ScoreCardEmbed(discord.Embed):
 
         if isinstance(record, DetailedRecentRecord):
             total_combo = record.extras.get(KEY_TOTAL_COMBO)
-            score_data += (
-                f" ▸ x{record.max_combo}{f'/{total_combo}' if total_combo else ''}"
+
+            if record.max_combo >= 0:
+                score_data += (
+                    f" ▸ x{record.max_combo}{f'/{total_combo}' if total_combo else ''}"
+                )
+
+            has_judgements = (
+                record.judgements.jcrit >= 0
+                and record.judgements.justice >= 0
+                and record.judgements.attack >= 0
+                and record.judgements.miss >= 0
             )
 
-            self.add_field(
-                name="\u200B",
-                value=(
-                    f"CRITICAL {record.judgements.jcrit}\n"
-                    f"JUSTICE {record.judgements.justice}\n"
-                    f"ATTACK {record.judgements.attack}\n"
-                    f"MISS {record.judgements.miss}"
-                ),
-                inline=True,
+            has_note_percentages = (
+                record.note_type.tap >= 0
+                and record.note_type.hold >= 0
+                and record.note_type.slide >= 0
+                and record.note_type.air >= 0
+                and record.note_type.flick >= 0
             )
-            self.add_field(
-                name="\u200B",
-                value=(
-                    f"TAP {record.note_type.tap * 100:.2f}%\n"
-                    f"HOLD {record.note_type.hold * 100:.2f}%\n"
-                    f"SLIDE {record.note_type.slide * 100:.2f}%\n"
-                    f"AIR {record.note_type.air * 100:.2f}%\n"
-                    f"FLICK {record.note_type.flick * 100:.2f}%"
-                ),
-                inline=True,
-            )
+
+            if has_judgements and has_note_percentages:
+                self.add_field(
+                    name="\u200b",
+                    value=(
+                        f"CRITICAL {record.judgements.jcrit}\n"
+                        f"JUSTICE {record.judgements.justice}\n"
+                        f"ATTACK {record.judgements.attack}\n"
+                        f"MISS {record.judgements.miss}"
+                    ),
+                    inline=True,
+                )
+
+                self.add_field(
+                    name="\u200b",
+                    value=(
+                        f"TAP {record.note_type.tap * 100:.2f}%\n"
+                        f"HOLD {record.note_type.hold * 100:.2f}%\n"
+                        f"SLIDE {record.note_type.slide * 100:.2f}%\n"
+                        f"AIR {record.note_type.air * 100:.2f}%\n"
+                        f"FLICK {record.note_type.flick * 100:.2f}%"
+                    ),
+                    inline=True,
+                )
+            elif has_judgements:
+                score_data += "\n"
+                score_data += f"▸ {record.judgements.jcrit} / {record.judgements.justice} / {record.judgements.attack} / {record.judgements.miss}"
 
         if isinstance(record, RecentRecord):
-            self._timestamp = record.date
+            if record.date.timestamp() > 0:
+                self._timestamp = record.date
 
-            self.set_author(name=f"TRACK {record.track}")
+            if record.track > 0:
+                self.set_author(name=f"TRACK {record.track}")
+
             self.description = (
                 f"**{escape_markdown(record.title)} [{_displayed_difficulty(record)}]**\n"
                 "\n"

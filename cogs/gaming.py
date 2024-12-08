@@ -166,7 +166,7 @@ class GamingCog(commands.Cog, name="Games"):
             description = ""
             for idx, score in enumerate(scores):
                 description += (
-                    f"\u200B{idx + 1}. <@{score.discord_id}>: {score.score}\n"
+                    f"\u200b{idx + 1}. <@{score.discord_id}>: {score.score}\n"
                 )
             embed.description = description
             await ctx.reply(embed=embed, mention_author=False)

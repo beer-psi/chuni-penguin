@@ -1,15 +1,21 @@
 import asyncio
 import contextlib
+from argparse import ArgumentError
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from io import BytesIO
 from typing import TYPE_CHECKING, Optional
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from PIL import Image
 
 from chunithm_net.exceptions import ChuniNetError
+from chunithm_net.models.enums import SkillClass
+from utils import shlex_split
+from utils.argparse import DiscordArguments
 from utils.views.profile import ProfileView
 
 if TYPE_CHECKING:
@@ -158,15 +164,74 @@ class ProfileCog(commands.Cog, name="Profile"):
             mention_author=False,
         )
 
-    @commands.hybrid_command(name="chunithm", aliases=["chuni", "profile"])
-    async def chunithm(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
-    ):
-        """View your CHUNITHM profile."""
+    async def _kamaitachi_profile_card(self, user_id: int):
+        async with self.utils.kamaitachi_client(user_id) as client:
+            resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
+            data = resp.json()
 
-        async with ctx.typing(), self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
+            if not data["success"]:
+                msg = f"Could not get Kamaitachi profile: {data['description']}"
+                raise commands.CommandError(msg)
+
+            user_id = data["body"]["id"]
+            username = data["body"]["username"]
+
+            resp = await client.get(
+                "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
+            )
+            data = resp.json()
+
+            if not data["success"]:
+                msg = f"Could not get Kamaitachi game stats: {data['description']}"
+                raise commands.CommandError(msg)
+
+            stats = data["body"]
+
+        embed = discord.Embed(
+            title=username,
+            color=0xCA1961,
+            url=f"https://kamai.tachi.ac/u/{username}/games/chunithm/Single",
+        )
+        description = ""
+
+        if "dan" in stats["gameStats"]["classes"]:
+            medal = getattr(
+                SkillClass, stats["gameStats"]["classes"]["dan"].replace("DAN_", "")
+            )
+            description = f"Class {medal}"
+
+            if "emblem" in stats["gameStats"]["classes"]:
+                emblem = getattr(
+                    SkillClass,
+                    stats["gameStats"]["classes"]["emblem"].replace("DAN_", ""),
+                )
+                description += f", cleared all of class {emblem}"
+
+            description += "."
+
+        description = (
+            f"{description}\n"
+            f"▸ **NaiveRating**: {stats['gameStats']['ratings']['naiveRating']:.2f}\n"
+            f"▸ **Scores**: {stats['totalScores']}\n"
+            f"▸ **Session Playtime**: {stats['playtime'] // (60 * 60 * 1000)} hours\n"
+        )
+
+        if (
+            stats["mostRecentScore"] is not None
+            and stats["mostRecentScore"]["timeAchieved"] is not None
+        ):
+            ts = datetime.fromtimestamp(
+                stats["mostRecentScore"]["timeAchieved"] / 1000, tz=UTC
+            )
+            last_played = f"<t:{int(ts.timestamp())}:f>"
+            description += f"▸ **Last played**: {last_played}\n"
+
+        embed.description = description
+
+        return embed
+
+    async def _chunithm_net_profile_card(self, user_id: int):
+        async with self.utils.chuninet(user_id) as client:
             player_data = await client.player_data()
 
             optional_data: list[str] = []
@@ -195,22 +260,112 @@ class ProfileCog(commands.Cog, name="Profile"):
             if player_data.last_play_date:
                 description += f"▸ **Last played**: <t:{int(player_data.last_play_date.timestamp())}:f>\n"
 
-            embed = (
-                discord.Embed(
-                    title=player_data.name,
-                    description=description,
-                    color=player_data.possession.color(),
-                )
-                .set_author(name=player_data.nameplate.content)
-                .set_thumbnail(url=player_data.character)
-            )
+            embed = discord.Embed(
+                title=player_data.name,
+                description=description,
+                color=player_data.possession.color(),
+            ).set_author(name=player_data.nameplate.content)
 
-            view = ProfileView(ctx, player_data)
-            view.message = await ctx.reply(
-                embed=embed,
-                view=view if user is None else None,  # type: ignore[reportGeneralTypeIssues]
-                mention_author=False,
-            )
+            if player_data.character_frame is None:
+                files = []
+                embed = embed.set_thumbnail(url=player_data.character)
+            elif player_data.character is not None:
+                character_resp = await client.session.get(player_data.character)
+                charaframe_resp = await client.session.get(player_data.character_frame)
+
+                character = Image.open(BytesIO(character_resp.content))
+                charaframe = Image.open(BytesIO(charaframe_resp.content))
+
+                character = character.resize((87, 87), Image.Resampling.LANCZOS)
+                charaframe = charaframe.resize((98, 98), Image.Resampling.LANCZOS)
+
+                charaframe.paste(character, (6, 6), character)
+
+                avatar = BytesIO()
+                charaframe.save(avatar, "PNG", optimize=True)
+                avatar.seek(0)
+
+                files = [discord.File(avatar, filename="avatar.png")]
+                embed = embed.set_thumbnail(url="attachment://avatar.png")
+            else:
+                files = []
+
+            return player_data, embed, files
+
+    async def _chunithm_inner(
+        self,
+        ctx: Context,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        target_id = ctx.author.id if user is None else user.id
+
+        async with ctx.typing():
+            if kamaitachi:
+                embed = await self._kamaitachi_profile_card(target_id)
+
+                await ctx.reply(embed=embed, mention_author=False)
+            else:
+                profile_data, embed, files = await self._chunithm_net_profile_card(
+                    target_id
+                )
+                view = ProfileView(ctx, profile_data)
+                view.message = await ctx.reply(
+                    embed=embed,
+                    files=files,
+                    view=view if user is None else None,  # pyright: ignore[reportArgumentType]
+                    mention_author=False,
+                )
+
+    @commands.command(name="chunithm", aliases=["chuni", "profile"])
+    async def chunithm(
+        self,
+        ctx: Context,
+        *,
+        query: str = "",
+    ):
+        """View your CHUNITHM profile.
+
+        **Parameters**:
+        `user`: The user to view the profile of.
+        `-k, --kamaitachi`: Whether to view their Kamaitachi CHUNITHM profile instead.
+        """
+
+        parser = DiscordArguments()
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
+
+        try:
+            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+        except ArgumentError as e:
+            raise commands.BadArgument(str(e)) from e
+
+        user = None
+
+        if len(rest) > 0:
+            for converter in [commands.MemberConverter, commands.UserConverter]:
+                with contextlib.suppress(commands.BadArgument):
+                    user = await converter().convert(ctx, rest[0])
+                    break
+
+        await self._chunithm_inner(ctx, user, kamaitachi=args.kamaitachi)
+
+    @app_commands.command(name="chunithm", description="View your CHUNITHM profile.")
+    @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.describe(
+        user="The user to view the profile of",
+        kamaitachi="Whether to view their Kamaitachi CHUNITHM profile instead",
+    )
+    async def chunithm_slash(
+        self,
+        interaction: discord.Interaction,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        ctx = await Context.from_interaction(interaction)
+
+        await self._chunithm_inner(ctx, user, kamaitachi=kamaitachi)
 
     @commands.hybrid_command(name="rename")
     async def rename(self, ctx: Context, *, new_name: str):

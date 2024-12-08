@@ -171,11 +171,18 @@ class AuthCog(commands.Cog, name="Auth"):
 
         if ctx.channel == channel:
             msg = view.message = await ctx.reply(
-                embed=embed, view=view, mention_author=False
+                content=f"If you're trying to link your Kamaitachi account, use `{ctx.prefix}kamaitachi link` instead!",
+                embed=embed,
+                view=view,
+                mention_author=False,
             )
         else:
             try:
-                msg = view.message = await channel.send(embed=embed, view=view)
+                msg = view.message = await channel.send(
+                    content=f"If you're trying to link your Kamaitachi account, use `{ctx.prefix}kamaitachi link` instead!",
+                    embed=embed,
+                    view=view,
+                )
             except discord.errors.Forbidden:
                 return None
 

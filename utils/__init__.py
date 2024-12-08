@@ -132,7 +132,10 @@ def sdvxin_link(view: "SdvxinChartView") -> str:
 
 
 def get_jacket_url(song: "Song") -> str:
-    if song.available:
+    current_time = datetime.now(TOKYO_TZ)
+    is_maintenance = 4 <= current_time.hour <= 7
+
+    if song.available and not is_maintenance:
         return f"{INTERNATIONAL_JACKET_BASE}/{song.jacket}"
 
     if not song.removed:

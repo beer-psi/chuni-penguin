@@ -45,10 +45,16 @@ from .utils import (
 
 
 def parse_player_card_and_avatar(soup: BeautifulSoup):
-    if (e := soup.select_one(".player_chara img")) is not None:
-        character = cast(str, e["src"])
+    if (e := soup.select_one(".player_chara")) is not None:
+        img = e.select_one("img")
+        character = img.attrs["src"] if e else None
+
+        character_frame = (
+            extract_last_part(e.attrs["style"]) if "style" in e.attrs else None
+        )
     else:
         character = None
+        character_frame = None
 
     name = soup.select_one(".player_name_in").get_text()
     lv = chuni_int(soup.select_one(".player_lv").get_text())
@@ -122,6 +128,11 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
 
     return PlayerData(
         character=character,
+        character_frame=(
+            f"https://chunithm-net-eng.com/mobile/images/charaframe_{character_frame}.png"
+            if character_frame
+            else None
+        ),
         avatar=avatar,
         name=name,
         lv=lv,
