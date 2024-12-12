@@ -20,4 +20,5 @@ VERSION_NAMES = {
     "v2024.12": "Shattered Memories",
     "v2024.12.1": "Shattered Memories",
     "v2024.12.2": "Shattered Memories",
+    "v2024.12.3": "Shattered Memories",
 }

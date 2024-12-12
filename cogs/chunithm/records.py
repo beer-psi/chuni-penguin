@@ -1099,8 +1099,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 mention_author=False,
             )
 
-    @commands.hybrid_command("new10", aliases=["n10"])
-    async def new10(
+    @commands.hybrid_command("new20", aliases=["n10", "n15", "n20", "new10", "new15"])
+    async def new20(
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
     ):
         """Calculate your rating in the new CHUNITHM VERSE system (latest version is
@@ -1159,25 +1159,22 @@ class RecordsCog(commands.Cog, name="Records"):
             else Decimal(0)
         )
 
-        new10 = new_records[:10]
-        new10_total = sum((item.extras[KEY_PLAY_RATING] for item in new10), Decimal(0))
-        new10_avg = (
-            floor_to_ndp(new10_total / len(new10), 4) if len(new10) > 0 else Decimal(0)
+        new20 = new_records[:20]
+        new20_total = sum((item.extras[KEY_PLAY_RATING] for item in new20), Decimal(0))
+        new20_avg = (
+            floor_to_ndp(new20_total / len(new20), 4) if len(new20) > 0 else Decimal(0)
         )
 
         content = (
             f"**Best 30 average**: {best30_avg}\n"
-            f"**New 10 average**: {new10_avg}\n"
-            f"**Rating**: {floor_to_ndp((best30_total + new10_total) / 40, 2)}\n"
-            "*This is a prediction of the new rating system and does not reflect "
-            "the actual distribution between old/new in CHUNITHM VERSE. The bot will be "
-            "updated once the distribution is known.*"
+            f"**New 20 average**: {new20_avg}\n"
+            f"**Rating**: {floor_to_ndp((best30_total + new20_total) / 50, 2)}\n"
         )
 
-        if len(new10) == 0:
+        if len(new20) == 0:
             await message.edit(content=content, allowed_mentions=AllowedMentions.none())
         else:
-            view = B30View(ctx, new10, show_reachable=False)
+            view = B30View(ctx, new20, show_reachable=False)
             view.message = await message.edit(
                 content=content,
                 embeds=view.format_page(view.items[: view.per_page]),
