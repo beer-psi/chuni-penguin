@@ -40,7 +40,13 @@ from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
 from utils.kamaitachi import convert_kt_pbs_to_records, convert_kt_scores_to_records
-from utils.views import B30View, CompareView, RecentRecordsView, SelectToCompareView
+from utils.views import (
+    B30N20View,
+    B30View,
+    CompareView,
+    RecentRecordsView,
+    SelectToCompareView,
+)
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -1150,37 +1156,15 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
         best30 = old_records[:30]
-        best30_total = sum(
-            (item.extras[KEY_PLAY_RATING] for item in best30), Decimal(0)
-        )
-        best30_avg = (
-            floor_to_ndp(best30_total / len(best30), 4)
-            if len(best30) > 0
-            else Decimal(0)
-        )
-
         new20 = new_records[:20]
-        new20_total = sum((item.extras[KEY_PLAY_RATING] for item in new20), Decimal(0))
-        new20_avg = (
-            floor_to_ndp(new20_total / len(new20), 4) if len(new20) > 0 else Decimal(0)
-        )
 
-        content = (
-            f"**Best 30 average**: {best30_avg}\n"
-            f"**New 20 average**: {new20_avg}\n"
-            f"**Rating**: {floor_to_ndp((best30_total + new20_total) / 50, 2)}\n"
+        view = B30N20View(ctx, best30, new20)
+        view.message = await message.edit(
+            content=view.format_content(),
+            embeds=view.format_page(view.items[: view.per_page]),
+            view=view,
+            allowed_mentions=AllowedMentions.none(),
         )
-
-        if len(new20) == 0:
-            await message.edit(content=content, allowed_mentions=AllowedMentions.none())
-        else:
-            view = B30View(ctx, new20, show_reachable=False)
-            view.message = await message.edit(
-                content=content,
-                embeds=view.format_page(view.items[: view.per_page]),
-                view=view,
-                allowed_mentions=AllowedMentions.none(),
-            )
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(

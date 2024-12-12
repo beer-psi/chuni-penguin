@@ -1,4 +1,5 @@
 from utils.views.b30 import B30View
+from utils.views.b30n20 import B30N20View
 from utils.views.compare import CompareView
 from utils.views.embeds import EmbedPaginationView
 from utils.views.gaming import NextGameButtonView, SkipButtonView

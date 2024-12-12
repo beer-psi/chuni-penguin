@@ -13,10 +13,10 @@ class PaginationView(discord.ui.View):
     def __init__(self, ctx: Context, items: Sequence, per_page: int = 5):
         super().__init__(timeout=120)
         self.ctx = ctx
-        self.items = items
+        self._items = items
         self._page = 0
         self.per_page = per_page
-        self.max_index = ceil(len(self.items) / per_page) - 1
+        self.max_index = ceil(len(self._items) / per_page) - 1
 
         if self.max_index == 0:
             for item in self.children:
@@ -34,6 +34,15 @@ class PaginationView(discord.ui.View):
     def page(self, value):
         self._page = max(0, min(value, self.max_index))
         self.toggle_buttons()
+
+    @property
+    def items(self):
+        return self._items
+
+    @items.setter
+    def items(self, value):
+        self._items = value
+        self.max_index = ceil(len(self._items) / self.per_page) - 1
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         return interaction.user == self.ctx.author
