@@ -1,15 +1,3 @@
-## Development is paused
-
-Personally, this bot is feature complete, and I don't feel like spending my time
-working on a project for almost no monetary gain **and** no appreciation from
-anyone.
-
-The bot will stay alive for the foreseeable future, songs and charts will be
-updated, but don't expect any new features. Bugfixes may be considered if I keep
-being annoyed in my logs.
-
----
-
 ## chuni penguin
 
 [![Deploy](https://github.com/beer-psi/chuni-penguin/actions/workflows/deploy.yaml/badge.svg)](https://github.com/beer-psi/chuni-penguin/actions/workflows/deploy.yaml)
@@ -21,6 +9,12 @@ Discord bot for CHUNITHM International version.
 I have a hosted instance that you can invite
 [here](https://discord.com/oauth2/authorize?client_id=1091948342101155950&scope=bot+applications.commands&permissions=274877983744),
 though uptime is sometimes flaky.
+
+### Notice
+
+I will not be actively developing the bot anymore. There's not much left I think
+the bot actually needs, and my motivation has been slowly waning to implement
+them. I'll still fix any reported bugs and review any PRs.
 
 ### Features
 
