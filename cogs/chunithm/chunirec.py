@@ -256,12 +256,15 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             except ValueError:
                 title_rarity = 0
 
+            payload += "1"  # number of titles set, hardcoded to 1 until VERSE is released in intl
             payload += serialize_number(title_rarity, 1, max=9)
             payload += "0"  # seemingly deprecated field
             payload += "3"  # region index: paralost = 1, intl = 2, jp = 3
             payload += "0"  # net battle rank
             payload += "000"  # net battle playcount
             payload += serialize_string(player_data.name, 2)
+
+            # for verse, just serialize all 3 titles
             payload += serialize_string(player_data.nameplate.content, 2)
 
             records: list[Record] = []
