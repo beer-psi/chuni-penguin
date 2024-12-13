@@ -109,13 +109,22 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         """Shows information about the bot."""
 
         embed = discord.Embed(color=discord.Color.yellow())
+
+        about = (
+            "This is [chuni-penguin](https://github.com/beer-psi/chuni-penguin), a Discord bot created by "
+            "[beerpsi](https://github.com/beer-psi) and [contributors](https://github.com/beer-psi/chuni-penguin/graphs/contributors) "
+            "for CHUNITHM International version. "
+        )
+
+        if config.bot.support_server_invite:
+            about += (
+                f"If you have any questions or problems, join the [support server]({config.bot.support_server_invite}) "
+                "for help!"
+            )
+
         embed.add_field(
             name="About the bot",
-            value=(
-                "This is [chuni-penguin](https://github.com/beer-psi/chuni-penguin), a Discord bot created by "
-                "[beerpsi](https://github.com/beer-psi) and [contributors](https://github.com/beer-psi/chuni-penguin/graphs/contributors) "
-                "for CHUNITHM International version."
-            ),
+            value=about,
             inline=False,
         )
         if self.bot.user is not None and self.bot.user.avatar is not None:

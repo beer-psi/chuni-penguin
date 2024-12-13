@@ -41,6 +41,10 @@ class BotConfig:
 
         return [int(x) for x in raw.split(",")]
 
+    @property
+    def support_server_invite(self) -> str | None:
+        return self.__section.get("support_server_invite")
+
 
 class WebConfig:
     def __init__(self, section: "SectionProxy") -> None:
