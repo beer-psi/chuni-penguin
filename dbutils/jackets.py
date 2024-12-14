@@ -3,7 +3,7 @@ from logging import Logger
 from typing import TypedDict
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -36,6 +36,12 @@ async def update_jackets(
     async with async_session() as session:
         songs = (await session.scalars(select(Song))).all()
 
+    official_jacket_updates = []
+    official_chunithm = (
+        await client.get("https://chunithm.sega.jp/storage/json/music.json")
+    ).json()
+    official_chunithm_by_id = {int(x["id"]): x for x in official_chunithm}
+
     for song in songs:
         if song.id < 8000:
             song_title_artist_lookup[
@@ -43,7 +49,10 @@ async def update_jackets(
             ] = song
 
         if song.jacket is None:
-            continue
+            if song.id not in official_chunithm_by_id:
+                continue
+            song.jacket = official_chunithm_by_id[song.id]["image"]
+            official_jacket_updates.append({"id": song.id, "jacket": song.jacket})
 
         if is_url(song.jacket):
             jackets.append({"song_id": song.id, "jacket_url": song.jacket})
@@ -60,6 +69,11 @@ async def update_jackets(
                     "jacket_url": f"{INTERNATIONAL_JACKET_BASE}/{song.jacket}",
                 }
             )
+
+    if len(official_jacket_updates) > 0:
+        async with async_session() as session:
+            await session.execute(update(Song), official_jacket_updates)
+            await session.commit()
 
     for game in ("maimai", "chunithm", "ongeki"):
         zetaraku_songs = (
