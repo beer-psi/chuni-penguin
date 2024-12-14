@@ -9,6 +9,7 @@ from discord.utils import escape_markdown
 from zoneinfo import ZoneInfo
 
 from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
+from chunithm_net.models.enums import Difficulty
 
 if TYPE_CHECKING:
     from typing import TypeVar
@@ -109,8 +110,12 @@ def did_you_mean_text(result: "Song | None", alias: "Alias | None") -> str:
 
 
 def yt_search_link(title: str, difficulty: str, level: str) -> str:
-    if difficulty == "WE":
-        difficulty = "WORLD'S END"
+    try:
+        diff = Difficulty.from_short_form(difficulty)
+        difficulty = str(diff)
+    except ValueError:
+        pass
+
     return "https://www.youtube.com/results?search_query=" + quote(
         f'"CHUNITHM" "{title}" "{difficulty}" "{level}"'
     )
