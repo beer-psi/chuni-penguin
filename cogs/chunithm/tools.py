@@ -1,6 +1,6 @@
 import itertools
-from decimal import Decimal
 import random
+from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Optional, Sequence
 
 import discord
@@ -12,7 +12,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
 from chunithm_net.models.enums import Rank
-from database.models import Chart
+from database.models import Chart, Song
 from utils import did_you_mean_text, floor_to_ndp, round_to_nearest
 from utils.calculation.overpower import (
     calculate_overpower_base,
@@ -362,7 +362,12 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             stmt = (
                 select(Chart)
-                .where((Chart.const >= min_level) & (Chart.const <= max_level))
+                .join(Song, Chart.song_id == Song.id)
+                .where(
+                    (Chart.const >= min_level)
+                    & (Chart.const <= max_level)
+                    & (Song.available.is_(True))
+                )
                 .order_by(text("RANDOM()"))
                 .limit(count)
                 .options(joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view))
