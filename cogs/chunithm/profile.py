@@ -270,8 +270,10 @@ class ProfileCog(commands.Cog, name="Profile"):
                 files = []
                 embed = embed.set_thumbnail(url=player_data.character)
             elif player_data.character is not None:
-                character_resp = await client.session.get(player_data.character)
-                charaframe_resp = await client.session.get(player_data.character_frame)
+                character_resp, charaframe_resp = await asyncio.gather(
+                    client.session.get(player_data.character),
+                    client.session.get(player_data.character_frame),
+                )
 
                 character = Image.open(BytesIO(character_resp.content))
                 charaframe = Image.open(BytesIO(charaframe_resp.content))
