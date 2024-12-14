@@ -31,6 +31,7 @@ VERSIONS = [
     "SUN PLUS",
     "LUMINOUS",
     "LUMINOUS PLUS",
+    "VERSE",
 ]
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
 
