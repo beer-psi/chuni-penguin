@@ -344,7 +344,7 @@ class SearchCog(commands.Cog, name="Search"):
         detailed: bool = False,
     ):
         ctx = await Context.from_interaction(interaction)
-        return await self.info_inner(ctx, query=query, detailed=detailed)
+        return await self._info_inner(ctx, query=query, detailed=detailed)
 
     @commands.command("info")
     async def info(self, ctx: Context, *, query: str):
@@ -364,9 +364,9 @@ class SearchCog(commands.Cog, name="Search"):
                 args.query.append(arg)
 
         query = " ".join(args.query)
-        return await self.info_inner(ctx, query=query, detailed=args.detailed)
+        return await self._info_inner(ctx, query=query, detailed=args.detailed)
 
-    async def info_inner(self, ctx: Context, *, query: str, detailed: bool = False):
+    async def _info_inner(self, ctx: Context, *, query: str, detailed: bool = False):
         async with ctx.typing(), self.bot.begin_db_session() as session:
             guild_id = ctx.guild.id if ctx.guild is not None else None
             result = await self.utils.find_songs(query, guild_id=guild_id)
@@ -378,6 +378,7 @@ class SearchCog(commands.Cog, name="Search"):
                 )
 
             song_embeds: list[Embed] = []
+            verse_chart_constant_notice = False
 
             for song in result.songs:
                 stmt = (
@@ -395,6 +396,13 @@ class SearchCog(commands.Cog, name="Search"):
                         song_description += "**This song is removed.**\n\n"
                     else:
                         song_description += "**This song is not available in CHUNITHM International.**\n\n"
+
+                if (
+                    not verse_chart_constant_notice
+                    and song.version == "VERSE"
+                    and any((x.const is not None and x.const >= 14.7 for x in charts))
+                ):
+                    verse_chart_constant_notice = True
 
                 displayed_version = song.version
                 displayed_bpm = "Unknown"
@@ -489,9 +497,18 @@ class SearchCog(commands.Cog, name="Search"):
                 embed.description = song_description
                 song_embeds.append(embed)
 
+            content = (
+                "Chart constants follows CHUNITHM VERSE's scale."
+                if verse_chart_constant_notice
+                else None
+            )
+
             view = EmbedPaginationView(ctx, song_embeds)
             view.message = await ctx.reply(
-                embed=view.items[0], view=view, mention_author=False
+                content=content,
+                embed=view.items[0],
+                view=view,
+                mention_author=False,
             )
             return None
 
