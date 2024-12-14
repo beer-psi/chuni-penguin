@@ -4,6 +4,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, Command, when_mentioned
 
+from utils.config import config
+
 
 class HelpCommand(commands.HelpCommand):
     COLOUR = discord.Colour.yellow()
@@ -23,6 +25,16 @@ class HelpCommand(commands.HelpCommand):
             )
         )
 
+        footer_items = [
+            f"Use {prefix}help <command> for more info on a command.",
+            "Source code: https://github.com/beer-psi/chuni-penguin",
+        ]
+
+        if config.bot.support_server_invite is not None:
+            footer_items[1] = (
+                f"Discord: {config.bot.support_server_invite} | Source code: https://github.com/beer-psi/chuni-penguin"
+            )
+
         embed = (
             discord.Embed(color=self.COLOUR)
             # bot.user already exists if this command is invoked
@@ -31,7 +43,7 @@ class HelpCommand(commands.HelpCommand):
                 icon_url=bot.user.avatar.url if bot.user.avatar else None,
             )
             .set_footer(  # type: ignore[reportGeneralTypeIssues]
-                text=f"Use {prefix}help <command> for more info on a command.\nSource code: https://github.com/beer-psi/chuni-penguin"
+                text="\n".join(footer_items),
             )
         )
         description = ""
