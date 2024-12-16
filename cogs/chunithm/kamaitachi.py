@@ -137,8 +137,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     "Successfully linked with Kamaitachi.\n"
                     "You can now use `c>kamaitachi sync` to sync your recent scores.\n"
                     "\n"
-                    "**It is recommended that you run `c>kamaitachi sync pb` to sync your personal bests first, "
-                    "before syncing your recent scores.**"
+                    "**It is recommended that you run `c>kamaitachi sync` to sync your recent scores first, "
+                    "before syncing your personal bests with `c>kamaitachi sync pb`.**"
                 ),
                 mention_author=False,
             )
