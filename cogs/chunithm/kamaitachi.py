@@ -122,6 +122,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             if result is not None:
                 raise commands.BadArgument(result)
 
+            content = "Successfully linked with Kamaitachi."
+
             async with self.bot.begin_db_session() as session, session.begin():
                 if cookie is None:
                     cookie = Cookie(
@@ -132,14 +134,15 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     cookie.kamaitachi_token = token
                     await session.merge(cookie)
 
+                    content += (
+                        "\nYou can now use `c>kamaitachi sync` to sync your recent scores.\n"
+                        "\n"
+                        "**It is recommended that you run `c>kamaitachi sync` to sync your recent scores first, "
+                        "before syncing your personal bests with `c>kamaitachi sync pb`.**"
+                    )
+
             return await ctx.reply(
-                content=(
-                    "Successfully linked with Kamaitachi.\n"
-                    "You can now use `c>kamaitachi sync` to sync your recent scores.\n"
-                    "\n"
-                    "**It is recommended that you run `c>kamaitachi sync` to sync your recent scores first, "
-                    "before syncing your personal bests with `c>kamaitachi sync pb`.**"
-                ),
+                content=content,
                 mention_author=False,
             )
 
