@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Install rye
         uses: eifinger/setup-rye@cba39b644640fb95c375ce5bfe2fdf33c0b815fc # v4
@@ -33,6 +33,7 @@ jobs:
 
       - name: Configuration
         run: |
+          mkdir -p data/
           cp bot.example.ini bot.ini
           sed -i 's/# chunirec_token = <token>/chunirec_token = ${{ secrets.CHUNIREC_TOKEN }}/' bot.ini
 
@@ -55,4 +56,4 @@ jobs:
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
         with:
           name: database
-          path: database/database.sqlite3
+          path: data/database.sqlite3
