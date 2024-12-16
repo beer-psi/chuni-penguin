@@ -179,6 +179,9 @@ WORLD_END_REGEX = re.compile(r"【(.{1,2})】$", re.MULTILINE)
 
 
 def normalize_title(title: str, *, remove_we_kanji: bool = False) -> str:
+    if title == "Help me, ERINNNNNN!!":
+        title = "Help me, ERINNNNNN!!（Band ver.）"  # noqa: RUF001
+
     title = (
         title.lower()
         .replace(" ", " ")

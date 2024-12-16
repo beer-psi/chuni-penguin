@@ -57,6 +57,7 @@ TITLE_MAPPING = {
     "GranFatalite": "GranFatalité",
     "Help,me あーりん!": "Help me, あーりん!",
     "Help,me あーりん！": "Help me, あーりん！",
+    "Help me, ERINNNNNN!!": "Help me, ERINNNNNN!!（Band ver.）",  # The song was renamed by request of the rights holder.
     "In The Blue Sky `01": "In The Blue Sky '01",
     "In The Blue Sky ’01": "In The Blue Sky '01",
     "Jorqer": "Jörqer",
