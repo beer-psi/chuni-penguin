@@ -17,6 +17,9 @@ from database.models import Chart, SdvxinChartView, Song
 WORLD_END_SDVXIN_REGEX = re.compile(
     r"document\.title\s*=\s*['\"](?P<title>.+?) \[WORLD'S END(?:\])?\s*(?P<difficulty>.+?)(?:\]\s*)?['\"]"
 )
+WORLD_END_DIFFICULTY_REGEX = re.compile(
+    r"/chunithm/chfiles/chlv/new(?P<kanji>.)(?P<star_difficulty>\d)\.png"
+)
 SDVXIN_CATEGORIES = [
     "pops",
     "niconico",
@@ -177,12 +180,17 @@ async def update_sdvxin(
                         )
                         script_data = await script_resp.text()
 
-                        match = WORLD_END_SDVXIN_REGEX.search(script_data)
                         if (
-                            match is None
-                            or (level := match.group("difficulty")) is None
-                            or not (level := level.strip())
-                        ):
+                            match := WORLD_END_SDVXIN_REGEX.search(script_data)
+                        ) is not None:
+                            level = match.group("difficulty").strip()
+                        elif (
+                            match := WORLD_END_DIFFICULTY_REGEX.search(script_data)
+                        ) is not None:
+                            kanji = match.group("kanji")
+                            star_difficulty = match.group("star_difficulty")
+                            level = f"{kanji}{'☆' * int(star_difficulty)}"
+                        else:
                             logger.warning(
                                 f"Could not extract difficulty for {title}, {sdvx_in_id}"
                             )
