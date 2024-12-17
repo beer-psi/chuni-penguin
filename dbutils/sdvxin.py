@@ -182,7 +182,7 @@ async def update_sdvxin(
 
                         if (
                             match := WORLD_END_SDVXIN_REGEX.search(script_data)
-                        ) is not None:
+                        ) is not None and match.group("difficulty").strip():
                             level = match.group("difficulty").strip()
                         elif (
                             match := WORLD_END_DIFFICULTY_REGEX.search(script_data)
