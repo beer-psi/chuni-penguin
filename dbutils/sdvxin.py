@@ -181,6 +181,7 @@ async def update_sdvxin(
                         if (
                             match is None
                             or (level := match.group("difficulty")) is None
+                            or not (level := level.strip())
                         ):
                             logger.warning(
                                 f"Could not extract difficulty for {title}, {sdvx_in_id}"

@@ -1,12 +1,26 @@
 from logging import Logger
 
 import aiohttp
+import msgspec
 from sqlalchemy import select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from database.models import Alias, Song
-from utils import json_loads
+
+
+class TachiChunithmSongData(msgspec.Struct, rename="camel"):
+    display_version: str
+    genre: str
+
+
+class TachiChunithmSong(msgspec.Struct, rename="camel"):
+    alt_titles: list[str]
+    artist: str
+    data: TachiChunithmSongData
+    id: int
+    search_terms: list[str]
+    title: str
 
 
 async def update_aliases(
@@ -21,8 +35,10 @@ async def update_aliases(
         )
         aliases = [x.split("\t") for x in (await resp.text()).splitlines()]
 
-        tachi_songs = await tachi_resp.json(loads=json_loads, content_type=None)
-        aliases.extend([[x["title"], *x["searchTerms"]] for x in tachi_songs])
+        tachi_songs = msgspec.json.decode(
+            await tachi_resp.read(), type=list[TachiChunithmSong]
+        )
+        aliases.extend([[x.title, *x.search_terms] for x in tachi_songs])
 
         inserted_aliases = []
         for alias in aliases:

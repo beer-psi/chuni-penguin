@@ -3,6 +3,7 @@ from logging import Logger
 from typing import TypedDict
 
 import httpx
+import msgspec
 from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -10,10 +11,23 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
 from database.models import Song, SongJacket
 
+from .chunirec import ChunithmOfficialSong, MaimaiOfficialSong
+
 # There's this really stupid thing where CHUNITHM/ONGEKI has the original game name
 # in the artist for songs from other IPs, but maimai doesn't. For song title/artist lookup
 # to work properly across all games, we need to strip the original game name from the artist.
 RE_GAME_NAME = re.compile(r"「.+」$")
+
+
+class ZetarakuSong(msgspec.Struct, rename="camel"):
+    title: str
+    artist: str
+    category: str
+    image_name: str
+
+
+class ZetarakuData(msgspec.Struct):
+    songs: list[ZetarakuSong]
 
 
 class SongJacketInsertCols(TypedDict):
@@ -37,10 +51,15 @@ async def update_jackets(
         songs = (await session.scalars(select(Song))).all()
 
     official_jacket_updates = []
-    official_chunithm = (
-        await client.get("https://chunithm.sega.jp/storage/json/music.json")
-    ).json()
-    official_chunithm_by_id = {int(x["id"]): x for x in official_chunithm}
+    official_chunithm_resp = await client.get(
+        "https://chunithm.sega.jp/storage/json/music.json"
+    )
+    official_chunithm = msgspec.json.decode(
+        official_chunithm_resp.content,
+        type=list[ChunithmOfficialSong],
+        strict=False,
+    )
+    official_chunithm_by_id = {x.id: x for x in official_chunithm}
 
     for song in songs:
         if song.id < 8000:
@@ -51,7 +70,7 @@ async def update_jackets(
         if song.jacket is None:
             if song.id not in official_chunithm_by_id:
                 continue
-            song.jacket = official_chunithm_by_id[song.id]["image"]
+            song.jacket = official_chunithm_by_id[song.id].image
             official_jacket_updates.append({"id": song.id, "jacket": song.jacket})
 
         if is_url(song.jacket):
@@ -76,58 +95,63 @@ async def update_jackets(
             await session.commit()
 
     for game in ("maimai", "chunithm", "ongeki"):
-        zetaraku_songs = (
-            await client.get(f"https://dp4p6x0xfi5o9.cloudfront.net/{game}/data.json")
-        ).json()
+        zetaraku_songs_resp = await client.get(
+            f"https://dp4p6x0xfi5o9.cloudfront.net/{game}/data.json"
+        )
+        zetaraku_songs = msgspec.json.decode(
+            zetaraku_songs_resp.content, type=ZetarakuData
+        )
 
-        for song in zetaraku_songs["songs"]:
+        for song in zetaraku_songs.songs:
             # We are not doing jacket song lookups for WORLD'S END/LUNATIC automatically because
             # holy fuck it's a massive can of worms.
-            if song["category"] in ("WORLD'S END", "LUNATIC"):
+            if song.category in ("WORLD'S END", "LUNATIC"):
                 continue
 
-            search_key = (
-                song["title"] + ":" + RE_GAME_NAME.sub("", song["artist"]).rstrip()
-            )
+            search_key = song.title + ":" + RE_GAME_NAME.sub("", song.artist).rstrip()
 
             if (db_song := song_title_artist_lookup.get(search_key)) is None:
                 continue
 
             logger.info(
-                f"Mapped {db_song.artist} - {db_song.title} to Zetaraku {game} entry {song['artist']} - {song['title']}."
+                f"Mapped {db_song.artist} - {db_song.title} to Zetaraku {game} entry {song.artist} - {song.title}."
             )
 
             jackets.append(
                 {
                     "song_id": db_song.id,
-                    "jacket_url": f"https://dp4p6x0xfi5o9.cloudfront.net/{game}/img/cover/{song['imageName']}",
+                    "jacket_url": f"https://dp4p6x0xfi5o9.cloudfront.net/{game}/img/cover/{song.image_name}",
                 }
             )
 
-    official_maimai = (
-        await client.get("https://maimai.sega.jp/data/maimai_songs.json")
-    ).json()
+    official_maimai_resp = await client.get(
+        "https://maimai.sega.jp/data/maimai_songs.json"
+    )
+    official_maimai = msgspec.json.decode(
+        official_maimai_resp.content,
+        type=list[MaimaiOfficialSong],
+    )
 
     for song in official_maimai:
-        search_key = song["title"] + ":" + RE_GAME_NAME.sub("", song["artist"]).rstrip()
+        search_key = song.title + ":" + RE_GAME_NAME.sub("", song.artist).rstrip()
 
         if (db_song := song_title_artist_lookup.get(search_key)) is None:
             continue
 
         logger.info(
-            f"Mapped {db_song.artist} - {db_song.title} to official maimai entry {song['artist']} - {song['title']}."
+            f"Mapped {db_song.artist} - {db_song.title} to official maimai entry {song.artist} - {song.title}."
         )
 
         jackets.append(
             {
                 "song_id": db_song.id,
-                "jacket_url": f"https://maimaidx.jp/maimai-mobile/img/Music/{song['image_url']}",
+                "jacket_url": f"https://maimaidx.jp/maimai-mobile/img/Music/{song.image_url}",
             }
         )
         jackets.append(
             {
                 "song_id": db_song.id,
-                "jacket_url": f"https://maimaidx-eng.com/maimai-mobile/img/Music/{song['image_url']}",
+                "jacket_url": f"https://maimaidx-eng.com/maimai-mobile/img/Music/{song.image_url}",
             }
         )
 
