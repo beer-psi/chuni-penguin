@@ -152,6 +152,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     "6502b8cb896a3108": {
         "id": "8025",
         "catname": "イロドリミドリ",
+        "newflag": "0",
         "title": "Help me, あーりん!",
         "reading": "HELPMEアウリン",
         "artist": "イロドリミドリ",
@@ -167,6 +168,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     "98baa8dadec9674a": {
         "id": "8078",
         "catname": "イロドリミドリ",
+        "newflag": "0",
         "title": "あねぺったん",
         "reading": "アネヘツタン",
         "artist": "月鈴姉妹(イロドリミドリ)",
@@ -182,6 +184,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     "108fb090064d84eb": {
         "id": "8116",
         "catname": "イロドリミドリ",
+        "newflag": "0",
         "title": "イロドリミドリ杯花映塚全一決定戦公式テーマソング『ウソテイ』",
         "reading": "イロトリミトリハイカエイツカセンイチケツテイセンコウシキテウマソンクウソテイ",
         "artist": "イロドリミドリ",
@@ -197,6 +200,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     "1ce51015f2293d1a": {
         "id": "8281",
         "catname": "ORIGINAL",
+        "newflag": "0",
         "title": "Parad'ox",
         "reading": "PARADOX",
         "artist": "Potwi",
@@ -212,6 +216,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     "67be895064262b87": {
         "id": "8282",
         "catname": "ORIGINAL",
+        "newflag": "0",
         "title": "otorii INNOVATED -[i]3-",
         "reading": "OTORIIINNOVATEDI3",
         "artist": "NAOKI underground",
@@ -240,6 +245,7 @@ for idx, random in enumerate(
     MANUAL_MAPPINGS[random_id] = {
         "id": str(8244 + idx),
         "catname": "VARIETY",
+        "newflag": "0",
         "title": "Random",
         "reading": "RANDOM",
         "artist": "Sobrem × Silentroom",  # noqa: RUF001
