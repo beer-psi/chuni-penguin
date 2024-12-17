@@ -325,7 +325,9 @@ async def update_db(logger: Logger, async_session: async_sessionmaker[AsyncSessi
         try:
             if song.meta.id in MANUAL_MAPPINGS:
                 chunithm_song = msgspec.convert(
-                    MANUAL_MAPPINGS[song.meta.id], ChunithmOfficialSong
+                    MANUAL_MAPPINGS[song.meta.id],
+                    ChunithmOfficialSong,
+                    strict=False,
                 )
             elif song.data.get("WE") is None:
                 chunithm_song = next(
