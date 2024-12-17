@@ -90,19 +90,9 @@ class ChunithmOfficialSong(msgspec.Struct):
 
 
 class MaimaiOfficialSong(msgspec.Struct):
-    artist: str
-    catcode: str
     image_url: str
-    release: str
-    lev_bas: str
-    lev_adv: str
-    lev_exp: str
-    lev_mas: str
-    sort: str
     title: str
-    title_kana: str
-    version: str
-    lev_remas: str | None = None
+    artist: str
 
 
 NOTE_TYPES: list[Literal["tap", "hold", "slide", "air", "flick"]] = [
