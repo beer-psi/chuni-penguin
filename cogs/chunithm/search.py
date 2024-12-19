@@ -433,7 +433,7 @@ class SearchCog(commands.Cog, name="Search"):
                         difficulty = Difficulty.from_short_form(chart.difficulty)
 
                         song_description += (
-                            f"**Version ({difficulty})**: {chart.version}"
+                            f"**Version ({difficulty})**: {chart.version}\n"
                         )
 
                 song_description += f"**BPM**: {displayed_bpm}\n"
