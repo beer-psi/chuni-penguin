@@ -514,7 +514,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         try:
             parsed_difficulty = Difficulty.from_short_form(difficulty.upper())
         except ValueError as e:
-            msg = f"Unknown difficulty name {escape_markdown(difficulty)}."
+            msg = f'Unknown difficulty name "{escape_markdown(difficulty)}".'
             raise commands.BadArgument(msg) from e
 
         async with ctx.typing():
@@ -546,9 +546,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 msg = f"No charts found for {escape_markdown(song.title)} [{parsed_difficulty}]."
                 raise commands.CommandError(msg)
 
-            chart_display_name = (
-                f"{escape_markdown(song.title)} [{parsed_difficulty} {chart.level}]"
-            )
+            chart_display_name = f"{escape_markdown(song.title)} [{parsed_difficulty} {chart.const or chart.level}]"
 
             if chart.sdvxin_chart_view is None:
                 msg = f"Chart view is not available for {chart_display_name} yet. Please try again later."
