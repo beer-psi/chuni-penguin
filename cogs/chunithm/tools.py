@@ -1,19 +1,23 @@
+import asyncio
 import itertools
 import random
 from decimal import Decimal
+from io import BytesIO
 from typing import TYPE_CHECKING, Literal, Optional, Sequence
 
 import discord
+import httpx
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context, Range
 from discord.utils import escape_markdown
+from PIL import Image
 from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
-from chunithm_net.models.enums import Rank
+from chunithm_net.models.enums import Difficulty, Rank
 from database.models import Chart, Song
-from utils import did_you_mean_text, floor_to_ndp, round_to_nearest
+from utils import did_you_mean_text, floor_to_ndp, round_to_nearest, sdvxin_link
 from utils.calculation.overpower import (
     calculate_overpower_base,
     calculate_overpower_max,
@@ -26,6 +30,25 @@ if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.autocompleters import AutocompletersCog
     from cogs.botutils import UtilsCog
+
+
+def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
+    with (
+        Image.open(BytesIO(bg)) as bg_img,
+        Image.open(BytesIO(data)) as data_img,
+        Image.open(BytesIO(bar)) as bar_img,
+    ):
+        background = Image.new("RGBA", bg_img.size, (0, 0, 0, 255))
+        result = Image.alpha_composite(background, bg_img.convert("RGBA"))
+        result = Image.alpha_composite(result, data_img.convert("RGBA"))
+        result = Image.alpha_composite(result, bar_img.convert("RGBA"))
+
+        output = BytesIO()
+        result.convert("RGB").save(output, format="JPEG", quality=92)
+
+    output.seek(0)
+
+    return output
 
 
 class ToolsCog(commands.Cog, name="Tools"):
@@ -464,6 +487,115 @@ class ToolsCog(commands.Cog, name="Tools"):
             await ctx.reply(
                 embed=ChartCardEmbed(chart, border=True), mention_author=False
             )
+            return None
+
+    @commands.hybrid_command("chart")
+    @app_commands.choices(
+        difficulty=[
+            app_commands.Choice(name="BASIC", value="BASIC"),
+            app_commands.Choice(name="ADVANCED", value="ADVANCED"),
+            app_commands.Choice(name="EXPERT", value="EXPERT"),
+            app_commands.Choice(name="MASTER", value="MASTER"),
+            app_commands.Choice(name="ULTIMA", value="ULTIMA"),
+        ]
+    )
+    @app_commands.autocomplete(query=song_title_autocomplete)
+    async def chart(self, ctx: Context, difficulty: str, *, query: str):
+        """Renders a chart view from sdvx.in for a given song and difficulty.
+
+        Parameters
+        ----------
+        difficulty: str
+            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT).
+        query: str
+            Song title to search for. You don't have to be exact; try things out!
+        """
+
+        async with ctx.typing():
+            guild_id = ctx.guild.id if ctx.guild else None
+            song, alias, similarity = await self.utils.find_song(
+                query, guild_id=guild_id, worlds_end=False
+            )
+
+            if song is None or similarity < SIMILARITY_THRESHOLD:
+                return await ctx.reply(
+                    did_you_mean_text(song, alias), mention_author=False
+                )
+
+            async with self.bot.begin_db_session() as session:
+                stmt = (
+                    select(Chart)
+                    .where(
+                        (Chart.song == song)
+                        & (Chart.difficulty == difficulty[:3].upper())
+                    )
+                    .limit(1)
+                    .options(
+                        joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
+                    )
+                )
+                chart = (await session.execute(stmt)).scalar_one_or_none()
+
+            if chart is None:
+                msg = (
+                    f"No charts found for {escape_markdown(song.title)} [{difficulty}]."
+                )
+                raise commands.CommandError(msg)
+
+            chart_display_name = f"{escape_markdown(song.title)} [{Difficulty.from_short_form(chart.difficulty)} {chart.level}]"
+
+            if chart.sdvxin_chart_view is None:
+                msg = f"Chart view is not available for {chart_display_name} yet. Please try again later."
+                raise commands.CommandError(msg)
+
+            sdvxin_id = chart.sdvxin_chart_view.id
+
+            if chart.difficulty == "ULT":
+                bg_url = (
+                    f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
+                )
+                data_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/obj/data{sdvxin_id}ult.png"
+                bar_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
+            else:
+                sdvxin_difficulty = (
+                    chart.difficulty.lower() if chart.difficulty != "MAS" else "mst"
+                )
+                bg_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png"
+                data_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/obj/data{sdvxin_id}{sdvxin_difficulty}.png"
+                bar_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
+
+            async with httpx.AsyncClient() as client:
+                bg_resp, data_resp, bar_resp = await asyncio.gather(
+                    client.get(bg_url),
+                    client.get(data_url),
+                    client.get(bar_url),
+                )
+
+            if bg_resp.is_error or data_resp.is_error or bar_resp.is_error:
+                msg = f"Failed to fetch chart view for {chart_display_name}. Please try again later."
+                raise commands.CommandError(msg)
+
+            output = await asyncio.to_thread(
+                compose_chart_view, bg_resp.content, data_resp.content, bar_resp.content
+            )
+            content = (
+                f"**{chart_display_name}**\n"
+                f"CHAIN: {chart.maxcombo} / TAP: {chart.tap} / HOLD: {chart.hold} / SLIDE: {chart.slide} / AIR: {chart.air} / FLICK: {chart.flick}\n"
+            )
+
+            if chart.charter is not None:
+                content += f"NOTES DESIGNER: {escape_markdown(chart.charter)}\n"
+
+            content += f"<{sdvxin_link(chart.sdvxin_chart_view)}>"
+
+            file = discord.File(
+                output,
+                filename=f"{sdvxin_id}{chart.difficulty.lower()}.jpg",
+                description=f"Chart view for {chart_display_name}",
+            )
+
+            await ctx.reply(content=content, file=file, mention_author=False)
+
             return None
 
 
