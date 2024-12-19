@@ -511,6 +511,12 @@ class ToolsCog(commands.Cog, name="Tools"):
             Song title to search for. You don't have to be exact; try things out!
         """
 
+        try:
+            parsed_difficulty = Difficulty.from_short_form(difficulty.upper())
+        except ValueError as e:
+            msg = f"Unknown difficulty name {escape_markdown(difficulty)}."
+            raise commands.BadArgument(msg) from e
+
         async with ctx.typing():
             guild_id = ctx.guild.id if ctx.guild else None
             song, alias, similarity = await self.utils.find_song(
@@ -537,12 +543,12 @@ class ToolsCog(commands.Cog, name="Tools"):
                 chart = (await session.execute(stmt)).scalar_one_or_none()
 
             if chart is None:
-                msg = (
-                    f"No charts found for {escape_markdown(song.title)} [{difficulty}]."
-                )
+                msg = f"No charts found for {escape_markdown(song.title)} [{parsed_difficulty}]."
                 raise commands.CommandError(msg)
 
-            chart_display_name = f"{escape_markdown(song.title)} [{Difficulty.from_short_form(chart.difficulty)} {chart.level}]"
+            chart_display_name = (
+                f"{escape_markdown(song.title)} [{parsed_difficulty} {chart.level}]"
+            )
 
             if chart.sdvxin_chart_view is None:
                 msg = f"Chart view is not available for {chart_display_name} yet. Please try again later."
