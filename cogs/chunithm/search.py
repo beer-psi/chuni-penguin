@@ -498,7 +498,7 @@ class SearchCog(commands.Cog, name="Search"):
                 song_embeds.append(embed)
 
             content = (
-                "Chart constants follows CHUNITHM VERSE's scale."
+                "Chart constants follow CHUNITHM VERSE's scale."
                 if verse_chart_constant_notice
                 else None
             )
