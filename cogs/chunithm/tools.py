@@ -17,7 +17,13 @@ from sqlalchemy.orm import joinedload
 
 from chunithm_net.models.enums import Difficulty, Rank
 from database.models import Chart, Song
-from utils import did_you_mean_text, floor_to_ndp, round_to_nearest, sdvxin_link
+from utils import (
+    did_you_mean_text,
+    floor_to_ndp,
+    round_to_nearest,
+    sdvxin_link,
+    yt_search_link,
+)
 from utils.calculation.overpower import (
     calculate_overpower_base,
     calculate_overpower_max,
@@ -590,7 +596,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             if chart.charter is not None:
                 content += f"NOTES DESIGNER: {escape_markdown(chart.charter)}\n"
 
-            content += f"<{sdvxin_link(chart.sdvxin_chart_view)}>"
+            content += f"-# [sdvx.in](<{sdvxin_link(chart.sdvxin_chart_view)}>) • [Search on YouTube](<{yt_search_link(song.title, chart.difficulty, chart.level)}>)"
 
             file = discord.File(
                 output,
