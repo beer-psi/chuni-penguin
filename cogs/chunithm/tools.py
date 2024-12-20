@@ -574,7 +574,11 @@ class ToolsCog(commands.Cog, name="Tools"):
                 data_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/obj/data{sdvxin_id}{sdvxin_difficulty}.png"
                 bar_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
 
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(timeout=60.0),
+                follow_redirects=True,
+                transport=httpx.AsyncHTTPTransport(retries=5),
+            ) as client:
                 bg_resp, data_resp, bar_resp = await asyncio.gather(
                     client.get(bg_url),
                     client.get(data_url),
