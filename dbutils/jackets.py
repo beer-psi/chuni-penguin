@@ -77,7 +77,7 @@ async def update_jackets(
     for song in songs:
         if song.id < 8000:
             song_title_artist_lookup[
-                f"{song.title}:{RE_GAME_NAME.sub('', song.artist).rstrip()}"
+                f"{song.title}:{normalize_artist(song.artist)}"
             ] = song
 
         if song.jacket is None:
@@ -121,7 +121,7 @@ async def update_jackets(
             if song.category in ("WORLD'S END", "LUNATIC"):
                 continue
 
-            search_key = song.title + ":" + RE_GAME_NAME.sub("", song.artist).rstrip()
+            search_key = song.title + ":" + normalize_artist(song.artist)
 
             if (db_song := song_title_artist_lookup.get(search_key)) is None:
                 continue
