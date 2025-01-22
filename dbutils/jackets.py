@@ -39,6 +39,19 @@ def is_url(value: str):
     return value.startswith(("http://", "https://"))
 
 
+def normalize_artist(artist: str):
+    return (
+        RE_GAME_NAME
+        .sub("", artist)
+        # Really dumb edge case, thanks SEGA.
+        # The alpha character used by maimai DX is APL FUNCTIONAL SYMBOL ALPHA (U+237A).
+        # The alpha character used by CHUNITHM and O.N.G.E.K.I. is GREEK SMALL LETTER ALPHA (U+03B1).
+        # This is why cross c>compare doesn't work with maimai bots.
+        .replace("からとP⍺ոchii少年", "からとPαnchii少年")
+        .rstrip()
+    )
+
+
 async def update_jackets(
     logger: Logger, async_session: async_sessionmaker[AsyncSession]
 ):
