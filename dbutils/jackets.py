@@ -146,7 +146,7 @@ async def update_jackets(
     )
 
     for song in official_maimai:
-        search_key = song.title + ":" + RE_GAME_NAME.sub("", song.artist).rstrip()
+        search_key = song.title + ":" + normalize_artist(song.artist)
 
         if (db_song := song_title_artist_lookup.get(search_key)) is None:
             continue
