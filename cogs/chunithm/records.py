@@ -320,9 +320,9 @@ def render_b30(
 
         # draw the internal level and rating value
         if isinstance(record, DetailedRecentRecord):
-            rating_text = f"({record.extras.get(KEY_PLAY_RATING)})"
+            rating_text = f"({record.extras.get(KEY_PLAY_RATING):.2f})"
         else:
-            rating_text = f"({record.extras.get(KEY_INTERNAL_LEVEL):.1f} > {record.extras.get(KEY_PLAY_RATING)})"
+            rating_text = f"({record.extras.get(KEY_INTERNAL_LEVEL):.1f} > {record.extras.get(KEY_PLAY_RATING):.2f})"
 
         b30_draw.text(
             (
