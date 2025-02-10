@@ -1212,13 +1212,13 @@ class RecordsCog(commands.Cog, name="Records"):
         rank: Optional[Rank] = None,
         sort: Literal["rating", "score", "overpower", "overpower %"] = "rating",
     ):
-        await interaction.response.defer()
-
         if level is None and difficulty is None and genre is None and rank is None:
             ctx = await Context.from_interaction(interaction)
             await self._best30_inner(ctx, user, image=True)
             return
 
+        await interaction.response.defer()
+        
         if (genre or rank) and not difficulty:
             return await interaction.followup.send(
                 "Difficulty must be set if genre or rank is set."
@@ -1393,13 +1393,18 @@ class RecordsCog(commands.Cog, name="Records"):
             for converter in [commands.MemberConverter, commands.UserConverter]:
                 with contextlib.suppress(commands.BadArgument):
                     user = await converter().convert(ctx, rest[0])
-                    str_level = rest[1] if len(rest) > 1 else None
+                    rest = rest[1:]
                     break
 
-        if str_level is None:
-            str_level = rest[0] if len(rest) > 0 else None
-
-        if str_level is None and user is not None:
+        str_level = rest[0] if len(rest) > 0 else None
+            
+        if (
+            user is not None
+            and str_level is None
+            and args.difficulty is None
+            and args.genre is None
+            and args.rank is None
+        ):
             await self.best30(ctx, query=f"-i {user.mention}")
             return
 
