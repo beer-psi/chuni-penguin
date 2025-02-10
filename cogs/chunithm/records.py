@@ -1215,7 +1215,8 @@ class RecordsCog(commands.Cog, name="Records"):
         await interaction.response.defer()
 
         if level is None and difficulty is None and genre is None and rank is None:
-            await self.best30_slash(interaction, user, image=True)
+            ctx = await Context.from_interaction(interaction)
+            await self._best30_inner(ctx, user, image=True)
             return
 
         if (genre or rank) and not difficulty:
@@ -1397,6 +1398,10 @@ class RecordsCog(commands.Cog, name="Records"):
 
         if str_level is None:
             str_level = rest[0] if len(rest) > 0 else None
+
+        if str_level is None and user is not None:
+            await self.best30(ctx, query=f"-i {user.mention}")
+            return
 
         level = None
         internal_level: float | None = None
