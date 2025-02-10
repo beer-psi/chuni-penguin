@@ -1214,6 +1214,10 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         await interaction.response.defer()
 
+        if level is None and difficulty is None and genre is None and rank is None:
+            await self.best30_slash(interaction, user, image=True)
+            return
+
         if (genre or rank) and not difficulty:
             return await interaction.followup.send(
                 "Difficulty must be set if genre or rank is set."
@@ -1287,7 +1291,7 @@ class RecordsCog(commands.Cog, name="Records"):
         self,
         ctx: Context,
         *,
-        query: str,
+        query: str | None = None,
     ):
         """
         **View your best scores for a level.**
@@ -1359,6 +1363,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 raise ValueError(msg)
 
             return arg
+
+        if query is None:
+            await self.best30(ctx, query="-i")
+            return
 
         parser = DiscordArguments()
         parser.add_argument("-d", "--difficulty", type=difficulty, required=False)
