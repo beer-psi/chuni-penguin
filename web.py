@@ -171,12 +171,7 @@ async def login(request: web.Request) -> web.Response:
     <body>
         <h1>Success!</h1>
         <p>Check the bot's DMs to see if the account has been successfully linked.</p>
-
-        <div>
-            <p>full sync dx plus users can use this command to log in:</p>
-            <code>m!login {escape(clal)}</code>
-        </div>
-
+        
         <div>
             <p>mimi xd bot users can use this command to log in:</p>
             <code>m>login clal={escape(clal)}</code>
