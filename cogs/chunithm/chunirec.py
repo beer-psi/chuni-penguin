@@ -301,7 +301,7 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
 
                 if record.chain_lamp == ChainType.FULL_CHAIN_PLUS:
                     combo_lamp |= ChunirecComboLamp.FULL_CHAIN_PLUS
-                elif record.chain_lamp == ChainType.FULL_CHAIN_PLUS:
+                elif record.chain_lamp == ChainType.FULL_CHAIN:
                     combo_lamp |= ChunirecComboLamp.FULL_CHAIN
 
                 clear_lamp = ChunirecClearLamp.FAILED
