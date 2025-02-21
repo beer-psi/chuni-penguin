@@ -49,7 +49,7 @@ class ScoreCardEmbed(discord.Embed):
                 lamps_str = [str(x) for x in lamps]
 
             score_data = (
-                f"▸ {rank_icon(record.rank)} ▸ {' / '.join(lamps)} ▸ {record.score}"
+                f"▸ {rank_icon(record.rank)} ▸ {' / '.join(lamps_str)} ▸ {record.score}"
             )
         else:
             score_data = f"▸ {rank_icon(record.rank)} ▸ {record.score}"
