@@ -5,6 +5,7 @@ from secrets import SystemRandom
 from typing import TYPE_CHECKING, Optional
 
 import discord
+from discord import app_commands, Interaction
 from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import delete
@@ -222,6 +223,43 @@ class AuthCog(commands.Cog, name="Auth"):
                     description="Please use `c>login` to restart the login process.",
                 ),
             )
+
+    @commands.command("token")
+    @commands.dm_only()
+    async def token(self, ctx: Context):
+        """Show your current token.
+
+        Useful for logging into other bots, but DO NOT show it to other people.
+        """
+
+        async with ctx.typing():
+            jar = await self.utils.login_check(ctx)
+    
+            for cookie in jar:
+                if cookie.name == "clal" and cookie.domain == "lng-tgk-aime-gw.am-all.net":
+                    await ctx.reply(
+                        f"Your token: ||{cookie.value}|| (click to reveal, DO NOT show to other people.)"
+                    )
+                    return
+
+        msg = "Could not find your token. This is probably a bug."
+        raise commands.CommandError(msg)
+
+    @app_commands.command(name="token", description="Show your current token.")
+    async def token_slash(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        
+        jar = await self.utils.login_check(ctx)
+
+        for cookie in jar:
+            if cookie.name == "clal" and cookie.domain == "lng-tgk-aime-gw.am-all.net":
+                await interaction.response.edit_message(
+                    content=f"Your token: ||{cookie.value}|| (click to reveal, DO NOT show to other people.)"
+                )
+                return
+
+        msg = "Could not find your token. This is probably a bug."
+        raise app_commands.AppCommandError(msg)
 
 
 async def setup(bot: "ChuniBot") -> None:
