@@ -5,6 +5,7 @@ import discord.ui
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
+from chunithm_net.models.enums import Difficulty
 from database.models import Chart
 from utils import yt_search_link
 
@@ -26,7 +27,7 @@ class SonglistView(PaginationView):
                 if chart.sdvxin_chart_view is not None
                 else yt_search_link(chart.song.title, chart.difficulty, chart.level)
             )
-            songlist += f"{idx + start_index + 1}. {escape_markdown(chart.song.title)} [[{chart.difficulty}]]({url})\n"
+            songlist += f"{idx + start_index + 1}. {escape_markdown(chart.song.title)} [[{Difficulty.from_short_form(chart.difficulty)} {chart.const}]]({url})\n"
         return discord.Embed(
             description=songlist,
         ).set_footer(text=f"Page {self.page + 1}/{self.max_index + 1}")
