@@ -10,7 +10,7 @@ from chunithm_net.consts import (
     KEY_PLAY_RATING,
     KEY_TOTAL_COMBO,
 )
-from chunithm_net.models.enums import ChainType, ComboType, Difficulty
+from chunithm_net.models.enums import ChainType, ClearType, ComboType, Difficulty
 from chunithm_net.models.record import (
     DetailedRecentRecord,
     MusicRecord,
@@ -36,12 +36,17 @@ class ScoreCardEmbed(discord.Embed):
         self.set_thumbnail(url=record.jacket)
 
         if show_lamps:
-            lamps = [str(record.clear_lamp)]
+            lamps: list[ChainType | ClearType | ComboType] = [record.clear_lamp]
 
             if record.combo_lamp != ComboType.NONE:
-                lamps.append(str(record.combo_lamp))
+                lamps.append(record.combo_lamp)
             if record.chain_lamp != ChainType.NONE:
-                lamps.append(str(record.chain_lamp))
+                lamps.append(record.chain_lamp)
+
+            if len(lamps) > 2:
+                lamps_str = [x.short_form() for x in lamps]
+            else:
+                lamps_str = [str(x) for x in lamps]
 
             score_data = (
                 f"▸ {rank_icon(record.rank)} ▸ {' / '.join(lamps)} ▸ {record.score}"
