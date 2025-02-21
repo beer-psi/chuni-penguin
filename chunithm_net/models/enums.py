@@ -100,6 +100,23 @@ class ClearType(Enum):
             return "ABSOLUTE+"
         return self.name.replace("_", " ")
 
+    def short_form(self):
+        if self.value == 0:
+            return "FAILED"
+        if self.value == 1:
+            return "CLR"
+        if self.value == 4:
+            return "HRD"
+        if self.value == 5:
+            return "ABS"
+        if self.value == 6:
+            return "ABS+"
+        if self.value == 7:
+            return "CTS"
+        
+        msg = f"Unknown clear type value {self.value}"
+        raise ValueError(msg)
+
 
 class ComboType(Enum):
     NONE = 0
@@ -112,6 +129,19 @@ class ComboType(Enum):
             return "AJC"
         return self.name.replace("_", " ")
 
+    def short_form(self):
+        if self.value == 0:
+            return "NONE"
+        if self.value == 1:
+            return "FC"
+        if self.value == 2:
+            return "AJ"
+        if self.value == 3:
+            return "AJC"
+
+        msg = f"Unknown combo type value {self.value}"
+        raise ValueError(msg)
+
 
 class ChainType(IntEnum):
     NONE = 0
@@ -122,6 +152,17 @@ class ChainType(IntEnum):
         if self.value == 2:
             return "FULL CHAIN+"
         return self.name.replace("_", " ")
+
+    def short_form(self):
+        if self.value == 0:
+            return "NONE"
+        if self.value == 1:
+            return "FCH"
+        if self.value == 2:
+            return "FCH+"
+
+        msg = f"Unknown chain type value {self.value}"
+        raise ValueError(msg)
 
 
 class Rank(Enum):
