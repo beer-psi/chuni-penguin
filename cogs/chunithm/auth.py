@@ -254,7 +254,7 @@ class AuthCog(commands.Cog, name="Auth"):
 
         for cookie in jar:
             if cookie.name == "clal" and cookie.domain == "lng-tgk-aime-gw.am-all.net":
-                await interaction.response.edit_message(
+                await interaction.followup.send(
                     content=f"Your token: ||{cookie.value}|| (click to reveal, DO NOT show to other people.)"
                 )
                 return
