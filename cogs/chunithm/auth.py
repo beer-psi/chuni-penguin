@@ -250,7 +250,7 @@ class AuthCog(commands.Cog, name="Auth"):
     async def token_slash(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
         
-        jar = await self.utils.login_check(ctx)
+        jar = await self.utils.login_check(interaction.user.id)
 
         for cookie in jar:
             if cookie.name == "clal" and cookie.domain == "lng-tgk-aime-gw.am-all.net":
