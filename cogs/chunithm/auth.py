@@ -160,11 +160,7 @@ class AuthCog(commands.Cog, name="Auth"):
             msg = "Invalid cookie."
             raise commands.BadArgument(msg)
 
-        passcode = (
-            str(self.random.randrange(10**5, 10**6))
-            if self.bot.app is not None
-            else None
-        )
+        passcode = str(self.random.randrange(10**5, 10**6))
         view = LoginFlowView(ctx, passcode, config.web.base_url)
         embed = view.format_embed(view.items[0])
 
@@ -187,9 +183,6 @@ class AuthCog(commands.Cog, name="Auth"):
             except discord.errors.Forbidden:
                 return None
 
-        if self.bot.app is None:
-            return None
-
         try:
             clal = await self.bot.wait_for(f"chunithm_login_{passcode}", timeout=300)
 
@@ -199,9 +192,11 @@ class AuthCog(commands.Cog, name="Auth"):
                 await msg.edit(
                     content=None,
                     embed=discord.Embed(
+                        color=discord.Color.green(),
                         title="Successfully logged in",
                         description="You can now use the bot's CHUNITHM-NET commands.",
                     ),
+                    view=None,
                 )
             else:
                 logger.debug("Invalid token provided.")
@@ -209,9 +204,11 @@ class AuthCog(commands.Cog, name="Auth"):
                 await msg.edit(
                     content=None,
                     embed=discord.Embed(
+                        color=discord.Color.red(),
                         title="Failed to login",
                         description="Invalid cookie.",
                     ),
+                    view=None,
                 )
         except TimeoutError:
             logger.warning("Login flow timed out.")
@@ -219,9 +216,11 @@ class AuthCog(commands.Cog, name="Auth"):
             await msg.edit(
                 content=None,
                 embed=discord.Embed(
+                    color=discord.Color.yellow(),
                     title="Login session timed out",
                     description="Please use `c>login` to restart the login process.",
                 ),
+                view=None,
             )
 
     @commands.command("token")
