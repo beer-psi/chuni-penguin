@@ -19,4 +19,5 @@ VERSION_NAMES = {
     "v0.2.3": "Spider's Thread",
     "v2024.12": "Shattered Memories",
     "v2025.1": "Cries, beyond The End",
+    "v2025.3": "[CRYSTAL_ACCESS]",
 }

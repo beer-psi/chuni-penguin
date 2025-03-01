@@ -1,6 +1,6 @@
 [project]
 name = "chuni-penguin"
-version = "2024.12.2"
+version = "2025.3"
 description = "Add your description here"
 authors = [{ name = "beerpiss", email = "lacvtg.a1.2023@gmail.com" }]
 dependencies = [
