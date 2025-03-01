@@ -152,8 +152,8 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
         version_name = VERSION_NAMES.get(revision.split("-", 1)[0])
 
-        if version_name is None:  # switched to vYEAR.MONTH.MINOR
-            year, month, _ = revision.split(".", 2)
+        if version_name is None:  # switched to vYEAR.MONTH
+            year, month = revision.split(".", 1)
             version_name = VERSION_NAMES.get(f"{year}.{month}")
 
         async with self.bot.begin_db_session() as session:
