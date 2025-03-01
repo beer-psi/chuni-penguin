@@ -1,4 +1,4 @@
-FROM python:3.11.9-slim-bookworm AS builder
+FROM python:3.12.9-slim-bookworm AS builder
 
 # Needed for fixing permissions of files created by Docker:
 ARG UID=1000 \
