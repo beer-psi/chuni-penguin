@@ -399,7 +399,7 @@ class SearchCog(commands.Cog, name="Search"):
 
                 if (
                     not verse_chart_constant_notice
-                    and song.version == "VERSE"
+                    and (song.version == "VERSE" or any((x.version == "VERSE" for x in charts)))
                     and any((x.const is not None and x.const >= 14.7 for x in charts))
                 ):
                     verse_chart_constant_notice = True

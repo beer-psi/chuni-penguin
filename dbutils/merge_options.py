@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional, overload
 from xml.etree import ElementTree
 
+import httpx
 from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
@@ -60,6 +61,10 @@ async def merge_options(
     *,
     extract_jackets: bool,
 ):
+    async with httpx.AsyncClient() as client:
+        songlist = (await client.get("https://chunithm.sega.jp/storage/json/music.json")).json()
+        jacket_by_id = dict((int(x["id"]), x["image"]) for x in songlist)
+
     if extract_jackets:
         (ASSETS_DIR / "jackets").mkdir(exist_ok=True, parents=True)
 
@@ -131,7 +136,7 @@ async def merge_options(
             "bpm": None,
             "min_bpm": None,
             "max_bpm": None,
-            "jacket": None,
+            "jacket": jacket_by_id.get(int(song_id)),
             "available": gettext(root, "./disableFlag") != "true",
             "removed": False,
         }
