@@ -118,6 +118,10 @@ TITLE_MAPPING = {
     "《散華》～ EMBARK": "《散華》 ～ EMBARK",
     "《慈雨》～ La Symphonie de Salacia: Agony Movement": "《慈雨》 ～ La Symphonie de Salacia: Agony Movement",
     "《創造》～ Cries, beyond The End": "《創造》 ～ Cries, beyond The End",
+    "[隔絶] ～Flame of Determination": "〚隔絶〛 ～Flame of Determination",
+    "[献身] ～Paradox of Choice": "〚献身〛 ～Paradox of Choice",
+    "[盲従] ～Fantasia Sonata Flower": "〚盲従〛 ～Fantasia Sonata Flower",
+    "[空虚] ～Pyrophilia": "〚空虚〛 ～Pyrophilia",
     "美少女無罪パイレーツ": "美少女無罪♡パイレーツ",
     "AMARA (大未来電脳)": "ÅMARA (大未来電脳)",
 }
