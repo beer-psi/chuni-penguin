@@ -5,6 +5,7 @@ import urllib.parse
 from argparse import ArgumentError
 from datetime import UTC, datetime
 from decimal import Decimal
+from math import ceil
 from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, cast
@@ -80,13 +81,209 @@ class reversor:
         return other.obj < self.obj
 
 
+def _render_b30_entry(
+    b30_image: Image.Image,
+    jacket_shadow_base: Image.Image,
+    record: Record,
+    i: int,
+    x: int,
+    y: int,
+):
+    jacket_path = ASSETS_DIR / "jackets" / f"{record.extras[KEY_SONG_ID]}.png"
+
+    # we use try/catch on jacket processing to gracefully fail to a black image
+    # if the jacket is missing or corrupted
+    try:
+        with Image.open(jacket_path) as jacket:
+            # convert the jacket to RGB since ImageEnhance explodes in different modes
+            # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
+            jacket = jacket.convert("RGB").resize(
+                (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
+            )
+
+            # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
+            jacket = jacket.crop(
+                (
+                    (jacket.width - B30_ENTRY_WIDTH) // 2,
+                    (jacket.height - B30_ENTRY_HEIGHT) // 2,
+                    (jacket.width + B30_ENTRY_WIDTH) // 2,
+                    (jacket.height + B30_ENTRY_HEIGHT) // 2,
+                )
+            )
+
+            # darken the image and blur it
+            jacket = (
+                ImageEnhance.Brightness(jacket)
+                .enhance(0.45)
+                .filter(ImageFilter.GaussianBlur(4))
+            )
+    except (FileNotFoundError, ValueError):
+        # fallback to a black background if anything fails
+        jacket = Image.new("RGB", (B30_ENTRY_WIDTH, B30_ENTRY_HEIGHT), 0)
+
+    # draw the difficulty colored triangle on the jacket, instead of on the b30 image.
+    # this ensures that the triangle is flush with the top right corner of the jacket instead of
+    # being slightly off by 1-2 pixels
+    difficulty_color = record.difficulty.color()
+    jacket_draw = ImageDraw.Draw(jacket)
+    jacket_draw.polygon(
+        [
+            (jacket.width - 55, 0),
+            (jacket.width, 0),
+            (jacket.width, 55),
+        ],
+        # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
+        # passing a number.
+        (
+            (difficulty_color >> 16) & 0xFF,
+            (difficulty_color >> 8) & 0xFF,
+            difficulty_color & 0xFF,
+        ),
+    )
+
+    # add a gaussian blurred shadow onto the jacket
+    jacket_shadow = jacket_shadow_base.copy()
+
+    jacket_shadow.paste(jacket, (10, 10))
+
+    jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
+
+    jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
+
+    # finally, paste the edited jacket onto the image.
+    b30_image = Image.alpha_composite(b30_image, jacket_padded)
+    b30_draw = ImageDraw.Draw(b30_image)
+
+    # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
+    title = record.title
+    title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
+
+    while title_length > B30_ENTRY_WIDTH - 15:
+        title = title[:-1]
+        title_length = b30_draw.textlength(title + "...", NOTO_SANS_JP_32_BOLD)
+
+    # draw the title
+    b30_draw.text(
+        (x + 10, y + 7),
+        title + ("..." if title != record.title else ""),
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_32_BOLD,
+    )
+
+    # draw the score
+    b30_draw.text(
+        (x + 10, y + 47),
+        f"{record.score:,}",
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_32_BOLD,
+    )
+
+    # draw the rank, next to the score
+    lamps = f"[{record.rank}]"
+
+    if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
+        lamps += " [AJC]"
+    elif record.combo_lamp == ComboType.ALL_JUSTICE:
+        lamps += " [AJ]"
+    elif record.combo_lamp == ComboType.FULL_COMBO:
+        lamps += " [FC]"
+
+    b30_draw.text(
+        (
+            x
+            + 10
+            + b30_draw.textlength(f"{record.score:,}", NOTO_SANS_JP_32_BOLD)
+            + 10,
+            y + 50,
+        ),
+        lamps,
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_28_MEDIUM,
+    )
+
+    # draw judgements, if they're available
+    if isinstance(record, DetailedRecentRecord):
+        b30_draw.text(
+            (x + 10, y + 89),
+            f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f} | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}",  # noqa: RUF001
+            fill="#FFFFFF",
+            font=NOTO_SANS_JP_28_MEDIUM,
+        )
+
+    # draw the rank of the b30 entry
+    b30_draw.text(
+        (x + 10, y + 125),
+        f"#{i + 1}",
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_32_BOLD,
+    )
+
+    # draw the internal level and rating value
+    if isinstance(record, DetailedRecentRecord):
+        rating_text = f"({record.extras.get(KEY_PLAY_RATING):.2f})"
+    else:
+        rating_text = f"({record.extras.get(KEY_INTERNAL_LEVEL):.1f} > {record.extras.get(KEY_PLAY_RATING):.2f})"
+
+    b30_draw.text(
+        (
+            x + 10 + b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_32_BOLD) + 10,
+            y + 128,
+        ),
+        rating_text,
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_28_MEDIUM,
+    )
+
+    # draw the timestamp
+    if isinstance(record, RecentRecord) and record.date.timestamp() > 0:
+        difference = datetime.now(UTC) - record.date
+
+        if difference.days >= 365:
+            delta = f"{difference.days // 365}y"
+        elif difference.days >= 30:
+            delta = f"{difference.days // 30}mo"
+        elif difference.days >= 1:
+            delta = f"{difference.days}d"
+        elif difference.seconds >= 3600:
+            delta = f"{difference.seconds // 3600}h"
+        elif difference.seconds >= 60:
+            delta = f"{difference.seconds // 60}m"
+        elif difference.seconds >= 1:
+            delta = f"{difference.seconds}s"
+        else:
+            delta = "0s"
+
+        delta_length = b30_draw.textlength(delta, NOTO_SANS_JP_28_MEDIUM)
+
+        b30_draw.text(
+            (int(x + B30_ENTRY_WIDTH - delta_length - 10), y + 128),
+            delta,
+            fill="#FFFFFF",
+            font=NOTO_SANS_JP_28_MEDIUM,
+        )
+
+    return b30_image
+
+
 def render_b30(
     player_name: str,
     records: list[Record],
+    new_records: list[Record] | None = None,
     current_rating: float | None = None,
     max_rating: float | None = None,
 ):
-    b30_image = Image.new("RGBA", size=(1872, 1784), color="#FFFFFF")
+    row_num = ceil(len(records) / 5)
+    
+    # 214 height for the header + 30 for spacing between header and b30
+    # each b30 entry has 15 padding
+    image_height = 214 + 30 + (B30_ENTRY_HEIGHT + 15) * row_num + 15
+
+    # Add a 45 pixel gap between old rating and new rating, if it is provided
+    if new_records is not None:
+        new_row_num = ceil(len(new_records) / 5)
+        image_height += 30 + (B30_ENTRY_HEIGHT + 15) * new_row_num + 15
+    
+    b30_image = Image.new("RGBA", size=(1872, image_height), color="#FFFFFF")
     b30_draw = ImageDraw.Draw(b30_image)
 
     with Image.open(ASSETS_DIR / "b30_bg.png") as im:
@@ -96,7 +293,7 @@ def render_b30(
     # header: player name and credits
     # draw a background for the player name
     b30_draw.rectangle(
-        (0, 0, b30_image.width, b30_image.height * 7 // 100), fill="#F2ACE0"
+        (0, 0, b30_image.width, 124), fill="#F2ACE0"
     )
 
     # draw the player name
@@ -116,7 +313,7 @@ def render_b30(
     b30_draw.multiline_text(
         (
             b30_image.width - credits_width - 30,
-            (b30_image.height * 7 // 100 - credits_height) // 2 - 6,
+            (124 - credits_height) // 2 - 6,
         ),
         "Generated by chuni penguin#3217\nhttps://chunithm.beerpsi.cc/invite",
         fill="#000000",
@@ -129,16 +326,20 @@ def render_b30(
     )
     max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in records)
     average = floor_to_ndp(total_rating / len(records), 4)
-    reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
 
     # subheader: rating information and generation date
     # draw a background for the subheader
     b30_draw.rectangle(
-        (0, b30_image.height * 7 // 100, b30_image.width, b30_image.height * 12 // 100),
+        (0, 124, b30_image.width, 214),
         fill="#F2D0F0",
     )
     # draw the rating information in the subheader
-    rating_text = f"AVERAGE {average:.4f} / REACHABLE {reachable:.4f}"
+    rating_text = f"AVERAGE {average:.4f}"
+
+    if len(records) == 30 and new_records is None:
+        reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
+
+        rating_text += f" / REACHABLE {reachable:.4f}"
 
     if max_rating is not None:
         rating_text = f"MAX {max_rating:.2f} / {rating_text}"
@@ -147,7 +348,7 @@ def render_b30(
         rating_text = f"RATING {current_rating:.2f} / {rating_text}"
 
     b30_draw.text(
-        (30, b30_image.height * 8.5 // 100),
+        (30, 151),
         rating_text,
         fill="#000000",
         font=INTER_32,
@@ -160,7 +361,7 @@ def render_b30(
     b30_draw.text(
         (
             b30_image.width - updated_length - 30,
-            b30_image.height * 8.5 // 100,
+            151,
         ),
         updated_text,
         fill="#000000",
@@ -187,183 +388,21 @@ def render_b30(
         # left to right, top to bottom
         # - the width/height is added by 15 to space out the entries
         x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
-        y = 30 + (b30_image.height * 12 // 100) + (i // 5) * (B30_ENTRY_HEIGHT + 15)
+        y = 30 + 214 + (i // 5) * (B30_ENTRY_HEIGHT + 15)
 
-        jacket_path = ASSETS_DIR / "jackets" / f"{record.extras[KEY_SONG_ID]}.png"
+        b30_image = _render_b30_entry(b30_image, jacket_shadow_base, record, i, x, y)
 
-        # we use try/catch on jacket processing to gracefully fail to a black image
-        # if the jacket is missing or corrupted
-        try:
-            with Image.open(jacket_path) as jacket:
-                # convert the jacket to RGB since ImageEnhance explodes in different modes
-                # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
-                jacket = jacket.convert("RGB").resize(
-                    (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
-                )
+    if new_records is not None:
+        for i, record in enumerate(new_records):
+            x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
 
-                # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
-                jacket = jacket.crop(
-                    (
-                        (jacket.width - B30_ENTRY_WIDTH) // 2,
-                        (jacket.height - B30_ENTRY_HEIGHT) // 2,
-                        (jacket.width + B30_ENTRY_WIDTH) // 2,
-                        (jacket.height + B30_ENTRY_HEIGHT) // 2,
-                    )
-                )
+            # start 60 pixels after the last b30 row, denoted by the 30 + 214 + 6 * ... + 60 part
+            y = 30 + 214 + 6 * (B30_ENTRY_HEIGHT + 15) + 45 + (i // 5) * (B30_ENTRY_HEIGHT + 15)
 
-                # darken the image and blur it
-                jacket = (
-                    ImageEnhance.Brightness(jacket)
-                    .enhance(0.45)
-                    .filter(ImageFilter.GaussianBlur(4))
-                )
-        except (FileNotFoundError, ValueError):
-            # fallback to a black background if anything fails
-            jacket = Image.new("RGB", (B30_ENTRY_WIDTH, B30_ENTRY_HEIGHT), 0)
-
-        # draw the difficulty colored triangle on the jacket, instead of on the b30 image.
-        # this ensures that the triangle is flush with the top right corner of the jacket instead of
-        # being slightly off by 1-2 pixels
-        difficulty_color = record.difficulty.color()
-        jacket_draw = ImageDraw.Draw(jacket)
-        jacket_draw.polygon(
-            [
-                (jacket.width - 55, 0),
-                (jacket.width, 0),
-                (jacket.width, 55),
-            ],
-            # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
-            # passing a number.
-            (
-                (difficulty_color >> 16) & 0xFF,
-                (difficulty_color >> 8) & 0xFF,
-                difficulty_color & 0xFF,
-            ),
-        )
-
-        # add a gaussian blurred shadow onto the jacket
-        jacket_shadow = jacket_shadow_base.copy()
-
-        jacket_shadow.paste(jacket, (10, 10))
-
-        jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
-
-        jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
-
-        # finally, paste the edited jacket onto the image.
-        b30_image = Image.alpha_composite(b30_image, jacket_padded)
-        b30_draw = ImageDraw.Draw(b30_image)
-
-        # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
-        title = record.title
-        title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
-
-        while title_length > B30_ENTRY_WIDTH - 15:
-            title = title[:-1]
-            title_length = b30_draw.textlength(title + "...", NOTO_SANS_JP_32_BOLD)
-
-        # draw the title
-        b30_draw.text(
-            (x + 10, y + 7),
-            title + ("..." if title != record.title else ""),
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_32_BOLD,
-        )
-
-        # draw the score
-        b30_draw.text(
-            (x + 10, y + 47),
-            f"{record.score:,}",
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_32_BOLD,
-        )
-
-        # draw the rank, next to the score
-        lamps = f"[{record.rank}]"
-
-        if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
-            lamps += " [AJC]"
-        elif record.combo_lamp == ComboType.ALL_JUSTICE:
-            lamps += " [AJ]"
-        elif record.combo_lamp == ComboType.FULL_COMBO:
-            lamps += " [FC]"
-
-        b30_draw.text(
-            (
-                x
-                + 10
-                + b30_draw.textlength(f"{record.score:,}", NOTO_SANS_JP_32_BOLD)
-                + 10,
-                y + 50,
-            ),
-            lamps,
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_28_MEDIUM,
-        )
-
-        # draw judgements, if they're available
-        if isinstance(record, DetailedRecentRecord):
-            b30_draw.text(
-                (x + 10, y + 89),
-                f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f} | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}",  # noqa: RUF001
-                fill="#FFFFFF",
-                font=NOTO_SANS_JP_28_MEDIUM,
-            )
-
-        # draw the rank of the b30 entry
-        b30_draw.text(
-            (x + 10, y + 125),
-            f"#{i + 1}",
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_32_BOLD,
-        )
-
-        # draw the internal level and rating value
-        if isinstance(record, DetailedRecentRecord):
-            rating_text = f"({record.extras.get(KEY_PLAY_RATING):.2f})"
-        else:
-            rating_text = f"({record.extras.get(KEY_INTERNAL_LEVEL):.1f} > {record.extras.get(KEY_PLAY_RATING):.2f})"
-
-        b30_draw.text(
-            (
-                x + 10 + b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_32_BOLD) + 10,
-                y + 128,
-            ),
-            rating_text,
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_28_MEDIUM,
-        )
-
-        # draw the timestamp
-        if isinstance(record, RecentRecord) and record.date.timestamp() > 0:
-            difference = datetime.now(UTC) - record.date
-
-            if difference.days >= 365:
-                delta = f"{difference.days // 365}y"
-            elif difference.days >= 30:
-                delta = f"{difference.days // 30}mo"
-            elif difference.days >= 1:
-                delta = f"{difference.days}d"
-            elif difference.seconds >= 3600:
-                delta = f"{difference.seconds // 3600}h"
-            elif difference.seconds >= 60:
-                delta = f"{difference.seconds // 60}m"
-            elif difference.seconds >= 1:
-                delta = f"{difference.seconds}s"
-            else:
-                delta = "0s"
-
-            delta_length = b30_draw.textlength(delta, NOTO_SANS_JP_28_MEDIUM)
-
-            b30_draw.text(
-                (int(x + B30_ENTRY_WIDTH - delta_length - 10), y + 128),
-                delta,
-                fill="#FFFFFF",
-                font=NOTO_SANS_JP_28_MEDIUM,
-            )
+            b30_image = _render_b30_entry(b30_image, jacket_shadow_base, record, i, x, y)
 
     # crop any extra bits we don't need, however we might need them later...
-    b30_image = b30_image.crop((0, 0, b30_image.width, 1429))
+    # b30_image = b30_image.crop((0, 0, b30_image.width, 1429))
 
     buffer = BytesIO()
 
