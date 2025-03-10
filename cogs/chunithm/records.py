@@ -388,6 +388,11 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         target_id = ctx.author.id if user is None else user.id
 
+        kamaitachi = (
+            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            == "kamaitachi"
+        )
+
         async with ctx.typing():
             if kamaitachi:
                 async with self.utils.kamaitachi_client(target_id) as client:
@@ -502,6 +507,11 @@ class RecordsCog(commands.Cog, name="Records"):
         kamaitachi: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
+
+        kamaitachi = (
+            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            == "kamaitachi"
+        )
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             if ctx.message.reference is not None:
@@ -766,6 +776,11 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         target_id = ctx.author.id if user is None else user.id
 
+        kamaitachi = (
+            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            == "kamaitachi"
+        )
+
         async with ctx.typing():
             guild_id = ctx.guild.id if ctx.guild else None
             result = await self.utils.find_songs(
@@ -970,6 +985,11 @@ class RecordsCog(commands.Cog, name="Records"):
         kamaitachi: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
+
+        kamaitachi = (
+            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            == "kamaitachi"
+        )
 
         async with ctx.typing():
             if kamaitachi:

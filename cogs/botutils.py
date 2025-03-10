@@ -182,6 +182,34 @@ class UtilsCog(commands.Cog, name="Utils"):
         async with client:
             yield client
 
+    async def choose_preferred_network(self, ctx_or_id: Context | int, *, kamaitachi: bool = False):
+        id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
+
+        async with self.bot.begin_db_session() as session:
+            stmt = select(Cookie).where(Cookie.discord_id == id)
+            cookie = (await session.execute(stmt)).scalar_one_or_none()
+
+            if cookie is None:
+                msg = "You are not logged in. Please send `c>login` in my DMs to log in."
+                raise commands.CommandError(msg)
+
+            if kamaitachi:
+                if cookie.kamaitachi_token is None:
+                    msg = "You have not linked your Kamaitachi account. Please send `c>kamaitachi link` in my DMs to get started."
+                    raise commands.CommandError(msg)
+                
+                return "kamaitachi"
+
+            if cookie.cookie.startswith("#LWP-Cookies-2.0"):
+                return "chuninet"
+
+            if cookie.kamaitachi_token is not None:
+                return "kamaitachi"
+
+            msg = "You are not logged in. Please send `c>login` in my DMs to log in."
+            raise commands.CommandError(msg)
+            
+
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
         song_ids = set()
         jackets = set()
