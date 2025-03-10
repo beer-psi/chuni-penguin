@@ -8,7 +8,7 @@ import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
 from discord.ext.commands import Context
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 
 from chunithm_net import ChuniNet
 from chunithm_net.exceptions import ChuniNetException, InvalidTokenException
@@ -58,7 +58,7 @@ class AuthCog(commands.Cog, name="Auth"):
                     )
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
-            stmt = delete(Cookie).where(Cookie.discord_id == ctx.author.id)
+            stmt = update(Cookie).where(Cookie.discord_id == ctx.author.id).values(cookie="")
             await session.execute(stmt)
             await session.commit()
         await ctx.reply(msg, mention_author=False)
