@@ -1111,7 +1111,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 mention_author=False,
             )
 
-    @commands.command("best30", aliases=["b30"])
+    @commands.command("best30", aliases=["b30", "best50", "b50"])
     async def best30(self, ctx: Context, *, query: str = ""):
         """View top 30 scores of you or another player.
 
