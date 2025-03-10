@@ -268,11 +268,19 @@ def _render_b30_entry(
 def render_b30(
     player_name: str,
     records: list[Record],
+    record_slots: int = 30,
     new_records: list[Record] | None = None,
+    new_record_slots: int = 20,
     current_rating: float | None = None,
     max_rating: float | None = None,
 ):
-    row_num = ceil(len(records) / 5)
+    if len(records) > record_slots:
+        raise ValueError("More records provided than number of record slots")
+    
+    if new_records is not None and len(new_records) > new_record_slots:
+        raise ValueError("More new records provided than number of new record slots")
+
+    row_num = ceil(record_slots / 5)
     
     # 214 height for the header + 30 for spacing between header and b30
     # each b30 entry has 15 padding
@@ -280,7 +288,7 @@ def render_b30(
 
     # Add a 45 pixel gap between old rating and new rating, if it is provided
     if new_records is not None:
-        new_row_num = ceil(len(new_records) / 5)
+        new_row_num = ceil(new_record_slots / 5)
         image_height += 30 + (B30_ENTRY_HEIGHT + 15) * new_row_num + 15
     
     b30_image = Image.new("RGBA", size=(1872, image_height), color="#FFFFFF")
@@ -321,22 +329,36 @@ def render_b30(
         spacing=12,
     )
 
-    total_rating = sum(
-        (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
-    )
-    max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in records)
-    average = floor_to_ndp(total_rating / len(records), 4)
-
     # subheader: rating information and generation date
     # draw a background for the subheader
     b30_draw.rectangle(
         (0, 124, b30_image.width, 214),
         fill="#F2D0F0",
     )
-    # draw the rating information in the subheader
-    rating_text = f"AVERAGE {average:.4f}"
 
-    if len(records) == 30 and new_records is None:
+    total_rating = sum(
+        (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
+    )
+    average = floor_to_ndp(total_rating / record_slots, 4)
+
+    # draw the rating information in the subheader
+    # if there's no new rating, we just call it average
+    # but if there's new rating, we need to differentiate between new rating and old rating.
+    if new_records is None:
+        rating_text = f"AVERAGE {average:.4f}"
+    else:
+        new_average = floor_to_ndp(
+            sum(
+                (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
+            ) / new_record_slots,
+            4,
+        )
+        rating_text = f"OLD {average:.4f} / NEW {new_average:.4f}"
+
+    # basic guard for old rating system, since there's no more
+    # "reachable" rating in the new system
+    if record_slots == 30 and new_records is None:
+        max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in records)
         reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
 
         rating_text += f" / REACHABLE {reachable:.4f}"
@@ -1074,7 +1096,10 @@ class RecordsCog(commands.Cog, name="Records"):
             b30_image = await asyncio.to_thread(
                 render_b30,
                 player_name,
-                best30,
+                records=best30,
+                record_slots=30,
+                # new_records=new20,
+                # new_record_slots=20,
                 current_rating=current_rating,
                 max_rating=max_rating,
             )
