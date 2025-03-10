@@ -303,6 +303,11 @@ class ProfileCog(commands.Cog, name="Profile"):
     ):
         target_id = ctx.author.id if user is None else user.id
 
+        kamaitachi = (
+            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            == "kamaitachi"
+        )
+
         async with ctx.typing():
             if kamaitachi:
                 embed = await self._kamaitachi_profile_card(target_id)
