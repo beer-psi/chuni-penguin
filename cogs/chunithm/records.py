@@ -1102,7 +1102,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 render_b30,
                 player_name,
                 records=best30,
-                record_slots=30,
+                record_slots=n,
                 # new_records=new20,
                 # new_record_slots=20,
                 current_rating=current_rating,
