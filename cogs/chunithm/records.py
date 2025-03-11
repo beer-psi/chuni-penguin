@@ -1089,7 +1089,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     best30 = await self.utils.hydrate_records(best30)
 
             if not image:
-                view = B30View(ctx, best30)
+                view = B30View(ctx, best30, rating_slots=n, show_reachable=n == 30)
                 view.message = await ctx.reply(
                     content=view.format_content(),
                     embeds=view.format_page(view.items[: view.per_page]),
