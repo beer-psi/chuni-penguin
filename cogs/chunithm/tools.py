@@ -365,19 +365,35 @@ class ToolsCog(commands.Cog, name="Tools"):
         count: int
             Number of charts to return. Must be between 1 and 4.
         max_rating: Optional[float]
-            Your maximum rating. If not provided, your rating will be fetched from CHUNITHM-NET,
+            Your maximum rating. If not provided, your rating will be fetched from CHUNITHM-NET/Kamaitachi,
             assuming you're logged in.
         """
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             if max_rating is None:
-                async with self.utils.chuninet(ctx) as client:
-                    basic_player_data = await client.authenticate()
-                    max_rating = basic_player_data.rating.max
+                network = await self.utils.choose_preferred_network(ctx)
 
-                    if max_rating is None:
-                        msg = "No rating data found. Please play a song first."
-                        raise commands.BadArgument(msg)
+                if network == "kamaitachi":
+                    async with self.utils.kamaitachi_client(ctx) as client:
+                        resp = await client.get(
+                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
+                        )
+                        data = resp.json()
+
+                        if not data["success"]:
+                            msg = f"Could not get Kamaitachi game stats: {data['description']}"
+                            raise commands.CommandError(msg)
+
+                        stats = data["body"]
+                        max_rating = stats["gameStats"]["ratings"]["naiveRating"]
+                else:
+                    async with self.utils.chuninet(ctx) as client:
+                        basic_player_data = await client.authenticate()
+                        max_rating = basic_player_data.rating.max
+
+            if max_rating is None:
+                msg = "No rating data found. Please play a song first."
+                raise commands.BadArgument(msg)
 
             # Determine min-max const to recommend based on user rating. Formula is intentionally confusing.
             min_level = max_rating * 1.05 - 3.05
