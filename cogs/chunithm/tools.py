@@ -514,11 +514,11 @@ class ToolsCog(commands.Cog, name="Tools"):
     @commands.hybrid_command("chart")
     @app_commands.choices(
         difficulty=[
-            app_commands.Choice(name="BASIC", value="BASIC"),
-            app_commands.Choice(name="ADVANCED", value="ADVANCED"),
-            app_commands.Choice(name="EXPERT", value="EXPERT"),
-            app_commands.Choice(name="MASTER", value="MASTER"),
-            app_commands.Choice(name="ULTIMA", value="ULTIMA"),
+            app_commands.Choice(name="BASIC", value="BAS"),
+            app_commands.Choice(name="ADVANCED", value="ADV"),
+            app_commands.Choice(name="EXPERT", value="EXP"),
+            app_commands.Choice(name="MASTER", value="MAS"),
+            app_commands.Choice(name="ULTIMA", value="ULT"),
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
