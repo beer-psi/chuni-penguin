@@ -1044,6 +1044,7 @@ class RecordsCog(commands.Cog, name="Records"):
         *,
         image: bool = False,
         kamaitachi: bool = False,
+        n: int = 30,
     ):
         target_id = ctx.author.id if user is None else user.id
 
@@ -1051,6 +1052,10 @@ class RecordsCog(commands.Cog, name="Records"):
             await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
             == "kamaitachi"
         )
+
+        if n == 50 and not kamaitachi:
+            msg = "Best 50 isn't currently supported yet! Please come back when CHUNITHM VERSE releases."
+            raise commands.CommandError(msg)
 
         async with ctx.typing():
             if kamaitachi:
@@ -1069,7 +1074,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     raise commands.CommandError(msg)
 
                 pbs = convert_kt_pbs_to_records(data["body"])
-                best30 = pbs[:30]
+                best30 = pbs[:n]
                 current_rating = None
                 max_rating = None
 
@@ -1140,8 +1145,13 @@ class RecordsCog(commands.Cog, name="Records"):
                     user = await converter().convert(ctx, rest[0])
                     break
 
+        n = 30
+
+        if ctx.message.content.startswith((f"{ctx.prefix}b50", f"{ctx.prefix}best50")):
+            n = 50
+
         await self._best30_inner(
-            ctx, user, image=args.image, kamaitachi=args.kamaitachi
+            ctx, user, image=args.image, kamaitachi=args.kamaitachi, n=n
         )
 
     @app_commands.command(name="best30", description="View top plays")
