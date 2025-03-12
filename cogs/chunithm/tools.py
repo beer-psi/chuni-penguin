@@ -318,6 +318,14 @@ class ToolsCog(commands.Cog, name="Tools"):
             "v": ["14", "14+", "14+"],
             "inf": ["14", "14+", "15"],
         }
+        course_condition: dict[str, str] = {
+            "i": "CLASS I: 50 LIFE, MISS -1, CLEAR +10",
+            "ii": "CLASS II: 50 LIFE, MISS -1",
+            "iii": "CLASS III: 30 LIFE, MISS -1",
+            "iv": "CLASS IV: 500 LIFE, JUSTICE or lower -1",
+            "v": "CLASS V: 300 LIFE, JUSTICE or lower -1",
+            "inf": "CLASS ∞: 150 LIFE, JUSTICE or lower -1",
+        }
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             stmt = (
@@ -340,6 +348,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if course_class == "infinite":
                     course_class = "inf"
 
+                content = course_condition[course_class]
                 track_levels = course_levels[course_class]
 
                 for track_level in track_levels:
@@ -353,6 +362,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     if chart is not None:
                         charts.append(chart)
             else:
+                content = None
                 try:
                     if "." in level:
                         query_level = float(level)
@@ -391,7 +401,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     return
 
             embeds: list[discord.Embed] = [ChartCardEmbed(chart) for chart in charts]
-            await ctx.reply(embeds=embeds, mention_author=False)
+            await ctx.reply(content=content, embeds=embeds, mention_author=False)
 
     @commands.hybrid_command("recommend")
     async def recommend(
