@@ -332,6 +332,8 @@ class ToolsCog(commands.Cog, name="Tools"):
             course_mode = level.lower() in {"i", "ii", "iii", "iv", "v", "inf", "infinite"}
 
             if course_mode:
+                # TODO: Remove the VERSE condition when VERSE drops next month
+                stmt = stmt.where((Song.version != "VERSE") & (Chart.version != "VERSE"))
                 charts = []
                 course_class = level.lower()
 
