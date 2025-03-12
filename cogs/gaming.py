@@ -44,7 +44,7 @@ class GamingCog(commands.Cog, name="Games"):
 
             stmt = (
                 select(Song)
-                .where(Song.genre != "WORLD'S END")
+                .where((Song.genre != "WORLD'S END") & (Song.removed == False))
                 .order_by(text("RANDOM()"))
                 .limit(1)
             )
