@@ -16,7 +16,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
 from chunithm_net.models.enums import Difficulty, Rank
-from database.models import Chart, Song
+from database.models import Chart, SdvxinChartView, Song
 from utils import (
     did_you_mean_text,
     floor_to_ndp,
@@ -298,35 +298,76 @@ class ToolsCog(commands.Cog, name="Tools"):
 
     @commands.hybrid_command("random")
     async def random(self, ctx: Context, level: str, count: Range[int, 1, 4] = 3):
-        """Get random charts based on level or chart constant.
+        """Get random charts based on level/course/chart constant.
 
         Parameters
         ----------
         level: str
-            Level to search for. Can be level (13+) or chart constant (13.5).
+            Level to search for. Can be a level (13+), a chart constant (13.5), or a
+            course class (`i`, `ii`, `iii`, `iv`, `v`, `inf`).
         count: int
-            Number of charts to return. Must be between 1 and 4.
+            Number of charts to return. Must be between 1 and 4. Not respected when
+            rolling a random course.
         """
 
+        course_levels: dict[str, list[str | None]] = {
+            "i": ["10", "10+", "11"],
+            "ii": ["11+", "12", "12+"],
+            "iii": ["12+", "13", "13+"],
+            "iv": ["13+", "14", "14+"],
+            "v": ["14", "14+", "14+"],
+            "inf": ["14", "14+", "15"],
+        }
+
         async with ctx.typing(), self.bot.begin_db_session() as session:
-            # Check whether input is level or constant
             stmt = (
                 select(Chart)
+                .join(Song, Chart.song_id == Song.id)
+                .where(Song.removed == False)
                 .order_by(text("RANDOM()"))
-                .limit(count)
                 .options(joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view))
             )
-            try:
-                if "." in level:
-                    query_level = float(level)
-                    stmt = stmt.where(Chart.const == query_level)
-                else:
-                    stmt = stmt.where(Chart.level == level)
-            except ValueError:
-                msg = "Please enter a valid level or chart constant."
-                raise commands.BadArgument(msg) from None
 
-            charts: Sequence[Chart] = (await session.execute(stmt)).scalars().all()
+            charts: Sequence[Chart]
+            course_mode = level.lower() in {"i", "ii", "iii", "iv", "v", "inf", "infinite"}
+
+            if course_mode:
+                charts = []
+                course_class = level.lower()
+
+                if course_class == "infinite":
+                    course_class = "inf"
+
+                track_levels = course_levels[course_class]
+
+                for track_level in track_levels:
+                    chart_stmt = stmt.limit(1)
+
+                    if track_level is not None:
+                        chart_stmt = chart_stmt.where(Chart.level == track_level)
+
+                    chart = (await session.execute(chart_stmt)).scalar_one_or_none()
+
+                    if chart is not None:
+                        charts.append(chart)
+            else:
+                try:
+                    if "." in level:
+                        query_level = float(level)
+                        stmt = stmt.limit(count).where(Chart.const == query_level)
+                    elif (
+                        (level.endswith("+") and level[:-1].isnumeric())
+                        or level.isnumeric()
+                    ):
+                        stmt = stmt.limit(count).where(Chart.level == level)
+                    else:
+                        msg = "Please enter a valid level or chart constant."
+                        raise commands.BadArgument(msg)
+                except ValueError:
+                    msg = "Please enter a valid level or chart constant."
+                    raise commands.BadArgument(msg) from None
+
+                charts = (await session.execute(stmt)).scalars().all()
 
             if len(charts) == 0:
                 await ctx.reply("No charts found.", mention_author=False)
@@ -336,15 +377,16 @@ class ToolsCog(commands.Cog, name="Tools"):
                 chart.song.id for chart in charts if chart.difficulty == "MAS"
             ]
 
-            if XL_TECHNO_JUMPSCARE in master_song_ids:
-                await ctx.reply(XL_TECHNO_JUMPSCARE, mention_author=False)
-                return
-            if VOLCANIC_SONG_ID in master_song_ids:
-                await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
-                return
-            if FORSAKEN_TALE_SONG_ID in master_song_ids and random.random() < 0.5:
-                await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
-                return
+            if not course_mode:
+                if XL_TECHNO_JUMPSCARE in master_song_ids:
+                    await ctx.reply(XL_TECHNO_JUMPSCARE, mention_author=False)
+                    return
+                if VOLCANIC_SONG_ID in master_song_ids:
+                    await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
+                    return
+                if FORSAKEN_TALE_SONG_ID in master_song_ids and random.random() < 0.5:
+                    await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
+                    return
 
             embeds: list[discord.Embed] = [ChartCardEmbed(chart) for chart in charts]
             await ctx.reply(embeds=embeds, mention_author=False)
