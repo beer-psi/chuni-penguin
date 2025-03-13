@@ -317,6 +317,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "iv": ["13+", "14", "14+"],
             "v": ["14", "14+", "14+"],
             "inf": ["14", "14+", "15"],
+            "random": ["12", "13", None],
         }
         course_condition: dict[str, str] = {
             "i": "CLASS I: 50 LIFE, MISS -1, CLEAR +10",
@@ -325,6 +326,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "iv": "CLASS IV: 500 LIFE, JUSTICE or lower -1",
             "v": "CLASS V: 300 LIFE, JUSTICE or lower -1",
             "inf": "CLASS ∞: 150 LIFE, JUSTICE or lower -1",
+            "random": "CLASS EXTRA - RANDOM: 50 LIFE, MISS -1",
         }
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
@@ -345,6 +347,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 "v",
                 "inf",
                 "infinite",
+                "random",
             }
 
             if course_mode:
@@ -368,8 +371,10 @@ class ToolsCog(commands.Cog, name="Tools"):
 
                     if track_level is not None:
                         chart_stmt = chart_stmt.where(Chart.level == track_level)
-
-                    print(chart_stmt)
+                    elif course_class == "random":
+                        chart_stmt = chart_stmt.where(
+                            (Chart.song_id >= 8244) & (Chart.song_id <= 8249)
+                        )
 
                     chart = (await session.execute(chart_stmt)).scalar_one_or_none()
 
