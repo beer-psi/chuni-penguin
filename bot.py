@@ -107,7 +107,7 @@ class ChuniBot(commands.Bot):
             try:
                 await self.load_extension(cog)
                 logger.info(f"Loaded extension {cog}")
-            except commands.errors.ExtensionAlreadyLoaded:  # noqa: PERF203
+            except commands.errors.ExtensionAlreadyLoaded:
                 logger.warning(f"{cog} already loaded")
             except commands.errors.NoEntryPointError:
                 logger.error(f"{COG_LIST} has no `setup` function.")

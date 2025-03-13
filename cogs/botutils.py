@@ -197,7 +197,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 if cookie.kamaitachi_token is None:
                     msg = "You have not linked your Kamaitachi account. Please send `c>kamaitachi link` in my DMs to get started."
                     raise commands.CommandError(msg)
-                
+
                 return "kamaitachi"
 
             if cookie.cookie.startswith("#LWP-Cookies-2.0"):
@@ -208,7 +208,7 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             msg = "You are not logged in. Please send `c>login` in my DMs to log in."
             raise commands.CommandError(msg)
-            
+
 
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
         song_ids = set()

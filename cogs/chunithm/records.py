@@ -5,8 +5,8 @@ import urllib.parse
 from argparse import ArgumentError
 from datetime import UTC, datetime
 from decimal import Decimal
-from math import ceil
 from io import BytesIO
+from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional, cast
 
@@ -275,13 +275,15 @@ def render_b30(
     max_rating: float | None = None,
 ):
     if len(records) > record_slots:
-        raise ValueError("More records provided than number of record slots")
-    
+        msg = "More records provided than number of record slots"
+        raise ValueError(msg)
+
     if new_records is not None and len(new_records) > new_record_slots:
-        raise ValueError("More new records provided than number of new record slots")
+        msg = "More new records provided than number of new record slots"
+        raise ValueError(msg)
 
     row_num = ceil(record_slots / 5)
-    
+
     # 214 height for the header + 30 for spacing between header and b30
     # each b30 entry has 15 padding
     image_height = 214 + 30 + (B30_ENTRY_HEIGHT + 15) * row_num + 15
@@ -290,7 +292,7 @@ def render_b30(
     if new_records is not None:
         new_row_num = ceil(new_record_slots / 5)
         image_height += 30 + (B30_ENTRY_HEIGHT + 15) * new_row_num + 15
-    
+
     b30_image = Image.new("RGBA", size=(1872, image_height), color="#FFFFFF")
     b30_draw = ImageDraw.Draw(b30_image)
 
@@ -300,9 +302,7 @@ def render_b30(
 
     # header: player name and credits
     # draw a background for the player name
-    b30_draw.rectangle(
-        (0, 0, b30_image.width, 124), fill="#F2ACE0"
-    )
+    b30_draw.rectangle((0, 0, b30_image.width, 124), fill="#F2ACE0")
 
     # draw the player name
     b30_draw.text((20, 0), player_name, fill="#000000", font=NOTO_SANS_JP_80)
@@ -350,7 +350,8 @@ def render_b30(
         new_average = floor_to_ndp(
             sum(
                 (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
-            ) / new_record_slots,
+            )
+            / new_record_slots,
             4,
         )
         rating_text = f"OLD {average:.4f} / NEW {new_average:.4f}"
@@ -419,16 +420,24 @@ def render_b30(
             x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
 
             # start 60 pixels after the last b30 row, denoted by the 30 + 214 + 6 * ... + 60 part
-            y = 30 + 214 + 6 * (B30_ENTRY_HEIGHT + 15) + 45 + (i // 5) * (B30_ENTRY_HEIGHT + 15)
+            y = (
+                30
+                + 214
+                + 6 * (B30_ENTRY_HEIGHT + 15)
+                + 45
+                + (i // 5) * (B30_ENTRY_HEIGHT + 15)
+            )
 
-            b30_image = _render_b30_entry(b30_image, jacket_shadow_base, record, i, x, y)
+            b30_image = _render_b30_entry(
+                b30_image, jacket_shadow_base, record, i, x, y
+            )
 
     # crop any extra bits we don't need, however we might need them later...
     # b30_image = b30_image.crop((0, 0, b30_image.width, 1429))
 
     buffer = BytesIO()
 
-    b30_image.save(buffer, "PNG", optimize=True)
+    b30_image.save(buffer, "PNG", compress_level=3)
     buffer.seek(0)
 
     return buffer
@@ -1185,9 +1194,10 @@ class RecordsCog(commands.Cog, name="Records"):
             The user to get scores for.
         """
 
-        async with ctx.typing(), self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
+        async with (
+            ctx.typing(),
+            self.utils.chuninet(ctx if user is None else user.id) as client,
+        ):
             recent10 = await client.recent10()
             recent10 = await self.utils.hydrate_records(recent10)
 
@@ -1309,10 +1319,10 @@ class RecordsCog(commands.Cog, name="Records"):
         if level is None and difficulty is None and genre is None and rank is None:
             ctx = await Context.from_interaction(interaction)
             await self._best30_inner(ctx, user, image=True)
-            return
+            return None
 
         await interaction.response.defer()
-        
+
         if (genre or rank) and not difficulty:
             return await interaction.followup.send(
                 "Difficulty must be set if genre or rank is set."
@@ -1461,7 +1471,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         if query is None:
             await self.best30(ctx, query="-i")
-            return
+            return None
 
         parser = DiscordArguments()
         parser.add_argument("-d", "--difficulty", type=difficulty, required=False)
@@ -1491,7 +1501,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     break
 
         str_level = rest[0] if len(rest) > 0 else None
-            
+
         if (
             user is not None
             and str_level is None
@@ -1500,7 +1510,7 @@ class RecordsCog(commands.Cog, name="Records"):
             and args.rank is None
         ):
             await self.best30(ctx, query=f"-i {user.mention}")
-            return
+            return None
 
         level = None
         internal_level: float | None = None
@@ -1528,9 +1538,10 @@ class RecordsCog(commands.Cog, name="Records"):
             else:
                 raise commands.BadArgument(msg)
 
-        async with ctx.typing(), self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
+        async with (
+            ctx.typing(),
+            self.utils.chuninet(ctx if user is None else user.id) as client,
+        ):
             records = await client.music_record_by_folder(
                 level=level,
                 genre=args.genre,

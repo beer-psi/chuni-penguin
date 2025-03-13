@@ -1,12 +1,12 @@
 import asyncio
 import platform
 import time
+import tomllib
 from pathlib import Path
 from random import random
 from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
-import tomllib
 from discord.ext import commands, tasks
 from discord.ext.commands import Context, Greedy
 from discord.utils import oauth_url
@@ -65,7 +65,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         for guild in guilds:
             try:
                 await ctx.bot.tree.sync(guild=guild)
-            except discord.HTTPException:  # noqa: PERF203
+            except discord.HTTPException:
                 pass
             else:
                 ret += 1

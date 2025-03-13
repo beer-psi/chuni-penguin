@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import cast
+from zoneinfo import ZoneInfo
 
 from bs4.element import ResultSet, Tag
-from zoneinfo import ZoneInfo
 
 from .models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
 

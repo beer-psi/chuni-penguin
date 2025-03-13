@@ -5,10 +5,10 @@ from secrets import SystemRandom
 from typing import TYPE_CHECKING, Optional
 
 import discord
-from discord import app_commands, Interaction
+from discord import Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
-from sqlalchemy import delete, update
+from sqlalchemy import update
 
 from chunithm_net import ChuniNet
 from chunithm_net.exceptions import ChuniNetException, InvalidTokenException
@@ -233,7 +233,7 @@ class AuthCog(commands.Cog, name="Auth"):
 
         async with ctx.typing():
             jar = await self.utils.login_check(ctx)
-    
+
             for cookie in jar:
                 if cookie.name == "clal" and cookie.domain == "lng-tgk-aime-gw.am-all.net":
                     await ctx.reply(
@@ -248,7 +248,7 @@ class AuthCog(commands.Cog, name="Auth"):
     @app_commands.command(name="token", description="Show your current token.")
     async def token_slash(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
-        
+
         jar = await self.utils.login_check(interaction.user.id)
 
         for cookie in jar:

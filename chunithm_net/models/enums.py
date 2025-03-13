@@ -113,7 +113,7 @@ class ClearType(Enum):
             return "ABS+"
         if self.value == 7:
             return "CTS"
-        
+
         msg = f"Unknown clear type value {self.value}"
         raise ValueError(msg)
 

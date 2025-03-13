@@ -16,7 +16,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
 from chunithm_net.models.enums import Difficulty, Rank
-from database.models import Chart, SdvxinChartView, Song
+from database.models import Chart, Song
 from utils import (
     did_you_mean_text,
     floor_to_ndp,
@@ -331,13 +331,21 @@ class ToolsCog(commands.Cog, name="Tools"):
             stmt = (
                 select(Chart)
                 .join(Song, Chart.song_id == Song.id)
-                .where(Song.removed == False)
+                .where(Song.removed == False)  # noqa: E712
                 .order_by(text("RANDOM()"))
                 .options(joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view))
             )
 
             charts: Sequence[Chart]
-            course_mode = level.lower() in {"i", "ii", "iii", "iv", "v", "inf", "infinite"}
+            course_mode = level.lower() in {
+                "i",
+                "ii",
+                "iii",
+                "iv",
+                "v",
+                "inf",
+                "infinite",
+            }
 
             if course_mode:
                 # TODO: Remove the VERSE condition when VERSE drops next month
@@ -374,9 +382,8 @@ class ToolsCog(commands.Cog, name="Tools"):
                         query_level = float(level)
                         stmt = stmt.limit(count).where(Chart.const == query_level)
                     elif (
-                        (level.endswith("+") and level[:-1].isnumeric())
-                        or level.isnumeric()
-                    ):
+                        level.endswith("+") and level[:-1].isnumeric()
+                    ) or level.isnumeric():
                         stmt = stmt.limit(count).where(Chart.level == level)
                     else:
                         msg = "Please enter a valid level or chart constant."

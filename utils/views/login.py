@@ -3,12 +3,13 @@ from typing import TYPE_CHECKING, override
 
 import discord.ui
 import httpx
-from discord.abc import MISSING
 from discord import Embed, Interaction
+from discord.abc import MISSING
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
 from chunithm_net import _AUTHENTICATION_URL
+
 from ._pagination import PaginationView
 
 if TYPE_CHECKING:
@@ -43,7 +44,7 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
             transport=httpx.AsyncHTTPTransport(retries=5),
         ) as client:
             await client.get(_AUTHENTICATION_URL)
-            
+
             resp = await client.post(
                 "https://lng-tgk-aime-gw.am-all.net/common_auth/login/sid/",
                 data={
@@ -55,7 +56,7 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
             )
 
             if (
-                (location := resp.headers.get("location")) is None 
+                (location := resp.headers.get("location")) is None
                 or "https://chunithm-net-eng.com" not in location
             ):
                 await interaction.followup.send(
@@ -66,34 +67,33 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
                     )
                 )
                 return
-            else:
-                clal = client.cookies.get("clal", domain="lng-tgk-aime-gw.am-all.net")
+            clal = client.cookies.get("clal", domain="lng-tgk-aime-gw.am-all.net")
 
-                if clal is None:
-                    await interaction.followup.send(
-                        embed=discord.Embed(
-                            color=discord.Color.red(),
-                            title="Error",
-                            description="Login was successful, but could not retrieve token.",
-                        )
-                    )
-                    return
-
-                interaction.client.dispatch(f"chunithm_login_{self.code}", clal)
-
+            if clal is None:
                 await interaction.followup.send(
                     embed=discord.Embed(
-                        color=discord.Color.green(),
-                        title="Success",
-                        description="Login successful.",
+                        color=discord.Color.red(),
+                        title="Error",
+                        description="Login was successful, but could not retrieve token.",
                     )
                 )
+                return
+
+            interaction.client.dispatch(f"chunithm_login_{self.code}", clal)
+
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    color=discord.Color.green(),
+                    title="Success",
+                    description="Login successful.",
+                )
+            )
 
 
 class LoginWithSegaIDView(discord.ui.View):
     def __init__(self, code: str, *, timeout: float | None = 180):
         super().__init__(timeout=timeout)
-        
+
         self.code = code
 
     @discord.ui.button(label="Login with SEGA ID", style=discord.ButtonStyle.green)
