@@ -53,7 +53,7 @@ jobs:
         run: rye run python -m dbutils update jackets
 
       - name: Upload created database
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: database
           path: data/database.sqlite3
