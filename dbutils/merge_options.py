@@ -35,6 +35,14 @@ VERSIONS = [
     "VERSE",
 ]
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
+WE_LEVEL_OVERRIDES = {
+    8244: "分☆☆☆ (LASTMORN)",
+    8245: "分☆☆☆ (Implexrough)",
+    8246: "分☆☆☆ (Shannon's Theorem)",
+    8247: "分☆☆☆ (Just Say It)",
+    8248: "分☆☆☆ (2anyFirst)",
+    8249: "分☆☆☆ (Alt Futur)",
+}
 
 
 @overload
@@ -62,8 +70,10 @@ async def merge_options(
     extract_jackets: bool,
 ):
     async with httpx.AsyncClient() as client:
-        songlist = (await client.get("https://chunithm.sega.jp/storage/json/music.json")).json()
-        jacket_by_id = dict((int(x["id"]), x["image"]) for x in songlist)
+        songlist = (
+            await client.get("https://chunithm.sega.jp/storage/json/music.json")
+        ).json()
+        jacket_by_id = {int(x["id"]): x["image"] for x in songlist}
 
     if extract_jackets:
         (ASSETS_DIR / "jackets").mkdir(exist_ok=True, parents=True)
@@ -167,11 +177,14 @@ async def merge_options(
             level_decimal = int(level_decimal_str)
 
             if genre == "WORLD'S END":
-                star_dif_type = int(gettext(root, "./starDifType", "0"))
-                displayed_level = we_tag_name
+                if int(song_id) in WE_LEVEL_OVERRIDES:
+                    displayed_level = WE_LEVEL_OVERRIDES[int(song_id)]
+                else:
+                    star_dif_type = int(gettext(root, "./starDifType", "0"))
+                    displayed_level = we_tag_name
 
-                for _ in range(-1, star_dif_type, 2):
-                    displayed_level += "☆"
+                    for _ in range(-1, star_dif_type, 2):
+                        displayed_level += "☆"
 
                 const = None
             else:

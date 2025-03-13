@@ -87,6 +87,7 @@ class ChunithmOfficialSong(msgspec.Struct):
     we_kanji: str
     we_star: str
     image: str
+    branch: str | msgspec.UnsetType = msgspec.UNSET
 
 
 class MaimaiOfficialSong(msgspec.Struct):
@@ -233,15 +234,15 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
 for idx, random in enumerate(
     # Random WE, A through F
     [
-        ("d8b8af2016eec2f0", "97af9ed62e768d73.jpg"),
-        ("5a0bc7702113a633", "fd4a488ed2bc67d8.jpg"),
-        ("948e0c4b67f4269d", "ce911dfdd8624a7c.jpg"),
-        ("56e583c091b4295c", "6a3201f1b63ff9a3.jpg"),
-        ("49794fec968b90ba", "d43ab766613ba19e.jpg"),
-        ("b9df9d9d74b372d9", "4a359278c6108748.jpg"),
+        ("d8b8af2016eec2f0", "97af9ed62e768d73.jpg", "LASTMORN"),
+        ("5a0bc7702113a633", "fd4a488ed2bc67d8.jpg", "Implexrough"),
+        ("948e0c4b67f4269d", "ce911dfdd8624a7c.jpg", "Shannon's Theorem"),
+        ("56e583c091b4295c", "6a3201f1b63ff9a3.jpg", "Just Say It"),
+        ("49794fec968b90ba", "d43ab766613ba19e.jpg", "2anyFirst"),
+        ("b9df9d9d74b372d9", "4a359278c6108748.jpg", "Alt Futur"),
     ]
 ):
-    random_id, random_image = random
+    random_id, random_image, random_branch = random
     MANUAL_MAPPINGS[random_id] = {
         "id": str(8244 + idx),
         "catname": "VARIETY",
@@ -256,6 +257,7 @@ for idx, random in enumerate(
         "lev_ult": "",
         "we_kanji": f"分{chr(65 + idx)}",
         "we_star": "5",
+        "branch": random_branch,
         "image": random_image,
     }
 
@@ -521,6 +523,11 @@ async def update_db(logger: Logger, async_session: async_sessionmaker[AsyncSessi
             we_stars = ""
             for _ in range(-1, int(chunithm_song.we_star), 2):
                 we_stars += "☆"
+
+            # Only for Random WEs.
+            if chunithm_song.branch is not msgspec.UNSET:
+                we_stars += f" ({chunithm_song.branch})"
+
             inserted_charts.append(
                 {
                     "song_id": chunithm_id,
