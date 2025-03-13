@@ -304,7 +304,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         ----------
         level: str
             Level to search for. Can be a level (13+), a chart constant (13.5), or a
-            course class (`i`, `ii`, `iii`, `iv`, `v`, `inf`).
+            course class (`i`, `ii`, `iii`, `iv`, `v`, `inf`, `random`, `wallpanic`).
         count: int
             Number of charts to return. Must be between 1 and 4. Not respected when
             rolling a random course.
@@ -318,6 +318,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "v": ["14", "14+", "14+"],
             "inf": ["14", "14+", "15"],
             "random": ["12", "13", None],
+            "wallpanic": ["10+", "11", "11+"],
         }
         course_condition: dict[str, str] = {
             "i": "CLASS I: 50 LIFE, MISS -1, CLEAR +10",
@@ -327,6 +328,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "v": "CLASS V: 300 LIFE, JUSTICE or lower -1",
             "inf": "CLASS ∞: 150 LIFE, JUSTICE or lower -1",
             "random": "CLASS EXTRA - RANDOM: 50 LIFE, MISS -1",
+            "wallpanic": "CLASS EXTRA - Wall Panic!: 400 LIFE, JUSTICE or lower -1, JUSTICE CRITICAL +1, field wall gets further back as LIFE decreases",
         }
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
@@ -348,6 +350,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 "inf",
                 "infinite",
                 "random",
+                "wallpanic",
             }
 
             if course_mode:
