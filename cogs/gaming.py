@@ -95,7 +95,7 @@ class GuessingGameSession:
                         )
                     )
                 )
-                aliases = [song.title] + [
+                aliases = [
                     alias.alias for alias in (await session.execute(stmt)).scalars()
                 ]
 
