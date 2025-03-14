@@ -125,14 +125,14 @@ class GuessingGameSession:
                 Difficulty.MASTER,
                 Difficulty.ULTIMA,
             }:
+                rotation = random.randrange(0, 4)
+                img = img.rotate(90 * rotation)
+
+            if self.difficulty == Difficulty.ULTIMA:
                 should_invert = random.random() < 0.5
 
                 if should_invert:
                     img = ImageOps.invert(img.convert("RGB"))
-
-            if self.difficulty == Difficulty.ULTIMA:
-                rotation = random.randrange(0, 4)
-                img = img.rotate(90 * rotation)
 
             buffer = io.BytesIO()
             img.save(buffer, format="PNG")
@@ -568,8 +568,8 @@ class GamingCog(commands.Cog, name="Games"):
         `-d`, `--difficulty`: The difficulty of the game:
         - `BASIC` is the default mode, with 90x90 crop and no filters.
         - `ADVANCED` has a 75x75 crop and no filters.
-        - `EXPERT` has a 75x75 crop and colors may be inverted.
-        - `MASTER` has a 60x60 crop and colors may be inverted.
+        - `EXPERT` has a 75x75 crop and images may be rotated 90/180/270 degrees.
+        - `MASTER` has a 60x60 crop and images may be rotated 90/180/270 degrees.
         - `ULTIMA` has a 60x60 crop, colors may be inverted, images may be rotated 90/180/270 degrees.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
