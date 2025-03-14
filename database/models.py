@@ -190,12 +190,20 @@ class SdvxinChartView(Base):
 class GuessScore(Base):
     __tablename__ = "guess_leaderboard"
     __table_args__ = (
-        UniqueConstraint("discord_id", "guild_id", name="_discord_id_guild_id_uc"),
+        UniqueConstraint(
+            "discord_id",
+            "guild_id",
+            "difficulty",
+            name="_discord_id_guild_id_difficulty_uc",
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     discord_id: Mapped[int] = mapped_column(BigInteger())
     guild_id: Mapped[int] = mapped_column(
         BigInteger(), nullable=False, default=-1, server_default=text("-1")
+    )
+    difficulty: Mapped[int] = mapped_column(
+        nullable=False, default=-1, server_default=text("-1")
     )
     score: Mapped[int] = mapped_column(nullable=False)

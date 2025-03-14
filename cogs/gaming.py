@@ -16,12 +16,14 @@ from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageOps
 from rapidfuzz import fuzz
 from sqlalchemy import delete, select, text
+from sqlalchemy.dialects.sqlite import insert
 
 from chunithm_net.models.enums import Difficulty
 from database.models import Alias, GuessScore, Song
 from utils import shlex_split
 from utils.argparse import DiscordArguments
 from utils.logging import logger as root_logger
+from utils.views.gaming import GuessLeaderboardView
 
 if TYPE_CHECKING:
     from discord.abc import MessageableChannel
@@ -169,18 +171,22 @@ class GuessingGameSession:
         guild_id = self.ctx.guild.id if self.ctx.guild else -1
 
         async with self.bot.begin_db_session() as session, session.begin():
-            stmt = select(GuessScore).where(
-                (GuessScore.discord_id == user_id) & (GuessScore.guild_id == guild_id)
+            stmt = insert(GuessScore).values(
+                discord_id=user_id,
+                guild_id=guild_id,
+                difficulty=self.difficulty.value,
+                score=1,
             )
-            score = (await session.execute(stmt)).scalar_one_or_none()
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[
+                    GuessScore.discord_id,
+                    GuessScore.guild_id,
+                    GuessScore.difficulty,
+                ],
+                set_={"score": GuessScore.score + 1},
+            )
 
-            if score is None:
-                score = GuessScore(discord_id=user_id, guild_id=guild_id, score=1)
-                session.add(score)
-            else:
-                score.score += 1
-                await session.merge(score)
-
+            await session.execute(stmt)
             await session.commit()
 
     def print_score_list(self):
@@ -508,37 +514,40 @@ class StartState(GuessingGameState):
 
 
 async def run_state_machine(
-    cog: "GamingCog", channel: "MessageableChannel", state: GuessingGameState
+    cog: "GamingCog",
+    channel: "MessageableChannel",
+    initial_state: GuessingGameState,
 ):
-    with cog.state_for_game_session_lock:
-        cog.state_for_game_session[channel.id] = state
+    current_state: GuessingGameState | None = initial_state
 
-    try:
-        next_state = await state()
+    while current_state is not None:
+        with cog.state_for_game_session_lock:
+            cog.state_for_game_session[channel.id] = current_state
 
-        if next_state is None:
+        try:
+            next_state = await current_state()
+
+            if next_state is None:
+                cog._clear_state(channel.id)
+                break
+
+            current_state = next_state
+        except Exception as e:
+            logger.exception("Error running guessing game state machine", exc_info=e)
             cog._clear_state(channel.id)
 
-            return None
-
-        return await run_state_machine(cog, channel, next_state)
-    except Exception as e:
-        logger.exception("Error running guessing game state machine", exc_info=e)
-
-        cog._clear_state(channel.id)
-
-        embed = discord.Embed(
-            color=discord.Color.red(),
-            title="Game ended",
-            description=(
-                "The game ended due to an error:\n"
-                "```python\n"
-                f"{traceback.format_exception_only(e)}\n"
-                "```\n"
-                "If this keeps happening, please ping the owner or contact them in the support Discord.",
-            ),
-        )
-        await channel.send(embed=embed)
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Game ended",
+                description=(
+                    "The game ended due to an error:\n"
+                    "```python\n"
+                    f"{traceback.format_exception_only(e)}\n"
+                    "```\n"
+                    "If this keeps happening, please ping the owner or contact them in the support Discord.",
+                ),
+            )
+            await channel.send(embed=embed)
 
 
 class GamingCog(commands.Cog, name="Games"):
@@ -551,25 +560,6 @@ class GamingCog(commands.Cog, name="Games"):
 
         self.state_for_game_session: dict[int, GuessingGameState] = {}
         self.state_for_game_session_lock = Lock()
-
-    @override
-    async def cog_command_error(self, ctx: Context, error: Exception) -> None:
-        with self.game_sessions_lock:
-            del self.game_sessions[ctx.channel.id]
-
-        await super().cog_command_error(ctx, error)
-
-    @override
-    async def cog_app_command_error(
-        self,
-        interaction: discord.Interaction,
-        error: discord.app_commands.AppCommandError,
-    ) -> None:
-        if interaction.channel is not None:
-            with self.game_sessions_lock:
-                del self.game_sessions[interaction.channel.id]
-
-        await super().cog_app_command_error(interaction, error)
 
     @commands.group("guess", invoke_without_command=True)
     async def guess(self, ctx: Context, *, arguments: str = ""):
@@ -657,26 +647,13 @@ class GamingCog(commands.Cog, name="Games"):
     async def guess_leaderboard(self, ctx: Context):
         assert ctx.guild is not None
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
-            stmt = (
-                select(GuessScore)
-                .where(GuessScore.guild_id == ctx.guild.id)
-                .order_by(GuessScore.score.desc())
-                .limit(10)
+        async with ctx.typing():
+            view = GuessLeaderboardView(ctx)
+            view.message = await ctx.reply(
+                embeds=await view.format_page(),
+                view=view,
+                mention_author=False,
             )
-            scores = (await session.execute(stmt)).scalars()
-
-            embed = discord.Embed(title=f"Guess Leaderboard for {ctx.guild.name}")
-
-            description = ""
-
-            for idx, score in enumerate(scores):
-                description += (
-                    f"\u200b{idx + 1}. <@{score.discord_id}>: {score.score}\n"
-                )
-
-            embed.description = description
-            await ctx.reply(embed=embed, mention_author=False)
 
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
@@ -693,6 +670,7 @@ class GamingCog(commands.Cog, name="Games"):
             await session.execute(
                 delete(GuessScore).where(GuessScore.guild_id == ctx.guild.id)
             )
+            await session.commit()
 
         await ctx.message.add_reaction("✅")
 
