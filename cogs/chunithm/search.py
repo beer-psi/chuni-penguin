@@ -119,7 +119,11 @@ class SearchCog(commands.Cog, name="Search"):
             msg = "ctx.guild == None and global_alias == True"
             raise RuntimeError(msg)
 
-        async with ctx.typing(), self.bot.begin_db_session() as session, session.begin():
+        async with (
+            ctx.typing(),
+            self.bot.begin_db_session() as session,
+            session.begin(),
+        ):
             stmt = (
                 select(Song)
                 .where(func.lower(Song.title) == func.lower(added_alias))
@@ -130,48 +134,6 @@ class SearchCog(commands.Cog, name="Search"):
             if song is not None:
                 msg = f"**{emd(added_alias)}** is already a song title."
                 raise commands.BadArgument(msg)
-
-            if global_alias:
-                stmt = (
-                    select(Alias)
-                    .where(func.lower(Alias.alias) == func.lower(added_alias))
-                    .options(joinedload(Alias.song))
-                )
-                aliases = (await session.execute(stmt)).scalars().all()
-
-                if len(aliases) > 0 and aliases[0].guild_id == -1:
-                    msg = f"**{emd(added_alias)}** already exists (global alias for **{emd(aliases[0].song.title)}**)."
-                    raise commands.BadArgument(msg)
-
-                if len(aliases) > 0 and aliases[0].guild_id != -1:
-                    aliases[0].guild_id = -1
-                    aliases[0].owner_id = None
-                    await session.merge(aliases[0])
-
-                    for x in aliases[1:]:
-                        await session.delete(x)
-
-                    return await ctx.reply(
-                        f"**{emd(added_alias)}** already exists as a guild-only alias. Promoting to global alias.",
-                        mention_author=False,
-                    )
-            else:
-                stmt = (
-                    select(Alias)
-                    .where(
-                        (func.lower(Alias.alias) == func.lower(added_alias))
-                        & ((Alias.guild_id == -1) | (Alias.guild_id == guild_id))
-                    )
-                    .options(joinedload(Alias.song))
-                )
-                alias = (await session.execute(stmt)).scalar_one_or_none()
-
-                if alias is not None:
-                    msg = (
-                        f"**{emd(added_alias)}** already exists "
-                        f"({'global ' if alias.guild_id == -1 else ''}alias for **{emd(alias.song.title)}**)."
-                    )
-                    raise commands.BadArgument(msg)
 
             stmt = select(Song).where(
                 # Limit to non-WE entries. WE entries are redirected to
@@ -198,14 +160,59 @@ class SearchCog(commands.Cog, name="Search"):
 
                 song = alias.song
 
+            if global_alias:
+                stmt = (
+                    select(Alias)
+                    .where(func.lower(Alias.alias) == func.lower(added_alias))
+                    .options(joinedload(Alias.song))
+                )
+                aliases = (await session.execute(stmt)).scalars().all()
+
+                if len(aliases) > 0 and aliases[0].guild_id == -1:
+                    msg = f"**{emd(added_alias)}** already exists (global alias for **{emd(aliases[0].song.title)}**)."
+                    raise commands.BadArgument(msg)
+
+                if len(aliases) > 0 and aliases[0].guild_id != -1:
+                    aliases[0].guild_id = -1
+                    aliases[0].owner_id = None
+                    aliases[0].song_id = song.id
+                    await session.merge(aliases[0])
+
+                    for x in aliases[1:]:
+                        await session.delete(x)
+
+                    await session.commit()
+                    return await ctx.reply(
+                        f"**{emd(added_alias)}** already exists as a guild-only alias. Promoting to global alias.",
+                        mention_author=False,
+                    )
+            else:
+                stmt = (
+                    select(Alias)
+                    .where(
+                        (func.lower(Alias.alias) == func.lower(added_alias))
+                        & ((Alias.guild_id == -1) | (Alias.guild_id == guild_id))
+                    )
+                    .options(joinedload(Alias.song))
+                )
+                alias = (await session.execute(stmt)).scalar_one_or_none()
+
+                if alias is not None:
+                    msg = (
+                        f"**{emd(added_alias)}** already exists "
+                        f"({'global ' if alias.guild_id == -1 else ''}alias for **{emd(alias.song.title)}**)."
+                    )
+                    raise commands.BadArgument(msg)
+
             session.add(
                 Alias(
-                    alias=added_alias,
+                    alias=added_alias.lower(),
                     guild_id=guild_id,
                     song_id=song.id,
                     owner_id=None if global_alias else ctx.author.id,
                 )
             )
+            await session.commit()
 
         await self.utils._reload_alias_cache()
 
@@ -234,7 +241,11 @@ class SearchCog(commands.Cog, name="Search"):
         if not is_alias_manager and ctx.guild is None:
             raise commands.NoPrivateMessage
 
-        async with ctx.typing(), self.bot.begin_db_session() as session, session.begin():
+        async with (
+            ctx.typing(),
+            self.bot.begin_db_session() as session,
+            session.begin(),
+        ):
             condition = func.lower(Alias.alias) == func.lower(removed_alias)
 
             if not is_alias_manager and ctx.guild is not None:
@@ -399,7 +410,10 @@ class SearchCog(commands.Cog, name="Search"):
 
                 if (
                     not verse_chart_constant_notice
-                    and (song.version == "VERSE" or any((x.version == "VERSE" for x in charts)))
+                    and (
+                        song.version == "VERSE"
+                        or any((x.version == "VERSE" for x in charts))
+                    )
                     and any((x.const is not None and x.const >= 14.7 for x in charts))
                 ):
                     verse_chart_constant_notice = True
