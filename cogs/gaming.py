@@ -440,9 +440,6 @@ class AskQuestionState(GuessingGameSkippableState):
             if not was_answered:
                 self.session.questions_timed_out += 1
 
-                if self.session.questions_timed_out >= 3:
-                    return EndGameTimedOut(self.session, 3)
-
             return ShowAnswerState(
                 self.session,
                 song,
