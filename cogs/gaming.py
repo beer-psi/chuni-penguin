@@ -1,12 +1,12 @@
 import asyncio
 import io
 from asyncio import CancelledError, TimeoutError
+from pathlib import Path
 from random import randrange
 from threading import Lock
 from typing import TYPE_CHECKING
 
 import discord
-from aiohttp import ClientSession
 from discord.ext import commands
 from discord.ext.commands import Context
 from PIL import Image
@@ -14,12 +14,15 @@ from rapidfuzz import fuzz
 from sqlalchemy import delete, select, text
 
 from database.models import Alias, GuessScore, Song
-from utils import get_jacket_url
+from utils.logging import logger as root_logger
 from utils.views import NextGameButtonView, SkipButtonView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.botutils import UtilsCog
+
+logger = root_logger.getChild(__name__)
+ASSETS_DIR = Path(__file__).parent.parent / "assets"
 
 
 class GamingCog(commands.Cog, name="Games"):
@@ -42,41 +45,51 @@ class GamingCog(commands.Cog, name="Games"):
         async with ctx.typing(), self.bot.begin_db_session() as session:
             prefix = await self.utils.guild_prefix(ctx)
 
-            stmt = (
-                select(Song)
-                .where((Song.genre != "WORLD'S END") & (Song.removed == False))
-                .order_by(text("RANDOM()"))
-                .limit(1)
-            )
-            song = (await session.execute(stmt)).scalar_one()
+            while True:
+                stmt = (
+                    select(Song)
+                    .where((Song.genre != "WORLD'S END") & (Song.removed == False))  # noqa: E712
+                    .order_by(text("RANDOM()"))
+                    .limit(1)
+                )
+                song = (await session.execute(stmt)).scalar_one()
 
-            stmt = select(Alias).where(
-                (Alias.song_id == song.id)
-                & (
-                    (Alias.guild_id == -1)
-                    | (
-                        Alias.guild_id
-                        == (ctx.guild.id if ctx.guild is not None else -1)
+                stmt = select(Alias).where(
+                    (Alias.song_id == song.id)
+                    & (
+                        (Alias.guild_id == -1)
+                        | (
+                            Alias.guild_id
+                            == (ctx.guild.id if ctx.guild is not None else -1)
+                        )
                     )
                 )
-            )
-            aliases = [song.title] + [
-                alias.alias for alias in (await session.execute(stmt)).scalars()
-            ]
+                aliases = [song.title] + [
+                    alias.alias for alias in (await session.execute(stmt)).scalars()
+                ]
 
-            jacket_url = get_jacket_url(song)
-            async with ClientSession() as session, session.get(jacket_url) as resp:
-                jacket_bytes = await resp.read()
-                img = Image.open(io.BytesIO(jacket_bytes))
+                jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
 
-            x = randrange(0, img.width - 90)
-            y = randrange(0, img.height - 90)
+                if not jacket_path.exists():
+                    logger.warning(
+                        "Missing jacket file for existing song %s - %s (ID %s)",
+                        song.artist,
+                        song.title,
+                        song.id,
+                    )
+                    continue
 
-            img = img.crop((x, y, x + 90, y + 90))
+                break
 
-            bytesio = io.BytesIO()
-            img.save(bytesio, format="PNG")
-            bytesio.seek(0)
+            with Image.open(jacket_path) as img:
+                x = randrange(0, img.width - 90)
+                y = randrange(0, img.height - 90)
+
+                img = img.crop((x, y, x + 90, y + 90))
+
+                bytesio = io.BytesIO()
+                img.save(bytesio, format="PNG")
+                bytesio.seek(0)
 
             question_embed = discord.Embed(
                 title="Guess the song!",
@@ -132,14 +145,16 @@ class GamingCog(commands.Cog, name="Games"):
                     f"**Category**: {song.genre}"
                 )
             )
-            answer_embed.set_image(url=jacket_url)
+            answer_embed.set_image(url="attachment://image.png")
 
-            await ctx.send(
-                content=content,
-                embed=answer_embed,
-                mention_author=False,
-                view=NextGameButtonView(self, self.game_sessions),
-            )
+            with jacket_path.open("rb") as f:
+                await ctx.send(
+                    content=content,
+                    embed=answer_embed,
+                    mention_author=False,
+                    view=NextGameButtonView(self, self.game_sessions),
+                    file=discord.File(f, "image.png"),
+                )
 
             with self.game_sessions_lock:
                 del self.game_sessions[ctx.channel.id]
