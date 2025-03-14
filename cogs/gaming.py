@@ -1,23 +1,27 @@
 import asyncio
+import contextlib
 import io
+import traceback
 from asyncio import CancelledError, TimeoutError
 from pathlib import Path
 from random import randrange
 from threading import Lock
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Protocol, override
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
+from discord.utils import escape_markdown
 from PIL import Image
 from rapidfuzz import fuzz
 from sqlalchemy import delete, select, text
 
 from database.models import Alias, GuessScore, Song
 from utils.logging import logger as root_logger
-from utils.views import NextGameButtonView, SkipButtonView
 
 if TYPE_CHECKING:
+    from discord.abc import MessageableChannel
+
     from bot import ChuniBot
     from cogs.botutils import UtilsCog
 
@@ -25,13 +29,476 @@ logger = root_logger.getChild(__name__)
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
 
 
+class GuessingGameSession:
+    def __init__(
+        self,
+        ctx: Context["ChuniBot"],
+        *,
+        question_count: int | None = None,
+        score_limit: int | None = None,
+        time_per_question: int = 20,
+    ) -> None:
+        self.ctx: Context = ctx
+
+        if question_count is None and score_limit is None:
+            msg = "Must specify either the number of questions (best of x) or the score limit (first to x)."
+            raise ValueError(msg)
+
+        self.questions_done: int = 0
+        self.questions_timed_out: int = 0
+        self.question_count: int | None = question_count
+        self.score_limit: int | None = score_limit
+        self.scores: dict[int, int] = {}
+
+        self.time_per_question = time_per_question
+
+    @property
+    def bot(self) -> "ChuniBot":
+        return self.ctx.bot
+
+    @property
+    def channel(self):
+        return self.ctx.channel
+
+    async def get_question(self):
+        async with self.bot.begin_db_session() as session:
+            while True:
+                stmt = (
+                    select(Song)
+                    .where((Song.genre != "WORLD'S END") & (Song.removed == False))  # noqa: E712
+                    .order_by(text("RANDOM()"))
+                    .limit(1)
+                )
+                song = (await session.execute(stmt)).scalar_one()
+
+                stmt = select(Alias).where(
+                    (Alias.song_id == song.id)
+                    & (
+                        (Alias.guild_id == -1)
+                        | (
+                            Alias.guild_id
+                            == (self.ctx.guild.id if self.ctx.guild is not None else -1)
+                        )
+                    )
+                )
+                aliases = [song.title] + [
+                    alias.alias for alias in (await session.execute(stmt)).scalars()
+                ]
+
+                jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
+
+                if not jacket_path.exists():
+                    logger.warning(
+                        "Missing jacket file for existing song %s - %s (ID %s)",
+                        song.artist,
+                        song.title,
+                        song.id,
+                    )
+                    continue
+
+                return song, aliases, jacket_path
+
+    def check_score_limit_reached(self):
+        if self.score_limit is None:
+            return False
+
+        return max(self.scores.values()) >= self.score_limit
+
+    def check_question_limit_reached(self):
+        if self.question_count is None:
+            return False
+
+        return self.questions_done >= self.question_count
+
+    async def increment_score(self, user_id: int):
+        guild_id = self.ctx.guild.id if self.ctx.guild else -1
+
+        async with self.bot.begin_db_session() as session, session.begin():
+            stmt = select(GuessScore).where(
+                (GuessScore.discord_id == user_id) & (GuessScore.guild_id == guild_id)
+            )
+            score = (await session.execute(stmt)).scalar_one_or_none()
+
+            if score is None:
+                score = GuessScore(discord_id=user_id, guild_id=guild_id, score=1)
+                session.add(score)
+            else:
+                score.score += 1
+                await session.merge(score)
+
+            await session.commit()
+
+    def print_score_list(self):
+        if len(self.scores) == 0:
+            return "No one got any points."
+
+        score_list = ""
+
+        for user_id, score in sorted(
+            self.scores.items(), key=lambda item: item[1], reverse=True
+        ):
+            score_list += f"<@{user_id}> has {score} point"
+
+            if score != 1:
+                score_list += "s"
+
+            score_list += "\n"
+
+        return score_list
+
+
+class GuessingGameState(Protocol):
+    async def __call__(self) -> "GuessingGameState | None":
+        """Execute the current state.
+
+        It must return another state for the executor to run, or return None
+        to finish the state machine.
+        """
+        ...
+
+
+class GuessingGameSkippableState(GuessingGameState):
+    async def skip(self):
+        """Skips the current state."""
+
+
+class WaitState(GuessingGameSkippableState):
+    def __init__(
+        self,
+        session: GuessingGameSession,
+        wait_time_s: int,
+        next_state: GuessingGameState,
+    ):
+        self.session = session
+        self.wait_time_s = wait_time_s
+        self.next_state = next_state
+
+        self._task: asyncio.Task | None = None
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        self._task = asyncio.create_task(asyncio.sleep(self.wait_time_s))
+
+        with contextlib.suppress(CancelledError):
+            await self._task
+
+        return self.next_state
+
+    @override
+    async def skip(self):
+        if self._task is not None:
+            self._task.cancel()
+
+
+class EndGameTimedOut(GuessingGameState):
+    def __init__(self, session: GuessingGameSession, n_unanswered: int) -> None:
+        self.session = session
+        self.n_unanswered = n_unanswered
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        embed = discord.Embed(
+            color=discord.Color.red(),
+            title="Game ended",
+            description=f"{self.n_unanswered} question{'' if self.n_unanswered == 1 else 's'} in a row went unanswered.",
+        )
+        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
+        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+
+        await self.session.channel.send(embed=embed)
+
+        return None
+
+
+class EndGameReachedQuestionLimit(GuessingGameState):
+    def __init__(self, session: GuessingGameSession) -> None:
+        self.session = session
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        embed = discord.Embed(
+            color=discord.Color.green(),
+            title="Game ended",
+            description="The question limit has been reached.",
+        )
+        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
+        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+
+        await self.session.channel.send(embed=embed)
+
+        return None
+
+
+class EndGameReachedScoreLimit(GuessingGameState):
+    def __init__(self, session: GuessingGameSession) -> None:
+        self.session = session
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        embed = discord.Embed(
+            color=discord.Color.green(),
+            title="Game ended",
+            description="The score limit has been reached.",
+        )
+        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
+        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+
+        await self.session.channel.send(embed=embed)
+
+        return None
+
+
+class ShowAnswerState(GuessingGameState):
+    def __init__(
+        self,
+        session: GuessingGameSession,
+        song: Song,
+        aliases: list[str],
+        jacket_path: Path,
+        accepted_answer: discord.Message | None,
+        *,
+        timed_out: bool = False,
+        skipped: bool = False,
+    ) -> None:
+        self.session = session
+        self.song = song
+        self.aliases = aliases
+        self.jacket_path = jacket_path
+        self.accepted_answer = accepted_answer
+        self.timed_out = timed_out
+        self.skipped = skipped
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        if self.accepted_answer is not None:
+            accepted_user = self.accepted_answer.author
+
+            await self.accepted_answer.add_reaction("✅")
+            await self.session.increment_score(accepted_user.id)
+
+            if accepted_user.id not in self.session.scores:
+                self.session.scores[accepted_user.id] = 1
+            else:
+                self.session.scores[accepted_user.id] += 1
+
+            accuracy = max(
+                [
+                    fuzz.QRatio(
+                        self.accepted_answer.content, alias, processor=str.lower
+                    )
+                    for alias in self.aliases
+                ]
+            )
+
+            content = (
+                f"{accepted_user.mention} has the correct answer ({accuracy:.2f}%)!"
+            )
+            color = discord.Color.green()
+        elif self.timed_out:
+            content = "Time's up!"
+            color = discord.Color.red()
+        elif self.skipped:
+            content = "Skipped!"
+            color = discord.Color.red()
+        else:
+            content = "Unknown reason."
+            color = discord.Color.red()
+
+        embed = discord.Embed(
+            color=color,
+            description=(
+                f"**Answer**: {escape_markdown(self.song.title)}\n"
+                f"{'\n'.join([escape_markdown(x) for x in self.aliases])}\n"
+                "\n"
+                f"**Artist**: {escape_markdown(self.song.artist)}\n"
+                f"**Category**: {escape_markdown(self.song.genre)}"
+            ),
+        )
+        embed.set_image(url="attachment://image.png")
+
+        if self.session.check_score_limit_reached():
+            next_state = EndGameReachedScoreLimit(self.session)
+        elif self.session.check_question_limit_reached():
+            next_state = EndGameReachedQuestionLimit(self.session)
+        elif self.session.questions_timed_out >= 3:
+            next_state = EndGameTimedOut(self.session, 3)
+        else:
+            content += " Next question in 3 seconds..."
+            next_state = WaitState(self.session, 3, AskQuestionState(self.session))
+
+        with self.jacket_path.open("rb") as f:
+            await self.session.channel.send(
+                content=content,
+                embed=embed,
+                file=discord.File(f, "image.png"),
+            )
+
+        return next_state
+
+
+class AskQuestionState(GuessingGameSkippableState):
+    def __init__(self, session: GuessingGameSession) -> None:
+        self.session = session
+
+        self._task: asyncio.Task | None = None
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        song, aliases, jacket_path = await self.session.get_question()
+
+        with Image.open(jacket_path) as img:
+            x = randrange(0, img.width - 90)
+            y = randrange(0, img.height - 90)
+
+            img = img.crop((x, y, x + 90, y + 90))
+
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+
+        question_embed = discord.Embed(
+            title="Guess the song!",
+            description=f"You have {self.session.time_per_question} seconds to guess the song.\nUse `{self.session.ctx.prefix}skip` to skip.",
+        )
+        question_embed.set_image(url="attachment://image.png")
+
+        was_answered = False
+
+        def check(m: discord.Message):
+            nonlocal was_answered
+
+            if not was_answered and m.channel == self.session.channel:
+                was_answered = True
+
+            return (
+                m.channel == self.session.channel
+                and max(
+                    [
+                        fuzz.QRatio(m.content, alias, processor=str.lower)
+                        for alias in aliases
+                    ]
+                )
+                >= 80
+            )
+
+        await self.session.channel.send(
+            embed=question_embed,
+            file=discord.File(buffer, "image.png"),
+            mention_author=False,
+        )
+
+        try:
+            self._task = asyncio.create_task(
+                self.session.bot.wait_for(
+                    "message", check=check, timeout=self.session.time_per_question
+                )
+            )
+            msg = await self._task
+            return ShowAnswerState(self.session, song, aliases, jacket_path, msg)
+        except CancelledError:
+            return ShowAnswerState(
+                self.session,
+                song,
+                aliases,
+                jacket_path,
+                None,
+                skipped=True,
+            )
+        except TimeoutError:
+            if not was_answered:
+                self.session.questions_timed_out += 1
+
+                if self.session.questions_timed_out >= 3:
+                    return EndGameTimedOut(self.session, 3)
+
+            return ShowAnswerState(
+                self.session,
+                song,
+                aliases,
+                jacket_path,
+                None,
+                timed_out=True,
+            )
+        finally:
+            self.session.questions_done += 1
+
+    @override
+    async def skip(self):
+        if self._task is not None:
+            self._task.cancel()
+
+
+class StartState(GuessingGameState):
+    def __init__(self, session: GuessingGameSession) -> None:
+        self.session = session
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        embed = discord.Embed(
+            color=discord.Color.yellow(),
+            title="A new game is starting in 5 seconds!",
+        )
+        embed.add_field(
+            name="Started by", value=self.session.ctx.author.mention, inline=True
+        )
+
+        if self.session.question_count is not None:
+            embed.add_field(
+                name="Questions", value=self.session.question_count, inline=True
+            )
+        elif self.session.score_limit is not None:
+            embed.add_field(
+                name="Score limit", value=self.session.score_limit, inline=True
+            )
+
+        await self.session.ctx.send(embed=embed)
+        return WaitState(self.session, 5, AskQuestionState(self.session))
+
+
+async def run_state_machine(
+    cog: "GamingCog", channel: "MessageableChannel", state: GuessingGameState
+):
+    with cog.state_for_game_session_lock:
+        cog.state_for_game_session[channel.id] = state
+
+    try:
+        next_state = await state()
+
+        if next_state is None:
+            cog._clear_state(channel.id)
+
+            return None
+
+        return await run_state_machine(cog, channel, next_state)
+    except Exception as e:
+        logger.exception("Error running guessing game state machine", exc_info=e)
+
+        cog._clear_state(channel.id)
+
+        embed = discord.Embed(
+            color=discord.Color.red(),
+            title="Game ended",
+            description=(
+                "The game ended due to an error:\n"
+                "```python\n"
+                f"{traceback.format_exception_only(e)}\n"
+                "```\n"
+                "If this keeps happening, please ping the owner or contact them in the support Discord.",
+            ),
+        )
+        await channel.send(embed=embed)
+
+
 class GamingCog(commands.Cog, name="Games"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
         self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
 
-        self.game_sessions: dict[int, asyncio.Task] = {}
+        self.game_sessions: dict[int, GuessingGameSession] = {}
         self.game_sessions_lock = Lock()
+
+        self.state_for_game_session: dict[int, GuessingGameState] = {}
+        self.state_for_game_session_lock = Lock()
 
     @override
     async def cog_command_error(self, ctx: Context, error: Exception) -> None:
@@ -55,147 +522,29 @@ class GamingCog(commands.Cog, name="Games"):
     @commands.group("guess", invoke_without_command=True)
     async def guess(self, ctx: Context, mode: str = "lenient"):
         if ctx.channel.id in self.game_sessions:
-            # await ctx.reply("There is already an ongoing session in this channel!")
+            await ctx.reply("There is already an ongoing session in this channel!")
             return
 
         with self.game_sessions_lock:
-            self.game_sessions[ctx.channel.id] = asyncio.create_task(asyncio.sleep(0))
-
-        async with ctx.typing(), self.bot.begin_db_session() as session:
-            prefix = await self.utils.guild_prefix(ctx)
-
-            while True:
-                stmt = (
-                    select(Song)
-                    .where((Song.genre != "WORLD'S END") & (Song.removed == False))  # noqa: E712
-                    .order_by(text("RANDOM()"))
-                    .limit(1)
-                )
-                song = (await session.execute(stmt)).scalar_one()
-
-                stmt = select(Alias).where(
-                    (Alias.song_id == song.id)
-                    & (
-                        (Alias.guild_id == -1)
-                        | (
-                            Alias.guild_id
-                            == (ctx.guild.id if ctx.guild is not None else -1)
-                        )
-                    )
-                )
-                aliases = [song.title] + [
-                    alias.alias for alias in (await session.execute(stmt)).scalars()
-                ]
-
-                jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
-
-                if not jacket_path.exists():
-                    logger.warning(
-                        "Missing jacket file for existing song %s - %s (ID %s)",
-                        song.artist,
-                        song.title,
-                        song.id,
-                    )
-                    continue
-
-                break
-
-            with Image.open(jacket_path) as img:
-                x = randrange(0, img.width - 90)
-                y = randrange(0, img.height - 90)
-
-                img = img.crop((x, y, x + 90, y + 90))
-
-                bytesio = io.BytesIO()
-                img.save(bytesio, format="PNG")
-                bytesio.seek(0)
-
-            question_embed = discord.Embed(
-                title="Guess the song!",
-                description=f"You have 20 seconds to guess the song.\nUse `{prefix}skip` to skip.",
-            )
-            question_embed.set_image(url="attachment://image.png")
-
-            view = SkipButtonView()
-            view.message = await ctx.reply(
-                content=f"Game started by {ctx.author.mention}",
-                embed=question_embed,
-                file=discord.File(bytesio, "image.png"),
-                mention_author=False,
-                view=view,
+            self.game_sessions[ctx.channel.id] = GuessingGameSession(
+                ctx, question_count=20
             )
 
-        def check(m: discord.Message):
-            if mode == "strict":
-                return m.channel == ctx.channel and m.content in aliases
-
-            return (
-                m.channel == ctx.channel
-                and max(
-                    [
-                        fuzz.QRatio(m.content, alias, processor=str.lower)
-                        for alias in aliases
-                    ]
-                )
-                >= 80
-            )
-
-        content = ""
-        try:
-            view.task = self.game_sessions[ctx.channel.id] = asyncio.create_task(
-                self.bot.wait_for("message", check=check, timeout=20)
-            )
-            msg: discord.Message = await self.game_sessions[ctx.channel.id]
-            accuracy = max(
-                [
-                    fuzz.QRatio(msg.content, alias, processor=str.lower)
-                    for alias in aliases
-                ]
-            )
-            await self._increment_score(
-                ctx.guild.id if ctx.guild else -1, msg.author.id
-            )
-            await msg.add_reaction("✅")
-
-            content = f"{msg.author.mention} has the correct answer ({accuracy:.2f}%)!"
-        except CancelledError:
-            content = "Skipped!"
-        except TimeoutError:
-            content = "Time's up!"
-        finally:
-            answers = "\n".join(aliases)
-            answer_embed = discord.Embed(
-                description=(
-                    f"**Answer**: {answers}\n"
-                    "\n"
-                    f"**Artist**: {song.artist}\n"
-                    f"**Category**: {song.genre}"
-                )
-            )
-            answer_embed.set_image(url="attachment://image.png")
-
-            with jacket_path.open("rb") as f:
-                await ctx.send(
-                    content=content,
-                    embed=answer_embed,
-                    mention_author=False,
-                    view=NextGameButtonView(self, self.game_sessions),
-                    file=discord.File(f, "image.png"),
-                )
-
-            with self.game_sessions_lock:
-                del self.game_sessions[ctx.channel.id]
-
-            # The whole point was to ignore exceptions.
-            return  # noqa: B012
+        await run_state_machine(
+            self, ctx.channel, StartState(self.game_sessions[ctx.channel.id])
+        )
 
     @commands.hybrid_command("skip")
     async def skip(self, ctx: Context):
-        if ctx.channel.id not in self.game_sessions:
-            await ctx.reply("There is no ongoing session in this channel!")
+        if ctx.channel.id not in self.state_for_game_session:
+            await ctx.reply("There is no ongoing sessions in this channel!")
             return
 
-        self.game_sessions[ctx.channel.id].cancel()
+        state = self.state_for_game_session[ctx.channel.id]
+
+        if isinstance(state, GuessingGameSkippableState):
+            await state.skip()
+
         return
 
     @commands.guild_only()
@@ -242,25 +591,17 @@ class GamingCog(commands.Cog, name="Games"):
 
         await ctx.message.add_reaction("✅")
 
-    async def _increment_score(self, guild_id: int, discord_id: int):
-        async with self.bot.begin_db_session() as session, session.begin():
-            stmt = select(GuessScore).where(
-                (GuessScore.discord_id == discord_id)
-                & (GuessScore.guild_id == guild_id)
-            )
-            score = (await session.execute(stmt)).scalar_one_or_none()
+    def _clear_state(self, channel_id: int):
+        with self.state_for_game_session_lock:
+            if channel_id in self.state_for_game_session:
+                del self.state_for_game_session[channel_id]
 
-            if score is None:
-                score = GuessScore(discord_id=discord_id, guild_id=guild_id, score=1)
-                session.add(score)
-            else:
-                score.score += 1
-                await session.merge(score)
-
-            await session.commit()
+        with self.game_sessions_lock:
+            if channel_id in self.game_sessions:
+                del self.game_sessions[channel_id]
 
 
 async def setup(bot: "ChuniBot") -> None:
     cog = GamingCog(bot)
     await bot.add_cog(cog)
-    bot.add_view(NextGameButtonView(cog, cog.game_sessions))
+    # bot.add_view(NextGameButtonView(cog, cog.game_sessions))
