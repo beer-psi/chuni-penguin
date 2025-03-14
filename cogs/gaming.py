@@ -97,7 +97,7 @@ class GuessingGameSession:
                         )
                     )
                 )
-                aliases = [
+                aliases = [song.title] + [
                     alias.alias for alias in (await session.execute(stmt)).scalars()
                 ]
 
@@ -169,11 +169,6 @@ class GuessingGameSession:
 
     async def increment_score(self, user_id: int):
         guild_id = self.ctx.guild.id if self.ctx.guild else -1
-
-        if user_id not in self.scores:
-            self.scores[user_id] = 1
-        else:
-            self.scores[user_id] += 1
 
         async with self.bot.begin_db_session() as session, session.begin():
             stmt = insert(GuessScore).values(
@@ -373,8 +368,7 @@ class ShowAnswerState(GuessingGameState):
         embed = discord.Embed(
             color=color,
             description=(
-                f"**Answer**: {escape_markdown(self.song.title)}\n"
-                f"{'\n'.join([escape_markdown(x) for x in self.aliases])}\n"
+                f"**Answer**: {'\n'.join([escape_markdown(x) for x in self.aliases])}\n"
                 "\n"
                 f"**Artist**: {escape_markdown(self.song.artist)}\n"
                 f"**Category**: {escape_markdown(self.song.genre)}"
