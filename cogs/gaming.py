@@ -60,6 +60,8 @@ class GuessingGameSession:
 
         self.time_per_question = time_per_question
 
+        self.stopping: bool = False
+
     @property
     def bot(self) -> "ChuniBot":
         return self.ctx.bot
@@ -243,6 +245,9 @@ class WaitState(GuessingGameSkippableState):
         with contextlib.suppress(CancelledError):
             await self._task
 
+        if self.session.stopping:
+            return EndGameUserCanceled(self.session)
+
         return self.next_state
 
     @override
@@ -300,6 +305,25 @@ class EndGameReachedScoreLimit(GuessingGameState):
             color=discord.Color.green(),
             title="Game ended",
             description="The score limit has been reached.",
+        )
+        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
+        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+
+        await self.session.channel.send(embed=embed)
+
+        return None
+
+
+class EndGameUserCanceled(GuessingGameState):
+    def __init__(self, session: GuessingGameSession) -> None:
+        self.session = session
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        embed = discord.Embed(
+            color=discord.Color.red(),
+            title="Game ended",
+            description="The game was stopped by a user.",
         )
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
         embed.add_field(name="Final Scores", value=self.session.print_score_list())
@@ -376,7 +400,9 @@ class ShowAnswerState(GuessingGameState):
         )
         embed.set_image(url="attachment://image.png")
 
-        if self.session.check_score_limit_reached():
+        if self.session.stopping:
+            next_state = EndGameUserCanceled(self.session)
+        elif self.session.check_score_limit_reached():
             next_state = EndGameReachedScoreLimit(self.session)
         elif self.session.check_question_limit_reached():
             next_state = EndGameReachedQuestionLimit(self.session)
@@ -632,11 +658,36 @@ class GamingCog(commands.Cog, name="Games"):
 
     @commands.hybrid_command("skip")
     async def skip(self, ctx: Context):
+        """Skips a state of an ongoing guessing game.
+
+        You can use this to skip a question, but also skip any waiting times,
+        such as the starting 5-second wait.
+        """
         if ctx.channel.id not in self.state_for_game_session:
             await ctx.reply("There is no ongoing sessions in this channel!")
             return
 
         state = self.state_for_game_session[ctx.channel.id]
+
+        if isinstance(state, GuessingGameSkippableState):
+            await state.skip()
+
+        return
+
+    @commands.hybrid_command("stop")
+    async def stop(self, ctx: Context):
+        """Stops the currently running guessing game."""
+        if ctx.channel.id not in self.state_for_game_session:
+            await ctx.reply("There is no ongoing sessions in this channel!")
+            return
+
+        with self.game_sessions_lock:
+            session = self.game_sessions[ctx.channel.id]
+
+        with self.state_for_game_session_lock:
+            state = self.state_for_game_session[ctx.channel.id]
+
+        session.stopping = True
 
         if isinstance(state, GuessingGameSkippableState):
             await state.skip()
