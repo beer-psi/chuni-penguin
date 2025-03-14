@@ -170,6 +170,11 @@ class GuessingGameSession:
     async def increment_score(self, user_id: int):
         guild_id = self.ctx.guild.id if self.ctx.guild else -1
 
+        if user_id not in self.scores:
+            self.scores[user_id] = 1
+        else:
+            self.scores[user_id] += 1
+
         async with self.bot.begin_db_session() as session, session.begin():
             stmt = insert(GuessScore).values(
                 discord_id=user_id,
@@ -548,6 +553,7 @@ async def run_state_machine(
                 ),
             )
             await channel.send(embed=embed)
+            break
 
 
 class GamingCog(commands.Cog, name="Games"):
