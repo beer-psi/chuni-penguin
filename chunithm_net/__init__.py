@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Optional
 import httpx
 from bs4 import BeautifulSoup
 
+from chunithm_net.models.leaderboard import Leaderboard, LeaderboardEntry
+
 from ._bs4 import BS4_FEATURE
 from ._httpx_hooks import raise_on_chunithm_net_error, raise_on_scheduled_maintenance
 from .consts import _KEY_DETAILED_PARAMS
@@ -25,6 +27,7 @@ from .parser import (
     parse_player_card_and_avatar,
     parse_player_data,
 )
+from .utils import chuni_int, parse_time
 
 if TYPE_CHECKING:
     from chunithm_net.models.player_data import PlayerData
@@ -301,6 +304,60 @@ class ChuniNet:
                 "Referer": str(_BASE_URL.join("/mobile/friend/search/searchUser/"))
             },
         )
+
+    async def music_leaderboard(self, idx: int, difficulty: Difficulty):
+        soup = await self._request_soup(
+            "POST",
+            "mobile/ranking/sendRankingDetail/",
+            data={
+                "diff": difficulty.value,
+                "idx": idx,
+                # "category" seems to not be required
+                "genre": "99",
+                "token": self._token,
+            },
+        )
+
+        updated_at_elem = soup.select_one(".ranking_update")
+
+        if updated_at_elem is None:
+            msg = "Could not find leaderboard update date."
+            raise ValueError(msg)
+
+        lb = Leaderboard(
+            updated_at=parse_time(updated_at_elem.text.removeprefix("Update on：")),  # noqa: RUF001
+            ranking=[],
+        )
+
+        for entry in soup.select(".rank_block"):
+            position_elem = entry.select_one(".rank_block_rank")
+            player_name_elem = entry.select_one(".rank_block_name")
+            score_elem = entry.select_one(".rank_score_block .rank_block_num")
+            ajc_count_elem = entry.select_one(
+                ".rank_score_block .rank_block_theory_text"
+            )
+            last_raised_elem = entry.select_one(".rank_block_date")
+
+            if (
+                position_elem is None
+                or player_name_elem is None
+                or score_elem is None
+                or last_raised_elem is None
+            ):
+                continue
+
+            lb_entry = LeaderboardEntry(
+                position=chuni_int(position_elem.text),
+                player_name=player_name_elem.text,
+                score=chuni_int(score_elem.text),
+                ajc_count=chuni_int(ajc_count_elem.text)
+                if ajc_count_elem is not None
+                else None,
+                last_raised=parse_time(last_raised_elem.text),
+            )
+            lb.ranking.append(lb_entry)
+
+        return lb
 
     @property
     def _token(self):

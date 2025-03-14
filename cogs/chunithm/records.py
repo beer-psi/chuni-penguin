@@ -35,7 +35,7 @@ from chunithm_net.models.record import (
     RecentRecord,
     Record,
 )
-from database.models import SongJacket
+from database.models import Chart, SongJacket
 from utils import did_you_mean_text, floor_to_ndp, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
@@ -48,6 +48,7 @@ from utils.views import (
     RecentRecordsView,
     SelectToCompareView,
 )
+from utils.views.leaderboard import LeaderboardView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -1611,6 +1612,68 @@ class RecordsCog(commands.Cog, name="Records"):
                 mention_author=False,
             )
             return None
+
+    @commands.hybrid_command("leaderboard", aliases=["lb"])
+    @app_commands.choices(
+        difficulty=[
+            app_commands.Choice(name="BASIC", value="BAS"),
+            app_commands.Choice(name="ADVANCED", value="ADV"),
+            app_commands.Choice(name="EXPERT", value="EXP"),
+            app_commands.Choice(name="MASTER", value="MAS"),
+            app_commands.Choice(name="ULTIMA", value="ULT"),
+        ]
+    )
+    @app_commands.autocomplete(query=song_title_autocomplete)
+    async def leaderboard(self, ctx: Context, difficulty: str, *, query: str):
+        """View the international leaderboard for a specific song and difficulty.
+
+        Currently requires logging in to CHUNITHM-NET, though this might be changed.
+
+        Parameters
+        ----------
+        difficulty: str
+            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT).
+        query: str
+            Song title to search for. You don't have to be exact; try things out!
+        """
+
+        try:
+            parsed_difficulty = Difficulty.from_short_form(difficulty.upper())
+        except ValueError as e:
+            msg = f'Unknown difficulty name "{escape_markdown(difficulty)}".'
+            raise commands.BadArgument(msg) from e
+
+        async with ctx.typing(), self.utils.chuninet(ctx) as client:
+            guild_id = ctx.guild.id if ctx.guild else None
+            song, alias, similarity = await self.utils.find_song(
+                query, guild_id=guild_id, worlds_end=False
+            )
+
+            if song is None or similarity < SIMILARITY_THRESHOLD:
+                await ctx.reply(did_you_mean_text(song, alias), mention_author=False)
+                return
+
+            async with self.bot.begin_db_session() as session:
+                stmt = (
+                    select(Chart)
+                    .where(
+                        (Chart.song_id == song.id)
+                        & (Chart.difficulty == parsed_difficulty.short_form())
+                    )
+                    .options(
+                        joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
+                    )
+                )
+                chart = (await session.execute(stmt)).scalar_one_or_none()
+
+            leaderboard = await client.music_leaderboard(song.id, parsed_difficulty)
+            view = LeaderboardView(ctx, leaderboard, song, parsed_difficulty, chart)
+
+            view.message = await ctx.reply(
+                embeds=view.format_page(view.items[: view.per_page]),
+                view=view,
+                mention_author=False,
+            )
 
 
 async def setup(bot: "ChuniBot"):
