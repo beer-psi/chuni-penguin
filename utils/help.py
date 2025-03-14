@@ -1,8 +1,8 @@
-from typing import Any, List, Mapping, Optional
+from typing import Any, List, Mapping, Optional, override
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import Cog, Command, when_mentioned
+from discord.ext.commands import Cog, Command, Group, when_mentioned
 
 from utils.config import config
 
@@ -74,6 +74,39 @@ class HelpCommand(commands.HelpCommand):
         embed.description = f"```{prefix}{command.qualified_name}```\n{command.help}"
 
         params = command.clean_params.values()
+        if params:
+            params_desc = ""
+            for param in params:
+                if not param.description:
+                    continue
+
+                params_desc += f"`{param.name}`"
+                params_desc += f": {param.description}"
+                if param.default is not param.empty:
+                    params_desc += f" (default: {param.default})"
+
+                params_desc += "\n"
+
+            if params_desc:
+                embed.description += f"\n\n**Parameters:**\n{params_desc}"
+        await self.get_destination().send(embed=embed)
+
+    @override
+    async def send_group_help(self, group: Group[Any, ..., Any], /) -> None:
+        ctx = self.context
+        bot = ctx.bot
+
+        prefix = next(
+            iter(
+                set(await bot.get_prefix(ctx.message))
+                - set(when_mentioned(bot, ctx.message))
+            )
+        )
+
+        embed = discord.Embed(color=self.COLOUR)
+        embed.description = f"```{prefix}{group.qualified_name}```\n{group.help}"
+
+        params = group.clean_params.values()
         if params:
             params_desc = ""
             for param in params:
