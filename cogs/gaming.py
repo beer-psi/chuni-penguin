@@ -542,7 +542,7 @@ async def run_state_machine(
                 description=(
                     "The game ended due to an error:\n"
                     "```python\n"
-                    f"{traceback.format_exception_only(e)}\n"
+                    f"{''.join(traceback.format_exception_only(e))}\n"
                     "```\n"
                     "If this keeps happening, please ping the owner or contact them in the support Discord.",
                 ),
