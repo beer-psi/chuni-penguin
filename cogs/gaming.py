@@ -60,7 +60,7 @@ class GuessingGameSession:
 
         self.time_per_question = time_per_question
 
-        self.stopping: bool = False
+        self.stopped_by: discord.User | discord.Member | None = None
 
     @property
     def bot(self) -> "ChuniBot":
@@ -245,7 +245,7 @@ class WaitState(GuessingGameSkippableState):
         with contextlib.suppress(CancelledError):
             await self._task
 
-        if self.session.stopping:
+        if self.session.stopped_by:
             return EndGameUserCanceled(self.session)
 
         return self.next_state
@@ -316,6 +316,10 @@ class EndGameReachedScoreLimit(GuessingGameState):
 
 class EndGameUserCanceled(GuessingGameState):
     def __init__(self, session: GuessingGameSession) -> None:
+        if session.stopped_by is None:
+            msg = "Cannot reach this state if stopped_by is None."
+            raise ValueError(msg)
+
         self.session = session
 
     @override
@@ -323,7 +327,7 @@ class EndGameUserCanceled(GuessingGameState):
         embed = discord.Embed(
             color=discord.Color.red(),
             title="Game ended",
-            description="The game was stopped by a user.",
+            description=f"The game was stopped by {self.session.stopped_by.mention}.",  # pyright: ignore[reportOptionalMemberAccess]
         )
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
         embed.add_field(name="Final Scores", value=self.session.print_score_list())
@@ -400,7 +404,7 @@ class ShowAnswerState(GuessingGameState):
         )
         embed.set_image(url="attachment://image.png")
 
-        if self.session.stopping:
+        if self.session.stopped_by:
             next_state = EndGameUserCanceled(self.session)
         elif self.session.check_score_limit_reached():
             next_state = EndGameReachedScoreLimit(self.session)
@@ -697,7 +701,7 @@ class GamingCog(commands.Cog, name="Games"):
         with self.state_for_game_session_lock:
             state = self.state_for_game_session[ctx.channel.id]
 
-        session.stopping = True
+        session.stopped_by = ctx.author
 
         if isinstance(state, GuessingGameSkippableState):
             await state.skip()
