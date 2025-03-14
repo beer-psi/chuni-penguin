@@ -1,10 +1,11 @@
 import asyncio
 import contextlib
 import io
+import random
 import traceback
+from argparse import ArgumentError
 from asyncio import CancelledError, TimeoutError
 from pathlib import Path
-from random import randrange
 from threading import Lock
 from typing import TYPE_CHECKING, Protocol, override
 
@@ -12,11 +13,14 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
-from PIL import Image
+from PIL import Image, ImageOps
 from rapidfuzz import fuzz
 from sqlalchemy import delete, select, text
 
+from chunithm_net.models.enums import Difficulty
 from database.models import Alias, GuessScore, Song
+from utils import shlex_split
+from utils.argparse import DiscordArguments
 from utils.logging import logger as root_logger
 
 if TYPE_CHECKING:
@@ -34,6 +38,7 @@ class GuessingGameSession:
         self,
         ctx: Context["ChuniBot"],
         *,
+        difficulty: Difficulty = Difficulty.BASIC,
         question_count: int | None = None,
         score_limit: int | None = None,
         time_per_question: int = 20,
@@ -44,6 +49,7 @@ class GuessingGameSession:
             msg = "Must specify either the number of questions (best of x) or the score limit (first to x)."
             raise ValueError(msg)
 
+        self.difficulty: Difficulty = difficulty
         self.questions_done: int = 0
         self.questions_timed_out: int = 0
         self.question_count: int | None = question_count
@@ -59,6 +65,14 @@ class GuessingGameSession:
     @property
     def channel(self):
         return self.ctx.channel
+
+    def get_crop_dimensions(self):
+        if self.difficulty == Difficulty.BASIC:
+            return (90, 90)
+        if self.difficulty in {Difficulty.ADVANCED, Difficulty.EXPERT}:
+            return (75, 75)
+
+        return (60, 60)
 
     async def get_question(self):
         async with self.bot.begin_db_session() as session:
@@ -96,7 +110,35 @@ class GuessingGameSession:
                     )
                     continue
 
-                return song, aliases, jacket_path
+                break
+
+        crop_width, crop_height = self.get_crop_dimensions()
+
+        with Image.open(jacket_path) as img:
+            x = random.randrange(0, img.width - crop_width)
+            y = random.randrange(0, img.height - crop_height)
+
+            img = img.crop((x, y, x + crop_width, y + crop_height))
+
+            if self.difficulty in {
+                Difficulty.EXPERT,
+                Difficulty.MASTER,
+                Difficulty.ULTIMA,
+            }:
+                should_invert = random.random() < 0.5
+
+                if should_invert:
+                    img = ImageOps.invert(img.convert("RGB"))
+
+            if self.difficulty == Difficulty.ULTIMA:
+                rotation = random.randrange(0, 4)
+                img = img.rotate(90 * rotation)
+
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+
+        return song, aliases, jacket_path, buffer
 
     def check_score_limit_reached(self):
         if self.score_limit is None:
@@ -344,17 +386,7 @@ class AskQuestionState(GuessingGameSkippableState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
-        song, aliases, jacket_path = await self.session.get_question()
-
-        with Image.open(jacket_path) as img:
-            x = randrange(0, img.width - 90)
-            y = randrange(0, img.height - 90)
-
-            img = img.crop((x, y, x + 90, y + 90))
-
-            buffer = io.BytesIO()
-            img.save(buffer, format="PNG")
-            buffer.seek(0)
+        song, aliases, jacket_path, question_image = await self.session.get_question()
 
         question_embed = discord.Embed(
             title="Guess the song!",
@@ -383,7 +415,7 @@ class AskQuestionState(GuessingGameSkippableState):
 
         await self.session.channel.send(
             embed=question_embed,
-            file=discord.File(buffer, "image.png"),
+            file=discord.File(question_image, "image.png"),
             mention_author=False,
         )
 
@@ -441,12 +473,21 @@ class StartState(GuessingGameState):
         embed.add_field(
             name="Started by", value=self.session.ctx.author.mention, inline=True
         )
+        embed.add_field(
+            name="Difficulty", value=str(self.session.difficulty), inline=True
+        )
+        embed.add_field(
+            name="Time to answer",
+            value=str(self.session.time_per_question),
+            inline=True,
+        )
 
         if self.session.question_count is not None:
             embed.add_field(
                 name="Questions", value=self.session.question_count, inline=True
             )
-        elif self.session.score_limit is not None:
+
+        if self.session.score_limit is not None:
             embed.add_field(
                 name="Score limit", value=self.session.score_limit, inline=True
             )
@@ -520,14 +561,67 @@ class GamingCog(commands.Cog, name="Games"):
         await super().cog_app_command_error(interaction, error)
 
     @commands.group("guess", invoke_without_command=True)
-    async def guess(self, ctx: Context, mode: str = "lenient"):
+    async def guess(self, ctx: Context, *, arguments: str = ""):
+        """Start a jacket art guessing game.
+
+        **Parameters**
+        `-d`, `--difficulty`: The difficulty of the game:
+        - `BASIC` is the default mode, with 90x90 crop and no filters.
+        - `ADVANCED` has a 70x70 crop and no filters.
+        - `EXPERT` has a 70x70 crop and colors may be inverted.
+        - `MASTER` has a 50x50 crop and colors may be inverted.
+        - `ULTIMA` has a 50x50 crop, colors may be inverted, images may be rotated 90/180/270 degrees.
+        `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
+        `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
+        `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
+        """
+
         if ctx.channel.id in self.game_sessions:
             await ctx.reply("There is already an ongoing session in this channel!")
             return
 
+        def parse_difficulty(arg: str) -> Difficulty:
+            if arg.upper().startswith("WORLD"):
+                return Difficulty.WORLDS_END
+
+            if arg.lower() == "we":
+                return Difficulty.WORLDS_END
+
+            return Difficulty.from_short_form(arg.upper()[:3])
+
+        parser = DiscordArguments()
+        parser.add_argument(
+            "-d",
+            "--difficulty",
+            type=parse_difficulty,
+            required=False,
+            default=Difficulty.BASIC,
+        )
+        parser.add_argument("-q", "--questions", type=int, required=False, default=20)
+        parser.add_argument("-s", "--score", type=int, required=False, default=None)
+        parser.add_argument("-t", "--time", type=int, required=False, default=20)
+
+        try:
+            args, _ = await parser.parse_known_intermixed_args(shlex_split(arguments))
+        except ArgumentError as e:
+            raise commands.BadArgument(str(e)) from e
+
+        difficulty: Difficulty = args.difficulty
+        questions: int = args.questions
+        score: int = args.score
+        time: int = args.time
+
+        if difficulty == Difficulty.WORLDS_END:
+            msg = "WORLD'S END isn't supported yet. I don't think you're supposed to know what it has in store for you..."
+            raise commands.BadArgument(msg)
+
         with self.game_sessions_lock:
             self.game_sessions[ctx.channel.id] = GuessingGameSession(
-                ctx, question_count=20
+                ctx,
+                difficulty=difficulty,
+                question_count=questions,
+                score_limit=score,
+                time_per_question=time,
             )
 
         await run_state_machine(
