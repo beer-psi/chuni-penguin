@@ -567,10 +567,10 @@ class GamingCog(commands.Cog, name="Games"):
         **Parameters**
         `-d`, `--difficulty`: The difficulty of the game:
         - `BASIC` is the default mode, with 90x90 crop and no filters.
-        - `ADVANCED` has a 70x70 crop and no filters.
-        - `EXPERT` has a 70x70 crop and colors may be inverted.
-        - `MASTER` has a 50x50 crop and colors may be inverted.
-        - `ULTIMA` has a 50x50 crop, colors may be inverted, images may be rotated 90/180/270 degrees.
+        - `ADVANCED` has a 75x75 crop and no filters.
+        - `EXPERT` has a 75x75 crop and colors may be inverted.
+        - `MASTER` has a 60x60 crop and colors may be inverted.
+        - `ULTIMA` has a 60x60 crop, colors may be inverted, images may be rotated 90/180/270 degrees.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
