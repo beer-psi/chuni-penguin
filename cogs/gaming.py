@@ -663,11 +663,13 @@ class GamingCog(commands.Cog, name="Games"):
         You can use this to skip a question, but also skip any waiting times,
         such as the starting 5-second wait.
         """
-        if ctx.channel.id not in self.state_for_game_session:
-            await ctx.reply("There is no ongoing sessions in this channel!")
-            return
+        with self.game_sessions_lock:
+            if ctx.channel.id not in self.game_sessions:
+                msg = "There are no ongoing games in this channel."
+                raise commands.CommandError(msg)
 
-        state = self.state_for_game_session[ctx.channel.id]
+        with self.state_for_game_session_lock:
+            state = self.state_for_game_session[ctx.channel.id]
 
         if isinstance(state, GuessingGameSkippableState):
             await state.skip()
@@ -677,12 +679,20 @@ class GamingCog(commands.Cog, name="Games"):
     @commands.hybrid_command("stop")
     async def stop(self, ctx: Context):
         """Stops the currently running guessing game."""
-        if ctx.channel.id not in self.state_for_game_session:
-            await ctx.reply("There is no ongoing sessions in this channel!")
-            return
 
         with self.game_sessions_lock:
+            if ctx.channel.id not in self.game_sessions:
+                msg = "There are no ongoing games in this channel."
+                raise commands.CommandError(msg)
+
             session = self.game_sessions[ctx.channel.id]
+
+        if ctx.author != session.ctx.author and (
+            isinstance(ctx.author, discord.User)
+            or ctx.author.guild_permissions.manage_guild
+        ):
+            msg = "You cannot stop a game unless you started it or have the Manage Server permission."
+            raise commands.CommandError(msg)
 
         with self.state_for_game_session_lock:
             state = self.state_for_game_session[ctx.channel.id]
