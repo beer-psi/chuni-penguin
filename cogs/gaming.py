@@ -13,7 +13,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageOps
 from rapidfuzz import fuzz
 from sqlalchemy import delete, select, text
 
@@ -134,11 +134,24 @@ class GuessingGameSession:
                 if should_invert:
                     img = ImageOps.invert(img.convert("RGB"))
 
-            buffer = io.BytesIO()
-            img.save(buffer, format="PNG")
-            buffer.seek(0)
+            cropped_image_buffer = io.BytesIO()
+            img.save(cropped_image_buffer, format="PNG", compress_level=3)
+            cropped_image_buffer.seek(0)
 
-        return song, aliases, jacket_path, buffer
+        with Image.open(jacket_path) as img:
+            draw = ImageDraw.Draw(img)
+            draw.rectangle(
+                (x, y, x + crop_width, y + crop_height),
+                fill=None,
+                outline=(255, 0, 0),
+                width=3,
+            )
+
+            answer_image_buffer = io.BytesIO()
+            img.save(answer_image_buffer, format="PNG", compress_level=3)
+            answer_image_buffer.seek(0)
+
+        return song, aliases, answer_image_buffer, cropped_image_buffer
 
     def check_score_limit_reached(self):
         if self.score_limit is None:
@@ -296,7 +309,7 @@ class ShowAnswerState(GuessingGameState):
         session: GuessingGameSession,
         song: Song,
         aliases: list[str],
-        jacket_path: Path,
+        answer_image: io.BytesIO,
         accepted_answer: discord.Message | None,
         *,
         timed_out: bool = False,
@@ -305,7 +318,7 @@ class ShowAnswerState(GuessingGameState):
         self.session = session
         self.song = song
         self.aliases = aliases
-        self.jacket_path = jacket_path
+        self.answer_image = answer_image
         self.accepted_answer = accepted_answer
         self.timed_out = timed_out
         self.skipped = skipped
@@ -368,12 +381,12 @@ class ShowAnswerState(GuessingGameState):
             content += " Next question in 3 seconds..."
             next_state = WaitState(self.session, 3, AskQuestionState(self.session))
 
-        with self.jacket_path.open("rb") as f:
-            await self.session.channel.send(
-                content=content,
-                embed=embed,
-                file=discord.File(f, "image.png"),
-            )
+        await self.session.channel.send(
+            content=content,
+            embed=embed,
+            file=discord.File(self.answer_image, "image.png"),
+        )
+        self.answer_image.close()
 
         return next_state
 
@@ -386,7 +399,7 @@ class AskQuestionState(GuessingGameSkippableState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
-        song, aliases, jacket_path, question_image = await self.session.get_question()
+        song, aliases, answer_image, question_image = await self.session.get_question()
 
         question_embed = discord.Embed(
             title="Guess the song!",
@@ -418,6 +431,7 @@ class AskQuestionState(GuessingGameSkippableState):
             file=discord.File(question_image, "image.png"),
             mention_author=False,
         )
+        question_image.close()
 
         try:
             self._task = asyncio.create_task(
@@ -426,13 +440,13 @@ class AskQuestionState(GuessingGameSkippableState):
                 )
             )
             msg = await self._task
-            return ShowAnswerState(self.session, song, aliases, jacket_path, msg)
+            return ShowAnswerState(self.session, song, aliases, answer_image, msg)
         except CancelledError:
             return ShowAnswerState(
                 self.session,
                 song,
                 aliases,
-                jacket_path,
+                answer_image,
                 None,
                 skipped=True,
             )
@@ -444,7 +458,7 @@ class AskQuestionState(GuessingGameSkippableState):
                 self.session,
                 song,
                 aliases,
-                jacket_path,
+                answer_image,
                 None,
                 timed_out=True,
             )
