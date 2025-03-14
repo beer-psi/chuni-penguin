@@ -409,6 +409,7 @@ class AskQuestionState(GuessingGameSkippableState):
         question_embed = discord.Embed(
             title="Guess the song!",
             description=f"You have {self.session.time_per_question} seconds to guess the song.\nUse `{self.session.ctx.prefix}skip` to skip.",
+            color=self.session.difficulty.color(),
         )
         question_embed.set_image(url="attachment://image.png")
 
