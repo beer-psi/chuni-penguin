@@ -4,7 +4,7 @@ from asyncio import CancelledError, TimeoutError
 from pathlib import Path
 from random import randrange
 from threading import Lock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext import commands
@@ -32,6 +32,25 @@ class GamingCog(commands.Cog, name="Games"):
 
         self.game_sessions: dict[int, asyncio.Task] = {}
         self.game_sessions_lock = Lock()
+
+    @override
+    async def cog_command_error(self, ctx: Context, error: Exception) -> None:
+        with self.game_sessions_lock:
+            del self.game_sessions[ctx.channel.id]
+
+        await super().cog_command_error(ctx, error)
+
+    @override
+    async def cog_app_command_error(
+        self,
+        interaction: discord.Interaction,
+        error: discord.app_commands.AppCommandError,
+    ) -> None:
+        if interaction.channel is not None:
+            with self.game_sessions_lock:
+                del self.game_sessions[interaction.channel.id]
+
+        await super().cog_app_command_error(interaction, error)
 
     @commands.group("guess", invoke_without_command=True)
     async def guess(self, ctx: Context, mode: str = "lenient"):
@@ -126,11 +145,19 @@ class GamingCog(commands.Cog, name="Games"):
             view.task = self.game_sessions[ctx.channel.id] = asyncio.create_task(
                 self.bot.wait_for("message", check=check, timeout=20)
             )
-            msg = await self.game_sessions[ctx.channel.id]
-            await self._increment_score(msg.author.id)
+            msg: discord.Message = await self.game_sessions[ctx.channel.id]
+            accuracy = max(
+                [
+                    fuzz.QRatio(msg.content, alias, processor=str.lower)
+                    for alias in aliases
+                ]
+            )
+            await self._increment_score(
+                ctx.guild.id if ctx.guild else -1, msg.author.id
+            )
             await msg.add_reaction("✅")
 
-            content = f"{msg.author.mention} has the correct answer!"
+            content = f"{msg.author.mention} has the correct answer ({accuracy:.2f}%)!"
         except CancelledError:
             content = "Skipped!"
         except TimeoutError:
@@ -171,42 +198,66 @@ class GamingCog(commands.Cog, name="Games"):
         self.game_sessions[ctx.channel.id].cancel()
         return
 
-    @guess.command("leaderboard")
+    @commands.guild_only()
+    @guess.command("leaderboard", aliases=["lb"])
     async def guess_leaderboard(self, ctx: Context):
+        assert ctx.guild is not None
+
         async with ctx.typing(), self.bot.begin_db_session() as session:
-            stmt = select(GuessScore).order_by(GuessScore.score.desc()).limit(10)
+            stmt = (
+                select(GuessScore)
+                .where(GuessScore.guild_id == ctx.guild.id)
+                .order_by(GuessScore.score.desc())
+                .limit(10)
+            )
             scores = (await session.execute(stmt)).scalars()
 
-            embed = discord.Embed(title="Guess Leaderboard")
+            embed = discord.Embed(title=f"Guess Leaderboard for {ctx.guild.name}")
+
             description = ""
+
             for idx, score in enumerate(scores):
                 description += (
                     f"\u200b{idx + 1}. <@{score.discord_id}>: {score.score}\n"
                 )
+
             embed.description = description
             await ctx.reply(embed=embed, mention_author=False)
 
-    @guess.command("reset", hidden=True)
-    @commands.is_owner()
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    @guess.command("reset")
     async def guess_reset(self, ctx: Context):
-        """Resets the c>guess leaderboard"""
+        """Resets the c>guess leaderboard for this server.
+
+        The user calling this command must have the Manage Server permission.
+        """
+
+        assert ctx.guild is not None
 
         async with self.bot.begin_db_session() as session:
-            await session.execute(delete(GuessScore))
+            await session.execute(
+                delete(GuessScore).where(GuessScore.guild_id == ctx.guild.id)
+            )
 
         await ctx.message.add_reaction("✅")
 
-    async def _increment_score(self, discord_id: int):
+    async def _increment_score(self, guild_id: int, discord_id: int):
         async with self.bot.begin_db_session() as session, session.begin():
-            stmt = select(GuessScore).where(GuessScore.discord_id == discord_id)
+            stmt = select(GuessScore).where(
+                (GuessScore.discord_id == discord_id)
+                & (GuessScore.guild_id == guild_id)
+            )
             score = (await session.execute(stmt)).scalar_one_or_none()
 
             if score is None:
-                score = GuessScore(discord_id=discord_id, score=1)
+                score = GuessScore(discord_id=discord_id, guild_id=guild_id, score=1)
                 session.add(score)
             else:
                 score.score += 1
                 await session.merge(score)
+
+            await session.commit()
 
 
 async def setup(bot: "ChuniBot") -> None:

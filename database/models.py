@@ -10,6 +10,7 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
     func,
+    text,
     type_coerce,
 )
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -188,6 +189,13 @@ class SdvxinChartView(Base):
 
 class GuessScore(Base):
     __tablename__ = "guess_leaderboard"
+    __table_args__ = (
+        UniqueConstraint("discord_id", "guild_id", name="_discord_id_guild_id_uc"),
+    )
 
-    discord_id: Mapped[int] = mapped_column(BigInteger(), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    discord_id: Mapped[int] = mapped_column(BigInteger())
+    guild_id: Mapped[int] = mapped_column(
+        BigInteger(), nullable=False, default=-1, server_default=text("-1")
+    )
     score: Mapped[int] = mapped_column(nullable=False)
