@@ -171,6 +171,9 @@ class GuessingGameSession:
         if self.score_limit is None:
             return False
 
+        if len(self.scores) == 0:
+            return False
+
         return max(self.scores.values()) >= self.score_limit
 
     def check_question_limit_reached(self):
