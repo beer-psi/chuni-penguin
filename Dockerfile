@@ -40,4 +40,4 @@ RUN uv sync --frozen
 COPY --chown=bot:bot . /code
 
 USER bot
-ENTRYPOINT ["/code/.venv/bin/python3", "run", "bot.py"]
+ENTRYPOINT ["/code/.venv/bin/python3", "bot.py"]
