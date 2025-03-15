@@ -35,7 +35,7 @@ RUN groupadd -g "${GID}" -r bot \
 
 COPY --chown=bot:bot pyproject.toml uv.lock .python-version /code/
 
-RUN uv sync --frozen
+RUN uv sync --frozen --all-extras
 
 COPY --chown=bot:bot . /code
 
