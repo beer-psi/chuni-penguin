@@ -37,19 +37,14 @@ BOT_DIR = Path(__file__).parent
 
 
 class KeyboardInterruptHandler:
-    def __init__(self):
-        self.bot: ChuniBot | None = None
-        self._pending: bool = False
+    def __init__(self, bot):
+        self.bot = bot
+        self._task = None
 
-    def __call__(self, code, frame):
-        if self._pending or not self.bot:
+    def __call__(self):
+        if self._task:
             raise KeyboardInterrupt
-
-        self.bot.loop.call_soon_threadsafe(self.bot.loop.create_task, self.bot.close())
-        self.bot.loop.call_soon_threadsafe(
-            lambda: None
-        )  # no-op to wake up loop (important!)
-        self._pending = True
+        self._task = asyncio.create_task(self.bot.close())
 
 
 class ChuniBot(commands.Bot):
@@ -116,6 +111,7 @@ class ChuniBot(commands.Bot):
                     self.app,
                     port=config.web.port,
                     host=config.web.listen_address,
+                    handle_signals=False,
                 )
             )
 
@@ -203,13 +199,14 @@ async def startup():
         root=False,
     )
 
-    sigint_handler = KeyboardInterruptHandler()
-    signal.signal(signal.SIGTERM, sigint_handler)
-    signal.signal(signal.SIGINT, sigint_handler)
-
     try:
         async with bot:
-            sigint_handler.bot = bot
+            handler = KeyboardInterruptHandler(bot)
+
+            with contextlib.suppress(NotImplementedError):
+                bot.loop.add_signal_handler(signal.SIGINT, handler)
+                bot.loop.add_signal_handler(signal.SIGTERM, handler)
+
             await bot.start(token, reconnect=True)
     except discord.LoginFailure:
         logger.error(
