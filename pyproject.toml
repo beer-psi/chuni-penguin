@@ -28,11 +28,8 @@ speedup = [
     "winloop>=0.1.6; sys_platform == 'win32'",
 ]
 
-[tool.uv]
-managed = true
-package = false
-no-sources = false
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "types-beautifulsoup4>=4.12.0.20240907",
     "typing-extensions>=4.12.2",
     "jishaku>=2.5.2",
@@ -44,6 +41,11 @@ dev-dependencies = [
     "pytest-httpx>=0.32.0",
     "pytest-html>=4.1.1",
 ]
+
+[tool.uv]
+managed = true
+package = false
+no-sources = false
 
 [tool.uv.pip]
 universal = true
