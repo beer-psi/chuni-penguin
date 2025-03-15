@@ -184,6 +184,12 @@ class GuessingGameSession:
 
         return self.wrong_answers >= self.wrong_answers_limit
 
+    def format_life(self):
+        if self.wrong_answers_limit is None:
+            return None
+
+        return f"{self.wrong_answers_limit - self.wrong_answers}/{self.wrong_answers_limit}"
+
     async def increment_score(self, user_id: int):
         guild_id = self.ctx.guild.id if self.ctx.guild else -1
 
@@ -303,7 +309,11 @@ class EndGameReachedQuestionLimit(GuessingGameState):
             title="Game ended",
             description="The question limit has been reached.",
         )
-        embed.add_field(name="Difficulty", value=str(self.session.difficulty))
+        embed.add_field(
+            name="Difficulty", value=str(self.session.difficulty), inline=True
+        )
+        if self.session.wrong_answers_limit:
+            embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
         embed.add_field(name="Final Scores", value=self.session.print_score_list())
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
 
@@ -323,7 +333,11 @@ class EndGameReachedScoreLimit(GuessingGameState):
             title="Game ended",
             description="The score limit has been reached.",
         )
-        embed.add_field(name="Difficulty", value=str(self.session.difficulty))
+        embed.add_field(
+            name="Difficulty", value=str(self.session.difficulty), inline=True
+        )
+        if self.session.wrong_answers_limit:
+            embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
         embed.add_field(name="Final Scores", value=self.session.print_score_list())
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
 
@@ -356,7 +370,11 @@ class EndGameUserCanceled(GuessingGameState):
                 description=f"The game was stopped by {self.session.stopped_by.mention}.",  # pyright: ignore[reportOptionalMemberAccess]
             )
             embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
-        embed.add_field(name="Difficulty", value=str(self.session.difficulty))
+        embed.add_field(
+            name="Difficulty", value=str(self.session.difficulty), inline=True
+        )
+        if self.session.wrong_answers_limit:
+            embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
         embed.add_field(name="Final Scores", value=self.session.print_score_list())
 
         await self.session.channel.send(embed=embed)
@@ -379,7 +397,10 @@ class EndGameTooManyWrongAnswers(GuessingGameState):
             title="Game ended",
             description=f"More than {self.session.wrong_answers_limit} question{'s' if self.session.wrong_answers_limit != 1 else ''} was answered wrongly.",
         )
-        embed.add_field(name="Difficulty", value=str(self.session.difficulty))
+        embed.add_field(
+            name="Difficulty", value=str(self.session.difficulty), inline=True
+        )
+        embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
         embed.add_field(name="Final Scores", value=self.session.print_score_list())
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
 
