@@ -683,7 +683,7 @@ async def run_state_machine(
                     "```python\n"
                     f"{''.join(traceback.format_exception_only(e))}\n"
                     "```\n"
-                    "If this keeps happening, please ping the owner or contact them in the support Discord.",
+                    "If this keeps happening, please ping the owner or contact them in the support Discord."
                 ),
             )
             await channel.send(embed=embed)
