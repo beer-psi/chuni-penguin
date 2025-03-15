@@ -692,8 +692,7 @@ class GamingCog(commands.Cog, name="Games"):
             session = self.game_sessions[ctx.channel.id]
 
         if ctx.author != session.ctx.author and (
-            isinstance(ctx.author, discord.User)
-            or ctx.author.guild_permissions.manage_guild
+            ctx.guild is None or ctx.author.guild_permissions.manage_guild  # pyright: ignore[reportAttributeAccessIssue]
         ):
             msg = "You cannot stop a game unless you started it or have the Manage Server permission."
             raise commands.CommandError(msg)
