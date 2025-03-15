@@ -44,6 +44,7 @@ class GuessingGameSession:
         question_count: int | None = None,
         score_limit: int | None = None,
         time_per_question: int = 20,
+        wrong_answers_limit: int | None = None,
     ) -> None:
         self.ctx: Context = ctx
 
@@ -52,11 +53,16 @@ class GuessingGameSession:
             raise ValueError(msg)
 
         self.difficulty: Difficulty = difficulty
+
         self.questions_done: int = 0
         self.questions_timed_out: int = 0
         self.question_count: int | None = question_count
+
         self.score_limit: int | None = score_limit
         self.scores: dict[int, int] = {}
+
+        self.wrong_answers_limit: int | None = wrong_answers_limit
+        self.wrong_answers: int = 0
 
         self.time_per_question = time_per_question
 
@@ -171,6 +177,12 @@ class GuessingGameSession:
             return False
 
         return self.questions_done >= self.question_count
+
+    def check_wrong_answers_limit_reached(self):
+        if self.wrong_answers_limit is None:
+            return False
+
+        return self.wrong_answers >= self.wrong_answers_limit
 
     async def increment_score(self, user_id: int):
         guild_id = self.ctx.guild.id if self.ctx.guild else -1
@@ -348,6 +360,29 @@ class EndGameUserCanceled(GuessingGameState):
         return None
 
 
+class EndGameTooManyWrongAnswers(GuessingGameState):
+    def __init__(self, session: GuessingGameSession) -> None:
+        if session.wrong_answers_limit is None:
+            msg = "Cannot reach this state if wrong answers limit is not set."
+            raise ValueError(msg)
+
+        self.session = session
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        embed = discord.Embed(
+            color=discord.Color.red(),
+            title="Game ended",
+            description=f"More than {self.session.wrong_answers_limit} question{'s' if self.session.wrong_answers_limit != 1 else ''} was answered wrongly.",
+        )
+        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
+        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+
+        await self.session.channel.send(embed=embed)
+
+        return None
+
+
 class ShowAnswerState(GuessingGameState):
     def __init__(
         self,
@@ -421,6 +456,8 @@ class ShowAnswerState(GuessingGameState):
             next_state = EndGameReachedScoreLimit(self.session)
         elif self.session.check_question_limit_reached():
             next_state = EndGameReachedQuestionLimit(self.session)
+        elif self.session.check_wrong_answers_limit_reached():
+            next_state = EndGameTooManyWrongAnswers(self.session)
         elif self.session.questions_timed_out >= 3:
             next_state = EndGameTimedOut(self.session, 3)
         else:
@@ -489,6 +526,8 @@ class AskQuestionState(GuessingGameSkippableState):
             msg = await self._task
             return ShowAnswerState(self.session, song, aliases, answer_image, msg)
         except CancelledError:
+            self.session.wrong_answers += 1
+
             return ShowAnswerState(
                 self.session,
                 song,
@@ -498,7 +537,9 @@ class AskQuestionState(GuessingGameSkippableState):
                 skipped=True,
             )
         except TimeoutError:
-            if not was_answered:
+            if was_answered:
+                self.session.wrong_answers += 1
+            else:
                 self.session.questions_timed_out += 1
 
             return ShowAnswerState(
@@ -548,6 +589,11 @@ class StartState(GuessingGameState):
         if self.session.score_limit is not None:
             embed.add_field(
                 name="Score limit", value=self.session.score_limit, inline=True
+            )
+
+        if self.session.wrong_answers_limit is not None:
+            embed.add_field(
+                name="LIFE", value=self.session.wrong_answers_limit, inline=True
             )
 
         await self.session.ctx.send(embed=embed)
@@ -617,6 +663,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
+        `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         """
 
         if ctx.channel.id in self.game_sessions:
@@ -643,6 +690,7 @@ class GamingCog(commands.Cog, name="Games"):
         parser.add_argument("-q", "--questions", type=int, required=False, default=20)
         parser.add_argument("-s", "--score", type=int, required=False, default=None)
         parser.add_argument("-t", "--time", type=int, required=False, default=20)
+        parser.add_argument("-w", "--wrong", type=int, required=False, default=None)
 
         try:
             args, _ = await parser.parse_known_intermixed_args(shlex_split(arguments))
@@ -651,8 +699,9 @@ class GamingCog(commands.Cog, name="Games"):
 
         difficulty: Difficulty = args.difficulty
         questions: int = args.questions
-        score: int = args.score
+        score: int | None = args.score
         time: int = args.time
+        wrong: int | None = args.wrong
 
         if difficulty == Difficulty.WORLDS_END:
             msg = "WORLD'S END isn't supported yet. I don't think you're supposed to know what it has in store for you..."
@@ -665,6 +714,7 @@ class GamingCog(commands.Cog, name="Games"):
                 question_count=questions,
                 score_limit=score,
                 time_per_question=time,
+                wrong_answers_limit=wrong,
             )
 
         await run_state_machine(
