@@ -60,7 +60,10 @@ class GuessingGameSession:
 
         self.time_per_question = time_per_question
 
-        self.stopped_by: discord.User | discord.Member | None = None
+        # If stopped by the bot itself, it means that we're restarting.
+        self.stopped_by: discord.User | discord.Member | discord.ClientUser | None = (
+            None
+        )
 
     @property
     def bot(self) -> "ChuniBot":
@@ -324,12 +327,20 @@ class EndGameUserCanceled(GuessingGameState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
-        embed = discord.Embed(
-            color=discord.Color.red(),
-            title="Game ended",
-            description=f"The game was stopped by {self.session.stopped_by.mention}.",  # pyright: ignore[reportOptionalMemberAccess]
-        )
-        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
+        if self.session.stopped_by == self.session.bot.user:
+            embed = discord.Embed(
+                color=discord.Color.yellow(),
+                title="Game ended",
+                description="I'm going down for an update. See you in about five minutes!",
+            )
+            embed.set_footer(text="This beer guy keeps messing with my code...")
+        else:
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                title="Game ended",
+                description=f"The game was stopped by {self.session.stopped_by.mention}.",  # pyright: ignore[reportOptionalMemberAccess]
+            )
+            embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
         embed.add_field(name="Final Scores", value=self.session.print_score_list())
 
         await self.session.channel.send(embed=embed)

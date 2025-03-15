@@ -1,8 +1,10 @@
 import asyncio
 import contextlib
 import functools
+import inspect
 import logging
 import logging.handlers
+import signal
 import sys
 from pathlib import Path
 from time import time
@@ -28,8 +30,26 @@ if TYPE_CHECKING:
     from aiohttp.web import Application
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
+    from cogs.gaming import GamingCog
+
 
 BOT_DIR = Path(__file__).parent
+
+
+class KeyboardInterruptHandler:
+    def __init__(self):
+        self.bot: ChuniBot | None = None
+        self._pending: bool = False
+
+    def __call__(self, code, frame):
+        if self._pending or not self.bot:
+            raise KeyboardInterrupt
+
+        self.bot.loop.call_soon_threadsafe(self.bot.loop.create_task, self.bot.close())
+        self.bot.loop.call_soon_threadsafe(
+            lambda: None
+        )  # no-op to wake up loop (important!)
+        self._pending = True
 
 
 class ChuniBot(commands.Bot):
@@ -124,6 +144,21 @@ class ChuniBot(commands.Bot):
         if hasattr(self, "engine"):
             await self.engine.dispose()
 
+        gaming: "GamingCog | None" = self.get_cog("Games")  # pyright: ignore[reportAssignmentType]
+
+        if gaming is not None:
+            with gaming.game_sessions_lock, gaming.state_for_game_session_lock:
+                for session in gaming.game_sessions.values():
+                    session.stopped_by = self.user
+
+                # Hack because we cannot import GuessingGateSkippableState
+                # because it'd be a cyclic import
+                for state in gaming.state_for_game_session.values():
+                    if hasattr(state, "skip") and inspect.iscoroutinefunction(
+                        state.skip  # pyright: ignore[reportAttributeAccessIssue]
+                    ):
+                        await state.skip()  # pyright: ignore[reportAttributeAccessIssue]
+
         return await super().close()
 
 
@@ -168,8 +203,13 @@ async def startup():
         root=False,
     )
 
+    sigint_handler = KeyboardInterruptHandler()
+    signal.signal(signal.SIGTERM, sigint_handler)
+    signal.signal(signal.SIGINT, sigint_handler)
+
     try:
         async with bot:
+            sigint_handler.bot = bot
             await bot.start(token, reconnect=True)
     except discord.LoginFailure:
         logger.error(
