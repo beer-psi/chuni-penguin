@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import io
 import random
+import time
 import traceback
 from argparse import ArgumentError
 from asyncio import CancelledError, TimeoutError
@@ -427,6 +428,7 @@ class ShowAnswerState(GuessingGameState):
         aliases: list[str],
         answer_image: io.BytesIO,
         accepted_answer: discord.Message | None,
+        guess_time: float | None = None,
         *,
         timed_out: bool = False,
         skipped: bool = False,
@@ -436,6 +438,7 @@ class ShowAnswerState(GuessingGameState):
         self.aliases = aliases
         self.answer_image = answer_image
         self.accepted_answer = accepted_answer
+        self.guess_time = guess_time
         self.timed_out = timed_out
         self.skipped = skipped
 
@@ -485,6 +488,9 @@ class ShowAnswerState(GuessingGameState):
             ),
         )
         embed.set_image(url="attachment://image.png")
+
+        if self.guess_time is not None:
+            embed.set_footer(text=f"Guessed in {self.guess_time:.2f} seconds")
 
         if self.session.stopped_by:
             next_state = EndGameUserCanceled(self.session)
@@ -559,8 +565,15 @@ class AskQuestionState(GuessingGameSkippableState):
                     "message", check=check, timeout=self.session.time_per_question
                 )
             )
+
+            start_time = time.perf_counter_ns()
             msg = await self._task
-            return ShowAnswerState(self.session, song, aliases, answer_image, msg)
+            end_time = time.perf_counter_ns()
+            guess_time = (end_time - start_time) / 1_000_000_000
+
+            return ShowAnswerState(
+                self.session, song, aliases, answer_image, msg, guess_time
+            )
         except CancelledError:
             self.session.wrong_answers += 1
 
