@@ -206,6 +206,7 @@ async def startup():
     sigint_handler = KeyboardInterruptHandler()
     signal.signal(signal.SIGTERM, sigint_handler)
     signal.signal(signal.SIGINT, sigint_handler)
+    signal.signal(signal.SIGKILL, sigint_handler)
 
     try:
         async with bot:
