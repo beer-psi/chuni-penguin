@@ -1,4 +1,4 @@
-FROM python:3.12.9-slim-bookworm AS builder
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
 
 # Needed for fixing permissions of files created by Docker:
 ARG UID=1000 \
@@ -33,9 +33,9 @@ RUN groupadd -g "${GID}" -r bot \
   && useradd -d '/code' -g bot -l -r -u "${UID}" bot \
   && chown -R bot:bot '/code'
 
-COPY --chown=bot:bot pyproject.toml requirements.lock /code/
+COPY --chown=bot:bot pyproject.toml uv.lock .python-version /code/
 
-RUN pip install -r requirements.lock
+RUN uv sync --frozen
 
 COPY --chown=bot:bot . /code
 

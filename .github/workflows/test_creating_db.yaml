@@ -18,18 +18,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: "Check out repository"
+        uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683" # v4
 
-      - name: Install rye
-        uses: eifinger/setup-rye@cba39b644640fb95c375ce5bfe2fdf33c0b815fc # v4
-        with:
-          version: "0.41.0"
-          enable-cache: true
-          cache-prefix: "rye-cache"
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@1edb52594c857e2b5b13128931090f0640537287" # v5
 
       - name: Install dependencies
-        run: rye sync --all-features --no-dev
+        run: uv sync --frozen
 
       - name: Configuration
         run: |
@@ -38,19 +34,19 @@ jobs:
           sed -i 's/# chunirec_token = <token>/chunirec_token = ${{ secrets.CHUNIREC_TOKEN }}/' bot.ini
 
       - name: Create database from schema
-        run: rye run python -m dbutils create
+        run: uv run python -m dbutils create
 
       - name: Update database with information from Chunirec + Zetaraku + Official website
-        run: rye run python -m dbutils update chunirec
+        run: uv run python -m dbutils update chunirec
 
       - name: Update sdvx.in chart views
-        run: rye run python -m dbutils update sdvxin
+        run: uv run python -m dbutils update sdvxin
 
       - name: Update database aliases
-        run: rye run python -m dbutils update alias
+        run: uv run python -m dbutils update alias
 
       - name: Update song jacket lookup
-        run: rye run python -m dbutils update jackets
+        run: uv run python -m dbutils update jackets
 
       - name: Upload created database
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
