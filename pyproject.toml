@@ -26,6 +26,8 @@ speedup = [
     "orjson>=3.10.7",
     "uvloop>=0.21.0; sys_platform != 'win32'",
     "winloop>=0.1.6; sys_platform == 'win32'",
+    "zstandard>=0.23.0",
+    "aiodns>=3.2.0; sys_platform != 'win32'",
 ]
 
 [dependency-groups]
@@ -46,6 +48,7 @@ dev = [
 managed = true
 package = false
 no-sources = false
+# index-url = "https://mirrors.sustech.edu.cn/pypi/web/simple"
 
 [tool.uv.pip]
 universal = true
