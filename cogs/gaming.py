@@ -290,7 +290,9 @@ class EndGameTimedOut(GuessingGameState):
             description=f"{self.n_unanswered} question{'' if self.n_unanswered == 1 else 's'} in a row went unanswered.",
         )
         embed.add_field(name="Difficulty", value=str(self.session.difficulty))
-        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+        embed.add_field(
+            name="Final Scores", value=self.session.print_score_list(), inline=False
+        )
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
 
         await self.session.channel.send(embed=embed)
@@ -314,7 +316,9 @@ class EndGameReachedQuestionLimit(GuessingGameState):
         )
         if self.session.wrong_answers_limit:
             embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+        embed.add_field(
+            name="Final Scores", value=self.session.print_score_list(), inline=False
+        )
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
 
         await self.session.channel.send(embed=embed)
@@ -338,7 +342,9 @@ class EndGameReachedScoreLimit(GuessingGameState):
         )
         if self.session.wrong_answers_limit:
             embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+        embed.add_field(
+            name="Final Scores", value=self.session.print_score_list(), inline=False
+        )
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
 
         await self.session.channel.send(embed=embed)
@@ -375,7 +381,9 @@ class EndGameUserCanceled(GuessingGameState):
         )
         if self.session.wrong_answers_limit:
             embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+        embed.add_field(
+            name="Final Scores", value=self.session.print_score_list(), inline=False
+        )
 
         await self.session.channel.send(embed=embed)
 
@@ -401,7 +409,9 @@ class EndGameTooManyWrongAnswers(GuessingGameState):
             name="Difficulty", value=str(self.session.difficulty), inline=True
         )
         embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(name="Final Scores", value=self.session.print_score_list())
+        embed.add_field(
+            name="Final Scores", value=self.session.print_score_list(), inline=False
+        )
         embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
 
         await self.session.channel.send(embed=embed)
