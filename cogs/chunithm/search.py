@@ -333,6 +333,17 @@ class SearchCog(commands.Cog, name="Search"):
 
         return None
 
+    @commands.is_owner()
+    @commands.command("reloadalias", aliases=["reloadaliases"], hidden=True)
+    async def reloadalias(self, ctx: Context):
+        async with ctx.typing():
+            await self.utils._reload_alias_cache()
+
+            await ctx.reply(
+                content=f"Loaded {len(self.utils.alias_cache)} aliases into memory.",
+                mention_author=False,
+            )
+
     async def song_title_autocomplete(
         self,
         interaction: "discord.Interaction[ChuniBot]",
