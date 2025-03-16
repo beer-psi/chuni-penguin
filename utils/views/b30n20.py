@@ -30,12 +30,12 @@ class B30N20View(PaginationView):
         )
 
         if len(b30) > 0:
-            self.best30_average: Decimal = floor_to_ndp(self.best30_total / len(b30), 4)
+            self.best30_average: Decimal = floor_to_ndp(self.best30_total / 30, 4)
         else:
             self.best30_average = Decimal(0)
 
         if len(n20) > 0:
-            self.new20_average: Decimal = floor_to_ndp(self.new20_total / len(n20), 4)
+            self.new20_average: Decimal = floor_to_ndp(self.new20_total / 20, 4)
         else:
             self.new20_average = Decimal(0)
 
