@@ -1199,7 +1199,7 @@ class RecordsCog(commands.Cog, name="Records"):
             ctx.typing(),
             self.utils.chuninet(ctx if user is None else user.id) as client,
         ):
-            recent10 = await client.recent10()
+            recent10 = await client.new20()
             recent10 = await self.utils.hydrate_records(recent10)
 
             view = B30View(ctx, recent10, rating_slots=10, show_reachable=False)

@@ -730,7 +730,10 @@ async def test_client_parses_music_for_rating(
 
     async with ChuniNet(jar) as client:
         best30 = await client.best30()
-        recent10 = await client.recent10()
+
+        # TODO: Replace this with a proper new20 page when VERSE drops
+        # They didn't change the URL at all LOL
+        recent10 = await client.new20()
 
     assert len(best30) == 30
 

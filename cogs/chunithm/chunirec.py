@@ -352,7 +352,7 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
                 content="Fetching recent10...",
                 allowed_mentions=AllowedMentions.none(),
             )
-            recent10 = await client.recent10()
+            recent10 = await client.new20()
 
             payload += serialize_number(len(recent10), 3)
             payload += "R"  # marker for course array
