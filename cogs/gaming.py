@@ -280,6 +280,30 @@ class WaitState(GuessingGameSkippableState):
             self._task.cancel()
 
 
+async def end_game(
+    session: GuessingGameSession,
+    color: discord.Color,
+    description: str,
+    *,
+    footer: str | None = None,
+    show_lives: bool = True,
+):
+    embed = discord.Embed(
+        color=color,
+        title="Game ended",
+        description=description,
+    )
+    embed.add_field(name="Difficulty", value=str(session.difficulty))
+
+    if show_lives and session.wrong_answers_limit:
+        embed.add_field(name="LIFE", value=session.format_life())
+
+    embed.add_field(name="Final Scores", value=session.print_score_list(), inline=False)
+    embed.set_footer(text=footer or "Use `c>guess lb` to view the server leaderboard.")
+
+    await session.channel.send(embed=embed)
+
+
 class EndGameTimedOut(GuessingGameState):
     def __init__(self, session: GuessingGameSession, n_unanswered: int) -> None:
         self.session = session
@@ -287,19 +311,12 @@ class EndGameTimedOut(GuessingGameState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
-        embed = discord.Embed(
-            color=discord.Color.red(),
-            title="Game ended",
-            description=f"{self.n_unanswered} question{'' if self.n_unanswered == 1 else 's'} in a row went unanswered.",
+        await end_game(
+            self.session,
+            discord.Color.red(),
+            f"{self.n_unanswered} question{'' if self.n_unanswered == 1 else 's'} in a row went unanswered.",
+            show_lives=False,
         )
-        embed.add_field(name="Difficulty", value=str(self.session.difficulty))
-        embed.add_field(
-            name="Final Scores", value=self.session.print_score_list(), inline=False
-        )
-        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
-
-        await self.session.channel.send(embed=embed)
-
         return None
 
 
@@ -309,23 +326,11 @@ class EndGameReachedQuestionLimit(GuessingGameState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
-        embed = discord.Embed(
-            color=discord.Color.green(),
-            title="Game ended",
-            description="The question limit has been reached.",
+        await end_game(
+            self.session,
+            discord.Color.green(),
+            "The question limit has been reached.",
         )
-        embed.add_field(
-            name="Difficulty", value=str(self.session.difficulty), inline=True
-        )
-        if self.session.wrong_answers_limit:
-            embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(
-            name="Final Scores", value=self.session.print_score_list(), inline=False
-        )
-        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
-
-        await self.session.channel.send(embed=embed)
-
         return None
 
 
@@ -335,23 +340,11 @@ class EndGameReachedScoreLimit(GuessingGameState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
-        embed = discord.Embed(
-            color=discord.Color.green(),
-            title="Game ended",
-            description="The score limit has been reached.",
+        await end_game(
+            self.session,
+            discord.Color.green(),
+            "The score limit has been reached.",
         )
-        embed.add_field(
-            name="Difficulty", value=str(self.session.difficulty), inline=True
-        )
-        if self.session.wrong_answers_limit:
-            embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(
-            name="Final Scores", value=self.session.print_score_list(), inline=False
-        )
-        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
-
-        await self.session.channel.send(embed=embed)
-
         return None
 
 
@@ -366,29 +359,18 @@ class EndGameUserCanceled(GuessingGameState):
     @override
     async def __call__(self) -> "GuessingGameState | None":
         if self.session.stopped_by == self.session.bot.user:
-            embed = discord.Embed(
-                color=discord.Color.yellow(),
-                title="Game ended",
-                description="I'm going down for an update. See you in about five minutes!",
+            await end_game(
+                self.session,
+                discord.Color.yellow(),
+                "I'm going down for an update. See you in about five minutes!",
+                footer="This beer guy keeps messing with my code...",
             )
-            embed.set_footer(text="This beer guy keeps messing with my code...")
-        else:
-            embed = discord.Embed(
-                color=discord.Color.red(),
-                title="Game ended",
-                description=f"The game was stopped by {self.session.stopped_by.mention}.",  # pyright: ignore[reportOptionalMemberAccess]
+        elif self.session.stopped_by is not None:  # this should always be true
+            await end_game(
+                self.session,
+                discord.Color.red(),
+                f"The game was stopped by {self.session.stopped_by.mention}.",
             )
-            embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
-        embed.add_field(
-            name="Difficulty", value=str(self.session.difficulty), inline=True
-        )
-        if self.session.wrong_answers_limit:
-            embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(
-            name="Final Scores", value=self.session.print_score_list(), inline=False
-        )
-
-        await self.session.channel.send(embed=embed)
 
         return None
 
@@ -403,22 +385,11 @@ class EndGameTooManyWrongAnswers(GuessingGameState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
-        embed = discord.Embed(
-            color=discord.Color.red(),
-            title="Game ended",
-            description=f"More than {self.session.wrong_answers_limit} question{'s' if self.session.wrong_answers_limit != 1 else ''} was answered wrongly.",
+        await end_game(
+            self.session,
+            discord.Color.red(),
+            f"More than {self.session.wrong_answers_limit} question{'s' if self.session.wrong_answers_limit != 1 else ''} was answered wrongly.",
         )
-        embed.add_field(
-            name="Difficulty", value=str(self.session.difficulty), inline=True
-        )
-        embed.add_field(name="LIFE", value=self.session.format_life(), inline=True)
-        embed.add_field(
-            name="Final Scores", value=self.session.print_score_list(), inline=False
-        )
-        embed.set_footer(text="Use `c>guess lb` to view the server leaderboard.")
-
-        await self.session.channel.send(embed=embed)
-
         return None
 
 
