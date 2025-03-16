@@ -3,7 +3,7 @@ import itertools
 import random
 from decimal import Decimal
 from io import BytesIO
-from typing import TYPE_CHECKING, Literal, Optional, Sequence
+from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
 
 import discord
 import httpx
@@ -31,6 +31,7 @@ from utils.calculation.overpower import (
 from utils.calculation.rating import calculate_rating, calculate_score_for_rating
 from utils.components import ChartCardEmbed
 from utils.constants import MAX_DIFFICULTY, SIMILARITY_THRESHOLD
+from utils.converters import DifficultyConverter
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -170,7 +171,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     )
                     res += f"\n▸ AJ: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
 
-                overpower = overpower_base + Decimal(0.5)
+                overpower = overpower_base + Decimal("0.5")
                 overpower_fc_percentage = floor_to_ndp(
                     overpower / overpower_max * 100, 2
                 )
@@ -533,7 +534,13 @@ class ToolsCog(commands.Cog, name="Tools"):
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
-    async def border(self, ctx: Context, difficulty: str, *, query: str):
+    async def border(
+        self,
+        ctx: Context,
+        difficulty: Annotated[Difficulty, DifficultyConverter],
+        *,
+        query: str,
+    ):
         """Display the number of permissible JUSTICE, ATTACK and MISS to achieve specific ranks on a chart.
 
         The values are based on realistic JUSTICE:ATTACK:MISS ratios and are for reference only.
@@ -560,7 +567,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             stmt = (
                 select(Chart)
                 .where(
-                    (Chart.song == song) & (Chart.difficulty == difficulty[:3].upper())
+                    (Chart.song == song) & (Chart.difficulty == difficulty.short_form())
                 )
                 .limit(1)
                 .options(joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view))
@@ -589,15 +596,21 @@ class ToolsCog(commands.Cog, name="Tools"):
     @commands.hybrid_command("chart")
     @app_commands.choices(
         difficulty=[
-            app_commands.Choice(name="BASIC", value="BAS"),
-            app_commands.Choice(name="ADVANCED", value="ADV"),
-            app_commands.Choice(name="EXPERT", value="EXP"),
-            app_commands.Choice(name="MASTER", value="MAS"),
-            app_commands.Choice(name="ULTIMA", value="ULT"),
+            app_commands.Choice(name="BASIC", value="BASIC"),
+            app_commands.Choice(name="ADVANCED", value="ADVANCED"),
+            app_commands.Choice(name="EXPERT", value="EXPERT"),
+            app_commands.Choice(name="MASTER", value="MASTER"),
+            app_commands.Choice(name="ULTIMA", value="ULTIMA"),
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
-    async def chart(self, ctx: Context, difficulty: str, *, query: str):
+    async def chart(
+        self,
+        ctx: Context,
+        difficulty: Annotated[Difficulty, DifficultyConverter],
+        *,
+        query: str,
+    ):
         """Renders a chart view from sdvx.in for a given song and difficulty.
 
         Parameters
@@ -607,12 +620,6 @@ class ToolsCog(commands.Cog, name="Tools"):
         query: str
             Song title to search for. You don't have to be exact; try things out!
         """
-
-        try:
-            parsed_difficulty = Difficulty.from_short_form(difficulty.upper())
-        except ValueError as e:
-            msg = f'Unknown difficulty name "{escape_markdown(difficulty)}".'
-            raise commands.BadArgument(msg) from e
 
         async with ctx.typing():
             guild_id = ctx.guild.id if ctx.guild else None
@@ -630,7 +637,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     select(Chart)
                     .where(
                         (Chart.song == song)
-                        & (Chart.difficulty == difficulty[:3].upper())
+                        & (Chart.difficulty == difficulty.short_form())
                     )
                     .limit(1)
                     .options(
@@ -640,10 +647,12 @@ class ToolsCog(commands.Cog, name="Tools"):
                 chart = (await session.execute(stmt)).scalar_one_or_none()
 
             if chart is None:
-                msg = f"No charts found for {escape_markdown(song.title)} [{parsed_difficulty}]."
+                msg = (
+                    f"No charts found for {escape_markdown(song.title)} [{difficulty}]."
+                )
                 raise commands.CommandError(msg)
 
-            chart_display_name = f"{escape_markdown(song.title)} [{parsed_difficulty} {chart.const or chart.level}]"
+            chart_display_name = f"{escape_markdown(song.title)} [{difficulty} {chart.const or chart.level}]"
 
             if chart.sdvxin_chart_view is None:
                 msg = f"Chart view is not available for {chart_display_name} yet. Please try again later."

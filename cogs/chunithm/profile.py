@@ -133,9 +133,10 @@ class ProfileCog(commands.Cog, name="Profile"):
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
     ):
         """View your CHUNITHM avatar."""
-        async with ctx.typing(), self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
+        async with (
+            ctx.typing(),
+            self.utils.chuninet(ctx if user is None else user.id) as client,
+        ):
             basic_data = await client.authenticate()
             avatar_urls = basic_data.avatar
 
@@ -151,7 +152,7 @@ class ProfileCog(commands.Cog, name="Profile"):
             tasks.extend(task(getattr(avatar_urls, name)) for name in AVATAR_COORDS)
             results = await asyncio.gather(*tasks)
             items: dict[str, bytes] = dict(
-                zip(
+                zip(  # noqa: B905
                     ["base", "back", *AVATAR_COORDS],
                     results,
                 )

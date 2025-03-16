@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Annotated, Sequence
 
 import discord
 from discord import Embed, app_commands
@@ -19,6 +19,7 @@ from utils import (
 )
 from utils.config import config
 from utils.constants import SIMILARITY_THRESHOLD
+from utils.converters import AliasNameConverter, AliasNameTransformer
 from utils.views.embeds import EmbedPaginationView
 from utils.views.songlist import SonglistView
 
@@ -79,14 +80,14 @@ class SearchCog(commands.Cog, name="Search"):
     async def addalias(
         self,
         ctx: Context,
-        song_title_or_alias: str,
-        added_alias: str,
+        song_title_or_alias: Annotated[str, AliasNameConverter],
+        added_alias: Annotated[str, AliasNameConverter],
         *,
         global_alias: bool = False,
     ):
         """Manually add a song alias for this server.
 
-        Aliases are case-insensitive.
+        Aliases are forced-lowercase.
 
         Parameters
         ----------
@@ -124,11 +125,7 @@ class SearchCog(commands.Cog, name="Search"):
             self.bot.begin_db_session() as session,
             session.begin(),
         ):
-            stmt = (
-                select(Song)
-                .where(func.lower(Song.title) == func.lower(added_alias))
-                .limit(1)
-            )
+            stmt = select(Song).where(func.lower(Song.title) == added_alias).limit(1)
             song = (await session.execute(stmt)).scalar_one_or_none()
 
             if song is not None:
@@ -138,13 +135,12 @@ class SearchCog(commands.Cog, name="Search"):
             stmt = select(Song).where(
                 # Limit to non-WE entries. WE entries are redirected to
                 # their non-WE respectives when song-searching anyways.
-                (func.lower(Song.title) == func.lower(song_title_or_alias))
-                & (Song.id < 8000)
+                (func.lower(Song.title) == song_title_or_alias) & (Song.id < 8000)
             )
             song = (await session.execute(stmt)).scalar_one_or_none()
 
             if song is None:
-                condition = func.lower(Alias.alias) == func.lower(song_title_or_alias)
+                condition = func.lower(Alias.alias) == song_title_or_alias
 
                 if not global_alias:
                     condition = condition & (
@@ -163,7 +159,7 @@ class SearchCog(commands.Cog, name="Search"):
             if global_alias:
                 stmt = (
                     select(Alias)
-                    .where(func.lower(Alias.alias) == func.lower(added_alias))
+                    .where(func.lower(Alias.alias) == added_alias)
                     .options(joinedload(Alias.song))
                 )
                 aliases = (await session.execute(stmt)).scalars().all()
@@ -190,7 +186,7 @@ class SearchCog(commands.Cog, name="Search"):
                 stmt = (
                     select(Alias)
                     .where(
-                        (func.lower(Alias.alias) == func.lower(added_alias))
+                        (func.lower(Alias.alias) == added_alias)
                         & ((Alias.guild_id == -1) | (Alias.guild_id == guild_id))
                     )
                     .options(joinedload(Alias.song))
@@ -206,7 +202,7 @@ class SearchCog(commands.Cog, name="Search"):
 
             session.add(
                 Alias(
-                    alias=added_alias.lower(),
+                    alias=added_alias,
                     guild_id=guild_id,
                     song_id=song.id,
                     owner_id=None if global_alias else ctx.author.id,
@@ -227,7 +223,9 @@ class SearchCog(commands.Cog, name="Search"):
         return None
 
     @commands.hybrid_command("removealias")
-    async def removealias(self, ctx: Context, *, removed_alias: str):
+    async def removealias(
+        self, ctx: Context, *, removed_alias: Annotated[str, AliasNameConverter]
+    ):
         """Remove an alias for this server.
 
         Parameters
@@ -246,7 +244,7 @@ class SearchCog(commands.Cog, name="Search"):
             self.bot.begin_db_session() as session,
             session.begin(),
         ):
-            condition = func.lower(Alias.alias) == func.lower(removed_alias)
+            condition = func.lower(Alias.alias) == removed_alias
 
             if not is_alias_manager and ctx.guild is not None:
                 condition = condition & (Alias.guild_id == ctx.guild.id)
@@ -285,7 +283,9 @@ class SearchCog(commands.Cog, name="Search"):
         )
 
     @commands.hybrid_command("listalias", aliases=["listaliases", "aliases"])
-    async def listalias(self, ctx: Context, *, query: str):
+    async def listalias(
+        self, ctx: Context, *, query: Annotated[str, AliasNameConverter]
+    ):
         """List aliases for a given song
 
         Parameters
@@ -350,7 +350,7 @@ class SearchCog(commands.Cog, name="Search"):
     async def info_slash(
         self,
         interaction: "discord.Interaction[ChuniBot]",
-        query: str,
+        query: app_commands.Transform[str, AliasNameTransformer],
         *,
         detailed: bool = False,
     ):
@@ -358,7 +358,7 @@ class SearchCog(commands.Cog, name="Search"):
         return await self._info_inner(ctx, query=query, detailed=detailed)
 
     @commands.command("info")
-    async def info(self, ctx: Context, *, query: str):
+    async def info(self, ctx: Context, *, query: Annotated[str, AliasNameConverter]):
         """Search for a song.
 
         **Parameters:**
