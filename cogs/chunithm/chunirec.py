@@ -225,17 +225,19 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             raise commands.CommandError(msg)
 
         message = await ctx.reply("Fetching player data...", mention_author=False)
-        payload = "06"
+        payload = "06"  # version number
 
         async with self.utils.chuninet(ctx) as client:
             player_data = await client.player_data()
 
             payload += serialize_number(player_data.lv, 3, max=9999)
             payload += serialize_number(
-                int(player_data.rating.current * 100), 3, max=9999
+                round(player_data.rating.current * 100), 3, max=9999
             )
+            # this is max rating, but in VERSE there's no such thing,
+            # so chunirec just serialized rating twice
             payload += serialize_number(
-                int(player_data.rating.max * 100) if player_data.rating.max else 0,
+                round(player_data.rating.current * 100),
                 3,
                 max=9999,
             )
@@ -251,13 +253,23 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             payload += serialize_number(class_emblem, 1, max=48)
             payload += serialize_number(1 if player_data.team is not None else 0, 1)
 
+            payload += serialize_number(1 + len(player_data.subtitles), 1, max=48)
+
             try:
                 title_rarity = TITLE_RARITIES.index(player_data.title.rarity)
             except ValueError:
                 title_rarity = 0
 
-            payload += "1"  # number of titles set, hardcoded to 1 until VERSE is released in intl
             payload += serialize_number(title_rarity, 1, max=9)
+
+            for subtitle in player_data.subtitles:
+                try:
+                    subtitle_rarity = TITLE_RARITIES.index(subtitle.rarity)
+                except ValueError:
+                    subtitle_rarity = 0
+
+                payload += serialize_number(subtitle_rarity, 1, max=9)
+
             payload += "0"  # seemingly deprecated field
             payload += "3"  # region index: paralost = 1, intl = 2, jp = 3
             payload += "0"  # net battle rank
@@ -266,6 +278,9 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
 
             # for verse, just serialize all 3 titles
             payload += serialize_string(player_data.title.content, 2)
+
+            for subtitle in player_data.subtitles:
+                payload += serialize_string(subtitle.content, 2)
 
             records: list[Record] = []
 
@@ -349,15 +364,15 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
                 payload += serialize_number(course_lamp.value, 1, max=7)
 
             await message.edit(
-                content="Fetching recent10...",
+                content="Fetching new20...",
                 allowed_mentions=AllowedMentions.none(),
             )
-            recent10 = await client.new20()
+            new20 = await client.new20()
 
-            payload += serialize_number(len(recent10), 3)
-            payload += "R"  # marker for course array
+            payload += serialize_number(len(new20), 3)
+            payload += "R"  # marker for new20 (used to be recent10)
 
-            for recent in recent10:
+            for recent in new20:
                 payload += serialize_number(
                     recent.extras[KEY_SONG_ID] % 20480
                     + recent.difficulty.value * 20480,
