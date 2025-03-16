@@ -63,10 +63,10 @@ def get_rank_and_lamps(soup: Tag) -> tuple[Rank, ClearType, ComboType, ChainType
         clear_type = ClearType.CLEAR
     elif soup.select_one("img[src*=hard]") is not None:
         clear_type = ClearType.HARD
-    elif soup.select_one("img[src*=absolutep]") is not None:
-        clear_type = ClearType.ABSOLUTE_PLUS
     elif soup.select_one("img[src*=absolute]") is not None:
         clear_type = ClearType.ABSOLUTE
+    elif soup.select_one("img[src*=brave]") is not None:
+        clear_type = ClearType.BRAVE
     elif soup.select_one("img[src*=catastrophy]") is not None:
         clear_type = ClearType.CATASTROPHY
     else:

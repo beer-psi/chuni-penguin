@@ -50,8 +50,8 @@ def test_difficulty_full_form(value, expected):
         (ClearType.FAILED, "FAILED"),
         (ClearType.CLEAR, "CLEAR"),
         (ClearType.HARD, "HARD"),
+        (ClearType.BRAVE, "BRAVE"),
         (ClearType.ABSOLUTE, "ABSOLUTE"),
-        (ClearType.ABSOLUTE_PLUS, "ABSOLUTE+"),
         (ClearType.CATASTROPHY, "CATASTROPHY"),
     ],
 )

@@ -91,13 +91,11 @@ class ClearType(Enum):
     FAILED = 0
     CLEAR = 1
     HARD = 4
-    ABSOLUTE = 5
-    ABSOLUTE_PLUS = 6
+    BRAVE = 5
+    ABSOLUTE = 6
     CATASTROPHY = 7
 
     def __str__(self):
-        if self.value == 6:
-            return "ABSOLUTE+"
         return self.name.replace("_", " ")
 
     def short_form(self):
@@ -108,9 +106,9 @@ class ClearType(Enum):
         if self.value == 4:
             return "HRD"
         if self.value == 5:
-            return "ABS"
+            return "BRV"
         if self.value == 6:
-            return "ABS+"
+            return "ABS"
         if self.value == 7:
             return "CTS"
 
