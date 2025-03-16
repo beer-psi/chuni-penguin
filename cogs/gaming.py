@@ -298,6 +298,8 @@ async def end_game(
     if show_lives and session.wrong_answers_limit:
         embed.add_field(name="LIFE", value=session.format_life())
 
+    embed.add_field(name="Time to answer", value=session.time_per_question)
+
     embed.add_field(name="Final Scores", value=session.print_score_list(), inline=False)
     embed.set_footer(text=footer or "Use `c>guess lb` to view the server leaderboard.")
 
