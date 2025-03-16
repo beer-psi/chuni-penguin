@@ -1350,6 +1350,8 @@ class RecordsCog(commands.Cog, name="Records"):
         """
         **View your best scores for a level.**
 
+        As a convenience, if no parameters are specified, this is the same as calling the `best50` command with image generation.
+
         **Parameters:**
         `user`: Discord username of the player. Yourself, if not provided.
         `level`: Level (from 1 to 15) to search for.
@@ -1419,7 +1421,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return arg
 
         if query is None:
-            await self.best50(ctx, query="-i")
+            await self._best50_inner(ctx, image=True)
             return None
 
         parser = DiscordArguments()
@@ -1458,7 +1460,7 @@ class RecordsCog(commands.Cog, name="Records"):
             and args.genre is None
             and args.rank is None
         ):
-            await self.best50(ctx, query=f"-i {user.mention}")
+            await self._best50_inner(ctx, user=user, image=True)
             return None
 
         level = None
