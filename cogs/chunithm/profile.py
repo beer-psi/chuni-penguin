@@ -152,7 +152,7 @@ class ProfileCog(commands.Cog, name="Profile"):
             tasks.extend(task(getattr(avatar_urls, name)) for name in AVATAR_COORDS)
             results = await asyncio.gather(*tasks)
             items: dict[str, bytes] = dict(
-                zip(
+                zip(  # noqa: B905
                     ["base", "back", *AVATAR_COORDS],
                     results,
                 )
@@ -253,7 +253,7 @@ class ProfileCog(commands.Cog, name="Profile"):
             description = (
                 f"{optional_data_joined}\n"
                 f"▸ **Level**: {level}\n"
-                f"▸ **Rating**: {player_data.rating.current:.2f} (MAX {player_data.rating.max:.2f})\n"
+                f"▸ **Rating**: {player_data.rating.current:.2f}\n"
                 f"▸ **OVER POWER**: {player_data.overpower.value:.2f} ({player_data.overpower.progress * 100:.2f}%)\n"
                 f"▸ **Plays**: {player_data.playcount}\n"
             )
