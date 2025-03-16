@@ -181,10 +181,10 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     @commands.hybrid_command("ping")
     async def ping(self, ctx: Context):
-        start = time.perf_counter()
+        start = time.perf_counter_ns()
         message = await ctx.send("Ping...")
-        end = time.perf_counter()
-        duration = (end - start) * 1000
+        end = time.perf_counter_ns()
+        duration = (end - start) / 1_000_000
         await message.edit(
             content=(
                 f"Pong! Took {duration:.2f}ms\n"
