@@ -212,7 +212,7 @@ class ProfileCog(commands.Cog, name="Profile"):
 
         description = (
             f"{description}\n"
-            f"▸ **NaiveRating**: {stats['gameStats']['ratings']['naiveRating']:.2f}\n"
+            f"▸ **NaiveRating**: {round(stats['gameStats']['ratings']['naiveRating'] * 100) / 100:.2f}\n"
             f"▸ **Scores**: {stats['totalScores']}\n"
             f"▸ **Session Playtime**: {stats['playtime'] // (60 * 60 * 1000)} hours\n"
         )
