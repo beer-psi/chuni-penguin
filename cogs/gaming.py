@@ -705,6 +705,7 @@ class GamingCog(commands.Cog, name="Games"):
             "-d",
             "--difficulty",
             required=False,
+            type=str,
             default="BASIC",
         )
         parser.add_argument("-q", "--questions", type=int, required=False, default=20)
