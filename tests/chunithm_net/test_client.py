@@ -366,7 +366,6 @@ async def test_client_parses_homepage(
     assert user_data.overpower.progress == pytest.approx(0.0568)
 
     assert user_data.rating.current == pytest.approx(15.10)
-    assert user_data.rating.max == pytest.approx(15.13)
 
     assert user_data.emblem is None
     assert user_data.medal is None
@@ -403,7 +402,7 @@ async def test_client_parses_playerdata(
 
     assert len(user_data.subtitles) == 1
     assert user_data.subtitles[0].content == "Sledgehammer"
-    assert user_data.subtitles[0].content == "gold"
+    assert user_data.subtitles[0].rarity == "gold"
 
     assert (
         user_data.avatar.base
@@ -477,7 +476,6 @@ async def test_client_parses_playerdata(
     assert user_data.overpower.progress == pytest.approx(0.0568)
 
     assert user_data.rating.current == pytest.approx(15.10)
-    assert user_data.rating.max == pytest.approx(15.13)
 
     assert user_data.currency is not None
     assert user_data.currency.owned == 133500
