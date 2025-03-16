@@ -37,6 +37,8 @@ dev = [
     "jishaku>=2.5.2",
     "ruff>=0.6.9",
     "basedpyright>=1.19.0",
+]
+test = [
     "pytest>=8.3.3",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=5.0.0",

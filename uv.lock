@@ -324,14 +324,16 @@ speedup = [
 dev = [
     { name = "basedpyright" },
     { name = "jishaku" },
+    { name = "ruff" },
+    { name = "types-beautifulsoup4" },
+    { name = "typing-extensions" },
+]
+test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-html" },
     { name = "pytest-httpx" },
-    { name = "ruff" },
-    { name = "types-beautifulsoup4" },
-    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -361,14 +363,16 @@ provides-extras = ["speedup"]
 dev = [
     { name = "basedpyright", specifier = ">=1.19.0" },
     { name = "jishaku", specifier = ">=2.5.2" },
+    { name = "ruff", specifier = ">=0.6.9" },
+    { name = "types-beautifulsoup4", specifier = ">=4.12.0.20240907" },
+    { name = "typing-extensions", specifier = ">=4.12.2" },
+]
+test = [
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
     { name = "pytest-html", specifier = ">=4.1.1" },
     { name = "pytest-httpx", specifier = ">=0.32.0" },
-    { name = "ruff", specifier = ">=0.6.9" },
-    { name = "types-beautifulsoup4", specifier = ">=4.12.0.20240907" },
-    { name = "typing-extensions", specifier = ">=4.12.2" },
 ]
 
 [[package]]
