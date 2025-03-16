@@ -718,7 +718,7 @@ class GamingCog(commands.Cog, name="Games"):
             raise commands.BadArgument(str(e)) from e
 
         difficulty: Difficulty = await DifficultyConverter().convert(
-            ctx, args.difficulty
+            ctx, args.difficulty or "BASIC"
         )
         questions: int = args.questions
         score: int | None = args.score
