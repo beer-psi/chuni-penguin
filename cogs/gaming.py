@@ -7,7 +7,6 @@ import traceback
 from argparse import ArgumentError
 from asyncio import CancelledError, TimeoutError
 from pathlib import Path
-from threading import Lock
 from typing import TYPE_CHECKING, Protocol, override
 
 import discord
@@ -660,20 +659,20 @@ async def run_state_machine(
     current_state: GuessingGameState | None = initial_state
 
     while current_state is not None:
-        with cog.state_for_game_session_lock:
+        async with cog.state_for_game_session_lock:
             cog.state_for_game_session[channel.id] = current_state
 
         try:
             next_state = await current_state()
 
             if next_state is None:
-                cog._clear_state(channel.id)
+                await cog._clear_state(channel.id)
                 break
 
             current_state = next_state
         except Exception as e:
             logger.exception("Error running guessing game state machine", exc_info=e)
-            cog._clear_state(channel.id)
+            await cog._clear_state(channel.id)
 
             embed = discord.Embed(
                 color=discord.Color.red(),
@@ -695,11 +694,14 @@ class GamingCog(commands.Cog, name="Games"):
         self.bot = bot
         self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
 
+        self.game_tasks: dict[int, asyncio.Task] = {}
+        self.game_tasks_lock = asyncio.Lock()
+
         self.game_sessions: dict[int, GuessingGameSession] = {}
-        self.game_sessions_lock = Lock()
+        self.game_sessions_lock = asyncio.Lock()
 
         self.state_for_game_session: dict[int, GuessingGameState] = {}
-        self.state_for_game_session_lock = Lock()
+        self.state_for_game_session_lock = asyncio.Lock()
 
     @commands.group("guess", invoke_without_command=True)
     async def guess(self, ctx: Context, *, arguments: str = ""):
@@ -759,8 +761,8 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "WORLD'S END isn't supported yet. I don't think you're supposed to know what it has in store for you..."
             raise commands.BadArgument(msg)
 
-        with self.game_sessions_lock:
-            self.game_sessions[ctx.channel.id] = GuessingGameSession(
+        async with self.game_sessions_lock:
+            session = self.game_sessions[ctx.channel.id] = GuessingGameSession(
                 ctx,
                 difficulty=difficulty,
                 question_count=questions,
@@ -769,9 +771,10 @@ class GamingCog(commands.Cog, name="Games"):
                 wrong_answers_limit=wrong,
             )
 
-        await run_state_machine(
-            self, ctx.channel, StartState(self.game_sessions[ctx.channel.id])
-        )
+        async with self.game_tasks_lock:
+            self.game_tasks[ctx.channel.id] = asyncio.create_task(
+                run_state_machine(self, ctx.channel, StartState(session))
+            )
 
     @commands.hybrid_command("skip")
     async def skip(self, ctx: Context):
@@ -780,12 +783,12 @@ class GamingCog(commands.Cog, name="Games"):
         You can use this to skip a question, but also skip any waiting times,
         such as the starting 5-second wait.
         """
-        with self.game_sessions_lock:
+        async with self.game_sessions_lock:
             if ctx.channel.id not in self.game_sessions:
                 msg = "There are no ongoing games in this channel."
                 raise commands.CommandError(msg)
 
-        with self.state_for_game_session_lock:
+        async with self.state_for_game_session_lock:
             state = self.state_for_game_session[ctx.channel.id]
 
         if isinstance(state, GuessingGameSkippableState):
@@ -797,7 +800,7 @@ class GamingCog(commands.Cog, name="Games"):
     async def stop(self, ctx: Context):
         """Stops the currently running guessing game."""
 
-        with self.game_sessions_lock:
+        async with self.game_sessions_lock:
             if ctx.channel.id not in self.game_sessions:
                 msg = "There are no ongoing games in this channel."
                 raise commands.CommandError(msg)
@@ -812,7 +815,7 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "You cannot stop a game unless you started it or have the Manage Server permission."
             raise commands.CommandError(msg)
 
-        with self.state_for_game_session_lock:
+        async with self.state_for_game_session_lock:
             state = self.state_for_game_session[ctx.channel.id]
 
         session.stopped_by = ctx.author
@@ -854,12 +857,12 @@ class GamingCog(commands.Cog, name="Games"):
 
         await ctx.message.add_reaction("✅")
 
-    def _clear_state(self, channel_id: int):
-        with self.state_for_game_session_lock:
+    async def _clear_state(self, channel_id: int):
+        async with self.state_for_game_session_lock:
             if channel_id in self.state_for_game_session:
                 del self.state_for_game_session[channel_id]
 
-        with self.game_sessions_lock:
+        async with self.game_sessions_lock:
             if channel_id in self.game_sessions:
                 del self.game_sessions[channel_id]
 

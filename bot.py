@@ -143,7 +143,7 @@ class ChuniBot(commands.Bot):
         gaming: "GamingCog | None" = self.get_cog("Games")  # pyright: ignore[reportAssignmentType]
 
         if gaming is not None:
-            with gaming.game_sessions_lock, gaming.state_for_game_session_lock:
+            async with gaming.game_sessions_lock, gaming.state_for_game_session_lock:
                 for session in gaming.game_sessions.values():
                     session.stopped_by = self.user
 
