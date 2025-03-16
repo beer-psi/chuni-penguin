@@ -364,12 +364,14 @@ class EndGameUserCanceled(GuessingGameState):
                 discord.Color.yellow(),
                 "I'm going down for an update. See you in about five minutes!",
                 footer="This beer guy keeps messing with my code...",
+                show_lives=False,
             )
         elif self.session.stopped_by is not None:  # this should always be true
             await end_game(
                 self.session,
                 discord.Color.red(),
                 f"The game was stopped by {self.session.stopped_by.mention}.",
+                show_lives=False,
             )
 
         return None
