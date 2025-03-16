@@ -62,12 +62,29 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     team_name_elem = soup.select_one(".player_team_name")
     team_name = team_name_elem.get_text() if team_name_elem else None
 
-    nameplate_content = soup.select_one(".player_honor_text").get_text()
-    nameplate_rarity = (
-        str(soup.select_one(".player_honor_short")["style"])
-        .split("_")[-1]
-        .split(".")[0]
-    )
+    title_elems = soup.select(".player_honor_short")
+
+    if len(title_elems) == 0:
+        msg = "Invalid webpage. At least the main title must be set."
+        raise ValueError(msg)
+
+    title_content = title_elems[0].select_one(".player_honor_text").get_text()
+    title_rarity = extract_last_part(str(title_elems[0]["style"]))
+    title = Title(title_content, title_rarity)
+    subtitles: list[Title] = []
+
+    for title_elem in title_elems[1:]:
+        title_content_elem = title_elem.select_one(".player_honor_text")
+
+        if title_content_elem is None:
+            continue
+
+        subtitles.append(
+            Title(
+                title_content_elem.get_text(),
+                extract_last_part(str(title_elem["style"])),
+            )
+        )
 
     rating = parse_player_rating(soup.select(".player_rating_num_block img"))
     max_rating = float(soup.select_one(".player_rating_max").get_text())
@@ -139,7 +156,8 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
         reborn=reborn,
         possession=possession,
         team=Team(name=team_name) if team_name else None,
-        title=Title(content=nameplate_content, rarity=nameplate_rarity),
+        title=title,
+        subtitles=subtitles,
         rating=Rating(rating, max_rating),
         overpower=Overpower(overpower_value, overpower_progress),
         last_play_date=last_play_date,

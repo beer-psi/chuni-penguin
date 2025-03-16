@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
@@ -71,6 +71,7 @@ class PlayerData:
     team: Optional[Team] = None
     overpower: Overpower
     title: Title
+    subtitles: list[Title] = field(default_factory=list)
     rating: Rating
     currency: Optional[Currency] = None
 
