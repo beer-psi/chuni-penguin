@@ -27,7 +27,6 @@ from chunithm_net.consts import (
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
     KEY_SONG_ID,
-    KEY_SONG_VERSION,
 )
 from chunithm_net.models.enums import ComboType, Difficulty, Genres, Rank
 from chunithm_net.models.record import (
@@ -39,7 +38,7 @@ from database.models import Chart, SongJacket
 from utils import did_you_mean_text, floor_to_ndp, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
-from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
+from utils.constants import SIMILARITY_THRESHOLD
 from utils.kamaitachi import convert_kt_pbs_to_records, convert_kt_scores_to_records
 from utils.views import (
     B30N20View,
@@ -273,7 +272,6 @@ def render_b30(
     new_records: list[Record] | None = None,
     new_record_slots: int = 20,
     current_rating: float | None = None,
-    max_rating: float | None = None,
 ):
     if len(records) > record_slots:
         msg = "More records provided than number of record slots"
@@ -356,17 +354,6 @@ def render_b30(
             4,
         )
         rating_text = f"OLD {average:.4f} / NEW {new_average:.4f}"
-
-    # basic guard for old rating system, since there's no more
-    # "reachable" rating in the new system
-    if record_slots == 30 and new_records is None:
-        max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in records)
-        reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
-
-        rating_text += f" / REACHABLE {reachable:.4f}"
-
-    if max_rating is not None:
-        rating_text = f"MAX {max_rating:.2f} / {rating_text}"
 
     if current_rating is not None:
         rating_text = f"RATING {current_rating:.2f} / {rating_text}"
@@ -1047,14 +1034,13 @@ class RecordsCog(commands.Cog, name="Records"):
 
         await self._scores_inner(ctx, query, user, kamaitachi=kamaitachi)
 
-    async def _best30_inner(
+    async def _best50_inner(
         self,
         ctx: Context,
         user: discord.User | discord.Member | None = None,
         *,
         image: bool = False,
         kamaitachi: bool = False,
-        n: int = 30,
     ):
         target_id = ctx.author.id if user is None else user.id
 
@@ -1062,10 +1048,6 @@ class RecordsCog(commands.Cog, name="Records"):
             await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
             == "kamaitachi"
         )
-
-        if n == 50 and not kamaitachi:
-            msg = "Best 50 isn't currently supported yet! Please come back when CHUNITHM VERSE releases."
-            raise commands.CommandError(msg)
 
         async with ctx.typing():
             if kamaitachi:
@@ -1084,39 +1066,60 @@ class RecordsCog(commands.Cog, name="Records"):
                     raise commands.CommandError(msg)
 
                 pbs = convert_kt_pbs_to_records(data["body"])
-                best30 = pbs[:n]
+                best50 = pbs[:50]
                 current_rating = None
-                max_rating = None
 
-                best30 = await self.utils.hydrate_records(best30)
+                best50 = await self.utils.hydrate_records(best50)
+
+                if not image:
+                    view = B30View(ctx, best50, rating_slots=50, show_reachable=False)
+                    view.message = await ctx.reply(
+                        content=view.format_content(),
+                        embeds=view.format_page(view.items[: view.per_page]),
+                        view=view,
+                        mention_author=False,
+                    )
+                    return
+
+                records = best50
+                record_slots = 50
+                new_records = None
+                new_record_slots = 0
             else:
                 async with self.utils.chuninet(target_id) as client:
                     player_data = await client.player_data()
                     player_name = player_data.name
                     current_rating = player_data.rating.current
-                    max_rating = player_data.rating.max
+
                     best30 = await client.best30()
                     best30 = await self.utils.hydrate_records(best30)
 
-            if not image:
-                view = B30View(ctx, best30, rating_slots=n, show_reachable=n == 30)
-                view.message = await ctx.reply(
-                    content=view.format_content(),
-                    embeds=view.format_page(view.items[: view.per_page]),
-                    view=view,
-                    mention_author=False,
-                )
-                return
+                    new20 = await client.new20()
+                    new20 = await self.utils.hydrate_records(new20)
+
+                if not image:
+                    view = B30N20View(ctx, best30, new20)
+                    view.message = await ctx.reply(
+                        content=view.format_content(),
+                        embeds=view.format_page(view.items[: view.per_page]),
+                        view=view,
+                        mention_author=False,
+                    )
+                    return
+
+                records = best30
+                record_slots = 30
+                new_records = new20
+                new_record_slots = 20
 
             b30_image = await asyncio.to_thread(
                 render_b30,
                 player_name,
-                records=best30,
-                record_slots=n,
-                # new_records=new20,
-                # new_record_slots=20,
+                records=records,
+                record_slots=record_slots,
+                new_records=new_records,
+                new_record_slots=new_record_slots,
                 current_rating=current_rating,
-                max_rating=max_rating,
             )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
             await ctx.reply(
@@ -1126,15 +1129,15 @@ class RecordsCog(commands.Cog, name="Records"):
                 mention_author=False,
             )
 
-    @commands.command("best30", aliases=["b30", "best50", "b50"])
-    async def best30(self, ctx: Context, *, query: str = ""):
-        """View top 30 scores of you or another player.
+    @commands.command("best50", aliases=["b50", "b30", "best30"])
+    async def best50(self, ctx: Context, *, query: str = ""):
+        """View top 50 scores of you or another player.
 
         **Parameters**:
         `user`: The user to get scores for.
-        `-i, --image`: Render an image of your best 30 scores instead of viewing
+        `-i, --image`: Render an image of your best 50 scores instead of viewing
         with Discord embeds
-        `-k, --kamaitachi`: Get the best 30 scores from Kamaitachi, if the user
+        `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
         has that linked.
         """
 
@@ -1155,23 +1158,18 @@ class RecordsCog(commands.Cog, name="Records"):
                     user = await converter().convert(ctx, rest[0])
                     break
 
-        n = 30
-
-        if ctx.message.content.startswith((f"{ctx.prefix}b50", f"{ctx.prefix}best50")):
-            n = 50
-
-        await self._best30_inner(
-            ctx, user, image=args.image, kamaitachi=args.kamaitachi, n=n
+        await self._best50_inner(
+            ctx, user, image=args.image, kamaitachi=args.kamaitachi
         )
 
-    @app_commands.command(name="best30", description="View top plays")
+    @app_commands.command(name="best50", description="View top plays")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
-        user="The user to get best30 for",
-        image="Render an image of your best 30 scores",
-        kamaitachi="Get your best 30 from Kamaitachi if linked",
+        user="The user to get best50 for",
+        image="Render an image of your best 50 scores",
+        kamaitachi="Get your best 50 from Kamaitachi if linked",
     )
-    async def best30_slash(
+    async def best50_slash(
         self,
         interaction: Interaction,
         user: discord.User | discord.Member | None = None,
@@ -1181,13 +1179,13 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         ctx = await Context.from_interaction(interaction)
 
-        await self._best30_inner(ctx, user, image=image, kamaitachi=kamaitachi)
+        await self._best50_inner(ctx, user, image=image, kamaitachi=kamaitachi)
 
     @commands.hybrid_command("recent10", aliases=["r10"])
-    async def recent10(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
-    ):
-        """View top recent plays
+    async def recent10(self, ctx: Context):
+        """THIS COMMAND IS REMOVED
+
+        View top recent plays
 
         Parameters
         ----------
@@ -1195,26 +1193,17 @@ class RecordsCog(commands.Cog, name="Records"):
             The user to get scores for.
         """
 
-        async with (
-            ctx.typing(),
-            self.utils.chuninet(ctx if user is None else user.id) as client,
-        ):
-            recent10 = await client.new20()
-            recent10 = await self.utils.hydrate_records(recent10)
-
-            view = B30View(ctx, recent10, rating_slots=10, show_reachable=False)
-            view.message = await ctx.reply(
-                content=view.format_content(),
-                embeds=view.format_page(view.items[: view.per_page]),
-                view=view,
-                mention_author=False,
-            )
+        msg = (
+            "Recent rating has been removed since CHUNITHM VERSE. "
+            f"Please use the `{ctx.prefix}best50` command to view your old and new rating."
+        )
+        raise commands.CommandError(msg)
 
     @commands.hybrid_command("new20", aliases=["n10", "n15", "n20", "new10", "new15"])
-    async def new20(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
-    ):
-        """Calculate your rating in the new CHUNITHM VERSE system (latest version is
+    async def new20(self, ctx: Context):
+        """THIS COMMAND IS REMOVED
+
+        Calculate your rating in the new CHUNITHM VERSE system (latest version is
         LUMINOUS PLUS).
 
         Parameters
@@ -1223,53 +1212,12 @@ class RecordsCog(commands.Cog, name="Records"):
             The user to get scores for.
         """
 
-        ctx_or_id = ctx if user is None else user.id
-        message = await ctx.reply("Fetching scores...", mention_author=False)
-        all_records: list[Record] = []
-
-        async with self.utils.chuninet(ctx_or_id) as client:
-            for difficulty in Difficulty:
-                if difficulty == Difficulty.WORLDS_END:
-                    continue
-
-                await message.edit(
-                    content=f"Fetching {difficulty} scores...",
-                    allowed_mentions=AllowedMentions.none(),
-                )
-
-                all_records.extend(
-                    await client.music_record_by_folder(difficulty=difficulty)
-                )
-
-        hydrated_records = await self.utils.hydrate_records(all_records)
-        old_records = [
-            x
-            for x in hydrated_records
-            if x.extras.get(KEY_SONG_VERSION) != CURRENT_CHUNITHM_VERSION
-        ]
-        new_records = [
-            x
-            for x in hydrated_records
-            if x.extras.get(KEY_SONG_VERSION) == CURRENT_CHUNITHM_VERSION
-        ]
-
-        old_records.sort(
-            key=lambda x: (x.extras.get(KEY_PLAY_RATING), x.score), reverse=True
+        msg = (
+            "Because CHUNITHM International version is now on VERSE, "
+            f"this command has been removed. Please use the `{ctx.prefix}best50` "
+            "command to view your old and new rating."
         )
-        new_records.sort(
-            key=lambda x: (x.extras.get(KEY_PLAY_RATING), x.score), reverse=True
-        )
-
-        best30 = old_records[:30]
-        new20 = new_records[:20]
-
-        view = B30N20View(ctx, best30, new20)
-        view.message = await message.edit(
-            content=view.format_content(),
-            embeds=view.format_page(view.items[: view.per_page]),
-            view=view,
-            allowed_mentions=AllowedMentions.none(),
-        )
+        raise commands.CommandError(msg)
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(
@@ -1319,7 +1267,7 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         if level is None and difficulty is None and genre is None and rank is None:
             ctx = await Context.from_interaction(interaction)
-            await self._best30_inner(ctx, user, image=True)
+            await self._best50_inner(ctx, user, image=True)
             return None
 
         await interaction.response.defer()
@@ -1471,7 +1419,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return arg
 
         if query is None:
-            await self.best30(ctx, query="-i")
+            await self.best50(ctx, query="-i")
             return None
 
         parser = DiscordArguments()
@@ -1510,7 +1458,7 @@ class RecordsCog(commands.Cog, name="Records"):
             and args.genre is None
             and args.rank is None
         ):
-            await self.best30(ctx, query=f"-i {user.mention}")
+            await self.best50(ctx, query=f"-i {user.mention}")
             return None
 
         level = None
