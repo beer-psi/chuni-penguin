@@ -719,6 +719,7 @@ class GamingCog(commands.Cog, name="Games"):
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
+        # HACK: I have no idea why this is a coroutine if the default value is used...
         if inspect.isawaitable(args.difficulty):
             args.difficulty = await args.difficulty
 
