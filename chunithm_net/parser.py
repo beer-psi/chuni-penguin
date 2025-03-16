@@ -15,11 +15,11 @@ from .models.enums import (
 )
 from .models.player_data import (
     Currency,
-    Nameplate,
     Overpower,
     PlayerData,
     Rating,
     Team,
+    Title,
     UserAvatar,
 )
 from .models.record import (
@@ -139,7 +139,7 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
         reborn=reborn,
         possession=possession,
         team=Team(name=team_name) if team_name else None,
-        nameplate=Nameplate(content=nameplate_content, rarity=nameplate_rarity),
+        title=Title(content=nameplate_content, rarity=nameplate_rarity),
         rating=Rating(rating, max_rating),
         overpower=Overpower(overpower_value, overpower_progress),
         last_play_date=last_play_date,

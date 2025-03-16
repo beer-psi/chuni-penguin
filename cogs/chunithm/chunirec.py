@@ -252,7 +252,7 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             payload += serialize_number(1 if player_data.team is not None else 0, 1)
 
             try:
-                title_rarity = TITLE_RARITIES.index(player_data.nameplate.rarity)
+                title_rarity = TITLE_RARITIES.index(player_data.title.rarity)
             except ValueError:
                 title_rarity = 0
 
@@ -265,7 +265,7 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             payload += serialize_string(player_data.name, 2)
 
             # for verse, just serialize all 3 titles
-            payload += serialize_string(player_data.nameplate.content, 2)
+            payload += serialize_string(player_data.title.content, 2)
 
             records: list[Record] = []
 

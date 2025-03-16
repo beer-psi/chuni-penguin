@@ -133,9 +133,10 @@ class ProfileCog(commands.Cog, name="Profile"):
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
     ):
         """View your CHUNITHM avatar."""
-        async with ctx.typing(), self.utils.chuninet(
-            ctx if user is None else user.id
-        ) as client:
+        async with (
+            ctx.typing(),
+            self.utils.chuninet(ctx if user is None else user.id) as client,
+        ):
             basic_data = await client.authenticate()
             avatar_urls = basic_data.avatar
 
@@ -264,7 +265,7 @@ class ProfileCog(commands.Cog, name="Profile"):
                 title=player_data.name,
                 description=description,
                 color=player_data.possession.color(),
-            ).set_author(name=player_data.nameplate.content)
+            ).set_author(name=player_data.title.content)
 
             if player_data.character_frame is None:
                 files = []

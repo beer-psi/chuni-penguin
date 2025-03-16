@@ -6,7 +6,7 @@ from .enums import Possession, SkillClass
 
 
 @dataclass
-class Nameplate:
+class Title:
     content: str
     rarity: str
 
@@ -70,7 +70,7 @@ class PlayerData:
 
     team: Optional[Team] = None
     overpower: Overpower
-    nameplate: Nameplate
+    title: Title
     rating: Rating
     currency: Optional[Currency] = None
 
