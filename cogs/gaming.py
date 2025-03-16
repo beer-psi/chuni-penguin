@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import inspect
 import io
 import random
 import time
@@ -718,8 +719,11 @@ class GamingCog(commands.Cog, name="Games"):
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
+        if inspect.isawaitable(args.difficulty):
+            args.difficulty = await args.difficulty
+
         difficulty: Difficulty = await DifficultyConverter().convert(
-            ctx, args.difficulty or "BASIC"
+            ctx, args.difficulty
         )
         questions: int = args.questions
         score: int | None = args.score
