@@ -15,6 +15,7 @@ from PIL import Image
 from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
+from chunithm_net.consts import KEY_PLAY_RATING
 from chunithm_net.models.enums import Difficulty, Rank
 from database.models import Chart, Song
 from utils import (
@@ -458,8 +459,12 @@ class ToolsCog(commands.Cog, name="Tools"):
                         max_rating = stats["gameStats"]["ratings"]["naiveRating"]
                 else:
                     async with self.utils.chuninet(ctx) as client:
-                        basic_player_data = await client.authenticate()
-                        max_rating = basic_player_data.rating.max
+                        best30 = await client.best30()
+                        best30 = await self.utils.hydrate_records(best30)
+                        max_rating = float(
+                            sum((x.extras[KEY_PLAY_RATING] for x in best30), Decimal(0))
+                            / 30
+                        )
 
             if max_rating is None:
                 msg = "No rating data found. Please play a song first."
