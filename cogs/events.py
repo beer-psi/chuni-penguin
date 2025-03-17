@@ -182,11 +182,11 @@ class EventsCog(commands.Cog, name="Events"):
             embed.description = str(exc)
 
         if isinstance(exc, httpx.TimeoutException):
-            embed.description = "Timed out trying to connect to CHUNITHM-NET."
+            embed.description = "Timed out trying to connect to the network."
 
         if isinstance(exc, httpx.TransportError):
             embed.description = (
-                "An unknown network error occured trying to connect to CHUNITHM-NET.\n"
+                "An unknown network error occured trying to connect to the network.\n"
                 "\n"
                 "Detailed error:\n"
                 "```python\n"
