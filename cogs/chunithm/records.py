@@ -1091,22 +1091,29 @@ class RecordsCog(commands.Cog, name="Records"):
                     raise commands.CommandError(msg)
 
                 pbs = convert_kt_pbs_to_records(data["body"])
-                best30 = pbs[:n]
+                records = pbs[:50]
+                record_slots = 50
                 current_rating = None
                 max_rating = None
 
-                best30 = await self.utils.hydrate_records(best30)
+                records = await self.utils.hydrate_records(records)
             else:
                 async with self.utils.chuninet(target_id) as client:
                     player_data = await client.player_data()
                     player_name = player_data.name
                     current_rating = player_data.rating.current
                     max_rating = player_data.rating.max
-                    best30 = await client.best30()
-                    best30 = await self.utils.hydrate_records(best30)
+                    records = await client.best30()
+                    records = await self.utils.hydrate_records(records)
+                    record_slots = 30
 
             if not image:
-                view = B30View(ctx, best30, rating_slots=n, show_reachable=n == 30)
+                view = B30View(
+                    ctx,
+                    records,
+                    rating_slots=record_slots,
+                    show_reachable=record_slots == 30,
+                )
                 view.message = await ctx.reply(
                     content=view.format_content(),
                     embeds=view.format_page(view.items[: view.per_page]),
@@ -1118,8 +1125,8 @@ class RecordsCog(commands.Cog, name="Records"):
             b30_image = await asyncio.to_thread(
                 render_b30,
                 player_name,
-                records=best30,
-                record_slots=n,
+                records=records,
+                record_slots=record_slots,
                 # new_records=new20,
                 # new_record_slots=20,
                 current_rating=current_rating,
