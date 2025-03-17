@@ -8,7 +8,7 @@ import traceback
 from argparse import ArgumentError
 from asyncio import CancelledError, TimeoutError
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, override
+from typing import TYPE_CHECKING, Protocol, cast, override
 
 import discord
 from discord.ext import commands
@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
     from bot import ChuniBot
     from cogs.botutils import UtilsCog
+    from cogs.events import EventsCog
 
 logger = root_logger.getChild(__name__)
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
@@ -631,6 +632,7 @@ class StartState(GuessingGameState):
 async def run_state_machine(
     cog: "GamingCog",
     channel: "MessageableChannel",
+    session: GuessingGameSession,
     initial_state: GuessingGameState,
 ):
     current_state: GuessingGameState | None = initial_state
@@ -650,6 +652,9 @@ async def run_state_machine(
         except Exception as e:
             logger.exception("Error running guessing game state machine", exc_info=e)
             await cog._clear_state(channel.id)
+
+            if events_cog := cast("EventsCog | None", cog.bot.get_cog("Events")):
+                await events_cog._submit_error_to_webhook(session.ctx, e)
 
             embed = discord.Embed(
                 color=discord.Color.red(),
@@ -747,7 +752,7 @@ class GamingCog(commands.Cog, name="Games"):
 
         async with self.game_tasks_lock:
             self.game_tasks[ctx.channel.id] = asyncio.create_task(
-                run_state_machine(self, ctx.channel, StartState(session))
+                run_state_machine(self, ctx.channel, session, StartState(session))
             )
 
     @commands.hybrid_command("skip")
