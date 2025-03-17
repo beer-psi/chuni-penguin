@@ -108,7 +108,12 @@ class SearchCog(commands.Cog, name="Search"):
         if not global_alias and ctx.guild is None:
             raise commands.NoPrivateMessage
 
-        if global_alias and ctx.author.id not in config.bot.alias_managers:
+        is_alias_manager = (
+            ctx.author.id in config.bot.alias_managers
+            or ctx.author.id == self.bot.owner_id
+        )
+
+        if global_alias and not is_alias_manager:
             msg = "You are not allowed to add global aliases."
             raise commands.CheckFailure(msg)
 
@@ -235,16 +240,28 @@ class SearchCog(commands.Cog, name="Search"):
     ):
         """Remove an alias for this server.
 
+        The alias owner can always delete their own aliases. If someone
+        has the Manage Server permissions then they can also delete it.
+
         Parameters
         ----------
         alias: str
             The alias to remove.
         """
 
-        is_alias_manager = ctx.author.id in config.bot.alias_managers
+        is_alias_manager = (
+            ctx.author.id in config.bot.alias_managers
+            or ctx.author.id == self.bot.owner_id
+        )
 
         if not is_alias_manager and ctx.guild is None:
             raise commands.NoPrivateMessage
+
+        # If the person is not an alias manager, we already know that this
+        # command must be run in a guild.
+        bypass_ownership_check: bool = (
+            is_alias_manager or ctx.author.guild_permissions.manage_guild  # pyright: ignore[reportAttributeAccessIssue]
+        )
 
         async with (
             ctx.typing(),
@@ -253,35 +270,41 @@ class SearchCog(commands.Cog, name="Search"):
         ):
             condition = func.lower(Alias.alias) == removed_alias
 
-            if not is_alias_manager and ctx.guild is not None:
-                condition = condition & (Alias.guild_id == ctx.guild.id)
+            if is_alias_manager:
+                guild_condition = Alias.guild_id == -1
+
+                if ctx.guild is not None:
+                    guild_condition |= Alias.guild_id == ctx.guild.id
+
+                condition &= guild_condition
+            elif ctx.guild is not None:
+                condition &= Alias.guild_id == ctx.guild.id
+
+            if not bypass_ownership_check:
+                condition &= Alias.owner_id == ctx.author.id
 
             stmt = select(Alias).where(condition)
+
+            # when searching for guild_id = ctx.guild.id or guild_id = -1, the cases that happen are
+            # - it is a global alias, in which case there is only *the* global alias
+            # - it is a guild alias, in which case the global alias doesn't exist
+            # therefore there should be only one or no aliases
             alias = (await session.execute(stmt)).scalar_one_or_none()
 
             if alias is None:
                 msg = f"**{emd(removed_alias)}** does not exist"
 
-                if not is_alias_manager:
+                if not bypass_ownership_check:
                     msg += " or you don't have permissions to remove it"
 
                 msg += "."
 
-                raise commands.BadArgument(msg)
+                raise commands.CommandError(msg)
 
-            if (
-                not is_alias_manager
-                and alias.guild_id != -1
-                and alias.owner_id != ctx.author.id
-                and not (
-                    isinstance(ctx.author, discord.Member)
-                    and ctx.author.guild_permissions.administrator
-                )
-            ):
-                msg = "You cannot delete an alias that you didn't add yourself."
-                raise commands.CheckFailure(msg)
-
+            # if there is a suitable alias, then we can definitely remove it, since we
+            # have already matched all of the conditions above.
             await session.delete(alias)
+            await session.commit()
 
         await self.utils._reload_alias_cache()
         await ctx.reply(
