@@ -1,10 +1,13 @@
+import io
+import json
 import traceback
+from pprint import pformat
 from typing import TYPE_CHECKING, cast
 
 import aiohttp
 import discord
 import httpx
-from discord import Webhook, app_commands
+from discord import Webhook
 from discord.app_commands import AppCommandError
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -66,8 +69,12 @@ class EventsCog(commands.Cog, name="Events"):
         )
         # fmt: on
 
-        await interaction.edit_original_response(embed=embed)
-        await self._submit_error_to_webhook(interaction.command, exc)
+        if interaction.response.is_done():
+            await interaction.edit_original_response(embed=embed)
+        else:
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        await self._submit_error_to_webhook(interaction, exc)
 
         return
 
@@ -111,7 +118,7 @@ class EventsCog(commands.Cog, name="Events"):
         # fmt: on
 
         await ctx.reply(embed=embed, mention_author=False)
-        await self._submit_error_to_webhook(ctx.command, exc)
+        await self._submit_error_to_webhook(ctx, exc)
 
         return None
 
@@ -198,33 +205,71 @@ class EventsCog(commands.Cog, name="Events"):
 
     async def _submit_error_to_webhook(
         self,
-        command: commands.Command
-        | app_commands.Command
-        | app_commands.ContextMenu
-        | None,
+        context_or_interaction: Context | discord.Interaction,
         exc: Exception,
     ):
         if (webhook_url := config.bot.error_reporting_webhook) is None:
             return
 
+        command = context_or_interaction.command
         command_name = command.name if command else None
 
-        async with aiohttp.ClientSession() as session:
-            webhook = Webhook.from_url(webhook_url, session=session)
+        files = [
+            discord.File(
+                io.BytesIO("".join(traceback.format_exception(exc)).encode()),
+                "traceback.txt",
+            )
+        ]
 
+        if isinstance(context_or_interaction, discord.Interaction):
             content = (
-                f"## Exception in command {command_name}\n\n"
+                f"Unhandled exception in `/{command_name}`\n"
+                "\n"
+                f"User ID: `{context_or_interaction.user.id}` ({context_or_interaction.user.mention})\n"
+                f"Channel ID: `{context_or_interaction.channel.id if context_or_interaction.channel else None}`{f' (<#{context_or_interaction.channel.id}>)' if context_or_interaction.channel else ''}\n"
+                f"Guild ID: `{context_or_interaction.guild.id if context_or_interaction.guild else None}`{f' ({context_or_interaction.guild.name})' if context_or_interaction.guild else ''}"
+            )
+            files.append(
+                discord.File(
+                    io.BytesIO(
+                        json.dumps(
+                            context_or_interaction.data,
+                            ensure_ascii=False,
+                            indent=4,
+                        ).encode()
+                    ),
+                    "interaction_data.json",
+                )
+            )
+        else:
+            content = (
+                f"Unhandled exception in `c>{command_name}`\n"
+                "\n"
+                f"User ID: `{context_or_interaction.author.id}` ({context_or_interaction.author.mention})\n"
+                f"Channel ID: `{context_or_interaction.channel.id}` (<#{context_or_interaction.channel.id}>)\n"
+                f"Guild ID: `{context_or_interaction.guild.id if context_or_interaction.guild else None}`{f' ({context_or_interaction.guild.name})' if context_or_interaction.guild else ''}\n"
+                "\n"
+                "Arguments:\n"
                 "```python\n"
-                f"{(''.join(traceback.format_exception(exc)))[-1961 + len(str(command_name)) :]}"
+                f"{pformat(context_or_interaction.args, sort_dicts=False, underscore_numbers=True)}\n"
+                "```\n"
+                "\n"
+                "Keyword arguments:\n"
+                "```python\n"
+                f"{pformat(context_or_interaction.kwargs, sort_dicts=False, underscore_numbers=True)}\n"
                 "```"
             )
 
+        async with aiohttp.ClientSession() as session:
+            webhook = Webhook.from_url(webhook_url, session=session)
             client_user = cast(discord.ClientUser, self.bot.user)
+
             await webhook.send(
                 username=client_user.display_name,
                 avatar_url=client_user.display_avatar.url,
                 content=content,
                 allowed_mentions=discord.AllowedMentions.none(),
+                files=files,
             )
 
 
