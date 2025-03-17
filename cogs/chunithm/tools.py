@@ -355,12 +355,6 @@ class ToolsCog(commands.Cog, name="Tools"):
             }
 
             if course_mode:
-                # TODO: Remove the VERSE condition when VERSE drops next month
-                stmt = stmt.where(
-                    (Song.version != "VERSE")
-                    & (Chart.version.is_(None) | (Chart.version != "VERSE"))
-                )
-                # stmt = stmt.where((Song.version != "VERSE") & (Chart.version != "VERSE"))
                 charts = []
                 course_class = level.lower()
 
