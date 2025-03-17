@@ -713,7 +713,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     data = resp.json()
 
                     if not data["success"]:
-                        msg = f"Could not get scores from Kamaitachi: {data['success']}"
+                        msg = f"Could not get scores from Kamaitachi: {data['description']}"
                         raise commands.CommandError(msg)
 
                     raw_records = convert_kt_pbs_to_records(data["body"])
@@ -935,7 +935,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     data = resp.json()
 
                     if not data["success"]:
-                        msg = f"Could not get scores from Kamaitachi: {data['success']}"
+                        msg = f"Could not get scores from Kamaitachi: {data['description']}"
                         raise commands.CommandError(msg)
 
                     raw_records = convert_kt_pbs_to_records(data["body"])
