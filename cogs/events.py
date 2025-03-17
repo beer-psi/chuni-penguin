@@ -85,6 +85,10 @@ class EventsCog(commands.Cog, name="Events"):
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
 
+        if isinstance(exc, (commands.BadArgument, commands.MissingRequiredArgument)):
+            await ctx.send_help(ctx.command)
+            return None
+
         embed, delete_after = await self._construct_error_embed(ctx.prefix or "c>", exc)
 
         if embed.description is not None:
@@ -211,7 +215,7 @@ class EventsCog(commands.Cog, name="Events"):
             content = (
                 f"## Exception in command {command_name}\n\n"
                 "```python\n"
-                f"{(''.join(traceback.format_exception(exc)))[-1961 + len(str(command_name)):]}"
+                f"{(''.join(traceback.format_exception(exc)))[-1961 + len(str(command_name)) :]}"
                 "```"
             )
 
