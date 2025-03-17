@@ -1,52 +1,61 @@
+import random
 from typing import TYPE_CHECKING
 
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
 if TYPE_CHECKING:
     from bot import ChuniBot
 
+EIGHT_BALL_RESPONSES = [
+    "Most definitely yes.",
+    "For sure.",
+    "Totally!",
+    "Of course!",
+    "As I see it, yes.",
+    "My sources say yes.",
+    "Yes.",
+    "Most likely.",
+    "Perhaps...",
+    "Maybe...",
+    "Hm, not sure.",
+    "It is uncertain.",
+    "Ask me again later.",
+    "Don't count on it.",
+    "Probably not.",
+    "Very doubtful.",
+    "Most likely no.",
+    "Nope.",
+    "No.",
+    "My sources say no.",
+    "Don't even think about it.",
+    "Definitely no.",
+    "NO - It may cause disease contraction!",
+]
+
 
 class FluffCog(commands.Cog, name="Fluff"):
     def __init__(self) -> None:
-        super().__init__()
+        self.random = random.Random()
+        self.random.seed()
 
-    @commands.command("unny")
-    async def cunny(self, ctx: Context):
-        """😭"""
+    @commands.hybrid_command("8ball")
+    @app_commands.describe(question="A question to ask the mysterious 8ball")
+    async def eight_ball(self, ctx: Context, *, question: str):
+        """Ask the 8ball a question. It can only respond with yes or no.
 
-        if (
-            ctx.message.reference is not None
-            and ctx.message.reference.message_id is not None
-        ):
-            reference = await ctx.channel.fetch_message(
-                ctx.message.reference.message_id
-            )
-        else:
-            reference = ctx.message
+        Parameters
+        ----------
+        question: str
+            A question to ask the 8ball. It must end with a question mark.
+        """
+        if not question.endswith("?"):
+            msg = "That doesn't look like a question."
+            raise commands.BadArgument(msg)
 
-        await reference.reply(
-            "https://cdn.discordapp.com/attachments/1041530799704526961/1110813221008441375/uohhhroll.gif",
-            mention_author=False,
-        )
-
-    @commands.command("bu")
-    async def bu(self, ctx: Context):
-        """🛐"""
-
-        if (
-            ctx.message.reference is not None
-            and ctx.message.reference.message_id is not None
-        ):
-            reference = await ctx.channel.fetch_message(
-                ctx.message.reference.message_id
-            )
-        else:
-            reference = ctx.message
-
-        await reference.reply(
-            "https://cdn.discordapp.com/emojis/1093540495818502164.gif",
-            mention_author=False,
+        await ctx.reply(
+            content=self.random.choice(EIGHT_BALL_RESPONSES), mention_author=False
         )
 
 
