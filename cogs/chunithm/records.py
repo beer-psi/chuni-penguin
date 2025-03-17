@@ -1027,7 +1027,7 @@ class RecordsCog(commands.Cog, name="Records"):
         else:
             query = " ".join(rest)
 
-        query = await AliasNameConverter().convert(ctx, query)
+        query = await AliasNameConverter(lower=True).convert(ctx, query)
 
         await self._scores_inner(ctx, query, user, kamaitachi=args.kamaitachi)
 
@@ -1045,7 +1045,7 @@ class RecordsCog(commands.Cog, name="Records"):
     async def scores_slash(
         self,
         interaction: discord.Interaction,
-        query: app_commands.Transform[str, AliasNameTransformer],
+        query: app_commands.Transform[str, AliasNameTransformer(lower=True)],
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
@@ -1636,7 +1636,7 @@ class RecordsCog(commands.Cog, name="Records"):
         ctx: Context,
         difficulty: Annotated[Difficulty, DifficultyConverter],
         *,
-        query: Annotated[str, AliasNameConverter],
+        query: Annotated[str, AliasNameConverter(lower=True)],
     ):
         """View the international leaderboard for a specific song and difficulty.
 

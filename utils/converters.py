@@ -42,12 +42,20 @@ class DifficultyConverter(commands.Converter[Difficulty]):
 # emotes and mentions of people, so it's probably not possible.
 # At least we can force casing to always be lowercase.
 class AliasNameConverter(commands.Converter[str]):
+    def __init__(self, *, lower: bool = False) -> None:
+        super().__init__()
+        self.lower = lower
+
     @override
     async def convert(self, ctx: commands.Context, argument: str) -> str:
-        return argument.lower()
+        return argument.strip().lower() if self.lower else argument.strip()
 
 
 class AliasNameTransformer(app_commands.Transformer):
+    def __init__(self, *, lower: bool = False) -> None:
+        super().__init__()
+        self.lower = lower
+
     @override
     async def transform(self, interaction: Interaction, value: str) -> str:
-        return value.lower()
+        return value.strip().lower() if self.lower else value.strip()

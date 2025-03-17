@@ -80,14 +80,14 @@ class SearchCog(commands.Cog, name="Search"):
     async def addalias(
         self,
         ctx: Context,
-        song_title_or_alias: Annotated[str, AliasNameConverter],
+        song_title_or_alias: Annotated[str, AliasNameConverter(lower=True)],
         added_alias: Annotated[str, AliasNameConverter],
         *,
         global_alias: bool = False,
     ):
         """Manually add a song alias for this server.
 
-        Aliases are forced-lowercase.
+        Aliases are case-insensitive.
 
         Parameters
         ----------
@@ -112,6 +112,8 @@ class SearchCog(commands.Cog, name="Search"):
             msg = "You are not allowed to add global aliases."
             raise commands.CheckFailure(msg)
 
+        added_alias_lower = added_alias.lower()
+
         if global_alias:
             guild_id = -1
         elif ctx.guild is not None:
@@ -125,7 +127,9 @@ class SearchCog(commands.Cog, name="Search"):
             self.bot.begin_db_session() as session,
             session.begin(),
         ):
-            stmt = select(Song).where(func.lower(Song.title) == added_alias).limit(1)
+            stmt = (
+                select(Song).where(func.lower(Song.title) == added_alias_lower).limit(1)
+            )
             song = (await session.execute(stmt)).scalar_one_or_none()
 
             if song is not None:
@@ -159,7 +163,7 @@ class SearchCog(commands.Cog, name="Search"):
             if global_alias:
                 stmt = (
                     select(Alias)
-                    .where(func.lower(Alias.alias) == added_alias)
+                    .where(func.lower(Alias.alias) == added_alias_lower)
                     .options(joinedload(Alias.song))
                 )
                 aliases = (await session.execute(stmt)).scalars().all()
@@ -186,7 +190,7 @@ class SearchCog(commands.Cog, name="Search"):
                 stmt = (
                     select(Alias)
                     .where(
-                        (func.lower(Alias.alias) == added_alias)
+                        (func.lower(Alias.alias) == added_alias_lower)
                         & ((Alias.guild_id == -1) | (Alias.guild_id == guild_id))
                     )
                     .options(joinedload(Alias.song))
@@ -224,7 +228,10 @@ class SearchCog(commands.Cog, name="Search"):
 
     @commands.hybrid_command("removealias")
     async def removealias(
-        self, ctx: Context, *, removed_alias: Annotated[str, AliasNameConverter]
+        self,
+        ctx: Context,
+        *,
+        removed_alias: Annotated[str, AliasNameConverter(lower=True)],
     ):
         """Remove an alias for this server.
 
@@ -284,7 +291,7 @@ class SearchCog(commands.Cog, name="Search"):
 
     @commands.hybrid_command("listalias", aliases=["listaliases", "aliases"])
     async def listalias(
-        self, ctx: Context, *, query: Annotated[str, AliasNameConverter]
+        self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
     ):
         """List aliases for a given song
 
@@ -361,7 +368,7 @@ class SearchCog(commands.Cog, name="Search"):
     async def info_slash(
         self,
         interaction: "discord.Interaction[ChuniBot]",
-        query: app_commands.Transform[str, AliasNameTransformer],
+        query: app_commands.Transform[str, AliasNameTransformer(lower=True)],
         *,
         detailed: bool = False,
     ):
@@ -369,7 +376,9 @@ class SearchCog(commands.Cog, name="Search"):
         return await self._info_inner(ctx, query=query, detailed=detailed)
 
     @commands.command("info")
-    async def info(self, ctx: Context, *, query: Annotated[str, AliasNameConverter]):
+    async def info(
+        self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
+    ):
         """Search for a song.
 
         **Parameters:**
