@@ -302,11 +302,19 @@ def render_b30(
 
     with Image.open(ASSETS_DIR / "b30_bg.png") as im:
         im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
+        im = im.crop(
+            (
+                (im.width - b30_image.width) / 2,
+                (im.height - b30_image.height) / 2,
+                (im.width + b30_image.width) / 2,
+                (im.height + b30_image.height) / 2,
+            )
+        )
         b30_image.paste(im.filter(ImageFilter.GaussianBlur(8)))
 
     # header: player name and credits
     # draw a background for the player name
-    b30_draw.rectangle((0, 0, b30_image.width, 124), fill="#F2ACE0")
+    b30_draw.rectangle((0, 0, b30_image.width, 124), fill="#0ffba8")
 
     # draw the player name
     b30_draw.text((20, 0), player_name, fill="#000000", font=NOTO_SANS_JP_80)
@@ -337,7 +345,7 @@ def render_b30(
     # draw a background for the subheader
     b30_draw.rectangle(
         (0, 124, b30_image.width, 214),
-        fill="#F2D0F0",
+        fill="#70f8b7",
     )
 
     total_rating = sum(
