@@ -618,7 +618,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 if len(messages) == 0:
                     msg = "No recent scores found."
-                    raise commands.BadArgument(msg)
+                    raise commands.CommandError(msg)
 
                 message = messages[0]
 

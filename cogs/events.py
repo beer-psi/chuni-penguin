@@ -47,7 +47,11 @@ class EventsCog(commands.Cog, name="Events"):
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
 
-        embed, _ = await self._construct_error_embed("/", exc)
+        embed, _ = await self._construct_error_embed(
+            "/",
+            interaction.command.qualified_name if interaction.command else None,
+            exc,
+        )
 
         if embed.description is not None:
             await interaction.edit_original_response(embed=embed)
@@ -92,11 +96,9 @@ class EventsCog(commands.Cog, name="Events"):
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
 
-        if isinstance(exc, (commands.BadArgument, commands.MissingRequiredArgument)):
-            await ctx.send_help(ctx.command)
-            return None
-
-        embed, delete_after = await self._construct_error_embed(ctx.prefix or "c>", exc)
+        embed, delete_after = await self._construct_error_embed(
+            ctx.prefix or "c>", ctx.command.qualified_name if ctx.command else None, exc
+        )
 
         if embed.description is not None:
             return await ctx.reply(
@@ -122,7 +124,9 @@ class EventsCog(commands.Cog, name="Events"):
 
         return None
 
-    async def _construct_error_embed(self, prefix: str, exc: Exception):
+    async def _construct_error_embed(
+        self, prefix: str, command_name: str | None, exc: Exception
+    ):
         embed = discord.Embed(
             color=discord.Color.red(),
             title="Error",
@@ -159,27 +163,37 @@ class EventsCog(commands.Cog, name="Events"):
                 f"You're too fast. Take a break for {exc.retry_after:.2f} seconds."
             )
             delete_after = exc.retry_after
-        if isinstance(exc, commands.errors.ExpectedClosingQuoteError):
+        elif isinstance(exc, commands.errors.ExpectedClosingQuoteError):
             embed.description = "You're missing a quote somewhere. Perhaps you're using the wrong kind of quote (`\"` vs `”`)?"
-        if isinstance(exc, commands.errors.UnexpectedQuoteError):
+        elif isinstance(exc, commands.errors.UnexpectedQuoteError):
             embed.description = (
                 f"Unexpected quote mark, {exc.quote!r}, in non-quoted string. If this was intentional, "
                 "escape the quote with a backslash (\\\\)."
             )
-        if isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
+        elif isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
             embed.description = str(exc)
-        if isinstance(
+        elif isinstance(
             exc, (commands.errors.NotOwner, commands.errors.MissingPermissions)
         ):
             embed.description = "Insufficient permissions."
-        if isinstance(exc, commands.BadLiteralArgument):
+        elif isinstance(exc, commands.BadLiteralArgument):
             to_string = [repr(x) for x in exc.literals]
             if len(to_string) > 2:
                 fmt = "{}, or {}".format(", ".join(to_string[:-1]), to_string[-1])
             else:
                 fmt = " or ".join(to_string)
             embed.description = f"`{exc.param.displayed_name or exc.param.name}` must be one of {fmt}, received {exc.argument!r}"
-        if isinstance(exc, commands.CommandError) and not isinstance(
+        elif isinstance(exc, commands.BadArgument):
+            embed.description = (
+                f"Bad argument: {exc!s}\n"
+                f"View help for this command with `{prefix}help {command_name}`."
+            )
+        elif isinstance(exc, commands.MissingRequiredArgument):
+            embed.description = (
+                f"Missing required argument: `{exc.param.displayed_name or exc.param.name}`\n"
+                f"View help for this command with `{prefix}help {command_name}`."
+            )
+        elif isinstance(exc, commands.CommandError) and not isinstance(
             exc,
             (
                 commands.CommandNotFound,
