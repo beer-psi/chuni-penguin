@@ -4,7 +4,7 @@ from argparse import ArgumentError
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from io import BytesIO
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, override
 
 import discord
 from discord import app_commands
@@ -16,7 +16,11 @@ from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
 from utils import shlex_split
 from utils.argparse import DiscordArguments
-from utils.views.profile import ProfileView
+from utils.views.profile import (
+    PersistentHideFriendCodeButton,
+    PersistentSendFriendRequestButton,
+    ProfileView,
+)
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -128,6 +132,11 @@ class ProfileCog(commands.Cog, name="Profile"):
         self.bot = bot
         self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
 
+    @override
+    async def cog_load(self) -> None:
+        self.bot.add_dynamic_items(PersistentHideFriendCodeButton)
+        self.bot.add_dynamic_items(PersistentSendFriendRequestButton)
+
     @commands.hybrid_command(name="avatar")
     async def avatar(
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
@@ -212,7 +221,7 @@ class ProfileCog(commands.Cog, name="Profile"):
 
         description = (
             f"{description}\n"
-            f"▸ **NaiveRating**: {int(stats['gameStats']['ratings']['naiveRating'] * 100) / 100:.2f}\n"
+            f"▸ **NaiveRating**: {round(stats['gameStats']['ratings']['naiveRating'] * 100) / 100:.2f}\n"
             f"▸ **Scores**: {stats['totalScores']}\n"
             f"▸ **Session Playtime**: {stats['playtime'] // (60 * 60 * 1000)} hours\n"
         )

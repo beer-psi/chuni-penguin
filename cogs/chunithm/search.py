@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Annotated, Sequence
 
 import discord
 from discord import Embed, app_commands
@@ -19,6 +19,7 @@ from utils import (
 )
 from utils.config import config
 from utils.constants import SIMILARITY_THRESHOLD
+from utils.converters import AliasNameConverter, AliasNameTransformer
 from utils.views.embeds import EmbedPaginationView
 from utils.views.songlist import SonglistView
 
@@ -79,8 +80,8 @@ class SearchCog(commands.Cog, name="Search"):
     async def addalias(
         self,
         ctx: Context,
-        song_title_or_alias: str,
-        added_alias: str,
+        song_title_or_alias: Annotated[str, AliasNameConverter(lower=True)],
+        added_alias: Annotated[str, AliasNameConverter],
         *,
         global_alias: bool = False,
     ):
@@ -107,9 +108,16 @@ class SearchCog(commands.Cog, name="Search"):
         if not global_alias and ctx.guild is None:
             raise commands.NoPrivateMessage
 
-        if global_alias and ctx.author.id not in config.bot.alias_managers:
+        is_alias_manager = (
+            ctx.author.id in config.bot.alias_managers
+            or ctx.author.id == self.bot.owner_id
+        )
+
+        if global_alias and not is_alias_manager:
             msg = "You are not allowed to add global aliases."
             raise commands.CheckFailure(msg)
+
+        added_alias_lower = added_alias.lower()
 
         if global_alias:
             guild_id = -1
@@ -125,9 +133,7 @@ class SearchCog(commands.Cog, name="Search"):
             session.begin(),
         ):
             stmt = (
-                select(Song)
-                .where(func.lower(Song.title) == func.lower(added_alias))
-                .limit(1)
+                select(Song).where(func.lower(Song.title) == added_alias_lower).limit(1)
             )
             song = (await session.execute(stmt)).scalar_one_or_none()
 
@@ -138,13 +144,12 @@ class SearchCog(commands.Cog, name="Search"):
             stmt = select(Song).where(
                 # Limit to non-WE entries. WE entries are redirected to
                 # their non-WE respectives when song-searching anyways.
-                (func.lower(Song.title) == func.lower(song_title_or_alias))
-                & (Song.id < 8000)
+                (func.lower(Song.title) == song_title_or_alias) & (Song.id < 8000)
             )
             song = (await session.execute(stmt)).scalar_one_or_none()
 
             if song is None:
-                condition = func.lower(Alias.alias) == func.lower(song_title_or_alias)
+                condition = func.lower(Alias.alias) == song_title_or_alias
 
                 if not global_alias:
                     condition = condition & (
@@ -163,7 +168,7 @@ class SearchCog(commands.Cog, name="Search"):
             if global_alias:
                 stmt = (
                     select(Alias)
-                    .where(func.lower(Alias.alias) == func.lower(added_alias))
+                    .where(func.lower(Alias.alias) == added_alias_lower)
                     .options(joinedload(Alias.song))
                 )
                 aliases = (await session.execute(stmt)).scalars().all()
@@ -190,7 +195,7 @@ class SearchCog(commands.Cog, name="Search"):
                 stmt = (
                     select(Alias)
                     .where(
-                        (func.lower(Alias.alias) == func.lower(added_alias))
+                        (func.lower(Alias.alias) == added_alias_lower)
                         & ((Alias.guild_id == -1) | (Alias.guild_id == guild_id))
                     )
                     .options(joinedload(Alias.song))
@@ -206,7 +211,7 @@ class SearchCog(commands.Cog, name="Search"):
 
             session.add(
                 Alias(
-                    alias=added_alias.lower(),
+                    alias=added_alias,
                     guild_id=guild_id,
                     song_id=song.id,
                     owner_id=None if global_alias else ctx.author.id,
@@ -227,8 +232,16 @@ class SearchCog(commands.Cog, name="Search"):
         return None
 
     @commands.hybrid_command("removealias")
-    async def removealias(self, ctx: Context, *, removed_alias: str):
+    async def removealias(
+        self,
+        ctx: Context,
+        *,
+        removed_alias: Annotated[str, AliasNameConverter(lower=True)],
+    ):
         """Remove an alias for this server.
+
+        The alias owner can always delete their own aliases. If someone
+        has the Manage Server permissions then they can also delete it.
 
         Parameters
         ----------
@@ -236,47 +249,62 @@ class SearchCog(commands.Cog, name="Search"):
             The alias to remove.
         """
 
-        is_alias_manager = ctx.author.id in config.bot.alias_managers
+        is_alias_manager = (
+            ctx.author.id in config.bot.alias_managers
+            or ctx.author.id == self.bot.owner_id
+        )
 
         if not is_alias_manager and ctx.guild is None:
             raise commands.NoPrivateMessage
+
+        # If the person is not an alias manager, we already know that this
+        # command must be run in a guild.
+        bypass_ownership_check: bool = (
+            is_alias_manager or ctx.author.guild_permissions.manage_guild  # pyright: ignore[reportAttributeAccessIssue]
+        )
 
         async with (
             ctx.typing(),
             self.bot.begin_db_session() as session,
             session.begin(),
         ):
-            condition = func.lower(Alias.alias) == func.lower(removed_alias)
+            condition = func.lower(Alias.alias) == removed_alias
 
-            if not is_alias_manager and ctx.guild is not None:
-                condition = condition & (Alias.guild_id == ctx.guild.id)
+            if is_alias_manager:
+                guild_condition = Alias.guild_id == -1
+
+                if ctx.guild is not None:
+                    guild_condition |= Alias.guild_id == ctx.guild.id
+
+                condition &= guild_condition
+            elif ctx.guild is not None:
+                condition &= Alias.guild_id == ctx.guild.id
+
+            if not bypass_ownership_check:
+                condition &= Alias.owner_id == ctx.author.id
 
             stmt = select(Alias).where(condition)
+
+            # when searching for guild_id = ctx.guild.id or guild_id = -1, the cases that happen are
+            # - it is a global alias, in which case there is only *the* global alias
+            # - it is a guild alias, in which case the global alias doesn't exist
+            # therefore there should be only one or no aliases
             alias = (await session.execute(stmt)).scalar_one_or_none()
 
             if alias is None:
                 msg = f"**{emd(removed_alias)}** does not exist"
 
-                if not is_alias_manager:
+                if not bypass_ownership_check:
                     msg += " or you don't have permissions to remove it"
 
                 msg += "."
 
-                raise commands.BadArgument(msg)
+                raise commands.CommandError(msg)
 
-            if (
-                not is_alias_manager
-                and alias.guild_id != -1
-                and alias.owner_id != ctx.author.id
-                and not (
-                    isinstance(ctx.author, discord.Member)
-                    and ctx.author.guild_permissions.administrator
-                )
-            ):
-                msg = "You cannot delete an alias that you didn't add yourself."
-                raise commands.CheckFailure(msg)
-
+            # if there is a suitable alias, then we can definitely remove it, since we
+            # have already matched all of the conditions above.
             await session.delete(alias)
+            await session.commit()
 
         await self.utils._reload_alias_cache()
         await ctx.reply(
@@ -285,7 +313,9 @@ class SearchCog(commands.Cog, name="Search"):
         )
 
     @commands.hybrid_command("listalias", aliases=["listaliases", "aliases"])
-    async def listalias(self, ctx: Context, *, query: str):
+    async def listalias(
+        self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
+    ):
         """List aliases for a given song
 
         Parameters
@@ -333,6 +363,17 @@ class SearchCog(commands.Cog, name="Search"):
 
         return None
 
+    @commands.is_owner()
+    @commands.command("reloadalias", aliases=["reloadaliases"], hidden=True)
+    async def reloadalias(self, ctx: Context):
+        async with ctx.typing():
+            await self.utils._reload_alias_cache()
+
+            await ctx.reply(
+                content=f"Loaded {len(self.utils.alias_cache)} aliases into memory.",
+                mention_author=False,
+            )
+
     async def song_title_autocomplete(
         self,
         interaction: "discord.Interaction[ChuniBot]",
@@ -350,7 +391,7 @@ class SearchCog(commands.Cog, name="Search"):
     async def info_slash(
         self,
         interaction: "discord.Interaction[ChuniBot]",
-        query: str,
+        query: app_commands.Transform[str, AliasNameTransformer(lower=True)],
         *,
         detailed: bool = False,
     ):
@@ -358,7 +399,9 @@ class SearchCog(commands.Cog, name="Search"):
         return await self._info_inner(ctx, query=query, detailed=detailed)
 
     @commands.command("info")
-    async def info(self, ctx: Context, *, query: str):
+    async def info(
+        self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
+    ):
         """Search for a song.
 
         **Parameters:**

@@ -44,12 +44,15 @@ class LeaderboardView(PaginationView):
         description = ""
 
         for item in items:
-            description += f"`{item.position}` {item.player_name.ljust(8, "　")} ▸ {rank_icon(Rank.from_score(item.score))} ▸ {item.score}"
+            description += f"`{item.position}` {item.player_name.ljust(8, '　')} ▸ {rank_icon(Rank.from_score(item.score))} ▸ {item.score}"
 
             if item.ajc_count is not None:
                 description += f" ▸ AJC count: {item.ajc_count}"
 
             description += f" ▸ <t:{int(item.last_raised.timestamp())}:f>\n"
+
+        if description == "":
+            description = "No scores."
 
         leaderboard_embed = discord.Embed(
             color=self.difficulty.color(),

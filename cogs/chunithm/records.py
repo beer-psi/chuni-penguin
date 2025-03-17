@@ -8,7 +8,7 @@ from decimal import Decimal
 from io import BytesIO
 from math import ceil
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional, cast
+from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 
 import discord
 from discord import AllowedMentions, Interaction, app_commands
@@ -39,6 +39,11 @@ from utils import did_you_mean_text, floor_to_ndp, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.constants import SIMILARITY_THRESHOLD
+from utils.converters import (
+    AliasNameConverter,
+    AliasNameTransformer,
+    DifficultyConverter,
+)
 from utils.kamaitachi import convert_kt_pbs_to_records, convert_kt_scores_to_records
 from utils.views import (
     B30N20View,
@@ -1009,6 +1014,8 @@ class RecordsCog(commands.Cog, name="Records"):
         else:
             query = " ".join(rest)
 
+        query = await AliasNameConverter(lower=True).convert(ctx, query)
+
         await self._scores_inner(ctx, query, user, kamaitachi=args.kamaitachi)
 
     @app_commands.command(
@@ -1025,7 +1032,7 @@ class RecordsCog(commands.Cog, name="Records"):
     async def scores_slash(
         self,
         interaction: discord.Interaction,
-        query: str,
+        query: app_commands.Transform[str, AliasNameTransformer(lower=True)],
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
@@ -1398,11 +1405,6 @@ class RecordsCog(commands.Cog, name="Records"):
 
             return genre
 
-        def difficulty(arg: str) -> Difficulty:
-            if arg.upper().startswith("WORLD"):
-                return Difficulty.WORLDS_END
-            return Difficulty.from_short_form(arg.upper()[:3])
-
         def rank(arg: str) -> Rank:
             return Rank[arg.upper().replace("+", "p")]
 
@@ -1425,7 +1427,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return None
 
         parser = DiscordArguments()
-        parser.add_argument("-d", "--difficulty", type=difficulty, required=False)
+        parser.add_argument("-d", "--difficulty", type=str, required=False)
         parser.add_argument("-s", "--sort", type=sort_type, required=False)
 
         group = parser.add_mutually_exclusive_group()
@@ -1437,7 +1439,12 @@ class RecordsCog(commands.Cog, name="Records"):
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        if (args.genre or args.rank) and not args.difficulty:
+        if args.difficulty:
+            difficulty = await DifficultyConverter().convert(ctx, args.difficulty)
+        else:
+            difficulty = None
+
+        if (args.genre or args.rank) and not difficulty:
             msg = "Must specify a difficulty when searching by genre or rank."
             raise commands.BadArgument(msg)
 
@@ -1456,7 +1463,7 @@ class RecordsCog(commands.Cog, name="Records"):
         if (
             user is not None
             and str_level is None
-            and args.difficulty is None
+            and difficulty is None
             and args.genre is None
             and args.rank is None
         ):
@@ -1496,7 +1503,7 @@ class RecordsCog(commands.Cog, name="Records"):
             records = await client.music_record_by_folder(
                 level=level,
                 genre=args.genre,
-                difficulty=args.difficulty,
+                difficulty=difficulty,
                 rank=args.rank,
             )
             assert records is not None
@@ -1566,15 +1573,21 @@ class RecordsCog(commands.Cog, name="Records"):
     @commands.hybrid_command("leaderboard", aliases=["lb"])
     @app_commands.choices(
         difficulty=[
-            app_commands.Choice(name="BASIC", value="BAS"),
-            app_commands.Choice(name="ADVANCED", value="ADV"),
-            app_commands.Choice(name="EXPERT", value="EXP"),
-            app_commands.Choice(name="MASTER", value="MAS"),
-            app_commands.Choice(name="ULTIMA", value="ULT"),
+            app_commands.Choice(name="BASIC", value="BASIC"),
+            app_commands.Choice(name="ADVANCED", value="ADVANCED"),
+            app_commands.Choice(name="EXPERT", value="EXPERT"),
+            app_commands.Choice(name="MASTER", value="MASTER"),
+            app_commands.Choice(name="ULTIMA", value="ULTIMA"),
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
-    async def leaderboard(self, ctx: Context, difficulty: str, *, query: str):
+    async def leaderboard(
+        self,
+        ctx: Context,
+        difficulty: Annotated[Difficulty, DifficultyConverter],
+        *,
+        query: Annotated[str, AliasNameConverter(lower=True)],
+    ):
         """View the international leaderboard for a specific song and difficulty.
 
         Currently requires logging in to CHUNITHM-NET, though this might be changed.
@@ -1586,13 +1599,6 @@ class RecordsCog(commands.Cog, name="Records"):
         query: str
             Song title to search for. You don't have to be exact; try things out!
         """
-
-        try:
-            parsed_difficulty = Difficulty.from_short_form(difficulty.upper())
-        except ValueError as e:
-            msg = f'Unknown difficulty name "{escape_markdown(difficulty)}".'
-            raise commands.BadArgument(msg) from e
-
         async with ctx.typing(), self.utils.chuninet(ctx) as client:
             guild_id = ctx.guild.id if ctx.guild else None
             song, alias, similarity = await self.utils.find_song(
@@ -1610,7 +1616,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     select(Chart)
                     .where(
                         (Chart.song_id == song.id)
-                        & (Chart.difficulty == parsed_difficulty.short_form())
+                        & (Chart.difficulty == difficulty.short_form())
                     )
                     .options(
                         joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
@@ -1618,8 +1624,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 )
                 chart = (await session.execute(stmt)).scalar_one_or_none()
 
-            leaderboard = await client.music_leaderboard(song.id, parsed_difficulty)
-            view = LeaderboardView(ctx, leaderboard, song, parsed_difficulty, chart)
+            leaderboard = await client.music_leaderboard(song.id, difficulty)
+            view = LeaderboardView(ctx, leaderboard, song, difficulty, chart)
 
             view.message = await ctx.reply(
                 embeds=view.format_page(view.items[: view.per_page]),

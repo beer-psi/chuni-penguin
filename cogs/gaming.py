@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import inspect
 import io
 import random
 import time
@@ -22,6 +23,7 @@ from chunithm_net.models.enums import Difficulty
 from database.models import Alias, GuessScore, Song
 from utils import shlex_split
 from utils.argparse import DiscordArguments
+from utils.converters import DifficultyConverter
 from utils.logging import logger as root_logger
 from utils.views.gaming import GuessLeaderboardView
 
@@ -297,6 +299,8 @@ async def end_game(
 
     if show_lives and session.wrong_answers_limit:
         embed.add_field(name="LIFE", value=session.format_life())
+
+    embed.add_field(name="Time to answer", value=session.time_per_question)
 
     embed.add_field(name="Final Scores", value=session.print_score_list(), inline=False)
     embed.set_footer(text=footer or "Use `c>guess lb` to view the server leaderboard.")
@@ -697,22 +701,13 @@ class GamingCog(commands.Cog, name="Games"):
             await ctx.reply("There is already an ongoing session in this channel!")
             return
 
-        def parse_difficulty(arg: str) -> Difficulty:
-            if arg.upper().startswith("WORLD"):
-                return Difficulty.WORLDS_END
-
-            if arg.lower() == "we":
-                return Difficulty.WORLDS_END
-
-            return Difficulty.from_short_form(arg.upper()[:3])
-
         parser = DiscordArguments()
         parser.add_argument(
             "-d",
             "--difficulty",
-            type=parse_difficulty,
             required=False,
-            default=Difficulty.BASIC,
+            type=str,
+            default="BASIC",
         )
         parser.add_argument("-q", "--questions", type=int, required=False, default=20)
         parser.add_argument("-s", "--score", type=int, required=False, default=None)
@@ -724,7 +719,13 @@ class GamingCog(commands.Cog, name="Games"):
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        difficulty: Difficulty = args.difficulty
+        # HACK: I have no idea why this is a coroutine if the default value is used...
+        if inspect.isawaitable(args.difficulty):
+            args.difficulty = await args.difficulty
+
+        difficulty: Difficulty = await DifficultyConverter().convert(
+            ctx, args.difficulty
+        )
         questions: int = args.questions
         score: int | None = args.score
         time: int = args.time
