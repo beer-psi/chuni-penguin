@@ -550,6 +550,11 @@ class ToolsCog(commands.Cog, name="Tools"):
         async with ctx.typing():
             if difficulty_or_notecount.isnumeric():
                 notecount = int(difficulty_or_notecount)
+
+                if notecount <= 0:
+                    msg = "Notecount should be larger than 0."
+                    raise commands.BadArgument(msg)
+
                 deductions = calculate_score_deduction_per_judgement(notecount)
 
                 embed = discord.Embed(
