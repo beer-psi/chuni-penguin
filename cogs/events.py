@@ -97,7 +97,9 @@ class EventsCog(commands.Cog, name="Events"):
             exc = cast(Exception, exc.original)
 
         embed, delete_after = await self._construct_error_embed(
-            ctx.prefix or "c>", ctx.command.qualified_name if ctx.command else None, exc
+            ctx.prefix or "c>",
+            ctx.command.qualified_name if ctx.command else None,
+            exc,
         )
 
         if embed.description is not None:
@@ -233,7 +235,7 @@ class EventsCog(commands.Cog, name="Events"):
             return
 
         command = context_or_interaction.command
-        command_name = command.name if command else None
+        command_name = command.qualified_name if command else None
 
         files = [
             discord.File(
