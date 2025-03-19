@@ -903,11 +903,12 @@ class RecordsCog(commands.Cog, name="Records"):
                 await view.wait()
 
                 if view.value is None:
-                    await select_message.edit(
-                        content="Timed out before selecting a song.",
-                        view=None,
-                        allowed_mentions=AllowedMentions.none(),
-                    )
+                    with contextlib.suppress(discord.errors.NotFound):
+                        await select_message.edit(
+                            content="Timed out before selecting a song.",
+                            view=None,
+                            allowed_mentions=AllowedMentions.none(),
+                        )
                     return None
 
                 song = songs[int(view.value)]
