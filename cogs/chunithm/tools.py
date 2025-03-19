@@ -704,18 +704,20 @@ class ToolsCog(commands.Cog, name="Tools"):
             sdvxin_id = chart.sdvxin_chart_view.id
 
             if chart.difficulty == "ULT":
-                bg_url = (
-                    f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
-                )
-                data_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/obj/data{sdvxin_id}ult.png"
-                bar_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
+                bg_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
+                data_url = f"https://sdvx.in/chunithm/ult/obj/data{sdvxin_id}ult.png"
+                bar_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
             else:
                 sdvxin_difficulty = (
                     chart.difficulty.lower() if chart.difficulty != "MAS" else "mst"
                 )
-                bg_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png"
-                data_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/obj/data{sdvxin_id}{sdvxin_difficulty}.png"
-                bar_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
+                bg_url = (
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png"
+                )
+                data_url = f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/obj/data{sdvxin_id}{sdvxin_difficulty}.png"
+                bar_url = (
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
+                )
 
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(timeout=60.0),
