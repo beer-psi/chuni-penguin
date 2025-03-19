@@ -59,6 +59,7 @@ class LeaderboardView(PaginationView):
             description=description,
             timestamp=self.leaderboard.updated_at,
         )
+        leaderboard_embed.set_footer(text=f"Page {self.page + 1}/{self.max_index + 1}")
 
         return [info_embed, leaderboard_embed]
 
