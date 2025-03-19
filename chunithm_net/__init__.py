@@ -336,7 +336,9 @@ class ChuniNet:
             ajc_count_elem = entry.select_one(
                 ".rank_score_block .rank_block_theory_text"
             )
-            last_raised_elem = entry.select_one(".rank_block_date")
+            last_raised_elem = entry.select_one(
+                ".rank_block_date, .rank_block_date_new"
+            )
 
             if (
                 position_elem is None
