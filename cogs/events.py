@@ -263,6 +263,17 @@ class EventsCog(commands.Cog, name="Events"):
                 )
             )
         else:
+            args = context_or_interaction.args
+            ctx_arg_idx = None
+
+            for i, arg in enumerate(args):
+                if isinstance(arg, Context):
+                    ctx_arg_idx = i
+                    break
+
+            if ctx_arg_idx is not None:
+                args = args[ctx_arg_idx + 1 :]
+
             content = (
                 f"Unhandled exception in `c>{command_name}`\n"
                 "\n"
@@ -272,7 +283,7 @@ class EventsCog(commands.Cog, name="Events"):
                 "\n"
                 "Arguments:\n"
                 "```python\n"
-                f"{pformat(context_or_interaction.args, sort_dicts=False, underscore_numbers=True)}\n"
+                f"{pformat(args, sort_dicts=False, underscore_numbers=True)}\n"
                 "```\n"
                 "\n"
                 "Keyword arguments:\n"
