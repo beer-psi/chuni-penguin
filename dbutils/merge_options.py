@@ -6,11 +6,12 @@ from typing import Optional, overload
 from xml.etree import ElementTree
 
 import httpx
-from PIL import Image
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from chunithm_net.models.enums import Difficulty
 from database.models import Chart, Song
 
 VERSIONS = [
@@ -43,6 +44,8 @@ WE_LEVEL_OVERRIDES = {
     8248: "分☆☆☆ (2anyFirst)",
     8249: "分☆☆☆ (Alt Futur)",
 }
+B30_ENTRY_WIDTH = 350
+B30_ENTRY_HEIGHT = 180
 
 
 @overload
@@ -59,6 +62,81 @@ def gettext(
     if (e := p.find(path)) is not None:
         return e.text
     return default
+
+
+# best30
+# add a gaussian blurred shadow onto the jacket
+# generate the base shadow here so we can just copy it for each jacket later
+JACKET_SHADOW_BASE = Image.new("RGBA", (B30_ENTRY_WIDTH + 20, B30_ENTRY_HEIGHT + 20))
+JACKET_SHADOW_BASE.paste(
+    (0, 0, 0, 200), (5, 5, B30_ENTRY_WIDTH + 15, B30_ENTRY_HEIGHT + 15)
+)
+
+for _ in range(5):
+    JACKET_SHADOW_BASE = JACKET_SHADOW_BASE.filter(ImageFilter.GaussianBlur)
+
+
+def extract_and_make_b30_difficulty_cards(song_id: int, jacket_file: Path):
+    with Image.open(jacket_file) as im:
+        im = im.convert("RGB")
+        im.save(
+            ASSETS_DIR / "jackets" / f"{song_id}.png",
+            format="PNG",
+            optimize=True,
+        )
+
+        # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
+        im = im.resize((B30_ENTRY_WIDTH, im.height * B30_ENTRY_WIDTH // im.width))
+
+        # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
+        im = im.crop(
+            (
+                (im.width - B30_ENTRY_WIDTH) // 2,
+                (im.height - B30_ENTRY_HEIGHT) // 2,
+                (im.width + B30_ENTRY_WIDTH) // 2,
+                (im.height + B30_ENTRY_HEIGHT) // 2,
+            )
+        )
+
+        # darken the image and blur it
+        im = (
+            ImageEnhance.Brightness(im)
+            .enhance(0.45)
+            .filter(ImageFilter.GaussianBlur(4))
+        )
+
+        for difficulty in Difficulty:
+            if difficulty == Difficulty.WORLDS_END:
+                continue
+
+            difficulty_color = difficulty.color()
+            jacket = im.copy()
+            jacket_draw = ImageDraw.Draw(jacket)
+            jacket_draw.polygon(
+                [
+                    (jacket.width - 55, 0),
+                    (jacket.width, 0),
+                    (jacket.width, 55),
+                ],
+                # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
+                # passing a number.
+                (
+                    (difficulty_color >> 16) & 0xFF,
+                    (difficulty_color >> 8) & 0xFF,
+                    difficulty_color & 0xFF,
+                ),
+            )
+
+            # add a gaussian blurred shadow onto the jacket
+            jacket_shadow = JACKET_SHADOW_BASE.copy()
+
+            jacket_shadow.paste(jacket, (10, 10))
+
+            jacket_shadow.save(
+                ASSETS_DIR / "jackets" / f"{song_id}_{difficulty.value}.png",
+                "PNG",
+                optimize=True,
+            )
 
 
 async def merge_options(
@@ -121,12 +199,9 @@ async def merge_options(
             if not jacket_file:
                 continue
 
-            with Image.open(xml_path.parent / jacket_file) as im:
-                im.save(
-                    ASSETS_DIR / "jackets" / f"{int(song_id)}.png",
-                    format="PNG",
-                    optimize=True,
-                )
+            extract_and_make_b30_difficulty_cards(
+                int(song_id), xml_path.parent / jacket_file
+            )
 
         if we_tag_name != "Invalid":
             genre = "WORLD'S END"

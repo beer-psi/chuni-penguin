@@ -95,66 +95,77 @@ def _render_b30_entry(
     x: int,
     y: int,
 ):
-    jacket_path = ASSETS_DIR / "jackets" / f"{record.extras[KEY_SONG_ID]}.png"
-
-    # we use try/catch on jacket processing to gracefully fail to a black image
-    # if the jacket is missing or corrupted
-    try:
-        with Image.open(jacket_path) as jacket:
-            # convert the jacket to RGB since ImageEnhance explodes in different modes
-            # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
-            jacket = jacket.convert("RGB").resize(
-                (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
-            )
-
-            # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
-            jacket = jacket.crop(
-                (
-                    (jacket.width - B30_ENTRY_WIDTH) // 2,
-                    (jacket.height - B30_ENTRY_HEIGHT) // 2,
-                    (jacket.width + B30_ENTRY_WIDTH) // 2,
-                    (jacket.height + B30_ENTRY_HEIGHT) // 2,
-                )
-            )
-
-            # darken the image and blur it
-            jacket = (
-                ImageEnhance.Brightness(jacket)
-                .enhance(0.45)
-                .filter(ImageFilter.GaussianBlur(4))
-            )
-    except (FileNotFoundError, ValueError):
-        # fallback to a black background if anything fails
-        jacket = Image.new("RGB", (B30_ENTRY_WIDTH, B30_ENTRY_HEIGHT), 0)
-
-    # draw the difficulty colored triangle on the jacket, instead of on the b30 image.
-    # this ensures that the triangle is flush with the top right corner of the jacket instead of
-    # being slightly off by 1-2 pixels
-    difficulty_color = record.difficulty.color()
-    jacket_draw = ImageDraw.Draw(jacket)
-    jacket_draw.polygon(
-        [
-            (jacket.width - 55, 0),
-            (jacket.width, 0),
-            (jacket.width, 55),
-        ],
-        # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
-        # passing a number.
-        (
-            (difficulty_color >> 16) & 0xFF,
-            (difficulty_color >> 8) & 0xFF,
-            difficulty_color & 0xFF,
-        ),
+    song_id = record.extras[KEY_SONG_ID]
+    jacket_path = ASSETS_DIR / "jackets" / f"{song_id}.png"
+    jacket_prerendered_path = (
+        ASSETS_DIR / "jackets" / f"{song_id}_{record.difficulty.value}.png"
     )
 
-    # add a gaussian blurred shadow onto the jacket
-    jacket_shadow = jacket_shadow_base.copy()
+    if jacket_prerendered_path.exists():
+        with Image.open(jacket_prerendered_path) as jacket_prerendered:
+            jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
+            jacket_padded.paste(
+                jacket_prerendered, (x - 10, y - 10), jacket_prerendered
+            )
+    else:
+        # we use try/catch on jacket processing to gracefully fail to a black image
+        # if the jacket is missing or corrupted
+        try:
+            with Image.open(jacket_path) as jacket:
+                # convert the jacket to RGB since ImageEnhance explodes in different modes
+                # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
+                jacket = jacket.convert("RGB").resize(
+                    (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
+                )
 
-    jacket_shadow.paste(jacket, (10, 10))
+                # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
+                jacket = jacket.crop(
+                    (
+                        (jacket.width - B30_ENTRY_WIDTH) // 2,
+                        (jacket.height - B30_ENTRY_HEIGHT) // 2,
+                        (jacket.width + B30_ENTRY_WIDTH) // 2,
+                        (jacket.height + B30_ENTRY_HEIGHT) // 2,
+                    )
+                )
 
-    jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
+                # darken the image and blur it
+                jacket = (
+                    ImageEnhance.Brightness(jacket)
+                    .enhance(0.45)
+                    .filter(ImageFilter.GaussianBlur(4))
+                )
+        except (FileNotFoundError, ValueError):
+            # fallback to a black background if anything fails
+            jacket = Image.new("RGB", (B30_ENTRY_WIDTH, B30_ENTRY_HEIGHT), 0)
 
-    jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
+        # draw the difficulty colored triangle on the jacket, instead of on the b30 image.
+        # this ensures that the triangle is flush with the top right corner of the jacket instead of
+        # being slightly off by 1-2 pixels
+        difficulty_color = record.difficulty.color()
+        jacket_draw = ImageDraw.Draw(jacket)
+        jacket_draw.polygon(
+            [
+                (jacket.width - 55, 0),
+                (jacket.width, 0),
+                (jacket.width, 55),
+            ],
+            # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
+            # passing a number.
+            (
+                (difficulty_color >> 16) & 0xFF,
+                (difficulty_color >> 8) & 0xFF,
+                difficulty_color & 0xFF,
+            ),
+        )
+
+        # add a gaussian blurred shadow onto the jacket
+        jacket_shadow = jacket_shadow_base.copy()
+
+        jacket_shadow.paste(jacket, (10, 10))
+
+        jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
+
+        jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
 
     # finally, paste the edited jacket onto the image.
     b30_image = Image.alpha_composite(b30_image, jacket_padded)
