@@ -20,6 +20,7 @@ from database.models import Chart, Song
 from utils import (
     did_you_mean_text,
     floor_to_ndp,
+    json_loads,
     round_to_nearest,
     sdvxin_link,
     yt_search_link,
@@ -456,7 +457,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                         resp = await client.get(
                             "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
                         )
-                        data = resp.json()
+                        data = json_loads(resp.content)
 
                         if not data["success"]:
                             msg = f"Could not get Kamaitachi game stats: {data['description']}"

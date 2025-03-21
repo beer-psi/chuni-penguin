@@ -36,7 +36,7 @@ from chunithm_net.models.record import (
     Record,
 )
 from database.models import Chart, SongJacket
-from utils import did_you_mean_text, floor_to_ndp, shlex_split
+from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
@@ -484,7 +484,7 @@ class RecordsCog(commands.Cog, name="Records"):
             if kamaitachi:
                 async with self.utils.kamaitachi_client(target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
-                    data = resp.json()
+                    data = json_loads(resp.content)
 
                     if not data["success"]:
                         msg = f"Could not get user information from Kamaitachi: {data['success']}"
@@ -495,7 +495,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     resp = await client.get(
                         "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/scores/recent"
                     )
-                    data = resp.json()
+                    data = json_loads(resp.content)
 
                     if not data["success"]:
                         msg = f"Could not retrieve recent scores from Kamaitachi: {data['description']}"
@@ -710,7 +710,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 async with self.utils.kamaitachi_client(target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
-                    data = resp.json()
+                    data = json_loads(resp.content)
 
                     if not data["success"]:
                         msg = f"Could not get user information from Kamaitachi: {data['success']}"
@@ -721,7 +721,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     resp = await client.get(
                         f"https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs?search={urllib.parse.quote(song.title)}"
                     )
-                    data = resp.json()
+                    data = json_loads(resp.content)
 
                     if not data["success"]:
                         msg = f"Could not get scores from Kamaitachi: {data['description']}"
@@ -933,7 +933,7 @@ class RecordsCog(commands.Cog, name="Records"):
             if kamaitachi:
                 async with self.utils.kamaitachi_client(target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
-                    data = resp.json()
+                    data = json_loads(resp.content)
 
                     if not data["success"]:
                         msg = f"Could not get user information from Kamaitachi: {data['success']}"
@@ -944,7 +944,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     resp = await client.get(
                         f"https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs?search={urllib.parse.quote(song.title)}"
                     )
-                    data = resp.json()
+                    data = json_loads(resp.content)
 
                     if not data["success"]:
                         msg = f"Could not get scores from Kamaitachi: {data['description']}"
@@ -1090,13 +1090,13 @@ class RecordsCog(commands.Cog, name="Records"):
             if kamaitachi:
                 async with self.utils.kamaitachi_client(target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
-                    data = resp.json()
+                    data = json_loads(resp.content)
                     player_name = data["body"]["username"]
 
                     resp = await client.get(
                         "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
                     )
-                    data = resp.json()
+                    data = json_loads(resp.content)
 
                 if not data["success"]:
                     msg = f"Could not retrieve your best scores from Kamaitachi: {data['description']}"
