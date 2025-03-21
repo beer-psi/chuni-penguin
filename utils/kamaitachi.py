@@ -10,7 +10,8 @@ from chunithm_net.consts import (
     KEY_PLAY_RATING,
     KEY_SONG_ID,
 )
-from chunithm_net.models.enums import ClearType, ComboType, Difficulty, Rank
+from chunithm_net.models.enums import ClearType, ComboType, Difficulty, Rank, SkillClass
+from chunithm_net.models.player_data import PlayerData
 from chunithm_net.models.record import (
     DetailedRecentRecord,
     Judgements,
@@ -22,6 +23,14 @@ from chunithm_net.models.record import (
 from utils import floor_to_ndp
 
 T = TypeVar("T", bound=msgspec.Struct)
+
+KTChunithmLamp = Literal[
+    "FAILED", "CLEAR", "FULL COMBO", "ALL JUSTICE", "ALL JUSTICE CRITICAL"
+]
+KTChunithmDifficulty = Literal["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"]
+KTChunithmClass = Literal[
+    "DAN_I", "DAN_II", "DAN_III", "DAN_IV", "DAN_V", "DAN_INFINITE"
+]
 
 
 class KTResponse(msgspec.Struct, Generic[T]):
@@ -53,9 +62,7 @@ class KTChunithmOptionalData(msgspec.Struct, rename="camel"):
 
 class KTChunithmScoreData(msgspec.Struct, rename="camel"):
     score: int
-    lamp: Literal[
-        "FAILED", "CLEAR", "FULL COMBO", "ALL JUSTICE", "ALL JUSTICE CRITICAL"
-    ]
+    lamp: KTChunithmLamp
     judgements: KTChunithmJudgements
     optional: KTChunithmOptionalData
     grade: Literal[
@@ -143,7 +150,7 @@ class KTChunithmChartData(msgspec.Struct, rename="camel"):
 class KTChunithmChart(msgspec.Struct, rename="camel"):
     chart_id: str = msgspec.field(name="chartID")
     song_id: int = msgspec.field(name="songID")
-    difficulty: Literal["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"]
+    difficulty: KTChunithmDifficulty
     is_primary: bool
     level: str
     level_num: float
@@ -164,8 +171,85 @@ class KTChunithmScoreResponseBody(msgspec.Struct):
     charts: list[KTChunithmChart]
 
 
+class KTBatchManualChunithmMeta(msgspec.Struct):
+    game: Literal["chunithm"] = "chunithm"
+    playtype: Literal["Single"] = "Single"
+    service: str = "site-importer"
+    version: str | msgspec.UnsetType = msgspec.UNSET
+
+
+class KTBatchManualChunithmScore(msgspec.Struct, rename="camel"):
+    score: int
+    lamp: KTChunithmLamp
+    match_type: Literal["inGameID", "songTitle", "tachiSongID"]
+    identifier: str
+    difficulty: KTChunithmDifficulty
+    time_achieved: int | msgspec.UnsetType = msgspec.UNSET
+    judgements: KTChunithmJudgements | msgspec.UnsetType = msgspec.UNSET
+    optional: KTChunithmOptionalData | msgspec.UnsetType = msgspec.UNSET
+
+
+class KTBatchManualChunithmClasses(msgspec.Struct):
+    dan: KTChunithmClass | msgspec.UnsetType = msgspec.UNSET
+    emblem: KTChunithmClass | msgspec.UnsetType = msgspec.UNSET
+
+
+class KTBatchManualChunithm(msgspec.Struct):
+    meta: KTBatchManualChunithmMeta = msgspec.field(
+        default_factory=KTBatchManualChunithmMeta
+    )
+    scores: list[KTBatchManualChunithmScore] = msgspec.field(default_factory=list)
+    classes: KTBatchManualChunithmClasses = msgspec.field(
+        default_factory=KTBatchManualChunithmClasses
+    )
+
+
+class KTBatchManualResponseBody(msgspec.Struct):
+    url: str
+
+
+class KTImportErrContent(msgspec.Struct, rename="camel"):
+    type: str
+    message: str
+
+
+class KTImportDocument(msgspec.Struct, rename="camel"):
+    score_ids: list[str] = msgspec.field(name="scoreIDs")
+    errors: list[KTImportErrContent]
+
+
+class KTImportPollStatus(msgspec.Struct, rename="camel", tag_field="importStatus"):
+    pass
+
+
+class KTImportPollStatusOngoingProgress(msgspec.Struct):
+    description: str
+    value: int | msgspec.UnsetType = msgspec.UNSET
+
+
+class KTImportPollStatusOngoing(KTImportPollStatus, tag="ongoing"):
+    progress: KTImportPollStatusOngoingProgress | int
+
+
+class KTImportPollStatusCompleted(KTImportPollStatus, tag="completed"):
+    import_: KTImportDocument = msgspec.field(name="import")
+
+
+class KTStatusResponseBody(msgspec.Struct, rename="camel"):
+    server_time: int
+    start_time: int
+    version: str
+    whoami: int | None
+    permissions: list[str]
+
+
 KTChunithmPersonalBestResponse = KTResponse[KTChunithmPersonalBestResponseBody]
 KTChunithmScoreResponse = KTResponse[KTChunithmScoreResponseBody]
+KTBatchManualResponse = KTResponse[KTBatchManualResponseBody]
+KTImportPollStatusResponse = KTResponse[
+    KTImportPollStatusOngoing | KTImportPollStatusCompleted
+]
+KTStatusResponse = KTResponse[KTStatusResponseBody]
 
 
 def _convert_kt_to_record(
@@ -264,3 +348,74 @@ def convert_kt_scores_to_records(raw_body: Any) -> list[Record]:
         )
         for score in body.scores
     ]
+
+
+def _to_tachi_class(cls: SkillClass) -> KTChunithmClass:
+    mapping: dict[SkillClass, KTChunithmClass] = {
+        SkillClass.I: "DAN_I",
+        SkillClass.II: "DAN_II",
+        SkillClass.III: "DAN_III",
+        SkillClass.IV: "DAN_IV",
+        SkillClass.V: "DAN_V",
+        SkillClass.INFINITE: "DAN_INFINITE",
+    }
+
+    return mapping[cls]
+
+
+def _to_tachi_lamp(clear_lamp: ClearType, combo_lamp: ComboType) -> KTChunithmLamp:
+    if combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
+        return "ALL JUSTICE CRITICAL"
+
+    if combo_lamp == ComboType.ALL_JUSTICE:
+        return "ALL JUSTICE"
+
+    if combo_lamp == ComboType.FULL_COMBO:
+        return "FULL COMBO"
+
+    if clear_lamp != ClearType.FAILED:
+        return "CLEAR"
+
+    return "FAILED"
+
+
+def convert_to_kt_batch_manual(
+    profile: PlayerData, scores: list[DetailedRecentRecord | RecentRecord | Record]
+):
+    batch_manual = KTBatchManualChunithm()
+
+    if profile.medal is not None:
+        batch_manual.classes.dan = _to_tachi_class(profile.medal)
+    if profile.emblem is not None:
+        batch_manual.classes.emblem = _to_tachi_class(profile.emblem)
+
+    for score in scores:
+        if score.difficulty == Difficulty.WORLDS_END:
+            continue
+
+        if (song_id := score.extras.get(KEY_SONG_ID)) is None:
+            continue
+
+        tachi_score = KTBatchManualChunithmScore(
+            score=score.score,
+            lamp=_to_tachi_lamp(score.clear_lamp, score.combo_lamp),
+            match_type="inGameID",
+            identifier=str(song_id),
+            difficulty=str(score.difficulty),  # pyright: ignore[reportArgumentType]
+        )
+
+        if isinstance(score, RecentRecord):
+            tachi_score.time_achieved = int(score.date.timestamp() * 1000)
+
+        if isinstance(score, DetailedRecentRecord):
+            tachi_score.judgements = KTChunithmJudgements(
+                jcrit=score.judgements.jcrit,
+                justice=score.judgements.justice,
+                attack=score.judgements.attack,
+                miss=score.judgements.miss,
+            )
+            tachi_score.optional = KTChunithmOptionalData(max_combo=score.max_combo)
+
+        batch_manual.scores.append(tachi_score)
+
+    return batch_manual

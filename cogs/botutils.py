@@ -121,7 +121,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         clal = await self.fetch_cookie(id)
         if clal is None:
             msg = "You are not logged in. Please send `c>login` in my DMs to log in."
-            raise commands.BadArgument(msg)
+            raise commands.CommandError(msg)
         return clal
 
     async def fetch_cookie(self, id: int) -> LWPCookieJar | None:
@@ -182,7 +182,9 @@ class UtilsCog(commands.Cog, name="Utils"):
         async with client:
             yield client
 
-    async def choose_preferred_network(self, ctx_or_id: Context | int, *, kamaitachi: bool = False):
+    async def choose_preferred_network(
+        self, ctx_or_id: Context | int, *, kamaitachi: bool = False
+    ):
         id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
 
         async with self.bot.begin_db_session() as session:
@@ -190,7 +192,9 @@ class UtilsCog(commands.Cog, name="Utils"):
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
             if cookie is None:
-                msg = "You are not logged in. Please send `c>login` in my DMs to log in."
+                msg = (
+                    "You are not logged in. Please send `c>login` in my DMs to log in."
+                )
                 raise commands.CommandError(msg)
 
             if kamaitachi:
@@ -208,7 +212,6 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             msg = "You are not logged in. Please send `c>login` in my DMs to log in."
             raise commands.CommandError(msg)
-
 
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
         song_ids = set()

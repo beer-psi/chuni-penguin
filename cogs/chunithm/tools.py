@@ -21,10 +21,12 @@ from database.models import Chart, Song
 from utils import (
     did_you_mean_text,
     floor_to_ndp,
+    json_loads,
     round_to_nearest,
     sdvxin_link,
     yt_search_link,
 )
+from utils.border import calculate_border, calculate_score_deduction_per_judgement
 from utils.calculation.overpower import (
     calculate_overpower_base,
     calculate_overpower_max,
@@ -33,6 +35,7 @@ from utils.calculation.rating import calculate_rating, calculate_score_for_ratin
 from utils.components import ChartCardEmbed
 from utils.constants import MAX_DIFFICULTY, SIMILARITY_THRESHOLD
 from utils.converters import DifficultyConverter
+from utils.ranks import rank_icon
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -449,7 +452,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                         resp = await client.get(
                             "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
                         )
-                        data = resp.json()
+                        data = json_loads(resp.content)
 
                         if not data["success"]:
                             msg = f"Could not get Kamaitachi game stats: {data['description']}"
@@ -523,22 +526,13 @@ class ToolsCog(commands.Cog, name="Tools"):
         return await self.autocompleters.song_title_autocomplete(interaction, current)
 
     @commands.hybrid_command("border")
-    @app_commands.choices(
-        difficulty=[
-            app_commands.Choice(name="BASIC", value="BASIC"),
-            app_commands.Choice(name="ADVANCED", value="ADVANCED"),
-            app_commands.Choice(name="EXPERT", value="EXPERT"),
-            app_commands.Choice(name="MASTER", value="MASTER"),
-            app_commands.Choice(name="ULTIMA", value="ULTIMA"),
-        ]
-    )
     @app_commands.autocomplete(query=song_title_autocomplete)
     async def border(
         self,
         ctx: Context,
-        difficulty: Annotated[Difficulty, DifficultyConverter],
+        difficulty_or_notecount: str,
         *,
-        query: str,
+        query: str | None = None,
     ):
         """Display the number of permissible JUSTICE, ATTACK and MISS to achieve specific ranks on a chart.
 
@@ -547,50 +541,100 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         Parameters
         ----------
-        difficulty: str
-            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT).
+        difficulty_or_notecount: str | int
+            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT). Alternatively, enter a notecount here to get the border for that specific notecount.
         query: str
             Song title to search for. You don't have to be exact; try things out!
         """
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
-            guild_id = ctx.guild.id if ctx.guild else None
-            song, alias, similarity = await self.utils.find_song(
-                query, guild_id=guild_id, worlds_end=False
-            )
-            if song is None or similarity < SIMILARITY_THRESHOLD:
-                return await ctx.reply(
-                    did_you_mean_text(song, alias), mention_author=False
+        async with ctx.typing():
+            if difficulty_or_notecount.isnumeric():
+                notecount = int(difficulty_or_notecount)
+
+                if notecount <= 0:
+                    msg = "Notecount should be larger than 0."
+                    raise commands.BadArgument(msg)
+
+                deductions = calculate_score_deduction_per_judgement(notecount)
+
+                embed = discord.Embed(
+                    color=discord.Color.yellow(),
+                    title="Rank borders and deductions",
+                )
+                embed.add_field(name="Note Count", value=str(notecount), inline=False)
+
+                borders = calculate_border(notecount)
+                borders_field_value = ""
+
+                for rank, judgements in borders.items():
+                    borders_field_value += f"▸ {rank_icon(rank)} ▸ {judgements.justice}-{judgements.attack}-{judgements.miss}\n"
+
+                embed.add_field(
+                    name="Borders (JUSTICE-ATTACK-MISS)",
+                    value=borders_field_value.strip(),
                 )
 
-            stmt = (
-                select(Chart)
-                .where(
-                    (Chart.song == song) & (Chart.difficulty == difficulty.short_form())
+                deductions = calculate_score_deduction_per_judgement(notecount)
+                embed.add_field(
+                    name="Score Deduction",
+                    value=(
+                        f"▸ JUSTICE: -{deductions['justice']:.2f}\n"
+                        f"▸ ATTACK: -{deductions['attack']:.2f}\n"
+                        f"▸ MISS: -{deductions['miss']:.2f}\n"
+                    ),
                 )
-                .limit(1)
-                .options(joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view))
-            )
 
-            chart = (await session.execute(stmt)).scalar_one_or_none()
-            if chart is None:
+                await ctx.reply(embed=embed, mention_author=False)
+            else:
+                if query is None:
+                    raise commands.MissingRequiredArgument(ctx.command.params["query"])  # pyright: ignore[reportOptionalMemberAccess]
+
+                difficulty = await DifficultyConverter().convert(
+                    ctx, difficulty_or_notecount
+                )
+
+                guild_id = ctx.guild.id if ctx.guild else None
+                song, alias, similarity = await self.utils.find_song(
+                    query, guild_id=guild_id, worlds_end=False
+                )
+                if song is None or similarity < SIMILARITY_THRESHOLD:
+                    await ctx.reply(
+                        did_you_mean_text(song, alias), mention_author=False
+                    )
+                    return
+
+                stmt = (
+                    select(Chart)
+                    .where(
+                        (Chart.song == song)
+                        & (Chart.difficulty == difficulty.short_form())
+                    )
+                    .limit(1)
+                    .options(
+                        joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
+                    )
+                )
+
+                async with self.bot.begin_db_session() as session:
+                    chart = (await session.execute(stmt)).scalar_one_or_none()
+
+                if chart is None:
+                    await ctx.reply(
+                        "No charts found. Make sure you specified a valid chart difficulty (BAS/ADV/EXP/MAS/ULT).",
+                        mention_author=False,
+                    )
+                    return
+
+                if chart.maxcombo is None:
+                    await ctx.reply(
+                        content=f"We currently don't have note counts for {escape_markdown(song.title)} [{chart.difficulty}]. Try using `{ctx.prefix}border <notecount>` instead.",
+                        mention_author=False,
+                    )
+                    return
+
                 await ctx.reply(
-                    "No charts found. Make sure you specified a valid chart difficulty (BAS/ADV/EXP/MAS/ULT).",
-                    mention_author=False,
+                    embed=ChartCardEmbed(chart, border=True), mention_author=False
                 )
-                return None
-
-            if chart.maxcombo is None:
-                await ctx.reply(
-                    content=f"We currently don't have note counts for {escape_markdown(song.title)} [{chart.difficulty}]. Calculating the border is not possible. Please try again later.",
-                    mention_author=False,
-                )
-                return None
-
-            await ctx.reply(
-                embed=ChartCardEmbed(chart, border=True), mention_author=False
-            )
-            return None
 
     @commands.hybrid_command("chart")
     @app_commands.choices(
@@ -660,18 +704,20 @@ class ToolsCog(commands.Cog, name="Tools"):
             sdvxin_id = chart.sdvxin_chart_view.id
 
             if chart.difficulty == "ULT":
-                bg_url = (
-                    f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
-                )
-                data_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/obj/data{sdvxin_id}ult.png"
-                bar_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
+                bg_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
+                data_url = f"https://sdvx.in/chunithm/ult/obj/data{sdvxin_id}ult.png"
+                bar_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
             else:
                 sdvxin_difficulty = (
                     chart.difficulty.lower() if chart.difficulty != "MAS" else "mst"
                 )
-                bg_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png"
-                data_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/obj/data{sdvxin_id}{sdvxin_difficulty}.png"
-                bar_url = f"https://0ms.dev/mirrors/sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
+                bg_url = (
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png"
+                )
+                data_url = f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/obj/data{sdvxin_id}{sdvxin_difficulty}.png"
+                bar_url = (
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
+                )
 
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(timeout=60.0),

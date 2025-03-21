@@ -14,7 +14,7 @@ from PIL import Image
 
 from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
-from utils import shlex_split
+from utils import json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.views.profile import (
     PersistentHideFriendCodeButton,
@@ -177,7 +177,7 @@ class ProfileCog(commands.Cog, name="Profile"):
     async def _kamaitachi_profile_card(self, user_id: int):
         async with self.utils.kamaitachi_client(user_id) as client:
             resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
-            data = resp.json()
+            data = json_loads(resp.content)
 
             if not data["success"]:
                 msg = f"Could not get Kamaitachi profile: {data['description']}"
@@ -189,7 +189,7 @@ class ProfileCog(commands.Cog, name="Profile"):
             resp = await client.get(
                 "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
             )
-            data = resp.json()
+            data = json_loads(resp.content)
 
             if not data["success"]:
                 msg = f"Could not get Kamaitachi game stats: {data['description']}"

@@ -11,6 +11,7 @@ from time import time
 from typing import TYPE_CHECKING, Optional
 
 import discord
+import discord.utils
 import sqlalchemy.event
 from aiohttp import web
 from discord.ext import commands
@@ -20,6 +21,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from cogs import COG_LIST
 from database.models import Prefix
+from utils import json_dumps, json_loads
 from utils.config import config
 from utils.evtloop import get_event_loop
 from utils.help import HelpCommand
@@ -34,6 +36,10 @@ if TYPE_CHECKING:
 
 
 BOT_DIR = Path(__file__).parent
+
+
+discord.utils._from_json = json_loads
+discord.utils._to_json = json_dumps
 
 
 class KeyboardInterruptHandler:

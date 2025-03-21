@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
+import msgspec
 from discord.ext.commands.view import StringView
 from discord.utils import escape_markdown
 
@@ -22,20 +23,12 @@ if TYPE_CHECKING:
 TOKYO_TZ = ZoneInfo("Asia/Tokyo")
 
 
-try:
-    import orjson  # type: ignore[reportMissingImports]
+def json_loads(s: str | bytes | bytearray):
+    return msgspec.json.decode(s)
 
-    def json_dumps(obj):
-        return orjson.dumps(obj).decode("utf-8")
 
-    def json_loads(s):
-        return orjson.loads(s)
-
-except ModuleNotFoundError:
-    import json
-
-    json_dumps = json.dumps
-    json_loads = json.loads
+def json_dumps(obj: Any) -> str:
+    return msgspec.json.encode(obj).decode("utf-8")
 
 
 class asuppress(contextlib.AbstractAsyncContextManager):

@@ -1,4 +1,5 @@
 bot.ini
+data/
 database/*.sqlite3
 database/*.sqlite3-*
 discord.log

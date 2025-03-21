@@ -4,15 +4,23 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 import httpx
+import msgspec
 from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import select
 
-from chunithm_net.consts import KEY_SONG_ID
-from chunithm_net.models.enums import ClearType, ComboType, Difficulty, SkillClass
+from chunithm_net.models.enums import Difficulty
+from chunithm_net.models.record import DetailedRecentRecord, Record
 from database.models import Cookie
-from utils import json_dumps, json_loads
 from utils.config import config
+from utils.kamaitachi import (
+    KTBatchManualResponse,
+    KTImportPollStatusCompleted,
+    KTImportPollStatusOngoing,
+    KTImportPollStatusResponse,
+    KTStatusResponse,
+    convert_to_kt_batch_manual,
+)
 from utils.logging import logger as root_logger
 
 if TYPE_CHECKING:
@@ -20,17 +28,6 @@ if TYPE_CHECKING:
     from cogs.botutils import UtilsCog
 
 logger = root_logger.getChild(__name__)
-
-
-def to_tachi_class(cls: SkillClass) -> str:
-    return {
-        SkillClass.I: "DAN_I",
-        SkillClass.II: "DAN_II",
-        SkillClass.III: "DAN_III",
-        SkillClass.IV: "DAN_IV",
-        SkillClass.V: "DAN_V",
-        SkillClass.INFINITE: "DAN_INFINITE",
-    }[cls]
 
 
 class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": True}):
@@ -72,19 +69,22 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             client.headers["Authorization"] = f"Bearer {token}"
 
             resp = await client.get("https://kamai.tachi.ac/api/v1/status")
-            data = json_loads(resp.content)
+            data = msgspec.json.decode(resp.content, type=KTStatusResponse)
 
-        if data["success"] is False:
-            return data["description"]
+        if not data.success:
+            return data.description
 
-        if data["body"]["whoami"] is None:
+        assert data.body is not None
+
+        if data.body.whoami is None:
             return "The provided API token is not bound to any user."
 
-        permissions = data["body"]["permissions"]
+        permissions = data.body.permissions
+
         if "submit_score" not in permissions or "customise_score" not in permissions:
             return (
                 "The provided API token is missing permissions.\n"
-                "Ensure that the token has permissions `submit_score` and `customise_score`"
+                "Ensure that the token has permissions `submit_score` and `customise_score`."
             )
 
         return None
@@ -184,18 +184,6 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             content="Successfully unlinked with Kamaitachi.", mention_author=False
         )
 
-    def _tachi_lamp(self, clear_lamp: ClearType, combo_lamp: ComboType) -> str:
-        if combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
-            return "ALL JUSTICE CRITICAL"
-
-        if combo_lamp != ComboType.NONE:
-            return str(combo_lamp)
-
-        if clear_lamp != ClearType.FAILED:
-            return "CLEAR"
-
-        return "FAILED"
-
     @kamaitachi.command("sync", aliases=["s"])
     async def kamaitachi_sync(
         self, ctx: Context, sync: Literal["recent", "pb"] = "recent"
@@ -229,13 +217,15 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         message = await ctx.reply(
             "Fetching scores from CHUNITHM-NET...", mention_author=False
         )
-        async with self.utils.chuninet(
-            ctx
-        ) as chuni_client, httpx.AsyncClient() as tachi_client:
+        async with (
+            self.utils.chuninet(ctx) as chuni_client,
+            httpx.AsyncClient() as tachi_client,
+        ):
             tachi_client.headers["User-Agent"] = self.user_agent
             tachi_client.headers["Authorization"] = f"Bearer {cookie.kamaitachi_token}"
 
             profile = await chuni_client.player_data()
+            scores: list[DetailedRecentRecord | Record] = []
 
             if sync == "recent":
                 recents = await chuni_client.recent_record()
@@ -244,50 +234,14 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     if recent.difficulty == Difficulty.WORLDS_END:
                         continue
 
-                    score_data = {
-                        "score": recent.score,
-                        "lamp": self._tachi_lamp(recent.clear_lamp, recent.combo_lamp),
-                        "matchType": "inGameID",
-                        "identifier": "",
-                        "difficulty": str(recent.difficulty),
-                        "timeAchieved": int(recent.date.timestamp()) * 1000,
-                        "judgements": {},
-                        "hitMeta": {},
-                    }
-
                     detailed_recent = await chuni_client.detailed_recent_record(recent)
-
-                    if (song_id := detailed_recent.extras.get(KEY_SONG_ID)) is None:
-                        continue
-
-                    score_data["identifier"] = str(song_id)
-
-                    score_data["judgements"]["jcrit"] = detailed_recent.judgements.jcrit
-                    score_data["judgements"]["justice"] = (
-                        detailed_recent.judgements.justice
-                    )
-                    score_data["judgements"]["attack"] = (
-                        detailed_recent.judgements.attack
-                    )
-                    score_data["judgements"]["miss"] = detailed_recent.judgements.miss
-
-                    if (
-                        detailed_recent.judgements.justice == 0
-                        and detailed_recent.judgements.attack == 0
-                        and detailed_recent.judgements.miss == 0
-                    ):
-                        score_data["lamp"] = "ALL JUSTICE CRITICAL"
-
-                    score_data["hitMeta"]["maxCombo"] = detailed_recent.max_combo
-
-                    scores.append(score_data)
+                    scores.append(detailed_recent)
 
                     if len(scores) % 10 == 0:
                         await message.edit(
                             content=f"Fetching recent scores from CHUNITHM-NET... {len(scores)}/{len(recents)}",
                             allowed_mentions=discord.AllowedMentions.none(),
                         )
-
             elif sync == "pb":
                 for difficulty in Difficulty:
                     if difficulty == Difficulty.WORLDS_END:
@@ -303,83 +257,64 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                         difficulty=difficulty
                     )
 
-                    for score in records:
-                        if (song_id := score.extras.get(KEY_SONG_ID)) is None:
-                            continue
-
-                        score_data = {
-                            "score": score.score,
-                            "lamp": self._tachi_lamp(
-                                score.clear_lamp, score.combo_lamp
-                            ),
-                            "matchType": "inGameID",
-                            "identifier": str(song_id),
-                            "difficulty": str(score.difficulty),
-                        }
-
-                        if score.score == 1010000:
-                            score_data["lamp"] = "ALL JUSTICE CRITICAL"
-
-                        scores.append(score_data)
+                    scores.extend(records)
 
             await message.edit(content="Uploading scores to Kamaitachi...")
 
-            request_body = {
-                "meta": {
-                    "game": "chunithm",
-                    "playtype": "Single",
-                    "service": "site-importer",
-                },
-                "scores": scores,
-                "classes": {},
-            }
-
-            if profile.medal is not None:
-                request_body["classes"]["dan"] = to_tachi_class(profile.medal)
-            if profile.emblem is not None:
-                request_body["classes"]["emblem"] = to_tachi_class(profile.emblem)
+            batch_manual = convert_to_kt_batch_manual(profile, scores)
 
             resp = await tachi_client.post(
                 "https://kamai.tachi.ac/ir/direct-manual/import",
-                content=json_dumps(request_body),
+                content=msgspec.json.encode(batch_manual),
                 headers={
                     "Content-Type": "application/json",
                     "X-User-Intent": "true",
                 },
             )
-            data = json_loads(resp.content)
+            data = msgspec.json.decode(resp.content, type=KTBatchManualResponse)
 
-            if not data["success"]:
+            if not data.success:
                 return await message.edit(
-                    content=f"Failed to upload scores to Kamaitachi: {data['description']}"
+                    content=f"Failed to upload scores to Kamaitachi: {data.description}"
                 )
 
-            poll_url = data["body"]["url"]
+            assert data.body is not None
+
+            poll_url = data.body.url
 
             while True:
                 resp = await tachi_client.get(poll_url)
-                data = json_loads(resp.content)
+                data = msgspec.json.decode(
+                    resp.content, type=KTImportPollStatusResponse
+                )
 
-                if not data["success"]:
+                if not data.success:
                     return await message.edit(
-                        content=f"Failed to upload scores to Kamaitachi: {data['description']}"
+                        content=f"Failed to upload scores to Kamaitachi: {data.description}"
                     )
 
-                if data["body"]["importStatus"] == "ongoing":
-                    await message.edit(
-                        content=(
-                            f"Importing scores: {data['description']}\n"
-                            f"Progress: {data['body']['progress']['description']}"
+                if isinstance(data.body, KTImportPollStatusOngoing):
+                    if isinstance(data.body.progress, int):
+                        await message.edit(
+                            content=f"Importing scores: {data.description}"
                         )
-                    )
+                    else:
+                        await message.edit(
+                            content=(
+                                f"Importing scores: {data.description}\n"
+                                f"Progress: {data.body.progress.description}"
+                            )
+                        )
                     await asyncio.sleep(2)
                     continue
 
-                if data["body"]["importStatus"] == "completed":
-                    msg = f"{data['description']} {len(data['body']['import']['scoreIDs'])} scores"
+                if isinstance(data.body, KTImportPollStatusCompleted):
+                    msg = (
+                        f"{data.description} {len(data.body.import_.score_ids)} scores"
+                    )
 
-                    if len(data["body"]["import"]["errors"]) > 0:
-                        msg += f", {len(data['body']['import']['errors'])} errors"
+                    if len(data.body.import_.errors) > 0:
+                        msg += f", {len(data.body.import_.errors)} errors"
 
                     return await message.edit(content=msg)
 

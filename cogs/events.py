@@ -1,10 +1,13 @@
+import io
+import json
 import traceback
+from pprint import pformat
 from typing import TYPE_CHECKING, cast
 
 import aiohttp
 import discord
 import httpx
-from discord import Webhook, app_commands
+from discord import Webhook
 from discord.app_commands import AppCommandError
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -44,7 +47,11 @@ class EventsCog(commands.Cog, name="Events"):
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
 
-        embed, _ = await self._construct_error_embed("/", exc)
+        embed, _ = await self._construct_error_embed(
+            "/",
+            interaction.command.qualified_name if interaction.command else None,
+            exc,
+        )
 
         if embed.description is not None:
             await interaction.edit_original_response(embed=embed)
@@ -66,8 +73,12 @@ class EventsCog(commands.Cog, name="Events"):
         )
         # fmt: on
 
-        await interaction.edit_original_response(embed=embed)
-        await self._submit_error_to_webhook(interaction.command, exc)
+        if interaction.response.is_done():
+            await interaction.edit_original_response(embed=embed)
+        else:
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        await self._submit_error_to_webhook(interaction, exc)
 
         return
 
@@ -85,11 +96,11 @@ class EventsCog(commands.Cog, name="Events"):
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
 
-        if isinstance(exc, (commands.BadArgument, commands.MissingRequiredArgument)):
-            await ctx.send_help(ctx.command)
-            return None
-
-        embed, delete_after = await self._construct_error_embed(ctx.prefix or "c>", exc)
+        embed, delete_after = await self._construct_error_embed(
+            ctx.prefix or "c>",
+            ctx.command.qualified_name if ctx.command else None,
+            exc,
+        )
 
         if embed.description is not None:
             return await ctx.reply(
@@ -110,12 +121,21 @@ class EventsCog(commands.Cog, name="Events"):
         )
         # fmt: on
 
+        if config.bot.support_server_invite:
+            embed.description += "\n"
+            embed.description = (
+                f"If this error keeps happening, please join the [support server]({config.bot.support_server_invite}) "
+                "and report the bug in the #help-bugs channel!"
+            )
+
         await ctx.reply(embed=embed, mention_author=False)
-        await self._submit_error_to_webhook(ctx.command, exc)
+        await self._submit_error_to_webhook(ctx, exc)
 
         return None
 
-    async def _construct_error_embed(self, prefix: str, exc: Exception):
+    async def _construct_error_embed(
+        self, prefix: str, command_name: str | None, exc: Exception
+    ):
         embed = discord.Embed(
             color=discord.Color.red(),
             title="Error",
@@ -152,27 +172,37 @@ class EventsCog(commands.Cog, name="Events"):
                 f"You're too fast. Take a break for {exc.retry_after:.2f} seconds."
             )
             delete_after = exc.retry_after
-        if isinstance(exc, commands.errors.ExpectedClosingQuoteError):
+        elif isinstance(exc, commands.errors.ExpectedClosingQuoteError):
             embed.description = "You're missing a quote somewhere. Perhaps you're using the wrong kind of quote (`\"` vs `”`)?"
-        if isinstance(exc, commands.errors.UnexpectedQuoteError):
+        elif isinstance(exc, commands.errors.UnexpectedQuoteError):
             embed.description = (
                 f"Unexpected quote mark, {exc.quote!r}, in non-quoted string. If this was intentional, "
                 "escape the quote with a backslash (\\\\)."
             )
-        if isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
+        elif isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
             embed.description = str(exc)
-        if isinstance(
+        elif isinstance(
             exc, (commands.errors.NotOwner, commands.errors.MissingPermissions)
         ):
             embed.description = "Insufficient permissions."
-        if isinstance(exc, commands.BadLiteralArgument):
+        elif isinstance(exc, commands.BadLiteralArgument):
             to_string = [repr(x) for x in exc.literals]
             if len(to_string) > 2:
                 fmt = "{}, or {}".format(", ".join(to_string[:-1]), to_string[-1])
             else:
                 fmt = " or ".join(to_string)
             embed.description = f"`{exc.param.displayed_name or exc.param.name}` must be one of {fmt}, received {exc.argument!r}"
-        if isinstance(exc, commands.CommandError) and not isinstance(
+        elif isinstance(exc, commands.BadArgument):
+            embed.description = (
+                f"Bad argument: {exc!s}\n"
+                f"View help for this command with `{prefix}help {command_name}`."
+            )
+        elif isinstance(exc, commands.MissingRequiredArgument):
+            embed.description = (
+                f"Missing required argument: `{exc.param.displayed_name or exc.param.name}`\n"
+                f"View help for this command with `{prefix}help {command_name}`."
+            )
+        elif isinstance(exc, commands.CommandError) and not isinstance(
             exc,
             (
                 commands.CommandNotFound,
@@ -198,33 +228,82 @@ class EventsCog(commands.Cog, name="Events"):
 
     async def _submit_error_to_webhook(
         self,
-        command: commands.Command
-        | app_commands.Command
-        | app_commands.ContextMenu
-        | None,
+        context_or_interaction: Context | discord.Interaction,
         exc: Exception,
     ):
         if (webhook_url := config.bot.error_reporting_webhook) is None:
             return
 
-        command_name = command.name if command else None
+        command = context_or_interaction.command
+        command_name = command.qualified_name if command else None
 
-        async with aiohttp.ClientSession() as session:
-            webhook = Webhook.from_url(webhook_url, session=session)
+        files = [
+            discord.File(
+                io.BytesIO("".join(traceback.format_exception(exc)).encode()),
+                "traceback.txt",
+            )
+        ]
+
+        if isinstance(context_or_interaction, discord.Interaction):
+            content = (
+                f"Unhandled exception in `/{command_name}`\n"
+                "\n"
+                f"User ID: `{context_or_interaction.user.id}` ({context_or_interaction.user.mention})\n"
+                f"Channel ID: `{context_or_interaction.channel.id if context_or_interaction.channel else None}`{f' (<#{context_or_interaction.channel.id}>)' if context_or_interaction.channel else ''}\n"
+                f"Guild ID: `{context_or_interaction.guild.id if context_or_interaction.guild else None}`{f' ({context_or_interaction.guild.name})' if context_or_interaction.guild else ''}"
+            )
+            files.append(
+                discord.File(
+                    io.BytesIO(
+                        json.dumps(
+                            context_or_interaction.data,
+                            ensure_ascii=False,
+                            indent=4,
+                        ).encode()
+                    ),
+                    "interaction_data.json",
+                )
+            )
+        else:
+            args = context_or_interaction.args
+            ctx_arg_idx = None
+
+            for i, arg in enumerate(args):
+                if isinstance(arg, Context):
+                    ctx_arg_idx = i
+                    break
+
+            if ctx_arg_idx is not None:
+                args = args[ctx_arg_idx + 1 :]
 
             content = (
-                f"## Exception in command {command_name}\n\n"
+                f"Unhandled exception in `c>{command_name}`\n"
+                "\n"
+                f"User ID: `{context_or_interaction.author.id}` ({context_or_interaction.author.mention})\n"
+                f"Channel ID: `{context_or_interaction.channel.id}` (<#{context_or_interaction.channel.id}>)\n"
+                f"Guild ID: `{context_or_interaction.guild.id if context_or_interaction.guild else None}`{f' ({context_or_interaction.guild.name})' if context_or_interaction.guild else ''}\n"
+                "\n"
+                "Arguments:\n"
                 "```python\n"
-                f"{(''.join(traceback.format_exception(exc)))[-1961 + len(str(command_name)) :]}"
+                f"{pformat(args, sort_dicts=False, underscore_numbers=True)}\n"
+                "```\n"
+                "\n"
+                "Keyword arguments:\n"
+                "```python\n"
+                f"{pformat(context_or_interaction.kwargs, sort_dicts=False, underscore_numbers=True)}\n"
                 "```"
             )
 
+        async with aiohttp.ClientSession() as session:
+            webhook = Webhook.from_url(webhook_url, session=session)
             client_user = cast(discord.ClientUser, self.bot.user)
+
             await webhook.send(
                 username=client_user.display_name,
                 avatar_url=client_user.display_avatar.url,
                 content=content,
                 allowed_mentions=discord.AllowedMentions.none(),
+                files=files,
             )
 
 
