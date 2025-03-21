@@ -62,15 +62,13 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
 
     async with session.post(
         "https://kamai.tachi.ac/api/v1/oauth/token",
-        data=json_dumps(
-            {
-                "code": params["code"],
-                "client_id": kamaitachi_client_id,
-                "client_secret": kamaitachi_client_secret,
-                "grant_type": "authorization_code",
-                "redirect_uri": f"{base_url}/kamaitachi/oauth",
-            }
-        ),
+        data={
+            "code": params["code"],
+            "client_id": kamaitachi_client_id,
+            "client_secret": kamaitachi_client_secret,
+            "grant_type": "authorization_code",
+            "redirect_uri": f"{base_url}/kamaitachi/oauth",
+        },
     ) as resp:
         data = await resp.json(loads=json_loads)
 
@@ -211,7 +209,7 @@ def init_app(
 
     app.add_routes(router)
 
-    session = ClientSession()
+    session = ClientSession(json_serialize=json_dumps)
     session.headers.add(
         "User-Agent",
         f"chuni-penguin (+https://github.com/beer-psi/chuni-penguin) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",
