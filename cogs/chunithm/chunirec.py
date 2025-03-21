@@ -1,9 +1,10 @@
 import binascii
 import string
 from enum import IntEnum, IntFlag, auto
-from typing import TYPE_CHECKING, NotRequired, TypedDict, overload
+from typing import TYPE_CHECKING, overload
 
 import httpx
+import msgspec
 from discord import AllowedMentions, Forbidden
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
     from cogs.botutils import UtilsCog
 
 
-class ChunirecStatus(TypedDict):
+class ChunirecStatus(msgspec.Struct):
     maintenance: bool
     maintenance_msg: str
     latest_ver_date: int
@@ -25,9 +26,9 @@ class ChunirecStatus(TypedDict):
     available: bool
 
 
-class ChunirecGdhttsResponse(TypedDict):
+class ChunirecGdhttsResponse(msgspec.Struct):
     status: str
-    task_id: NotRequired[str]
+    task_id: str | msgspec.UnsetType = msgspec.UNSET
 
 
 class ChunirecComboLamp(IntFlag):
@@ -214,14 +215,14 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
         resp = await self.http_client.get(
             f"https://api.chunirec.net/2.0/pttgr/status.json?region={self.region_code}"
         )
-        status: ChunirecStatus = resp.json()
+        status = msgspec.json.decode(resp.content, type=ChunirecStatus)
 
-        if not status["available"]:
+        if not status.available:
             msg = "chunirec is currently not available. Please try again later."
             raise commands.CommandError(msg)
 
-        if status["maintenance"]:
-            msg = f"chunirec is down for maintenance: {status['maintenance_msg']}"
+        if status.maintenance:
+            msg = f"chunirec is down for maintenance: {status.maintenance_msg}"
             raise commands.CommandError(msg)
 
         message = await ctx.reply("Fetching player data...", mention_author=False)
@@ -374,22 +375,20 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             "https://api.chunirec.net/2.0/pttgr/gdhtts.json",
             data={"data": payload},
         )
-        data: ChunirecGdhttsResponse = resp.json()
+        data = msgspec.json.decode(resp.content, type=ChunirecGdhttsResponse)
 
-        if data["status"] != "ok":
+        if data.status != "ok" or data.task_id is msgspec.UNSET:
             await message.delete()
 
-            msg = f"Could not submit scores to chunirec: {data['status']}"
+            msg = f"Could not submit scores to chunirec: {data.status}"
             raise commands.CommandError(msg)
-
-        assert "task_id" in data
 
         await message.edit(
             content="Import complete. Please check in your DMs for a URL to save records to your chunirec account.",
             allowed_mentions=AllowedMentions.none(),
         )
         await dm_channel.send(
-            content=f"Click this link to save records to your chunirec account: https://chunirec.net/api/pttgr/resend?task_id={data['task_id']}"
+            content=f"Click this link to save records to your chunirec account: https://chunirec.net/api/pttgr/resend?task_id={data.task_id}"
         )
 
 
