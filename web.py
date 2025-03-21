@@ -61,8 +61,8 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
         cookie = (await db_session.execute(stmt)).scalar_one_or_none()
 
     async with session.post(
-        "https://kamai.tachi.ac/api/v1/oauth/token",
-        data={
+        "https://httpbin.org/post",
+        json={
             "code": params["code"],
             "client_id": kamaitachi_client_id,
             "client_secret": kamaitachi_client_secret,
