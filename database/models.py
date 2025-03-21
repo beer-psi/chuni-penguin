@@ -1,20 +1,15 @@
 from typing import Optional
 
 from discord.ext import commands
-from rapidfuzz import fuzz
 from sqlalchemy import (
     BigInteger,
-    ColumnElement,
-    Float,
     ForeignKey,
     String,
     UniqueConstraint,
-    func,
     text,
-    type_coerce,
 )
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from utils import sdvxin_link
@@ -65,15 +60,6 @@ class Song(Base):
         back_populates="song", cascade="all, delete-orphan"
     )
 
-    @hybrid_method
-    def similarity(self, search: str) -> float:
-        return fuzz.QRatio(search, self.title, processor=str.lower)
-
-    @similarity.inplace.expression
-    @classmethod
-    def _similarity_expr(cls, search: str) -> ColumnElement[float]:
-        return type_coerce(func.fuzz_qratio(search, cls.title), Float)
-
     def raise_if_not_available(self):
         if not self.available:
             if self.removed:
@@ -108,6 +94,7 @@ class Chart(Base):
     song_id: Mapped[int] = mapped_column(
         ForeignKey("chunirec_songs.id"), nullable=False
     )
+    # tachi_chart_id: Mapped[str | None] = mapped_column()
 
     difficulty: Mapped[str] = mapped_column(nullable=False)
     level: Mapped[str] = mapped_column(nullable=False)
@@ -144,15 +131,6 @@ class Alias(Base):
     owner_id: Mapped[Optional[int]] = mapped_column(BigInteger(), nullable=True)
 
     song: Mapped["Song"] = relationship(back_populates="aliases")
-
-    @hybrid_method
-    def similarity(self, search: str) -> float:
-        return fuzz.QRatio(search, self.alias, processor=str.lower)
-
-    @similarity.inplace.expression
-    @classmethod
-    def _similarity_expr(cls, search: str) -> ColumnElement[float]:
-        return type_coerce(func.fuzz_qratio(search, cls.alias), Float)
 
 
 class Prefix(Base):
