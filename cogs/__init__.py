@@ -4,7 +4,6 @@ COG_LIST: list[str] = [
     "cogs.events",
     "cogs.fluff",
     "cogs.gaming",
-    "cogs.hotreload",
     "cogs.misc",
     "cogs.chunithm.auth",
     "cogs.chunithm.chunirec",
