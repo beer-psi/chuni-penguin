@@ -85,6 +85,10 @@ def extract_and_make_b30_difficulty_cards(song_id: int, jacket_file: Path):
             optimize=True,
         )
 
+        # world's ends arent going to show up in b30 anytime soon
+        if song_id >= 8000:
+            return
+
         # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
         im = im.resize((B30_ENTRY_WIDTH, im.height * B30_ENTRY_WIDTH // im.width))
 
