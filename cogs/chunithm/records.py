@@ -16,6 +16,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -39,6 +40,7 @@ from database.models import Chart, SongJacket
 from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
+from utils.config import config
 from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
 from utils.converters import (
     AliasNameConverter,
@@ -600,6 +602,16 @@ class RecordsCog(commands.Cog, name="Records"):
             == "kamaitachi"
         )
 
+        url_whitelist = [JACKET_BASE, INTERNATIONAL_JACKET_BASE]
+        check_served_jackets = False
+
+        if config.web.serve_assets and config.web.base_url is not None:
+            url = httpx.URL(config.web.base_url)
+
+            if not url.host.startswith("127.") and url.host != "localhost":
+                url_whitelist.append(f"{config.web.base_url}/assets/jackets/")
+                check_served_jackets = True
+
         async with ctx.typing(), self.bot.begin_db_session() as session:
             message: discord.Message | discord.MessageSnapshot
 
@@ -611,6 +623,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 try:
 
                     def check(m: discord.Message):
+                        nonlocal url_whitelist
+
                         if m.author != self.bot.user:
                             return False
 
@@ -621,10 +635,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                         return any(
                             e.thumbnail.url is not None
-                            and (
-                                JACKET_BASE in e.thumbnail.url
-                                or INTERNATIONAL_JACKET_BASE in e.thumbnail.url
-                            )
+                            and any(url in e.thumbnail.url for url in url_whitelist)
                             for e in embeds
                         )
 
@@ -660,10 +671,18 @@ class RecordsCog(commands.Cog, name="Records"):
                 msg = "The message replied to does not contain any charts/scores."
                 raise commands.BadArgument(msg)
 
+            condition = SongJacket.jacket_url.in_(thumbnail_urls)
+
+            if check_served_jackets:
+                ids = [
+                    int(x.split("/")[-1].split(".")[0])
+                    for x in thumbnail_urls
+                    if f"{config.web.base_url}/assets/jackets/" in x
+                ]
+                condition |= SongJacket.song_id.in_(ids)
+
             sql = (
-                select(SongJacket)
-                .where(SongJacket.jacket_url.in_(thumbnail_urls))
-                .options(joinedload(SongJacket.song))
+                select(SongJacket).where(condition).options(joinedload(SongJacket.song))
             )
             jackets = (await session.execute(sql)).scalars().all()
 
