@@ -400,9 +400,11 @@ async def test_client_parses_playerdata(
     assert user_data.title.content == "ネコぱら"
     assert user_data.title.rarity == "silver"
 
-    assert len(user_data.subtitles) == 1
+    assert len(user_data.subtitles) == 2
     assert user_data.subtitles[0].content == "Sledgehammer"
     assert user_data.subtitles[0].rarity == "gold"
+    assert user_data.subtitles[1].content == "SPIRIT of PARADISE LOST"
+    assert user_data.subtitles[1].rarity == "version1"
 
     assert (
         user_data.avatar.base
