@@ -601,24 +601,35 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
+            message: discord.Message | discord.MessageSnapshot
+
             if ctx.message.reference is not None:
                 message = await ctx.channel.fetch_message(
                     cast(int, ctx.message.reference.message_id)
                 )
             else:
                 try:
-                    messages = [
-                        x
-                        async for x in ctx.channel.history(limit=50)
-                        if x.author == self.bot.user
-                        and any(
+
+                    def check(m: discord.Message):
+                        if m.author != self.bot.user:
+                            return False
+
+                        embeds = m.embeds.copy()
+
+                        for snapshot in m.message_snapshots:
+                            embeds.extend(snapshot.embeds)
+
+                        return any(
                             e.thumbnail.url is not None
                             and (
                                 JACKET_BASE in e.thumbnail.url
                                 or INTERNATIONAL_JACKET_BASE in e.thumbnail.url
                             )
-                            for e in x.embeds
+                            for e in embeds
                         )
+
+                    messages = [
+                        x async for x in ctx.channel.history(limit=50) if check(x)
                     ]
                 except discord.errors.Forbidden as e:
                     msg = (
@@ -634,7 +645,12 @@ class RecordsCog(commands.Cog, name="Records"):
                 message = messages[0]
 
             thumbnail_urls = []
-            for e in message.embeds:
+            embeds = message.embeds.copy()
+
+            for snapshot in message.message_snapshots:
+                embeds.extend(snapshot.embeds)
+
+            for e in embeds:
                 if e.thumbnail.url is not None:
                     thumbnail_urls.append(e.thumbnail.url)
                 elif e.image.url is not None:
@@ -652,8 +668,8 @@ class RecordsCog(commands.Cog, name="Records"):
             jackets = (await session.execute(sql)).scalars().all()
 
             if len(jackets) == 0:
-                await ctx.reply("No song found.", mention_author=False)
-                return
+                msg = "No songs found."
+                raise commands.CommandError(msg)
 
             if len(jackets) > 1:
                 view = SelectToCompareView(
@@ -684,9 +700,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 song.raise_if_not_available()
 
             embed = next(
-                x
-                for x in message.embeds
-                if jacket.jacket_url in {x.thumbnail.url, x.image.url}
+                x for x in embeds if jacket.jacket_url in {x.thumbnail.url, x.image.url}
             )
 
             if kamaitachi:
