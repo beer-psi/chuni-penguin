@@ -5,6 +5,7 @@ import inspect
 import logging
 import logging.handlers
 import signal
+import sqlite3
 import sys
 from pathlib import Path
 from time import time
@@ -16,7 +17,8 @@ import sqlalchemy.event
 from aiohttp import web
 from discord.ext import commands
 from rapidfuzz import fuzz
-from sqlalchemy import select
+from sqlalchemy import Engine, select, text
+from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from cogs import COG_LIST
@@ -86,15 +88,36 @@ class ChuniBot(commands.Bot):
         self.engine = create_async_engine(connection_string)
         self.begin_db_session = async_sessionmaker(self.engine, expire_on_commit=False)
 
-        def setup_database(conn, _):
-            conn.execute("PRAGMA journal_mode=WAL")
+        @sqlalchemy.event.listens_for(Engine, "connect")
+        def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
             conn.create_function(
                 "fuzz_qratio",
                 2,
                 functools.partial(fuzz.QRatio, processor=str.lower),  # type: ignore[reportCallIssue]
             )
 
-        sqlalchemy.event.listen(self.engine.sync_engine, "connect", setup_database)
+            # Disable allowing double quotes on strings
+            conn._connection._connection.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DDL, 0)
+            conn._connection._connection.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DML, 0)
+
+            cursor = conn.cursor()
+
+            # Turns on write-ahead logging: https://www.sqlite.org/wal.html
+            cursor.execute("PRAGMA journal_mode=WAL")
+
+            # Foreign keys need to be enabled to have an effect. https://www.sqlite.org/foreignkeys.html#fk_enable
+            cursor.execute("PRAGMA foreign_keys=ON")
+
+            # Wait until database isn't locked any more for 100ms before throwing "Database is busy" errors.
+            cursor.execute("PRAGMA busy_timeout=100")
+
+            # Enables query planner optimization.
+            cursor.execute("PRAGMA optimize=0x10002")
+
+            # Enables recursive triggers.
+            cursor.execute("PRAGMA recursive_triggers=ON")
+
+            cursor.close()
 
         # Load guild prefixes
         async with self.begin_db_session() as session:
@@ -160,6 +183,9 @@ class ChuniBot(commands.Bot):
                         state.skip  # pyright: ignore[reportAttributeAccessIssue]
                     ):
                         await state.skip()  # pyright: ignore[reportAttributeAccessIssue]
+
+        async with self.begin_db_session() as session:
+            await session.execute(text("PRAGMA optimize"))
 
         return await super().close()
 

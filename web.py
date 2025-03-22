@@ -10,7 +10,7 @@ from discord.utils import oauth_url
 from sqlalchemy import select
 
 from database.models import Cookie
-from utils import json_loads
+from utils import json_dumps, json_loads
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -209,7 +209,7 @@ def init_app(
 
     app.add_routes(router)
 
-    session = ClientSession()
+    session = ClientSession(json_serialize=json_dumps)
     session.headers.add(
         "User-Agent",
         f"chuni-penguin (+https://github.com/beer-psi/chuni-penguin) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",

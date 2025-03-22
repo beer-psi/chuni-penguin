@@ -1,20 +1,17 @@
 from typing import Optional
 
 from discord.ext import commands
-from rapidfuzz import fuzz
 from sqlalchemy import (
     BigInteger,
-    ColumnElement,
-    Float,
     ForeignKey,
+    ForeignKeyConstraint,
+    Index,
     String,
     UniqueConstraint,
-    func,
     text,
-    type_coerce,
 )
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from utils import sdvxin_link
@@ -34,6 +31,14 @@ class Cookie(Base):
 
 class Song(Base):
     __tablename__ = "chunirec_songs"
+    __table_args__ = (
+        Index("ix_chunirec_songs_title", "title"),
+        Index("ix_chunirec_songs_lower_title", text("LOWER(title)")),
+        Index("ix_chunirec_songs_genre", "genre"),
+        Index("ix_chunirec_songs_available", "available"),
+        Index("ix_chunirec_songs_removed", "removed"),
+        Index("ix_chunirec_songs_jacket", "jacket"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -65,15 +70,6 @@ class Song(Base):
         back_populates="song", cascade="all, delete-orphan"
     )
 
-    @hybrid_method
-    def similarity(self, search: str) -> float:
-        return fuzz.QRatio(search, self.title, processor=str.lower)
-
-    @similarity.inplace.expression
-    @classmethod
-    def _similarity_expr(cls, search: str) -> ColumnElement[float]:
-        return type_coerce(func.fuzz_qratio(search, cls.title), Float)
-
     def raise_if_not_available(self):
         if not self.available:
             if self.removed:
@@ -87,11 +83,15 @@ class Song(Base):
 
 class SongJacket(Base):
     __tablename__ = "song_jackets"
-    __table_args__ = (UniqueConstraint("jacket_url", name="_jacket_url_uc"),)
+    __table_args__ = (
+        Index("ix_song_jackets_song_id", "song_id"),
+        Index("ix_song_jackets_jacket_url", "jacket_url", unique=True),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     song_id: Mapped[int] = mapped_column(
-        ForeignKey("chunirec_songs.id"), nullable=False
+        ForeignKey("chunirec_songs.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
     )
     jacket_url: Mapped[str] = mapped_column(nullable=False)
 
@@ -101,12 +101,22 @@ class SongJacket(Base):
 class Chart(Base):
     __tablename__ = "chunirec_charts"
     __table_args__ = (
-        UniqueConstraint("song_id", "difficulty", name="_song_id_difficulty_uc"),
+        Index("ix_chunirec_charts_song_id", "song_id"),
+        Index("ix_chunirec_charts_difficulty", "difficulty"),
+        Index("ix_chunirec_charts_level", "level"),
+        Index("ix_chunirec_charts_const", "const"),
+        Index(
+            "ix_chunirec_charts_song_id_difficulty",
+            "song_id",
+            "difficulty",
+            unique=True,
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     song_id: Mapped[int] = mapped_column(
-        ForeignKey("chunirec_songs.id"), nullable=False
+        ForeignKey("chunirec_songs.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
     )
 
     difficulty: Mapped[str] = mapped_column(nullable=False)
@@ -132,27 +142,30 @@ class Chart(Base):
 
 class Alias(Base):
     __tablename__ = "aliases"
-    __table_args__ = (UniqueConstraint("alias", "guild_id", name="_alias_guild_id_uc"),)
+    __table_args__ = (
+        Index("ix_aliases_alias", "alias"),
+        Index("ix_aliases_guild_id", "guild_id"),
+        Index("ix_aliases_lower_alias", text("LOWER(alias)")),
+        Index("ix_aliases_song_id", "song_id"),
+        Index(
+            "ix_aliases_lower_alias_guild_id",
+            text("LOWER(alias)"),
+            "guild_id",
+            unique=True,
+        ),
+    )
 
     rowid: Mapped[int] = mapped_column(primary_key=True)
 
     alias: Mapped[str] = mapped_column(nullable=False)
     guild_id: Mapped[int] = mapped_column(BigInteger(), nullable=False)
     song_id: Mapped[int] = mapped_column(
-        ForeignKey("chunirec_songs.id"), nullable=False
+        ForeignKey("chunirec_songs.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
     )
     owner_id: Mapped[Optional[int]] = mapped_column(BigInteger(), nullable=True)
 
     song: Mapped["Song"] = relationship(back_populates="aliases")
-
-    @hybrid_method
-    def similarity(self, search: str) -> float:
-        return fuzz.QRatio(search, self.alias, processor=str.lower)
-
-    @similarity.inplace.expression
-    @classmethod
-    def _similarity_expr(cls, search: str) -> ColumnElement[float]:
-        return type_coerce(func.fuzz_qratio(search, cls.alias), Float)
 
 
 class Prefix(Base):
@@ -164,17 +177,22 @@ class Prefix(Base):
 
 class SdvxinChartView(Base):
     __tablename__ = "sdvxin"
-    __table_args__ = (UniqueConstraint("id", "difficulty", name="_id_difficulty_uc"),)
+    __table_args__ = (
+        Index("ix_sdvxin_song_id_difficulty", "song_id", "difficulty", unique=True),
+        Index("ix_sdvxin_id_difficulty", "id", "difficulty", "end_index", unique=True),
+        ForeignKeyConstraint(
+            ["song_id", "difficulty"],
+            ["chunirec_charts.song_id", "chunirec_charts.difficulty"],
+            onupdate="CASCADE",
+            ondelete="CASCADE",
+        ),
+    )
 
     rowid: Mapped[int] = mapped_column(primary_key=True)
 
     id: Mapped[str] = mapped_column(nullable=False)
-    song_id: Mapped[int] = mapped_column(
-        ForeignKey("chunirec_charts.song_id"), nullable=False
-    )
-    difficulty: Mapped[str] = mapped_column(
-        ForeignKey("chunirec_charts.difficulty"), nullable=False
-    )
+    song_id: Mapped[int] = mapped_column(nullable=False)
+    difficulty: Mapped[str] = mapped_column(nullable=False)
     end_index: Mapped[str] = mapped_column(nullable=False)
 
     chunithm_chart: Mapped["Chart"] = relationship(
@@ -190,6 +208,8 @@ class SdvxinChartView(Base):
 class GuessScore(Base):
     __tablename__ = "guess_leaderboard"
     __table_args__ = (
+        Index("ix_guess_leaderboard_guild_id", "guild_id"),
+        Index("ix_guess_leaderboard_guild_id_difficulty", "guild_id", "difficulty"),
         UniqueConstraint(
             "discord_id",
             "guild_id",
