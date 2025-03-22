@@ -682,7 +682,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 condition |= SongJacket.song_id.in_(ids)
 
             sql = (
-                select(SongJacket).where(condition).options(joinedload(SongJacket.song))
+                select(SongJacket)
+                .distinct()
+                .where(condition)
+                .options(joinedload(SongJacket.song))
             )
             jackets = (await session.execute(sql)).scalars().all()
 

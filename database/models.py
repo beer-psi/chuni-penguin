@@ -1,6 +1,7 @@
 from typing import Optional
 
 from discord.ext import commands
+from discord.utils import escape_markdown
 from sqlalchemy import (
     BigInteger,
     ForeignKey,
@@ -73,12 +74,10 @@ class Song(Base):
     def raise_if_not_available(self):
         if not self.available:
             if self.removed:
-                msg = f"The song {self.title} is removed."
+                msg = f"The song **{escape_markdown(self.title)}** is removed."
             else:
-                msg = (
-                    f"The song {self.title} is not available in CHUNITHM International."
-                )
-            raise commands.BadArgument(msg)
+                msg = f"The song {escape_markdown(self.title)} is not available in CHUNITHM International."
+            raise commands.CommandError(msg)
 
 
 class SongJacket(Base):
