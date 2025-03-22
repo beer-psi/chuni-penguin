@@ -244,7 +244,13 @@ class ProfileCog(commands.Cog, name="Profile"):
         async with self.utils.chuninet(user_id) as client:
             player_data = await client.player_data()
 
+            titles = f"-# {player_data.title.content}"
+
+            for title in player_data.subtitles:
+                titles += f"\n-# {title.content}"
+
             optional_data: list[str] = []
+
             if player_data.team is not None:
                 optional_data.append(f"Team {player_data.team.name}")
             if player_data.medal is not None:
@@ -253,13 +259,17 @@ class ProfileCog(commands.Cog, name="Profile"):
                     content += f", cleared all of class {player_data.emblem}"
                 content += "."
                 optional_data.append(content)
+
             optional_data_joined = "\n".join(optional_data)
 
             level = str(player_data.lv)
+
             if player_data.reborn > 0:
                 level = f"{player_data.reborn}⭐ + {level}"
 
             description = (
+                f"{titles}\n"
+                f"### {player_data.name}\n"
                 f"{optional_data_joined}\n"
                 f"▸ **Level**: {level}\n"
                 f"▸ **Rating**: {player_data.rating.current:.2f}\n"
@@ -271,10 +281,9 @@ class ProfileCog(commands.Cog, name="Profile"):
                 description += f"▸ **Last played**: <t:{int(player_data.last_play_date.timestamp())}:f>\n"
 
             embed = discord.Embed(
-                title=player_data.name,
                 description=description,
                 color=player_data.possession.color(),
-            ).set_author(name=player_data.title.content)
+            )
 
             if player_data.character_frame is None:
                 files = []
