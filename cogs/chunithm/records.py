@@ -11,12 +11,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 
 import discord
+import httpx
 from discord import AllowedMentions, Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
-import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
