@@ -67,14 +67,9 @@ class ChuniBot(commands.Bot):
     # Prefix cache
     prefixes: dict[int, str]
 
-    # key: user discord ID
-    # value: userId, _t cookies from CHUNITHM-NET
-    sessions: dict[int, tuple[str | None, str | None]]
-
     def __init__(self, *args, **kwargs):
         self.dev = config.dangerous.dev
         self.prefixes = {}
-        self.sessions = {}
 
         super().__init__(*args, **kwargs)
 
@@ -221,7 +216,7 @@ async def startup():
             console_handler,
             setup_handler(
                 logging.handlers.RotatingFileHandler(
-                    filename="discord.log",
+                    filename="data/discord.log",
                     encoding="utf-8",
                     maxBytes=32 * 1024 * 1024,  # 32 MiB
                     backupCount=5,  # Rotate through 5 files

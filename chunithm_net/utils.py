@@ -1,3 +1,4 @@
+import logging
 import re
 from collections.abc import Sequence
 from datetime import datetime
@@ -15,6 +16,8 @@ from .models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
 RE_CSS_BACKGROUND_IMAGE = re.compile(
     r"background-image\s*:\s*url\(['\"]?(?P<url>.+?)['\"]?\)"
 )
+
+_logger = logging.getLogger(__name__)
 
 
 class SpecialTitle(msgspec.Struct):
@@ -166,6 +169,9 @@ def parse_titles(title_elems: Sequence[Tag]):
             content = SPECIAL_TITLES[title_background_url_filename].content
             rarity = SPECIAL_TITLES[title_background_url_filename].rarity
         else:
+            _logger.warning(
+                "Ignoring unknown special title with URL %s", title_background_url
+            )
             continue
 
         titles.append(Title(content, rarity))

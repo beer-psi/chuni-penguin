@@ -144,21 +144,30 @@ def setup_logging(
     logger.setLevel(level)
     logger.addHandler(handler)
 
+    return logger
+
 
 console_handler = setup_handler(logging.StreamHandler())
-setup_logging(
-    "chuninewbot",
-    handler=QueueListenerHandler(
-        console_handler,
-        setup_handler(
-            logging.handlers.RotatingFileHandler(
-                filename="chuninewbot.log",
-                encoding="utf-8",
-                maxBytes=32 * 1024 * 1024,  # 32 MiB
-                backupCount=5,  # Rotate through 5 files
-            ),
+queue_handler = QueueListenerHandler(
+    console_handler,
+    setup_handler(
+        logging.handlers.RotatingFileHandler(
+            filename="data/chuni_penguin.log",
+            encoding="utf-8",
+            maxBytes=32 * 1024 * 1024,  # 32 MiB
+            backupCount=5,  # Rotate through 5 files
         ),
     ),
+)
+
+setup_logging(
+    "chunithm_net",
+    handler=queue_handler,
     level=logging.DEBUG if config.dangerous.dev else logging.INFO,
 )
-logger = logging.getLogger("chuninewbot")
+
+logger = setup_logging(
+    "chuni_penguin",
+    handler=queue_handler,
+    level=logging.DEBUG if config.dangerous.dev else logging.INFO,
+)
