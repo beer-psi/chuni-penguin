@@ -1,6 +1,7 @@
 import string
 import sys
 from html import escape
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 import aiohttp
@@ -11,6 +12,7 @@ from sqlalchemy import select
 
 from database.models import Cookie
 from utils import json_dumps, json_loads
+from utils.config import config
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -20,6 +22,7 @@ __all__ = ("init_app",)
 
 
 COOKIE_CHARACTERS = string.ascii_lowercase + string.digits
+ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 router = web.RouteTableDef()
@@ -183,6 +186,10 @@ async def login(request: web.Request) -> web.Response:
 """,
         content_type="text/html",
     )
+
+
+if (ASSETS_DIR / "jackets").exists() and config.web.serve_assets:
+    router.static("/assets/jackets", ASSETS_DIR / "jackets")
 
 
 async def on_response_prepare(_: web.Request, response: web.StreamResponse):

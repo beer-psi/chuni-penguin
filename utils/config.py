@@ -12,22 +12,18 @@ class BotConfig:
 
     @property
     def token(self) -> str:
-        return self.__section.get("token")
+        return self.__section["token"]
 
     @property
     def default_prefix(self) -> str:
-        return self.__section.get("default_prefix", fallback="c>")
+        return self.__section.get("default_prefix", fallback="c>")  # pyright: ignore[reportReturnType]
 
     @property
     def db_connection_string(self) -> str:
         return self.__section.get(
             "db_connection_string",
             fallback="sqlite+aiosqlite:///data/database.sqlite3",
-        )
-
-    @property
-    def db_encryption_key(self) -> str | None:
-        return self.__section.get("db_encryption_key")
+        )  # pyright: ignore[reportReturnType]
 
     @property
     def error_reporting_webhook(self) -> Optional[str]:
@@ -56,7 +52,7 @@ class WebConfig:
 
     @property
     def listen_address(self) -> str:
-        return self.__section.get("listen_address", fallback="127.0.0.1")
+        return self.__section.get("listen_address", fallback="127.0.0.1")  # pyright: ignore[reportReturnType]
 
     @property
     def port(self) -> Optional[int]:
@@ -69,6 +65,10 @@ class WebConfig:
     @property
     def goatcounter(self) -> Optional[str]:
         return self.__section.get("goatcounter")
+
+    @property
+    def serve_assets(self) -> bool:
+        return self.__section.getboolean("serve_assets", fallback=False)
 
 
 class CredentialsConfig:
@@ -89,7 +89,7 @@ class CredentialsConfig:
 
 
 class IconsConfig:
-    __slots__ = (
+    __slots__ = (  # noqa: RUF023
         "__section",
         "sssp",
         "sss",
@@ -124,15 +124,15 @@ class LegalConfig:
     def privacy_policy(self) -> str:
         return self.__section.get(
             "privacy_policy",
-            fallback="https://www.freeprivacypolicy.com/live/3614793b-5552-4114-a244-b194a3eb881d",
-        )
+            fallback="https://gist.github.com/beer-psi/273343ec521001720823ee0b238e1314#file-privacy-policy-md",
+        )  # pyright: ignore[reportReturnType]
 
     @property
     def terms_of_service(self) -> str:
         return self.__section.get(
             "terms_of_service",
-            fallback="https://www.freeprivacypolicy.com/live/506521e6-0d1a-452e-9071-dd140fbdd618",
-        )
+            fallback="https://gist.github.com/beer-psi/273343ec521001720823ee0b238e1314#file-terms-of-service-md",
+        )  # pyright: ignore[reportReturnType]
 
 
 class DangerousConfig:
