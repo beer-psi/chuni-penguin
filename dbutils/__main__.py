@@ -4,6 +4,8 @@ import argparse
 import logging
 from pathlib import Path
 
+import alembic.command
+from alembic.config import Config
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     async_sessionmaker,
@@ -68,6 +70,9 @@ async def main():
     if args.command == "create":
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+
+        alembic_config = Config(Path(__file__).parent.parent / "alembic.ini")
+        alembic.command.stamp(alembic_config, "head")
 
     if args.command == "update":
         async_session = async_sessionmaker(engine, expire_on_commit=False)
