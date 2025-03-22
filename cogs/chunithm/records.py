@@ -683,8 +683,8 @@ class RecordsCog(commands.Cog, name="Records"):
 
             sql = (
                 select(SongJacket)
-                .distinct()
                 .where(condition)
+                .group_by(SongJacket.song_id)
                 .options(joinedload(SongJacket.song))
             )
             jackets = (await session.execute(sql)).scalars().all()
