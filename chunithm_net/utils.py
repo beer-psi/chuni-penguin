@@ -1,10 +1,29 @@
+import re
+from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import cast
 from zoneinfo import ZoneInfo
 
+import msgspec
 from bs4.element import ResultSet, Tag
 
+from chunithm_net.models.player_data import Title
+
 from .models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
+
+RE_CSS_BACKGROUND_IMAGE = re.compile(
+    r"background-image\s*:\s*url\(['\"]?(?P<url>.+?)['\"]?\)"
+)
+
+
+class SpecialTitle(msgspec.Struct):
+    content: str
+    rarity: str
+
+
+with (Path(__file__).parent / "assets" / "titles.json").open(encoding="utf-8") as f:
+    SPECIAL_TITLES = msgspec.json.decode(f.read(), type=dict[str, SpecialTitle])
 
 
 def chuni_int(s: str) -> int:
@@ -114,3 +133,41 @@ def get_course_rank_and_lamps(soup: Tag):
         combo_type = ComboType.NONE
 
     return rank, clear_type, combo_type
+
+
+def parse_titles(title_elems: Sequence[Tag]):
+    titles: list[Title] = []
+
+    for title_elem in title_elems:
+        title_style = title_elem.get("style")
+
+        if title_style is None:
+            continue
+
+        title_background_url_match = RE_CSS_BACKGROUND_IMAGE.search(str(title_style))
+
+        if title_background_url_match is None:
+            continue
+
+        title_background_url: str = title_background_url_match.group("url")
+        title_background_url_filename = title_background_url.split("/")[-1]
+
+        # regular title
+        if title_background_url_filename.startswith("honor_bg_"):
+            title_content_elem = title_elem.select_one(".player_honor_text span")
+
+            if title_content_elem is None:
+                msg = "Invalid title (missing title content on normal titles)"
+                raise ValueError(msg)
+
+            content = title_content_elem.get_text()
+            rarity = extract_last_part(title_background_url_filename)
+        elif title_background_url_filename in SPECIAL_TITLES:
+            content = SPECIAL_TITLES[title_background_url_filename].content
+            rarity = SPECIAL_TITLES[title_background_url_filename].rarity
+        else:
+            continue
+
+        titles.append(Title(content, rarity))
+
+    return titles

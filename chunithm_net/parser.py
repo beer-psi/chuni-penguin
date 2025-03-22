@@ -1,4 +1,5 @@
 # pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false
+import re
 from typing import cast
 
 from bs4 import BeautifulSoup, Tag
@@ -19,7 +20,6 @@ from .models.player_data import (
     PlayerData,
     Rating,
     Team,
-    Title,
     UserAvatar,
 )
 from .models.record import (
@@ -41,6 +41,11 @@ from .utils import (
     get_rank_and_lamps,
     parse_player_rating,
     parse_time,
+    parse_titles,
+)
+
+RE_CSS_BACKGROUND_IMAGE = re.compile(
+    r"background-image\s*:\s*url\(['\"]?(?P<url>.+?)['\"]?\)"
 )
 
 
@@ -65,26 +70,12 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     title_elems = soup.select(".player_honor_short")
 
     if len(title_elems) == 0:
-        msg = "Invalid webpage. At least the main title must be set."
+        msg = "Invalid webpage. At least the main title must exist."
         raise ValueError(msg)
 
-    title_content = title_elems[0].select_one(".player_honor_text").get_text()
-    title_rarity = extract_last_part(str(title_elems[0]["style"]))
-    title = Title(title_content, title_rarity)
-    subtitles: list[Title] = []
-
-    for title_elem in title_elems[1:]:
-        title_content_elem = title_elem.select_one(".player_honor_text")
-
-        if title_content_elem is None:
-            continue
-
-        subtitles.append(
-            Title(
-                title_content_elem.get_text(),
-                extract_last_part(str(title_elem["style"])),
-            )
-        )
+    titles = parse_titles(title_elems)
+    title = titles[0]
+    subtitles = titles[1:]
 
     rating = parse_player_rating(soup.select(".player_rating_num_block img"))
 
