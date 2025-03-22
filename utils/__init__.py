@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
+import httpx
 import msgspec
 from discord.ext.commands.view import StringView
 from discord.utils import escape_markdown
 
 from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
 from chunithm_net.models.enums import Difficulty
+from utils.config import config
 
 if TYPE_CHECKING:
     from typing import TypeVar
@@ -138,6 +140,14 @@ def get_jacket_url(song: "Song") -> str:
 
     if not song.removed:
         return f"{JACKET_BASE}/{song.jacket}"
+
+    if config.web.serve_assets and config.web.base_url is not None:
+        url = httpx.URL(config.web.base_url)
+
+        if url.host.startswith("127.") or url.host == "localhost":
+            return song.jacket
+
+        return f"{config.web.base_url}/assets/jackets/{song.id}.png"
 
     return song.jacket
 
