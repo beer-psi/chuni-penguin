@@ -48,7 +48,6 @@ def logged_prefix_command(coro: "CommandCallback[CogT, ContextT, P, T]"):
         structlog.contextvars.bind_contextvars(
             execution_id=ctx.message.id,
             command_name=ctx.command.qualified_name if ctx.command else None,
-            is_app_command=ctx.interaction is not None,
         )
 
         command_failed = False
@@ -67,6 +66,7 @@ def logged_prefix_command(coro: "CommandCallback[CogT, ContextT, P, T]"):
             await _log(
                 "Command finished execution",
                 tag="command_finished",
+                is_app_command=ctx.interaction is not None,
                 invoked_with=ctx.invoked_with,
                 invoked_parents=ctx.invoked_parents,
                 args=list(args),
@@ -91,7 +91,6 @@ def logged_app_command(coro: "AppCommandCallback[GroupT, P, T]"):
             command_name=interaction.command.qualified_name
             if interaction.command
             else None,
-            is_app_command=interaction.command is not None,
         )
 
         command_failed = False
@@ -110,6 +109,7 @@ def logged_app_command(coro: "AppCommandCallback[GroupT, P, T]"):
             await _log(
                 "Command finished execution",
                 tag="command_finished",
+                is_app_command=interaction.command is not None,
                 args=list(args),
                 kwargs=kwargs,
                 guild_id=interaction.guild_id,
