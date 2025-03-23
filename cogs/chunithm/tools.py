@@ -50,9 +50,21 @@ def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
         Image.open(BytesIO(bar)) as bar_img,
     ):
         background = Image.new("RGBA", bg_img.size, (0, 0, 0, 255))
-        result = Image.alpha_composite(background, bg_img.convert("RGBA"))
-        result = Image.alpha_composite(result, data_img.convert("RGBA"))
-        result = Image.alpha_composite(result, bar_img.convert("RGBA"))
+        result = Image.alpha_composite(background, bg_img)
+
+        if data_img.size != bg_img.size:
+            container = Image.new("RGBA", bg_img.size, (0, 0, 0, 0))
+            container.paste(data_img, (0, 0), data_img)
+            data_img = container
+
+        result = Image.alpha_composite(result, data_img)
+
+        if bar_img.size != bg_img.size:
+            container = Image.new("RGBA", bg_img.size, (0, 0, 0, 0))
+            container.paste(bar_img, (0, 0), bar_img)
+            bar_img = container
+
+        result = Image.alpha_composite(result, bar_img)
 
         output = BytesIO()
         result.convert("RGB").save(output, format="JPEG", quality=92)
