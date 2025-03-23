@@ -2,18 +2,17 @@ import asyncio
 import contextlib
 import functools
 import inspect
-import logging
-import logging.handlers
 import signal
 import sqlite3
 import sys
+import time
 from pathlib import Path
-from time import time
 from typing import TYPE_CHECKING, Optional
 
 import discord
 import discord.utils
 import sqlalchemy.event
+import structlog
 from aiohttp import web
 from discord.ext import commands
 from rapidfuzz import fuzz
@@ -27,7 +26,7 @@ from utils import json_dumps, json_loads
 from utils.config import config
 from utils.evtloop import get_event_loop
 from utils.help import HelpCommand
-from utils.logging import QueueListenerHandler, console_handler, logger, setup_handler
+from utils.logging import logger
 from web import init_app
 
 if TYPE_CHECKING:
@@ -67,14 +66,17 @@ class ChuniBot(commands.Bot):
     # Prefix cache
     prefixes: dict[int, str]
 
+    command_start_time: dict[commands.Context, int]
+
     def __init__(self, *args, **kwargs):
         self.dev = config.dangerous.dev
         self.prefixes = {}
+        self.command_start_time = {}
 
         super().__init__(*args, **kwargs)
 
     async def start(self, *args, **kwargs):
-        self.launch_time = time()
+        self.launch_time = time.time()
         return await super().start(*args, **kwargs)
 
     async def setup_hook(self) -> None:
@@ -119,7 +121,11 @@ class ChuniBot(commands.Bot):
             prefixes = (await session.execute(select(Prefix))).scalars()
 
         self.prefixes = {prefix.guild_id: prefix.prefix for prefix in prefixes}
-        logger.info(f"Loaded {len(self.prefixes)} guild prefixes")
+        await logger.ainfo(
+            "Loaded guild prefixes",
+            tag="load_guild_prefix",
+            prefix_count=len(self.prefixes),
+        )
 
         # Setup login web server (if enabled)
         if config.web.enable:
@@ -140,21 +146,39 @@ class ChuniBot(commands.Bot):
             )
 
         if self.dev:
-            await self.load_extension("cogs.hotreload")
             await self.load_extension("jishaku")
 
         for cog in COG_LIST:
             try:
                 await self.load_extension(cog)
-                logger.info(f"Loaded extension {cog}")
+                await logger.ainfo(
+                    "Loaded extension",
+                    tag="load_extension",
+                    extension=cog,
+                )
             except commands.errors.ExtensionAlreadyLoaded:
+                await logger.awarning(
+                    "Extension already loaded",
+                    tag="extension_already_loaded",
+                    extension=cog,
+                )
                 logger.warning(f"{cog} already loaded")
             except commands.errors.NoEntryPointError:
-                logger.error(f"{COG_LIST} has no `setup` function.")
-            except commands.errors.ExtensionFailed as e:
-                logger.error(
-                    f"{cog} raised an error: {e.original.__class__.__name__}: {e.original}"
+                await logger.aerror(
+                    "Extension has no `setup` function.",
+                    tag="extension_missing_entry_point",
+                    extension=cog,
                 )
+            except commands.errors.ExtensionFailed as e:
+                await logger.exception(
+                    "Extension raised error",
+                    tag="extension_error",
+                    extension=cog,
+                    exc_info=e,
+                )
+
+        if config.dangerous.dev:
+            await self.load_extension("cogs.hotreload")
 
     async def close(self) -> None:
         if self.app is not None:
@@ -197,34 +221,55 @@ def guild_specific_prefix(default: str):
     return inner
 
 
+(intents := discord.Intents.default()).message_content = True
+
+bot = ChuniBot(
+    command_prefix=guild_specific_prefix(config.bot.default_prefix),  # type: ignore[reportGeneralTypeIssues]
+    intents=intents,
+    help_command=HelpCommand(),
+    config=config,
+)
+
+
+@bot.before_invoke
+async def before_invoke(ctx: commands.Context[ChuniBot]):
+    ctx.bot.command_start_time[ctx] = time.perf_counter_ns()
+
+    structlog.contextvars.clear_contextvars()
+    structlog.contextvars.bind_contextvars(
+        command_name=ctx.command.qualified_name if ctx.command else None,
+        message_id=ctx.message.id,
+    )
+
+
+@bot.after_invoke
+async def after_invoke(ctx: commands.Context[ChuniBot]):
+    end_time_ns = time.perf_counter_ns()
+    start_time_ns = ctx.bot.command_start_time[ctx]
+    duration = (end_time_ns - start_time_ns) // 1_000_000
+
+    _log = logger.aerror if ctx.command_failed else logger.ainfo
+    args = ctx.args[ctx.args.index(ctx) + 1 :]
+    kwargs = ctx.kwargs
+
+    await _log(
+        "Command finished",
+        tag="command_finished",
+        invoked_with=ctx.invoked_with,
+        invoked_parents=ctx.invoked_parents,
+        args=args,
+        kwargs=kwargs,
+        guild_id=ctx.guild.id if ctx.guild else None,
+        channel_id=ctx.channel.id,
+        user_id=ctx.author.id,
+        duration_ms=duration,
+    )
+
+
 async def startup():
     if (token := config.bot.token) is None:
         logger.error("Token not found. Make sure 'bot.token' is set in 'bot.ini'.")
         sys.exit(1)
-
-    (intents := discord.Intents.default()).message_content = True
-    bot = ChuniBot(
-        command_prefix=guild_specific_prefix(config.bot.default_prefix),  # type: ignore[reportGeneralTypeIssues]
-        intents=intents,
-        help_command=HelpCommand(),
-        config=config,
-    )
-
-    discord.utils.setup_logging(
-        level=logging.DEBUG if bot.dev else logging.INFO,
-        handler=QueueListenerHandler(
-            console_handler,
-            setup_handler(
-                logging.handlers.RotatingFileHandler(
-                    filename="data/discord.log",
-                    encoding="utf-8",
-                    maxBytes=32 * 1024 * 1024,  # 32 MiB
-                    backupCount=5,  # Rotate through 5 files
-                ),
-            ),
-        ),
-        root=False,
-    )
 
     try:
         async with bot:

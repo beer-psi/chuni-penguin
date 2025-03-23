@@ -1,6 +1,5 @@
 import csv
 import itertools
-from logging import Logger
 from pathlib import Path
 from typing import Optional, overload
 from xml.etree import ElementTree
@@ -10,6 +9,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from structlog.stdlib import BoundLogger
 
 from chunithm_net.models.enums import Difficulty
 from database.models import Chart, Song
@@ -144,7 +144,7 @@ def extract_and_make_b30_difficulty_cards(song_id: int, jacket_file: Path):
 
 
 async def merge_options(
-    logger: Logger,
+    logger: BoundLogger,
     async_session: async_sessionmaker[AsyncSession],
     data_dir: Path,
     option_dir: Optional[Path],

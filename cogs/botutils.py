@@ -254,7 +254,11 @@ class UtilsCog(commands.Cog, name="Utils"):
                 raise MissingDetailedParams
 
             if song is None:
-                logger.warning(f"Missing song data for song title {record.title}")
+                await logger.awarning(
+                    "Missing song data",
+                    tag="missing_song_data",
+                    title=record.title,
+                )
                 hydrated_records.append(record)
                 continue
 
@@ -277,8 +281,11 @@ class UtilsCog(commands.Cog, name="Utils"):
             )
 
             if chart is None:
-                logger.warning(
-                    f"Missing chart data for song ID {song.id}, difficulty {record.difficulty}"
+                await logger.awarning(
+                    "Missing chart data",
+                    tag="missing_chart_data",
+                    song_id=song.id,
+                    difficulty=record.difficulty,
                 )
                 hydrated_records.append(record)
                 continue

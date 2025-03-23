@@ -1,5 +1,4 @@
 import re
-from logging import Logger
 from typing import TypedDict
 
 import httpx
@@ -7,6 +6,7 @@ import msgspec
 from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from structlog.stdlib import BoundLogger
 
 from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
 from database.models import Song, SongJacket
@@ -41,19 +41,18 @@ def is_url(value: str):
 
 def normalize_artist(artist: str):
     return (
-        RE_GAME_NAME
-        .sub("", artist)
+        RE_GAME_NAME.sub("", artist)
         # Really dumb edge case, thanks SEGA.
         # The alpha character used by maimai DX is APL FUNCTIONAL SYMBOL ALPHA (U+237A).
         # The alpha character used by CHUNITHM and O.N.G.E.K.I. is GREEK SMALL LETTER ALPHA (U+03B1).
         # This is why cross c>compare doesn't work with maimai bots.
-        .replace("からとP⍺ոchii少年", "からとPαnchii少年")
+        .replace("からとP⍺ոchii少年", "からとPαnchii少年")  # noqa: RUF001
         .rstrip()
     )
 
 
 async def update_jackets(
-    logger: Logger, async_session: async_sessionmaker[AsyncSession]
+    logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
 ):
     client = httpx.AsyncClient()
 

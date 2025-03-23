@@ -21,13 +21,11 @@ from utils.kamaitachi import (
     KTStatusResponse,
     convert_to_kt_batch_manual,
 )
-from utils.logging import logger as root_logger
+from utils.logging import logger
 
 if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.botutils import UtilsCog
-
-logger = root_logger.getChild(__name__)
 
 
 class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": True}):
@@ -106,11 +104,15 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                 try:
                     await ctx.message.delete()
                 except (discord.errors.Forbidden, discord.errors.NotFound):
-                    logger.warning(
-                        "Could not delete message %d (guild %d) with token sent in public channel",
-                        ctx.message.id,
-                        -1 if ctx.guild is None else ctx.guild.id,
+                    await logger.awarning(
+                        "Could not delete message with token exposed",
+                        tag="failed_delete_message_exposing_keys",
+                        guild_id=ctx.guild.id if ctx.guild else None,
+                        channel_id=ctx.channel.id,
+                        user_id=ctx.author.id,
+                        message_id=ctx.message.id,
                     )
+
                     please_delete_message = "Please delete the original command. Why are you exposing your API keys?"
 
             await ctx.send(

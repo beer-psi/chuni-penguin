@@ -1,10 +1,9 @@
-from logging import Logger
-
 import aiohttp
 import msgspec
 from sqlalchemy import select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from structlog.stdlib import BoundLogger
 
 from database.models import Alias, Song
 
@@ -24,9 +23,13 @@ class TachiChunithmSong(msgspec.Struct, rename="camel"):
 
 
 async def update_aliases(
-    logger: Logger, async_session: async_sessionmaker[AsyncSession]
+    logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
 ):
-    async with aiohttp.ClientSession() as client, async_session() as session, session.begin():
+    async with (
+        aiohttp.ClientSession() as client,
+        async_session() as session,
+        session.begin(),
+    ):
         resp = await client.get(
             "https://github.com/lomotos10/GCM-bot/raw/main/data/aliases/en/chuni.tsv"
         )

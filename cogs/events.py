@@ -57,9 +57,10 @@ class EventsCog(commands.Cog, name="Events"):
             await interaction.edit_original_response(embed=embed)
             return
 
-        logger.exception(
-            "Unhandled exception in app command %s",
-            interaction.command.name if interaction.command else "unknown",
+        await logger.aexception(
+            "Unhandled exception in app command",
+            tag="app_command_error",
+            command=interaction.command.name if interaction.command else None,
             exc_info=exc,
         )
 
@@ -109,7 +110,12 @@ class EventsCog(commands.Cog, name="Events"):
                 delete_after=delete_after,  # type: ignore[reportCallIssue, reportArgumentType]
             )
 
-        logger.exception("Unhandled exception in command %s", ctx.command, exc_info=exc)
+        await logger.aexception(
+            "Unhandled exception in command",
+            tag="command_error",
+            command=ctx.command.qualified_name if ctx.command else None,
+            exc_info=exc,
+        )
 
         # fmt: off
         embed.description = (

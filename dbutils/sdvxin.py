@@ -3,7 +3,6 @@
 import importlib.util
 import re
 from html import unescape
-from logging import Logger
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -11,6 +10,7 @@ from bs4.element import Comment
 from sqlalchemy import select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from structlog.stdlib import BoundLogger
 
 from database.models import Chart, SdvxinChartView, Song
 
@@ -128,15 +128,17 @@ TITLE_MAPPING = {
 
 
 async def update_sdvxin(
-    logger: Logger, async_session: async_sessionmaker[AsyncSession]
+    logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
 ):
     bs4_features = "lxml" if importlib.util.find_spec("lxml") else "html.parser"
 
     # sdvx.in ID, song_id, difficulty
     inserted_data: list[dict] = []
-    async with aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(total=600)
-    ) as client, async_session() as session, session.begin():
+    async with (
+        aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=600)) as client,
+        async_session() as session,
+        session.begin(),
+    ):
         # standard categories
         for category in SDVXIN_CATEGORIES:
             logger.info(f"Processing category {category}")

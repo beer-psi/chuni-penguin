@@ -24,7 +24,7 @@ from database.models import Alias, GuessScore, Song
 from utils import shlex_split
 from utils.argparse import DiscordArguments
 from utils.converters import DifficultyConverter
-from utils.logging import logger as root_logger
+from utils.logging import logger
 from utils.views.gaming import GuessLeaderboardView
 
 if TYPE_CHECKING:
@@ -34,7 +34,6 @@ if TYPE_CHECKING:
     from cogs.botutils import UtilsCog
     from cogs.events import EventsCog
 
-logger = root_logger.getChild(__name__)
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
 
 
@@ -118,12 +117,14 @@ class GuessingGameSession:
                 jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
 
                 if not jacket_path.exists():
-                    logger.warning(
-                        "Missing jacket file for existing song %s - %s (ID %s)",
-                        song.artist,
-                        song.title,
-                        song.id,
+                    await logger.awarning(
+                        "Missing jacket file",
+                        tag="missing_jacket_asset",
+                        song_id=song.id,
+                        song_title=song.title,
+                        song_artist=song.artist,
                     )
+
                     continue
 
                 break
@@ -649,8 +650,12 @@ async def run_state_machine(
                 break
 
             current_state = next_state
-        except Exception as e:
-            logger.exception("Error running guessing game state machine", exc_info=e)
+        except Exception as e:  # noqa: BLE001
+            await logger.aexception(
+                "Error running guessing game",
+                tag="guessing_game_error",
+                exc_info=e,
+            )
             await cog._clear_state(channel.id)
 
             if events_cog := cast("EventsCog | None", cog.bot.get_cog("Events")):

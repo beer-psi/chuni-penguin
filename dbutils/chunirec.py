@@ -1,6 +1,5 @@
 import re
 from datetime import datetime
-from logging import Logger
 from typing import Literal, Optional
 
 import aiohttp
@@ -8,6 +7,7 @@ import msgspec
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from structlog.stdlib import BoundLogger
 
 from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
 from database.models import Chart, Song, SongJacket
@@ -291,7 +291,9 @@ def normalize_title(title: str, *, remove_we_kanji: bool = False) -> str:
     return title
 
 
-async def update_db(logger: Logger, async_session: async_sessionmaker[AsyncSession]):
+async def update_db(
+    logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
+):
     token = config.credentials.chunirec_token
     if token is None:
         msg = "credentials.chunirec_token"

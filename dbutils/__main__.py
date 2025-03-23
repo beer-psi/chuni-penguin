@@ -1,7 +1,6 @@
 # ruff: noqa: RUF001
 
 import argparse
-import logging
 from pathlib import Path
 
 import alembic.command
@@ -15,16 +14,13 @@ from sqlalchemy.ext.asyncio import (
 from database.models import Base
 from utils.config import config
 from utils.evtloop import get_event_loop
-from utils.logging import setup_logging
+from utils.logging import logger
 
 from .aliases import update_aliases
 from .chunirec import update_db
 from .jackets import update_jackets
 from .merge_options import merge_options
 from .sdvxin import update_sdvxin
-
-setup_logging("dbutils")
-logger = logging.getLogger("dbutils")
 
 
 async def main():

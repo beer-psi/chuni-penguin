@@ -3,6 +3,7 @@ import pathlib
 
 from discord.ext import commands, tasks
 
+from cogs import COG_LIST
 from utils.logging import logger
 
 # put your extension names in this list
@@ -22,33 +23,42 @@ class HotReload(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.hot_reload_loop.start()
+        self.last_modified_time: dict[str, float] = {}
 
     async def cog_unload(self):
         self.hot_reload_loop.stop()
 
     @tasks.loop(seconds=3)
     async def hot_reload_loop(self):
-        for extension in list(self.bot.extensions.keys()):
+        for extension in COG_LIST:
             if extension in IGNORE_EXTENSIONS:
                 continue
-            path = path_from_extension(extension)
-            time = path.stat().st_mtime
 
-            try:
-                if self.last_modified_time[extension] == time:
-                    continue
-            except KeyError:
-                self.last_modified_time[extension] = time
+            path = path_from_extension(extension)
+            new_lmt = path.stat().st_mtime
+            old_lmt = self.last_modified_time.get(extension)
+
+            if old_lmt is not None and old_lmt == new_lmt:
+                continue
+
+            self.last_modified_time[extension] = new_lmt
 
             try:
                 # For d.py 2.0, await the next line
                 await self.bot.reload_extension(extension)
-            except commands.ExtensionError:
-                logger.warning(f"Couldn't reload extension: {extension}")
+            except commands.ExtensionError as e:
+                await logger.aerror(
+                    "Couldn't reload extension",
+                    tag="extension_error",
+                    extension=extension,
+                    exc_info=e,
+                )
             else:
-                logger.info(f"Reloaded extension: {extension}")
+                await logger.ainfo(
+                    "Reloaded extension", tag="reload_extension", extension=extension
+                )
             finally:
-                self.last_modified_time[extension] = time
+                self.last_modified_time[extension] = new_lmt
 
     @hot_reload_loop.before_loop
     async def cache_last_modified_time(self):
@@ -58,8 +68,8 @@ class HotReload(commands.Cog):
             if extension in IGNORE_EXTENSIONS:
                 continue
             path = path_from_extension(extension)
-            time = path.stat().st_mtime
-            self.last_modified_time[extension] = time
+            lmt = path.stat().st_mtime
+            self.last_modified_time[extension] = lmt
 
 
 async def setup(bot):
