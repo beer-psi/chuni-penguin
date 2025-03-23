@@ -20,6 +20,7 @@ from utils import (
 from utils.config import config
 from utils.constants import SIMILARITY_THRESHOLD
 from utils.converters import AliasNameConverter, AliasNameTransformer
+from utils.logging import logged_app_command, logged_prefix_command
 from utils.views.embeds import EmbedPaginationView
 from utils.views.songlist import SonglistView
 
@@ -36,6 +37,7 @@ class SearchCog(commands.Cog, name="Search"):
         self.autocompleters: "AutocompletersCog" = bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
 
     @commands.hybrid_command("find")
+    @logged_prefix_command
     async def find(self, ctx: Context, level: str):
         """Find charts by level or chart constant.
 
@@ -77,6 +79,7 @@ class SearchCog(commands.Cog, name="Search"):
             )
 
     @commands.hybrid_command("addalias")
+    @logged_prefix_command
     async def addalias(
         self,
         ctx: Context,
@@ -232,6 +235,7 @@ class SearchCog(commands.Cog, name="Search"):
         return None
 
     @commands.hybrid_command("removealias")
+    @logged_prefix_command
     async def removealias(
         self,
         ctx: Context,
@@ -313,6 +317,7 @@ class SearchCog(commands.Cog, name="Search"):
         )
 
     @commands.hybrid_command("listalias", aliases=["listaliases", "aliases"])
+    @logged_prefix_command
     async def listalias(
         self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
     ):
@@ -365,6 +370,7 @@ class SearchCog(commands.Cog, name="Search"):
 
     @commands.is_owner()
     @commands.command("reloadalias", aliases=["reloadaliases"], hidden=True)
+    @logged_prefix_command
     async def reloadalias(self, ctx: Context):
         async with ctx.typing():
             await self.utils._reload_alias_cache()
@@ -388,6 +394,7 @@ class SearchCog(commands.Cog, name="Search"):
         detailed="Display detailed chart information (note counts and designer name)",
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
+    @logged_app_command
     async def info_slash(
         self,
         interaction: "discord.Interaction[ChuniBot]",
@@ -399,6 +406,7 @@ class SearchCog(commands.Cog, name="Search"):
         return await self._info_inner(ctx, query=query, detailed=detailed)
 
     @commands.command("info")
+    @logged_prefix_command
     async def info(
         self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
     ):

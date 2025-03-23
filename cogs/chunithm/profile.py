@@ -16,6 +16,7 @@ from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
 from utils import json_loads, shlex_split
 from utils.argparse import DiscordArguments
+from utils.logging import logged_app_command, logged_prefix_command
 from utils.views.profile import (
     PersistentHideFriendCodeButton,
     PersistentSendFriendRequestButton,
@@ -138,6 +139,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         self.bot.add_dynamic_items(PersistentSendFriendRequestButton)
 
     @commands.hybrid_command(name="avatar")
+    @logged_prefix_command
     async def avatar(
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
     ):
@@ -336,6 +338,7 @@ class ProfileCog(commands.Cog, name="Profile"):
                 )
 
     @commands.command(name="chunithm", aliases=["chuni", "profile"])
+    @logged_prefix_command
     async def chunithm(
         self,
         ctx: Context,
@@ -373,6 +376,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         user="The user to view the profile of",
         kamaitachi="Whether to view their Kamaitachi CHUNITHM profile instead",
     )
+    @logged_app_command
     async def chunithm_slash(
         self,
         interaction: discord.Interaction,

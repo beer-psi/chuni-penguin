@@ -34,6 +34,7 @@ from utils.calculation.rating import calculate_rating, calculate_score_for_ratin
 from utils.components import ChartCardEmbed
 from utils.constants import MAX_DIFFICULTY, SIMILARITY_THRESHOLD
 from utils.converters import DifficultyConverter
+from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
 if TYPE_CHECKING:
@@ -68,6 +69,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
 
     @commands.hybrid_command("anmitsu", aliases=["rub"])
+    @logged_prefix_command
     async def anmitsu(
         self,
         ctx: Context,
@@ -118,6 +120,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         await ctx.reply(res, mention_author=False)
 
     @commands.hybrid_command("calculate", aliases=["calc"])
+    @logged_prefix_command
     async def calculate(
         self,
         ctx: Context,
@@ -188,6 +191,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         await ctx.reply(res, mention_author=False)
 
     @commands.hybrid_command("const", aliases=["constant"])
+    @logged_prefix_command
     async def const(
         self,
         ctx: Context,
@@ -263,6 +267,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         await ctx.reply(res, mention_author=False)
 
     @commands.hybrid_command("rating")
+    @logged_prefix_command
     async def rating(
         self, ctx: Context, rating: Range[float, 1.0, MAX_DIFFICULTY + 2.15]
     ):
@@ -301,6 +306,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         await ctx.reply(res, mention_author=False)
 
     @commands.hybrid_command("random")
+    @logged_prefix_command
     async def random(self, ctx: Context, level: str, count: Range[int, 1, 4] = 3):
         """Get random charts based on level/course/chart constant.
 
@@ -429,6 +435,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             await ctx.reply(content=content, embeds=embeds, mention_author=False)
 
     @commands.hybrid_command("recommend")
+    @logged_prefix_command
     async def recommend(
         self,
         ctx: Context,
@@ -528,6 +535,7 @@ class ToolsCog(commands.Cog, name="Tools"):
 
     @commands.hybrid_command("border")
     @app_commands.autocomplete(query=song_title_autocomplete)
+    @logged_prefix_command
     async def border(
         self,
         ctx: Context,
@@ -648,6 +656,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
+    @logged_prefix_command
     async def chart(
         self,
         ctx: Context,

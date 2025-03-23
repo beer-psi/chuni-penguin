@@ -15,6 +15,7 @@ from sqlalchemy import delete, func, select, text
 from database.models import Cookie, Prefix, Song
 from utils.config import config
 from utils.constants import VERSION_NAMES
+from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -36,6 +37,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     @commands.command("treesync", hidden=True, invoke_without_command=True)
     @commands.is_owner()
+    @logged_prefix_command
     async def sync(
         self,
         ctx: Context["ChuniBot"],
@@ -75,6 +77,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
     @commands.hybrid_command("source", aliases=["src"])
+    @logged_prefix_command
     async def source(self, ctx: Context):
         """Get the source code for this bot."""
 
@@ -87,6 +90,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         await ctx.reply(reply, mention_author=False)
 
     @commands.hybrid_command("invite")
+    @logged_prefix_command
     async def invite(self, ctx: Context):
         """Invite this bot to your server!"""
 
@@ -107,6 +111,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         )  # type: ignore[reportGeneralTypeIssues]
 
     @commands.hybrid_command("botinfo")
+    @logged_prefix_command
     async def botinfo(self, ctx: Context):
         """Shows information about the bot."""
 
@@ -182,6 +187,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.hybrid_command("ping")
+    @logged_prefix_command
     async def ping(self, ctx: Context):
         start = time.perf_counter_ns()
         message = await ctx.send("Ping...")
@@ -196,6 +202,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     @commands.hybrid_command("prefix")
     @commands.guild_only()
+    @logged_prefix_command
     async def prefix(self, ctx: Context, new_prefix: Optional[str] = None):
         """Get or set the prefix for this server.
 
@@ -236,6 +243,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
                 await ctx.reply(f"Prefix set to `{new_prefix}`", mention_author=False)
 
     @commands.hybrid_command("legal")
+    @logged_prefix_command
     async def legal(self, ctx: Context):
         """Links to the bot's privacy policy and terms of service
 

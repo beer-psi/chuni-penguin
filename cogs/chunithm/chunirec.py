@@ -11,6 +11,7 @@ from discord.ext.commands import Context
 
 from chunithm_net.consts import KEY_SONG_ID
 from chunithm_net.models.enums import ChainType, ClearType, ComboType, Difficulty
+from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -193,6 +194,7 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
         self.region_code = "jp2"
 
     @commands.hybrid_group("chunirec", invoke_without_command=True)
+    @logged_prefix_command
     async def chunirec(self, ctx: Context):
         await ctx.reply(
             content=(
@@ -205,6 +207,7 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
         )
 
     @chunirec.command("sync", aliases=["s"])
+    @logged_prefix_command
     async def chunirec_sync(self, ctx: Context):
         try:
             dm_channel = await ctx.author.create_dm()

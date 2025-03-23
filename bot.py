@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Optional
 import discord
 import discord.utils
 import sqlalchemy.event
-import structlog
 from aiohttp import web
 from discord.ext import commands
 from rapidfuzz import fuzz
@@ -229,41 +228,6 @@ bot = ChuniBot(
     help_command=HelpCommand(),
     config=config,
 )
-
-
-@bot.before_invoke
-async def before_invoke(ctx: commands.Context[ChuniBot]):
-    ctx.bot.command_start_time[ctx] = time.perf_counter_ns()
-
-    structlog.contextvars.clear_contextvars()
-    structlog.contextvars.bind_contextvars(
-        command_name=ctx.command.qualified_name if ctx.command else None,
-        message_id=ctx.message.id,
-    )
-
-
-@bot.after_invoke
-async def after_invoke(ctx: commands.Context[ChuniBot]):
-    end_time_ns = time.perf_counter_ns()
-    start_time_ns = ctx.bot.command_start_time[ctx]
-    duration = (end_time_ns - start_time_ns) // 1_000_000
-
-    _log = logger.aerror if ctx.command_failed else logger.ainfo
-    args = ctx.args[ctx.args.index(ctx) + 1 :]
-    kwargs = ctx.kwargs
-
-    await _log(
-        "Command finished",
-        tag="command_finished",
-        invoked_with=ctx.invoked_with,
-        invoked_parents=ctx.invoked_parents,
-        args=args,
-        kwargs=kwargs,
-        guild_id=ctx.guild.id if ctx.guild else None,
-        channel_id=ctx.channel.id,
-        user_id=ctx.author.id,
-        duration_ms=duration,
-    )
 
 
 async def startup():

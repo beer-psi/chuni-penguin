@@ -15,7 +15,7 @@ from chunithm_net.exceptions import ChuniNetException, InvalidTokenException
 from database.models import Cookie
 from utils import asuppress
 from utils.config import config
-from utils.logging import logger
+from utils.logging import logged_app_command, logged_prefix_command, logger
 from utils.views.login import LoginFlowView
 
 if TYPE_CHECKING:
@@ -30,6 +30,7 @@ class AuthCog(commands.Cog, name="Auth"):
         self.random = SystemRandom()
 
     @commands.hybrid_command(name="logout")
+    @logged_prefix_command
     async def logout(self, ctx: Context, *, invalidate: bool = False):
         """Logs you out of the bot.
 
@@ -106,6 +107,7 @@ class AuthCog(commands.Cog, name="Auth"):
             return None
 
     @commands.hybrid_command("login")
+    @logged_prefix_command
     async def login(self, ctx: Context, clal: Optional[str] = None):
         """Link with your CHUNITHM-NET account.
 
@@ -261,6 +263,7 @@ class AuthCog(commands.Cog, name="Auth"):
 
     @commands.command("token")
     @commands.dm_only()
+    @logged_prefix_command
     async def token(self, ctx: Context):
         """Show your current token.
 
@@ -285,6 +288,7 @@ class AuthCog(commands.Cog, name="Auth"):
         raise commands.CommandError(msg)
 
     @app_commands.command(name="token", description="Show your current token.")
+    @logged_app_command
     async def token_slash(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
 

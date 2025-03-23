@@ -48,6 +48,7 @@ from utils.converters import (
     DifficultyConverter,
 )
 from utils.kamaitachi import convert_kt_pbs_to_records, convert_kt_scores_to_records
+from utils.logging import logged_app_command, logged_prefix_command
 from utils.views import (
     B30N20View,
     B30View,
@@ -545,6 +546,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
     @commands.command(name="recent", aliases=["rs"])
+    @logged_prefix_command
     async def recent(self, ctx: Context, *, query: str = ""):
         """View your recent scores.
 
@@ -577,6 +579,7 @@ class RecordsCog(commands.Cog, name="Records"):
         user="The user to get recent scores for",
         kamaitachi="Get recent scores from Kamaitachi, if linked",
     )
+    @logged_app_command
     async def recent_slash(
         self,
         interaction: Interaction,
@@ -832,6 +835,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return
 
     @commands.command("compare", aliases=["c"])
+    @logged_prefix_command
     async def compare(self, ctx: Context, *, query: str = ""):
         """Compare your best score with another score.
 
@@ -873,6 +877,7 @@ class RecordsCog(commands.Cog, name="Records"):
         user="The user to compare with (defaults to you)",
         kamaitachi="Get scores from Kamaitachi, if the target user has a linked account",
     )
+    @logged_app_command
     async def compare_slash(
         self,
         interaction: discord.Interaction,
@@ -1037,6 +1042,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return None
 
     @commands.command("scores")
+    @logged_prefix_command
     async def scores(
         self,
         ctx: Context,
@@ -1090,6 +1096,7 @@ class RecordsCog(commands.Cog, name="Records"):
     )
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.autocomplete(query=song_title_autocomplete)
+    @logged_app_command
     async def scores_slash(
         self,
         interaction: discord.Interaction,
@@ -1189,6 +1196,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
     @commands.command("best30", aliases=["b30", "best50", "b50"])
+    @logged_prefix_command
     async def best30(self, ctx: Context, *, query: str = ""):
         """View top 30 scores of you or another player.
 
@@ -1233,6 +1241,7 @@ class RecordsCog(commands.Cog, name="Records"):
         image="Render an image of your best 30 scores",
         kamaitachi="Get your best 30 from Kamaitachi if linked",
     )
+    @logged_app_command
     async def best30_slash(
         self,
         interaction: Interaction,
@@ -1246,6 +1255,7 @@ class RecordsCog(commands.Cog, name="Records"):
         await self._best30_inner(ctx, user, image=image, kamaitachi=kamaitachi)
 
     @commands.hybrid_command("recent10", aliases=["r10"])
+    @logged_prefix_command
     async def recent10(
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
     ):
@@ -1273,6 +1283,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
     @commands.hybrid_command("new20", aliases=["n10", "n15", "n20", "new10", "new15"])
+    @logged_prefix_command
     async def new20(
         self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
     ):
@@ -1368,6 +1379,7 @@ class RecordsCog(commands.Cog, name="Records"):
             for x in Rank.__members__.values()
         ],  # type: ignore[reportGeneralTypeIssues]
     )
+    @logged_app_command
     async def top_slash(
         self,
         interaction: "discord.Interaction[ChuniBot]",
@@ -1455,6 +1467,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return None
 
     @commands.command("top")
+    @logged_prefix_command
     async def top(
         self,
         ctx: Context,
@@ -1686,6 +1699,7 @@ class RecordsCog(commands.Cog, name="Records"):
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
+    @logged_prefix_command
     async def leaderboard(
         self,
         ctx: Context,

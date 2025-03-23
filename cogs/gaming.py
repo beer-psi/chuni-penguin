@@ -24,7 +24,7 @@ from database.models import Alias, GuessScore, Song
 from utils import shlex_split
 from utils.argparse import DiscordArguments
 from utils.converters import DifficultyConverter
-from utils.logging import logger
+from utils.logging import logged_prefix_command, logger
 from utils.views.gaming import GuessLeaderboardView
 
 if TYPE_CHECKING:
@@ -691,6 +691,7 @@ class GamingCog(commands.Cog, name="Games"):
         self.state_for_game_session_lock = asyncio.Lock()
 
     @commands.group("guess", invoke_without_command=True)
+    @logged_prefix_command
     async def guess(self, ctx: Context, *, arguments: str = ""):
         """Start a jacket art guessing game.
 
@@ -761,6 +762,7 @@ class GamingCog(commands.Cog, name="Games"):
             )
 
     @commands.hybrid_command("skip")
+    @logged_prefix_command
     async def skip(self, ctx: Context):
         """Skips a state of an ongoing guessing game.
 
@@ -781,6 +783,7 @@ class GamingCog(commands.Cog, name="Games"):
         return
 
     @commands.hybrid_command("stop")
+    @logged_prefix_command
     async def stop(self, ctx: Context):
         """Stops the currently running guessing game."""
 
@@ -811,6 +814,7 @@ class GamingCog(commands.Cog, name="Games"):
 
     @commands.guild_only()
     @guess.command("leaderboard", aliases=["lb"])
+    @logged_prefix_command
     async def guess_leaderboard(self, ctx: Context):
         assert ctx.guild is not None
 
@@ -825,6 +829,7 @@ class GamingCog(commands.Cog, name="Games"):
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @guess.command("reset")
+    @logged_prefix_command
     async def guess_reset(self, ctx: Context):
         """Resets the c>guess leaderboard for this server.
 

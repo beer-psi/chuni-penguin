@@ -5,6 +5,8 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from utils.logging import logged_prefix_command
+
 if TYPE_CHECKING:
     from bot import ChuniBot
 
@@ -42,6 +44,7 @@ class FluffCog(commands.Cog, name="Fluff"):
 
     @commands.hybrid_command("8ball")
     @app_commands.describe(question="A question to ask the mysterious 8ball")
+    @logged_prefix_command
     async def eight_ball(self, ctx: Context, *, question: str):
         """Ask the 8ball a question. It can only respond with yes or no.
 

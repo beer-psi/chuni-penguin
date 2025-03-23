@@ -21,7 +21,7 @@ from utils.kamaitachi import (
     KTStatusResponse,
     convert_to_kt_batch_manual,
 )
-from utils.logging import logger
+from utils.logging import logged_prefix_command, logger
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -51,6 +51,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         self.user_agent = f"ChuniPenguin (https://github.com/Rapptz/discord.py {discord.__version__}) Python/{sys.version_info[0]}.{sys.version_info[1]} httpx/{httpx.__version__}"
 
     @commands.hybrid_group("kamaitachi", aliases=["kt"], invoke_without_command=True)
+    @logged_prefix_command
     async def kamaitachi(self, ctx: Context):
         await ctx.reply(
             (
@@ -88,6 +89,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         return None
 
     @kamaitachi.command("link", aliases=["login"])
+    @logged_prefix_command
     async def kamaitachi_link(self, ctx: Context, token: Optional[str] = None):
         async with self.bot.begin_db_session() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
@@ -168,6 +170,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         )
 
     @kamaitachi.command("unlink", aliases=["logout"])
+    @logged_prefix_command
     async def kamaitachi_unlink(self, ctx: Context):
         async with self.bot.begin_db_session() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
@@ -187,6 +190,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         )
 
     @kamaitachi.command("sync", aliases=["s"])
+    @logged_prefix_command
     async def kamaitachi_sync(
         self, ctx: Context, sync: Literal["recent", "pb"] = "recent"
     ):
