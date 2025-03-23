@@ -60,7 +60,7 @@ class EventsCog(commands.Cog, name="Events"):
         await logger.aexception(
             "Unhandled exception in app command",
             tag="app_command_error",
-            command=interaction.command.name if interaction.command else None,
+            command=interaction.command.qualified_name if interaction.command else None,
             exc_info=exc,
         )
 
