@@ -129,7 +129,7 @@ class EventsCog(commands.Cog, name="Events"):
 
         if config.bot.support_server_invite:
             embed.description += "\n"
-            embed.description = (
+            embed.description += (
                 f"If this error keeps happening, please join the [support server]({config.bot.support_server_invite}) "
                 "and report the bug in the #help-bugs channel!"
             )
