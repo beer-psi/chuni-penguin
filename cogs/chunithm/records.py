@@ -1541,7 +1541,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return arg
 
         if query is None:
-            await self.best30(ctx, query="-i")
+            await self._best30_inner(ctx, image=True)
             return None
 
         parser = DiscordArguments()
@@ -1585,7 +1585,7 @@ class RecordsCog(commands.Cog, name="Records"):
             and args.genre is None
             and args.rank is None
         ):
-            await self.best30(ctx, query=f"-i {user.mention}")
+            await self._best30_inner(ctx, user, image=True)
             return None
 
         level = None
