@@ -820,11 +820,7 @@ class GamingCog(commands.Cog, name="Games"):
 
         async with ctx.typing():
             view = GuessLeaderboardView(ctx)
-            view.message = await ctx.reply(
-                embeds=await view.format_page(),
-                view=view,
-                mention_author=False,
-            )
+            await view.start()
 
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
