@@ -1,12 +1,11 @@
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, AsyncContextManager
+from typing import TYPE_CHECKING, Any, AsyncContextManager, override
 
 import discord.ui
 from discord.ext.commands import Context
 
 from utils.components import ScoreCardEmbed
 
-from ._pagination import PaginationView
+from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -17,8 +16,8 @@ if TYPE_CHECKING:
 
 
 def split_scores_into_credits(
-    scores: Sequence["RecentRecord"],
-) -> Sequence[Sequence["RecentRecord"]]:
+    scores: list["RecentRecord"],
+) -> list[list["RecentRecord"]]:
     credits = []
     current_credit = [scores[0]]
     last_track = scores[0].track
@@ -36,24 +35,43 @@ def split_scores_into_credits(
     return credits
 
 
+class RecentRecordsPageSource(ListPageSource[list["RecentRecord"]]):
+    def __init__(self, records: list["RecentRecord"]) -> None:
+        super().__init__(split_scores_into_credits(records), per_page=1)
+
+    @override
+    async def format_page(
+        self, menu: "PaginationView", page: list[list["RecentRecord"]]
+    ) -> dict[str, Any]:
+        scores = page[0]
+        embeds: list[discord.Embed] = [ScoreCardEmbed(s) for s in scores]
+        embeds.append(
+            discord.Embed(
+                description=f"Page {menu.current_page + 1}/{self.get_max_pages()}",
+            )
+        )
+
+        return {"embeds": embeds}
+
+
 class RecentRecordsView(PaginationView):
     def __init__(
         self,
         ctx: Context,
         bot: "ChuniBot",
-        scores: Sequence["RecentRecord"],
+        scores: list["RecentRecord"],
         chuni_client: "ChuniNet",
         chuni_client_manager: AsyncContextManager["ChuniNet"],
         userinfo: "PlayerData",
     ):
-        super().__init__(ctx, items=split_scores_into_credits(scores), per_page=1)
+        super().__init__(ctx, source=RecentRecordsPageSource(scores))
+        self.add_item(self.switch_to_26_50)
+        self.add_item(self.dropdown)
 
         self.scores = scores
         self.chuni_client = chuni_client
         self.chuni_client_manager = chuni_client_manager
-
         self.userinfo = userinfo
-        self.max_index = len(self.items) - 1
 
         self.utils: "UtilsCog" = bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
 
@@ -70,20 +88,6 @@ class RecentRecordsView(PaginationView):
         await self.chuni_client_manager.__aexit__(None, None, None)
         return await super().on_timeout()
 
-    def format_score_page(
-        self, scores: Sequence["RecentRecord"]
-    ) -> Sequence[discord.Embed]:
-        embeds: list[discord.Embed] = [ScoreCardEmbed(score) for score in scores]
-        embeds.append(
-            discord.Embed(description=f"Page {self.page + 1}/{self.max_index + 1}")
-        )
-        return embeds
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(
-            embeds=self.format_score_page(self.items[self.page]), view=self
-        )
-
     @discord.ui.button(label="26-50")
     async def switch_to_26_50(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -94,6 +98,7 @@ class RecentRecordsView(PaginationView):
         else:
             self.dropdown.options = self._dropdown_options[:25]
             button.label = "26-50"
+
         await interaction.response.edit_message(view=self)
 
     @discord.ui.select(placeholder="Select a score", row=1)

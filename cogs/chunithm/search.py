@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Annotated, Sequence
+from typing import TYPE_CHECKING, Annotated
 
 import discord
 from discord import Embed, app_commands
@@ -65,18 +65,14 @@ class SearchCog(commands.Cog, name="Search"):
             raise commands.BadArgument(msg) from None
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
-            charts: Sequence[Chart] = (await session.execute(stmt)).scalars().all()
+            charts = (await session.execute(stmt)).scalars().all()
 
             if len(charts) == 0:
                 await ctx.reply("No charts found.", mention_author=False)
                 return
 
-            view = SonglistView(ctx, charts)
-            view.message = await ctx.reply(
-                embed=view.format_songlist(view.items[: view.per_page]),
-                view=view,
-                mention_author=False,
-            )
+            view = SonglistView(ctx, list(charts))
+            await view.start()
 
     @commands.hybrid_command("addalias")
     @logged_prefix_command
@@ -569,12 +565,7 @@ class SearchCog(commands.Cog, name="Search"):
             )
 
             view = EmbedPaginationView(ctx, song_embeds)
-            view.message = await ctx.reply(
-                content=content,
-                embed=view.items[0],
-                view=view,
-                mention_author=False,
-            )
+            await view.start(content=content)
             return None
 
 

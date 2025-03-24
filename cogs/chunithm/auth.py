@@ -188,7 +188,6 @@ class AuthCog(commands.Cog, name="Auth"):
 
         passcode = str(self.random.randrange(10**5, 10**6))
         view = LoginFlowView(ctx, passcode, config.web.base_url)
-        embed = view.format_embed(view.items[0])
 
         await logger.adebug(
             "Initiating login flow",
@@ -197,18 +196,14 @@ class AuthCog(commands.Cog, name="Auth"):
         )
 
         if ctx.channel == channel:
-            msg = view.message = await ctx.reply(
+            msg = await view.start(
                 content=f"If you're trying to link your Kamaitachi account, use `{ctx.prefix}kamaitachi link` instead!",
-                embed=embed,
-                view=view,
-                mention_author=False,
             )
         else:
             try:
-                msg = view.message = await channel.send(
+                msg = await view.start_in(
+                    channel,
                     content=f"If you're trying to link your Kamaitachi account, use `{ctx.prefix}kamaitachi link` instead!",
-                    embed=embed,
-                    view=view,
                 )
             except discord.errors.Forbidden:
                 return None

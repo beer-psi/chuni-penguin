@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from typing import Any, override
 
 import discord
 import discord.ui
@@ -9,32 +9,36 @@ from chunithm_net.models.enums import Difficulty
 from database.models import Chart
 from utils import yt_search_link
 
-from ._pagination import PaginationView
+from ._pagination import ListPageSource, PaginationView
 
 
-class SonglistView(PaginationView):
-    # tuple is (title, difficulty, sdvx.in id)
-    def __init__(self, ctx: Context, charts: Sequence[Chart]):
-        super().__init__(ctx, items=charts, per_page=15)
+class SonglistPageSource(ListPageSource[Chart]):
+    def __init__(self, entries: list[Chart], *, per_page: int) -> None:
+        super().__init__(entries, per_page=per_page)
 
-    def format_songlist(
-        self, charts: Sequence[Chart], start_index: int = 0
-    ) -> discord.Embed:
+    @override
+    async def format_page(
+        self, menu: "PaginationView", page: list[Chart]
+    ) -> dict[str, Any]:
+        start = menu.current_page * self.per_page
         songlist = ""
-        for idx, chart in enumerate(charts):
+
+        for idx, chart in enumerate(page):
             url = (
                 chart.sdvxin_chart_view.url
                 if chart.sdvxin_chart_view is not None
                 else yt_search_link(chart.song.title, chart.difficulty, chart.level)
             )
-            songlist += f"{idx + start_index + 1}. {escape_markdown(chart.song.title)} [[{Difficulty.from_short_form(chart.difficulty)} {chart.const}]]({url})\n"
-        return discord.Embed(
-            description=songlist,
-        ).set_footer(text=f"Page {self.page + 1}/{self.max_index + 1}")
+            songlist += f"{idx + start + 1}. {escape_markdown(chart.song.title)} [[{Difficulty.from_short_form(chart.difficulty)} {chart.const}]]({url})\n"
 
-    async def callback(self, interaction: discord.Interaction):
-        begin = self.page * self.per_page
-        end = (self.page + 1) * self.per_page
-        await interaction.response.edit_message(
-            embed=self.format_songlist(self.items[begin:end], begin), view=self
-        )
+        return {
+            "embed": discord.Embed(
+                color=discord.Color.yellow(),
+                description=songlist,
+            ).set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+        }
+
+
+class SonglistView(PaginationView):
+    def __init__(self, ctx: Context, charts: list[Chart]):
+        super().__init__(ctx, SonglistPageSource(charts, per_page=15))

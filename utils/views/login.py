@@ -1,16 +1,16 @@
 from http.cookiejar import CookieJar
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 import discord.ui
 import httpx
-from discord import Embed, Interaction
+from discord import Interaction
 from discord.abc import MISSING
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
 from chunithm_net import _AUTHENTICATION_URL
 
-from ._pagination import PaginationView
+from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -26,7 +26,7 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
         *,
         title: str = MISSING,
         timeout: float | None = None,
-        custom_id: str = MISSING
+        custom_id: str = MISSING,
     ) -> None:
         super().__init__(title=title, timeout=timeout, custom_id=custom_id)
 
@@ -56,9 +56,8 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
             )
 
             if (
-                (location := resp.headers.get("location")) is None
-                or "https://chunithm-net-eng.com" not in location
-            ):
+                location := resp.headers.get("location")
+            ) is None or "https://chunithm-net-eng.com" not in location:
                 await interaction.followup.send(
                     embed=discord.Embed(
                         color=discord.Color.red(),
@@ -97,16 +96,14 @@ class LoginWithSegaIDView(discord.ui.View):
         self.code = code
 
     @discord.ui.button(label="Login with SEGA ID", style=discord.ButtonStyle.green)
-    async def login_with_sega_id(
-        self, interaction: Interaction, _: discord.ui.Button
-    ):
-        await interaction.response.send_modal(SegaIDLoginModal(self.code, timeout=self.timeout))
+    async def login_with_sega_id(self, interaction: Interaction, _: discord.ui.Button):
+        await interaction.response.send_modal(
+            SegaIDLoginModal(self.code, timeout=self.timeout)
+        )
 
 
-class LoginFlowView(PaginationView):
-    def __init__(
-        self, ctx: Context, code: str, server: str | None = None
-    ):
+class LoginFlowPageSource(ListPageSource):
+    def __init__(self, code: str, server: str | None) -> None:
         self.code = code
 
         if server is not None:
@@ -150,34 +147,47 @@ class LoginFlowView(PaginationView):
                 f"If the website asks for a server, enter **{escape_markdown(server)}**.\n"
             )
 
-        super().__init__(ctx, items, 1)
+        super().__init__(items, per_page=1)
 
-    def format_embed(self, item: str) -> Embed:
-        return Embed(
+    @override
+    async def format_page(
+        self, menu: "PaginationView", page: list[str]
+    ) -> dict[str, Any]:
+        embed = discord.Embed(
+            color=discord.Color.yellow(),
             title="How to login",
-            description=item,
+            description=page[0],
         )
+        kwargs: dict[str, Any] = {"embed": embed}
 
-    async def callback(self, interaction: Interaction):
-        description = self.items[self.page]
+        if menu.current_page == 2:
+            kwargs["content"] = self.script
 
-        if self.page != 0:
+        return kwargs
+
+
+class LoginFlowView(PaginationView):
+    def __init__(self, ctx: Context, code: str, server: str | None = None):
+        super().__init__(
+            ctx,
+            LoginFlowPageSource(code, server),
+        )
+        self.code = code
+        self.add_item(self.login_with_sega_id)
+
+    @override
+    async def show_page(self, interaction: Interaction, page_number: int):
+        if page_number != 0:
             self.remove_item(self.login_with_sega_id)
         else:
             self.add_item(self.login_with_sega_id)
 
-        await interaction.response.edit_message(
-            content=self.script if self.page == 2 else None,
-            embed=self.format_embed(description),
-            view=self,
-        )
+        return await super().show_page(interaction, page_number)
 
-    @discord.ui.button(label="Login with SEGA ID", style=discord.ButtonStyle.danger, row=1)
-    async def login_with_sega_id(
-        self,
-        interaction: Interaction,
-        _: discord.ui.Button
-    ):
+    @discord.ui.button(
+        label="Login with SEGA ID", style=discord.ButtonStyle.danger, row=1
+    )
+    async def login_with_sega_id(self, interaction: Interaction, _: discord.ui.Button):
         await interaction.response.send_message(
             content=(
                 "If you use SEGA ID to log in, you can use this method instead of the normal login process.\n"

@@ -1,5 +1,4 @@
-from collections.abc import Sequence
-from typing import override
+from typing import Any, override
 
 import discord
 from discord.ext.commands import Context
@@ -12,7 +11,61 @@ from utils import get_jacket_url
 from utils.components.chart_card_embed import ChartCardEmbed
 from utils.ranks import rank_icon
 
-from ._pagination import PaginationView
+from ._pagination import ListPageSource, PaginationView
+
+
+class LeaderboardPageSource(ListPageSource):
+    def __init__(
+        self,
+        leaderboard: Leaderboard,
+        song: Song,
+        difficulty: Difficulty,
+        chart: Chart | None = None,
+        *,
+        per_page: int,
+    ) -> None:
+        super().__init__(leaderboard.ranking, per_page=per_page)
+
+        self.leaderboard: Leaderboard = leaderboard
+        self.song: Song = song
+        self.difficulty: Difficulty = difficulty
+        self.chart: Chart | None = chart
+
+    @override
+    async def format_page(
+        self, menu: "PaginationView", page: list[LeaderboardEntry]
+    ) -> dict[str, Any]:
+        if self.chart is not None:
+            info_embed = ChartCardEmbed(self.chart)
+        else:
+            info_embed = discord.Embed(
+                description=f"**{escape_markdown(self.song.title)} [{self.difficulty}]**",
+            )
+            info_embed.set_thumbnail(url=get_jacket_url(self.song))
+
+        description = ""
+
+        for record in page:
+            description += f"`{record.position}` {record.player_name.ljust(8, '　')} ▸ {rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+
+            if record.ajc_count is not None:
+                description += f" ▸ AJC count: {record.ajc_count}"
+
+            description += f" ▸ <t:{int(record.last_raised.timestamp())}:f>\n"
+
+        if description == "":
+            description = "No scores."
+
+        leaderboard_embed = discord.Embed(
+            color=self.difficulty.color(),
+            description=description,
+            timestamp=self.leaderboard.updated_at,
+        )
+        leaderboard_embed.set_footer(
+            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+        )
+
+        return {"embeds": [info_embed, leaderboard_embed]}
 
 
 class LeaderboardView(PaginationView):
@@ -25,50 +78,13 @@ class LeaderboardView(PaginationView):
         chart: Chart | None = None,
         per_page: int = 10,
     ):
-        super().__init__(ctx, leaderboard.ranking, per_page)
-
-        self.leaderboard: Leaderboard = leaderboard
-        self.song: Song = song
-        self.difficulty: Difficulty = difficulty
-        self.chart: Chart | None = chart
-
-    def format_page(self, items: Sequence[LeaderboardEntry], start_index: int = 0):
-        if self.chart is not None:
-            info_embed = ChartCardEmbed(self.chart)
-        else:
-            info_embed = discord.Embed(
-                description=f"**{escape_markdown(self.song.title)} [{self.difficulty}]**",
-            )
-            info_embed.set_thumbnail(url=get_jacket_url(self.song))
-
-        description = ""
-
-        for item in items:
-            description += f"`{item.position}` {item.player_name.ljust(8, '　')} ▸ {rank_icon(Rank.from_score(item.score))} ▸ {item.score}"
-
-            if item.ajc_count is not None:
-                description += f" ▸ AJC count: {item.ajc_count}"
-
-            description += f" ▸ <t:{int(item.last_raised.timestamp())}:f>\n"
-
-        if description == "":
-            description = "No scores."
-
-        leaderboard_embed = discord.Embed(
-            color=self.difficulty.color(),
-            description=description,
-            timestamp=self.leaderboard.updated_at,
-        )
-        leaderboard_embed.set_footer(text=f"Page {self.page + 1}/{self.max_index + 1}")
-
-        return [info_embed, leaderboard_embed]
-
-    @override
-    async def callback(self, interaction: discord.Interaction):
-        begin = self.page * self.per_page
-        end = (self.page + 1) * self.per_page
-
-        await interaction.response.edit_message(
-            embeds=self.format_page(self.items[begin:end], begin),
-            view=self,
+        super().__init__(
+            ctx,
+            LeaderboardPageSource(
+                leaderboard,
+                song,
+                difficulty,
+                chart,
+                per_page=per_page,
+            ),
         )

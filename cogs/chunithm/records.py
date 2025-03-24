@@ -52,10 +52,10 @@ from utils.logging import logged_app_command, logged_prefix_command
 from utils.views import (
     B30N20View,
     B30View,
-    CompareView,
     RecentRecordsView,
     SelectToCompareView,
 )
+from utils.views.embeds import EmbedPaginationView
 from utils.views.leaderboard import LeaderboardView
 
 if TYPE_CHECKING:
@@ -514,11 +514,8 @@ class RecordsCog(commands.Cog, name="Records"):
                         show_reachable=False,
                         show_lamps=True,
                     )
-                    view.message = await ctx.reply(
-                        content=f"Most recent scores for {username} on Kamaitachi:",
-                        embeds=view.format_page(view.items[: view.per_page]),
-                        view=view,
-                        mention_author=False,
+                    await view.start(
+                        content=f"Most recent scores for {username} on Kamaitachi:"
                     )
                     return
 
@@ -538,11 +535,8 @@ class RecordsCog(commands.Cog, name="Records"):
             view = RecentRecordsView(
                 ctx, self.bot, hydrated_recents, client, ctxmgr, userinfo
             )
-            view.message = await ctx.reply(
+            await view.start(
                 content=f"Most recent credits for {userinfo.name}:",
-                embeds=view.format_score_page(view.items[0]),
-                view=view,
-                mention_author=False,
             )
 
     @commands.command(name="recent", aliases=["rs"])
@@ -814,24 +808,17 @@ class RecordsCog(commands.Cog, name="Records"):
             except ValueError:
                 pass
 
-            view = CompareView(ctx, records)
-            view.page = page
+            view = EmbedPaginationView(ctx, [ScoreCardEmbed(r) for r in records])
+            view.current_page = page
 
             if compare_message is not None:
-                view.message = compare_message
-                await compare_message.edit(
+                await view.start_from(
+                    compare_message,
                     content=f"Top play for {username}{network}:",
-                    embed=ScoreCardEmbed(view.items[view.page]),
-                    view=view,
-                    allowed_mentions=AllowedMentions.none(),
                 )
                 return
-            view.message = await ctx.reply(
-                content=f"Top play for {username}{network}:",
-                embed=ScoreCardEmbed(view.items[view.page]),
-                view=view,
-                mention_author=False,
-            )
+
+            await view.start(content=f"Top play for {username}{network}:")
             return
 
     @commands.command("compare", aliases=["c"])
@@ -1022,21 +1009,16 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     records = await self.utils.hydrate_records(records)
 
-            view = CompareView(ctx, records)
+            view = EmbedPaginationView(ctx, [ScoreCardEmbed(r) for r in records])
 
-            if select_message is None:
-                view.message = await ctx.reply(
+            if select_message is not None:
+                await view.start_from(
+                    select_message,
                     content=f"Top play for {username}{network}:",
-                    embed=ScoreCardEmbed(view.items[view.page]),
-                    view=view,
-                    mention_author=False,
                 )
             else:
-                view.message = await select_message.edit(
+                await view.start(
                     content=f"Top play for {username}{network}:",
-                    embed=ScoreCardEmbed(view.items[view.page]),
-                    view=view,
-                    allowed_mentions=AllowedMentions.none(),
                 )
 
             return None
@@ -1169,12 +1151,8 @@ class RecordsCog(commands.Cog, name="Records"):
                     rating_slots=record_slots,
                     show_reachable=record_slots == 30,
                 )
-                view.message = await ctx.reply(
-                    content=view.format_content(),
-                    embeds=view.format_page(view.items[: view.per_page]),
-                    view=view,
-                    mention_author=False,
-                )
+                await view.start()
+
                 return
 
             b30_image = await asyncio.to_thread(
@@ -1275,12 +1253,7 @@ class RecordsCog(commands.Cog, name="Records"):
             recent10 = await self.utils.hydrate_records(recent10)
 
             view = B30View(ctx, recent10, rating_slots=10, show_reachable=False)
-            view.message = await ctx.reply(
-                content=view.format_content(),
-                embeds=view.format_page(view.items[: view.per_page]),
-                view=view,
-                mention_author=False,
-            )
+            await view.start()
 
     @commands.hybrid_command("new20", aliases=["n10", "n15", "n20", "new10", "new15"])
     @logged_prefix_command
@@ -1337,12 +1310,7 @@ class RecordsCog(commands.Cog, name="Records"):
         new20 = new_records[:20]
 
         view = B30N20View(ctx, best30, new20)
-        view.message = await message.edit(
-            content=view.format_content(),
-            embeds=view.format_page(view.items[: view.per_page]),
-            view=view,
-            allowed_mentions=AllowedMentions.none(),
-        )
+        await view.start()
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(
@@ -1459,11 +1427,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             ctx = await Context.from_interaction(interaction)
             view = B30View(ctx, records, show_average=False, show_reachable=False)
-            view.message = await ctx.reply(
-                content=view.format_content(),
-                embeds=view.format_page(view.items[: view.per_page]),
-                view=view,
-            )
+            await view.start()
             return None
 
     @commands.command("top")
@@ -1680,12 +1644,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 ]
 
             view = B30View(ctx, records, show_average=False, show_reachable=False)
-            view.message = await ctx.reply(
-                content=view.format_content(),
-                embeds=view.format_page(view.items[: view.per_page]),
-                view=view,
-                mention_author=False,
-            )
+            await view.start()
             return None
 
     @commands.hybrid_command("leaderboard", aliases=["lb"])
@@ -1745,12 +1704,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             leaderboard = await client.music_leaderboard(song.id, difficulty)
             view = LeaderboardView(ctx, leaderboard, song, difficulty, chart)
-
-            view.message = await ctx.reply(
-                embeds=view.format_page(view.items[: view.per_page]),
-                view=view,
-                mention_author=False,
-            )
+            await view.start()
 
 
 async def setup(bot: "ChuniBot"):
