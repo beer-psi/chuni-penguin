@@ -49,6 +49,15 @@ def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
         Image.open(BytesIO(data)) as data_img,
         Image.open(BytesIO(bar)) as bar_img,
     ):
+        if bg_img.mode != "RGBA":
+            bg_img = bg_img.convert("RGBA")
+
+        if data_img.mode != "RGBA":
+            data_img = data_img.convert("RGBA")
+
+        if bar_img.mode != "RGBA":
+            bar_img = bar_img.convert("RGBA")
+
         background = Image.new("RGBA", bg_img.size, (0, 0, 0, 255))
         result = Image.alpha_composite(background, bg_img)
 
