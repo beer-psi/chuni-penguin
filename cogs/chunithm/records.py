@@ -718,9 +718,7 @@ class RecordsCog(commands.Cog, name="Records"):
             if not kamaitachi:
                 song.raise_if_not_available()
 
-            embed = next(
-                x for x in embeds if jacket.jacket_url in {x.thumbnail.url, x.image.url}
-            )
+            embed = next(x for x in embeds if jacket.jacket_url in url_whitelist)
 
             if kamaitachi:
                 if song.genre == "WORLD'S END":
