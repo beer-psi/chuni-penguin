@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import time
 from pathlib import Path
+from types import FrameType
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -43,14 +44,26 @@ discord.utils._to_json = json_dumps
 
 
 class KeyboardInterruptHandler:
-    def __init__(self, bot):
-        self.bot = bot
-        self._task = None
+    def __init__(self, bot: "ChuniBot"):
+        self.bot: "ChuniBot" = bot
+        self._pending: bool = False
 
-    def __call__(self):
-        if self._task:
+    def __call__(
+        self,
+        signal: int | None = None,
+        frame: FrameType | None = None,
+    ):
+        if self._pending:
             raise KeyboardInterrupt
-        self._task = asyncio.create_task(self.bot.close())
+
+        self.bot.loop.call_soon_threadsafe(
+            self.bot.loop.create_task,
+            self.bot.close(),
+        )
+        self.bot.loop.call_soon_threadsafe(
+            lambda: None
+        )  # no-op to wake up loop (important!)
+        self._pending = True
 
 
 class ChuniBot(commands.Bot):
@@ -67,12 +80,22 @@ class ChuniBot(commands.Bot):
 
     command_start_time: dict[commands.Context, int]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.message_content = True
+
+        command_prefix = guild_specific_prefix(config.bot.default_prefix)
+        help_command = HelpCommand()
+
+        super().__init__(
+            command_prefix=command_prefix,
+            help_command=help_command,
+            intents=intents,
+        )
+
         self.dev = config.dangerous.dev
         self.prefixes = {}
         self.command_start_time = {}
-
-        super().__init__(*args, **kwargs)
 
     async def start(self, *args, **kwargs):
         self.launch_time = time.time()
@@ -220,28 +243,21 @@ def guild_specific_prefix(default: str):
     return inner
 
 
-(intents := discord.Intents.default()).message_content = True
-
-bot = ChuniBot(
-    command_prefix=guild_specific_prefix(config.bot.default_prefix),  # type: ignore[reportGeneralTypeIssues]
-    intents=intents,
-    help_command=HelpCommand(),
-    config=config,
-)
-
-
 async def startup():
     if (token := config.bot.token) is None:
         logger.error("Token not found. Make sure 'bot.token' is set in 'bot.ini'.")
         sys.exit(1)
 
     try:
-        async with bot:
+        async with ChuniBot() as bot:
             handler = KeyboardInterruptHandler(bot)
 
-            with contextlib.suppress(NotImplementedError):
+            try:
                 bot.loop.add_signal_handler(signal.SIGINT, handler)
                 bot.loop.add_signal_handler(signal.SIGTERM, handler)
+            except NotImplementedError:  # fucking windows
+                signal.signal(signal.SIGINT, handler)
+                signal.signal(signal.SIGTERM, handler)
 
             await bot.start(token, reconnect=True)
     except discord.LoginFailure:
