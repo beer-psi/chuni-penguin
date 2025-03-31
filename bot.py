@@ -124,6 +124,10 @@ class ChuniBot(commands.Bot):
             # Turns on write-ahead logging: https://www.sqlite.org/wal.html
             cursor.execute("PRAGMA journal_mode=WAL")
 
+            # Sychronize to disk less offten for performance boosts. WAL mode is safe
+            # from corruption even in this mode.
+            cursor.execute("PRAGMA synchronous=NORMAL")
+
             # Foreign keys need to be enabled to have an effect. https://www.sqlite.org/foreignkeys.html#fk_enable
             cursor.execute("PRAGMA foreign_keys=ON")
 
@@ -203,13 +207,6 @@ class ChuniBot(commands.Bot):
             await self.load_extension("cogs.hotreload")
 
     async def close(self) -> None:
-        if self.app is not None:
-            await self.app.shutdown()
-            await self.app.cleanup()
-
-        if hasattr(self, "engine"):
-            await self.engine.dispose()
-
         gaming: "GamingCog | None" = self.get_cog("Games")  # pyright: ignore[reportAssignmentType]
 
         if gaming is not None:
@@ -225,8 +222,14 @@ class ChuniBot(commands.Bot):
                     ):
                         await state.skip()  # pyright: ignore[reportAttributeAccessIssue]
 
+        if self.app is not None:
+            await self.app.shutdown()
+            await self.app.cleanup()
+
         async with self.begin_db_session() as session:
             await session.execute(text("PRAGMA optimize"))
+
+        await self.engine.dispose()
 
         return await super().close()
 
