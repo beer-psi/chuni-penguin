@@ -223,7 +223,7 @@ class ProfileCog(commands.Cog, name="Profile"):
 
         description = (
             f"{description}\n"
-            f"▸ **NaiveRating**: {round(stats['gameStats']['ratings']['naiveRating'] * 100) / 100:.2f}\n"
+            f"▸ **NaiveRating**: ?????\n"
             f"▸ **Scores**: {stats['totalScores']}\n"
             f"▸ **Session Playtime**: {stats['playtime'] // (60 * 60 * 1000)} hours\n"
         )
@@ -264,7 +264,7 @@ class ProfileCog(commands.Cog, name="Profile"):
             description = (
                 f"{optional_data_joined}\n"
                 f"▸ **Level**: {level}\n"
-                f"▸ **Rating**: {player_data.rating.current:.2f} (MAX {player_data.rating.max:.2f})\n"
+                f"▸ **Rating**: ????? (MAX ?????)\n"
                 f"▸ **OVER POWER**: {player_data.overpower.value:.2f} ({player_data.overpower.progress * 100:.2f}%)\n"
                 f"▸ **Plays**: {player_data.playcount}\n"
             )

@@ -124,7 +124,7 @@ class ChuniBot(commands.Bot):
             # Turns on write-ahead logging: https://www.sqlite.org/wal.html
             cursor.execute("PRAGMA journal_mode=WAL")
 
-            # Sychronize to disk less offten for performance boosts. WAL mode is safe
+            # Sychronize to disk less often for performance boosts. WAL mode is safe
             # from corruption even in this mode.
             cursor.execute("PRAGMA synchronous=NORMAL")
 

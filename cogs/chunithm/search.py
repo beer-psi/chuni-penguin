@@ -12,6 +12,7 @@ from sqlalchemy.orm import joinedload
 from chunithm_net.models.enums import Difficulty
 from database.models import Alias, Chart, Song
 from utils import (
+    CHUNITHM_TO_MAIMAI_VERSION_MAP,
     did_you_mean_text,
     get_jacket_url,
     shlex_split,
@@ -453,7 +454,7 @@ class SearchCog(commands.Cog, name="Search"):
                     if song.removed:
                         song_description += "**This song is removed.**\n\n"
                     else:
-                        song_description += "**This song is not available in CHUNITHM International.**\n\n"
+                        song_description += "**This song is not available in maimai DX International.**\n\n"
 
                 if (
                     not verse_chart_constant_notice
@@ -465,7 +466,7 @@ class SearchCog(commands.Cog, name="Search"):
                 ):
                     verse_chart_constant_notice = True
 
-                displayed_version = song.version
+                displayed_version = CHUNITHM_TO_MAIMAI_VERSION_MAP[song.version]
                 displayed_bpm = "Unknown"
 
                 if song.release is not None:
@@ -493,9 +494,7 @@ class SearchCog(commands.Cog, name="Search"):
                     if chart.version is not None:
                         difficulty = Difficulty.from_short_form(chart.difficulty)
 
-                        song_description += (
-                            f"**Version ({difficulty})**: {chart.version}\n"
-                        )
+                        song_description += f"**Version ({difficulty})**: {CHUNITHM_TO_MAIMAI_VERSION_MAP[chart.version]}\n"
 
                 song_description += f"**BPM**: {displayed_bpm}\n"
 
@@ -559,7 +558,7 @@ class SearchCog(commands.Cog, name="Search"):
                 song_embeds.append(embed)
 
             content = (
-                "Chart constants follow CHUNITHM VERSE's scale."
+                "Chart constants follow maimai DX PRiSM's scale."
                 if verse_chart_constant_notice
                 else None
             )

@@ -1,38 +1,43 @@
 from decimal import Decimal
 from typing import Optional
 
+RATING_COEFFICIENTS = {
+    1_009_000: 224,
+    1_008_999: 222,
+    1_007_500: 216,
+    1_007_499: 214,
+    1_005_000: 211,
+    1_000_000: 208,
+    999_999: 206,
+    990_000: 203,
+    975_000: 200,
+    974_999: 176,
+    950_000: 168,
+    925_000: 152,
+    900_000: 136,
+    899_999: 128,
+    800_000: 120,
+    700_000: 112,
+    600_000: 96,
+    500_000: 80,
+    400_000: 64,
+    300_000: 48,
+    200_000: 32,
+    100_000: 16,
+    0: 0,
+}
 
-def calculate_rating(score: int, internal_level: Optional[float]) -> Decimal:
-    internal_level_10000 = int((internal_level or 0) * 10000)
 
-    if score >= 1_009_000:
-        rating10000 = internal_level_10000 + 21_500
-    elif score >= 1_007_500:
-        rating10000 = internal_level_10000 + 20_000 + (score - 1_007_500)
-    elif score >= 1_005_000:
-        rating10000 = internal_level_10000 + 15_000 + (score - 1_005_000) * 2
-    elif score >= 1_000_000:
-        rating10000 = internal_level_10000 + 10_000 + (score - 1_000_000)
-    elif score >= 975_000:
-        rating10000 = int(internal_level_10000 + (score - 975_000) * 2 / 5)
-    elif score >= 900_000:
-        rating10000 = int(internal_level_10000 - 50_000 + (score - 900_000) * 2 / 3)
-    elif score >= 800_000:
-        rating10000 = int(
-            (internal_level_10000 - 50_000) / 2
-            + ((score - 800_000) * ((internal_level_10000 - 50_000) / 2)) / 100_000
-        )
-    elif score >= 500_000:
-        rating10000 = int(
-            (((internal_level_10000 - 50_000) / 2) * (score - 500_000)) / 300_000
-        )
-    else:
-        rating10000 = 0
+def calculate_rating(score: int, internal_level: Optional[float]) -> int:
+    internal_level_10 = round((internal_level or 0) * 10)
+    score = min(1_009_000, score)
 
-    if rating10000 < 0 and internal_level is not None and internal_level > 0:
-        rating10000 = 0
+    for boundary, coeff in RATING_COEFFICIENTS.items():
+        if score >= boundary:
+            return int(score * coeff * internal_level_10 / 100_000_000)
 
-    return Decimal(rating10000 // 100) / 100
+    msg = f"Unresolvable score of {score}."
+    raise ValueError(msg)
 
 
 def calculate_score_for_rating(rating: float, internal_level: float) -> Optional[int]:
