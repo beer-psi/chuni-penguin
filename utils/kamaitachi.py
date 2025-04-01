@@ -21,7 +21,6 @@ from chunithm_net.models.record import (
     Skill,
 )
 from utils import floor_to_ndp
-from utils.calculation.rating import calculate_rating
 
 T = TypeVar("T", bound=msgspec.Struct)
 
@@ -276,8 +275,8 @@ def _convert_kt_to_record(
     record.extras[KEY_SONG_ID] = chart.data.in_game_id
     record.extras[KEY_LEVEL] = chart.level
     record.extras[KEY_INTERNAL_LEVEL] = chart.level_num
-    record.extras[KEY_PLAY_RATING] = calculate_rating(
-        score.score_data.score, chart.level_num
+    record.extras[KEY_PLAY_RATING] = floor_to_ndp(
+        Decimal(str(score.calculated_data.rating)), 2
     )
 
     if score.time_achieved:

@@ -31,13 +31,10 @@ class B30PageSource(ListPageSource["Record"]):
             (record.extras[KEY_PLAY_RATING] for record in records),
             start=Decimal(0),
         )
-        # max_play_rating = max(record.extras[KEY_PLAY_RATING] for record in records)
+        max_play_rating = max(record.extras[KEY_PLAY_RATING] for record in records)
 
-        self.total = total_rating
-        self.average = 0
-        self.reachable = 0
-        # self.average = floor_to_ndp(total_rating / rating_slots, 4)
-        # self.reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
+        self.average = floor_to_ndp(total_rating / rating_slots, 4)
+        self.reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
         self.has_estimated_play_rating = any(
             record.extras.get(KEY_INTERNAL_LEVEL) is None for record in records
         )
@@ -61,7 +58,7 @@ class B30PageSource(ListPageSource["Record"]):
 
         if self.show_average or self.show_reachable or self.has_estimated_play_rating:
             kwargs["content"] = (
-                (f"Total: **{self.total}**" if self.show_average else "")
+                (f"Average: **{self.average}**" if self.show_average else "")
                 + (f"\nReachable: **{self.reachable}**" if self.show_reachable else "")
                 + (
                     "\nPlay ratings marked with asterisks are estimated (due to lack of chart constants)."

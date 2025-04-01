@@ -146,7 +146,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         self,
         ctx: Context,
         score: Range[int, 0, 1010000],
-        chart_constant: float,
+        chart_constant: Optional[float] = None,
     ):
         """Calculate rating and over power from score and chart constant.
 
@@ -176,7 +176,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             sign = "+"
 
         res = f"A score of **{score}**{const_text} will give:"
-        res += f"\n• Rating: **{sign}{rating}**"
+        res += f"\n• Rating: **{sign}{floor_to_ndp(rating, 2)}**"
 
         if chart_constant is not None:
             overpower_max = calculate_overpower_max(chart_constant)
@@ -253,9 +253,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     range(925000, 875000, -25000),  # 900000..=925000
                 )
             )
-
         overpower_max = calculate_overpower_max(chart_constant)
-
         if mode == "aj":
             rating = calculate_rating(1010000, chart_constant)
             res += f"\n1010000 | {overpower_max:>5.2f} = 100.00%"
@@ -275,7 +273,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     # AJ means scores are above 1m => overpower is defined
                     res += f"{score:>7} | {overpower:>5.2f} = {overpower_aj:>7}"  # type: ignore[reportUnboundVariable]
                 else:
-                    res += f"{score:>7} | {rating:>5}"
+                    res += f"{score:>7} | {floor_to_ndp(rating, 2):>5.2f}"
                     if (
                         score == Rank.SSS.min_score
                         or score == Rank.SSp.min_score
@@ -301,12 +299,6 @@ class ToolsCog(commands.Cog, name="Tools"):
         rating: float
             Play rating you want to achieve
         """
-
-        msg = (
-            "Derakkuma has kidnapped me and replaced my rating system with his, which is way harder to reverse! "
-            "I can't do this..."
-        )
-        raise commands.CommandError(msg)
 
         res = f"Score required to achieve **{rating}** play rating:"
         res += "\n```Const |   Score\n---------------"
@@ -483,12 +475,6 @@ class ToolsCog(commands.Cog, name="Tools"):
             Your maximum rating. If not provided, your rating will be fetched from CHUNITHM-NET/Kamaitachi,
             assuming you're logged in.
         """
-
-        msg = (
-            "Derakkuma has kidnapped me and replace my rating system with his! I can't recommend this 300 rating "
-            "nonsense..."
-        )
-        raise commands.CommandError(msg)
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             if max_rating is None:

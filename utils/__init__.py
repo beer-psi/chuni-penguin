@@ -152,29 +152,6 @@ def get_jacket_url(song: "Song") -> str:
     return song.jacket
 
 
-CHUNITHM_TO_MAIMAI_VERSION_MAP = {
-    "CHUNITHM": "maimai ORANGE",
-    "CHUNITHM PLUS": "maimai ORANGE PLUS",
-    "AIR": "maimai PiNK",
-    "AIR PLUS": "maimai PiNK PLUS",
-    "STAR": "maimai MURASAKi",
-    "STAR PLUS": "maimai MURASAKi PLUS",
-    "AMAZON": "maimai MiLK",
-    "AMAZON PLUS": "maimai MiLK PLUS",
-    "CRYSTAL": "maimai DX",
-    "CRYSTAL PLUS": "maimai DX PLUS",
-    "PARADISE": "maimai DX Splash",
-    "PARADISE LOST": "maimai DX Splash PLUS",
-    "NEW": "maimai DX UNiVERSE",
-    "NEW PLUS": "maimai DX UNiVERSE PLUS",
-    "SUN": "maimai DX FESTiVAL",
-    "SUN PLUS": "maimai DX FESTiVAL PLUS",
-    "LUMINOUS": "maimai DX BUDDiES",
-    "LUMINOUS PLUS": "maimai DX BUDDiES PLUS",
-    "VERSE": "maimai DX PRiSM",
-}
-
-
 def release_to_chunithm_version(date: datetime) -> str:
     if (
         datetime(2015, 7, 16, tzinfo=TOKYO_TZ)

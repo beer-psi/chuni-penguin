@@ -120,7 +120,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         about = (
             "This is [chuni-penguin](https://github.com/beer-psi/chuni-penguin), a Discord bot created by "
             "[beerpsi](https://github.com/beer-psi) and [contributors](https://github.com/beer-psi/chuni-penguin/graphs/contributors) "
-            "for maimai DX International version. "
+            "for CHUNITHM International version. "
         )
 
         if config.bot.support_server_invite:

@@ -63,9 +63,9 @@ class ScoreCardEmbed(discord.Embed):
             footer_sections = []
             if record.difficulty != Difficulty.WORLDS_END:
                 if show_lamps:
-                    footer_sections.append(f"Rating: {play_rating}")
+                    footer_sections.append(f"Rating: {floor_to_ndp(play_rating, 2)}")
                 else:
-                    score_data += f" ▸ **{play_rating}**"
+                    score_data += f" ▸ **{floor_to_ndp(play_rating, 2)}**"
 
             if record.difficulty != Difficulty.WORLDS_END:
                 footer_sections.append(f"OP: {play_op_display}")

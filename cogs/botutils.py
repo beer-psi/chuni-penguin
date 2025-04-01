@@ -304,9 +304,10 @@ class UtilsCog(commands.Cog, name="Utils"):
                 else:
                     internal_level = record.extras[KEY_INTERNAL_LEVEL] = chart.const
 
-            record.extras[KEY_PLAY_RATING] = calculate_rating(
-                record.score, internal_level
-            )
+            if KEY_PLAY_RATING not in record.extras:
+                record.extras[KEY_PLAY_RATING] = calculate_rating(
+                    record.score, internal_level
+                )
 
             if KEY_OVERPOWER_BASE not in record.extras:
                 record.extras[KEY_OVERPOWER_BASE] = calculate_overpower_base(
