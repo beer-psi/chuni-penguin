@@ -305,7 +305,10 @@ async def end_game(
     embed.add_field(name="Time to answer", value=session.time_per_question)
 
     embed.add_field(name="Final Scores", value=session.print_score_list(), inline=False)
-    embed.set_footer(text=footer or "Use `c>guess lb` to view the server leaderboard.")
+    embed.set_footer(
+        text=footer
+        or f"Use `{session.ctx.prefix}guess lb` to view the server leaderboard."
+    )
 
     await session.channel.send(embed=embed)
 
@@ -827,7 +830,7 @@ class GamingCog(commands.Cog, name="Games"):
     @guess.command("reset")
     @logged_prefix_command
     async def guess_reset(self, ctx: Context):
-        """Resets the c>guess leaderboard for this server.
+        """Resets the guess leaderboard for this server.
 
         The user calling this command must have the Manage Server permission.
         """

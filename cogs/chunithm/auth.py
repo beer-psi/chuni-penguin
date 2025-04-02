@@ -251,7 +251,7 @@ class AuthCog(commands.Cog, name="Auth"):
                 embed=discord.Embed(
                     color=discord.Color.yellow(),
                     title="Login session timed out",
-                    description="Please use `c>login` to restart the login process.",
+                    description=f"Please use `{'/' if ctx.interaction else config.bot.default_prefix}login` to restart the login process.",
                 ),
                 view=None,
             )

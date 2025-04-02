@@ -117,11 +117,14 @@ class UtilsCog(commands.Cog, name="Utils"):
         return self.bot.prefixes.get(ctx.guild.id, default_prefix)
 
     async def login_check(self, ctx_or_id: Context | int) -> LWPCookieJar:
+        is_interaction = isinstance(ctx_or_id, Context) and ctx_or_id.interaction
         id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
         clal = await self.fetch_cookie(id)
+
         if clal is None:
-            msg = "You are not logged in. Please send `c>login` in my DMs to log in."
+            msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
             raise commands.CommandError(msg)
+
         return clal
 
     async def fetch_cookie(self, id: int) -> LWPCookieJar | None:
@@ -161,12 +164,13 @@ class UtilsCog(commands.Cog, name="Utils"):
     @contextlib.asynccontextmanager
     async def kamaitachi_client(self, ctx_or_id: Context | int):
         id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
+        is_interaction = isinstance(ctx_or_id, Context) and ctx_or_id.interaction
 
         async with self.bot.begin_db_session() as session:
             cookie = await session.scalar(select(Cookie).where(Cookie.discord_id == id))
 
             if cookie is None or cookie.kamaitachi_token is None:
-                msg = "You have not linked your Kamaitachi account. Please send `c>kamaitachi link` in my DMs to get started."
+                msg = f"You have not linked your Kamaitachi account. Please send `{'/' if is_interaction else config.bot.default_prefix}kamaitachi link` in my DMs to get started."
                 raise commands.CommandError(msg)
 
         client = httpx.AsyncClient(
@@ -186,20 +190,19 @@ class UtilsCog(commands.Cog, name="Utils"):
         self, ctx_or_id: Context | int, *, kamaitachi: bool = False
     ):
         id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
+        is_interaction = isinstance(ctx_or_id, Context) and ctx_or_id.interaction
 
         async with self.bot.begin_db_session() as session:
             stmt = select(Cookie).where(Cookie.discord_id == id)
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
             if cookie is None:
-                msg = (
-                    "You are not logged in. Please send `c>login` in my DMs to log in."
-                )
+                msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
                 raise commands.CommandError(msg)
 
             if kamaitachi:
                 if cookie.kamaitachi_token is None:
-                    msg = "You have not linked your Kamaitachi account. Please send `c>kamaitachi link` in my DMs to get started."
+                    msg = f"You have not linked your Kamaitachi account. Please send `{'/' if is_interaction else config.bot.default_prefix}kamaitachi link` in my DMs to get started."
                     raise commands.CommandError(msg)
 
                 return "kamaitachi"
@@ -210,7 +213,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             if cookie.kamaitachi_token is not None:
                 return "kamaitachi"
 
-            msg = "You are not logged in. Please send `c>login` in my DMs to log in."
+            msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
             raise commands.CommandError(msg)
 
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
