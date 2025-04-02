@@ -44,8 +44,8 @@ class ChunirecClearLamp(IntEnum):
     FAILED = 0
     CLEAR = auto()
     HARD = auto()
+    BRAVE = auto()
     ABSOLUTE = auto()
-    ABSOLUTE_PLUS = auto()
     CATASTROPHY = auto()
 
 
@@ -314,10 +314,10 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
                     clear_lamp = ChunirecClearLamp.CLEAR
                 elif record.clear_lamp == ClearType.HARD:
                     clear_lamp = ChunirecClearLamp.HARD
+                elif record.clear_lamp == ClearType.BRAVE:
+                    clear_lamp = ChunirecClearLamp.BRAVE
                 elif record.clear_lamp == ClearType.ABSOLUTE:
                     clear_lamp = ChunirecClearLamp.ABSOLUTE
-                elif record.clear_lamp == ClearType.ABSOLUTE_PLUS:
-                    clear_lamp = ChunirecClearLamp.ABSOLUTE_PLUS
                 elif record.clear_lamp == ClearType.CATASTROPHY:
                     clear_lamp = ChunirecClearLamp.CATASTROPHY
 
