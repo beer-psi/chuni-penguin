@@ -316,7 +316,14 @@ def render_b30(
     b30_draw = ImageDraw.Draw(b30_image)
 
     with Image.open(ASSETS_DIR / "b30_bg.png") as im:
-        im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
+        im = im.crop(
+            (
+                (im.width - b30_image.width) / 2,
+                (im.height - b30_image.height) / 2,
+                (im.width + b30_image.width) / 2,
+                (im.height + b30_image.height) / 2,
+            )
+        )
         b30_image.paste(im.filter(ImageFilter.GaussianBlur(8)))
 
     # header: player name and credits
