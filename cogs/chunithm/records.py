@@ -291,7 +291,6 @@ def render_b30(
     new_records: list[Record] | None = None,
     new_record_slots: int = 20,
     current_rating: float | None = None,
-    max_rating: float | None = None,
 ):
     if len(records) > record_slots:
         msg = "More records provided than number of record slots"
@@ -381,17 +380,6 @@ def render_b30(
             4,
         )
         rating_text = f"OLD {average:.4f} / NEW {new_average:.4f}"
-
-    # basic guard for old rating system, since there's no more
-    # "reachable" rating in the new system
-    if record_slots == 30 and new_records is None:
-        max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in records)
-        reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
-
-        rating_text += f" / REACHABLE {reachable:.4f}"
-
-    if max_rating is not None:
-        rating_text = f"MAX {max_rating:.2f} / {rating_text}"
 
     if current_rating is not None:
         rating_text = f"RATING {current_rating:.2f} / {rating_text}"
