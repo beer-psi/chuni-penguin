@@ -22,12 +22,14 @@ __all__ = ("logged_app_command", "logged_prefix_command", "logger")
 processors = structlog.get_config()["processors"][:-1]
 
 if config.dangerous.dev:
+    wrapper = structlog.make_filtering_bound_logger(logging.DEBUG)
     processors.append(structlog.dev.ConsoleRenderer())
 else:
+    wrapper = structlog.make_filtering_bound_logger(logging.INFO)
     processors.append(structlog.processors.dict_tracebacks)
     processors.append(structlog.processors.JSONRenderer())
 
-structlog.configure(processors=processors)
+structlog.configure(processors=processors, wrapper_class=wrapper)
 logger: BoundLogger = structlog.get_logger()
 
 
