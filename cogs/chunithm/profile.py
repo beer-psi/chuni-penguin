@@ -247,6 +247,7 @@ class ProfileCog(commands.Cog, name="Profile"):
             player_data = await client.player_data()
 
             optional_data: list[str] = []
+
             if player_data.team is not None:
                 optional_data.append(f"Team {player_data.team.name}")
             if player_data.medal is not None:
@@ -258,10 +259,15 @@ class ProfileCog(commands.Cog, name="Profile"):
             optional_data_joined = "\n".join(optional_data)
 
             level = str(player_data.lv)
+
             if player_data.reborn > 0:
                 level = f"{player_data.reborn}⭐ + {level}"
 
+            titles = "\n".join([f"**{t.content}**" for t in player_data.titles])
+
             description = (
+                f"{titles}\n"
+                f"### {player_data.name}\n"
                 f"{optional_data_joined}\n"
                 f"▸ **Level**: {level}\n"
                 f"▸ **Rating**: {player_data.rating:.2f}\n"
@@ -273,10 +279,9 @@ class ProfileCog(commands.Cog, name="Profile"):
                 description += f"▸ **Last played**: <t:{int(player_data.last_play_date.timestamp())}:f>\n"
 
             embed = discord.Embed(
-                title=player_data.name,
                 description=description,
                 color=player_data.possession.color(),
-            ).set_author(name=player_data.nameplate.content)
+            )
 
             if player_data.character_frame is None:
                 files = []

@@ -397,6 +397,12 @@ async def test_client_parses_playerdata(
     )
     assert user_data.name == "ＢｏＡｎｈＤＬＢ"  # noqa: RUF001
 
+    assert len(user_data.titles) == 2
+    assert user_data.titles[0].content == "ネコぱら"
+    assert user_data.titles[0].rarity == "silver"
+    assert user_data.titles[1].content == "SPIRIT of PARADISE LOST"
+    assert user_data.titles[1].rarity == "version1"
+
     assert (
         user_data.avatar.base
         == "https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png"
