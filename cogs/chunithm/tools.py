@@ -496,7 +496,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 else:
                     async with self.utils.chuninet(ctx) as client:
                         basic_player_data = await client.authenticate()
-                        max_rating = basic_player_data.rating.max
+                        max_rating = basic_player_data.rating
 
             if max_rating is None:
                 msg = "No rating data found. Please play a song first."

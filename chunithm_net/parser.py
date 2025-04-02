@@ -18,7 +18,6 @@ from .models.player_data import (
     Nameplate,
     Overpower,
     PlayerData,
-    Rating,
     Team,
     UserAvatar,
 )
@@ -70,7 +69,6 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     )
 
     rating = parse_player_rating(soup.select(".player_rating_num_block img"))
-    max_rating = float(soup.select_one(".player_rating_max").get_text())
 
     overpower = soup.select_one(".player_overpower_text").get_text().split(" ")
     overpower_value = float(overpower[0])
@@ -140,7 +138,7 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
         possession=possession,
         team=Team(name=team_name) if team_name else None,
         nameplate=Nameplate(content=nameplate_content, rarity=nameplate_rarity),
-        rating=Rating(rating, max_rating),
+        rating=rating,
         overpower=Overpower(overpower_value, overpower_progress),
         last_play_date=last_play_date,
         emblem=emblem,

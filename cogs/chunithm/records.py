@@ -28,7 +28,6 @@ from chunithm_net.consts import (
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
     KEY_SONG_ID,
-    KEY_SONG_VERSION,
 )
 from chunithm_net.models.enums import ComboType, Difficulty, Genres, Rank
 from chunithm_net.models.record import (
@@ -41,7 +40,7 @@ from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.config import config
-from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
+from utils.constants import SIMILARITY_THRESHOLD
 from utils.converters import (
     AliasNameConverter,
     AliasNameTransformer,
@@ -1143,7 +1142,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 async with self.utils.chuninet(target_id) as client:
                     player_data = await client.player_data()
                     player_name = player_data.name
-                    current_rating = player_data.rating.current
+                    current_rating = player_data.rating
 
                     records = await self.utils.hydrate_records(await client.best30())
                     record_slots = 30

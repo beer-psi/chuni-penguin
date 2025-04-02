@@ -12,12 +12,6 @@ class Nameplate:
 
 
 @dataclass
-class Rating:
-    current: float
-    max: Optional[float] = None
-
-
-@dataclass
 class Currency:
     owned: int
     total: int
@@ -71,7 +65,7 @@ class PlayerData:
     team: Optional[Team] = None
     overpower: Overpower
     nameplate: Nameplate
-    rating: Rating
+    rating: float
     currency: Optional[Currency] = None
 
     friend_code: Optional[str] = None

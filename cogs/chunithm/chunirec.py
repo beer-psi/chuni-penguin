@@ -235,14 +235,13 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             player_data = await client.player_data()
 
             payload += serialize_number(player_data.lv, 3, max=9999)
-            payload += serialize_number(
-                int(player_data.rating.current * 100), 3, max=9999
+
+            # Since max rating has been removed in CHUNITHM VERSE, the player's rating is
+            # just serialized twice.
+            payload += (
+                serialize_number(round(player_data.rating * 100), 3, max=9999) * 2
             )
-            payload += serialize_number(
-                int(player_data.rating.max * 100) if player_data.rating.max else 0,
-                3,
-                max=9999,
-            )
+
             payload += serialize_number(player_data.playcount or 0, 4)
 
             class_emblem = 0

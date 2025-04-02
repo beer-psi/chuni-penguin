@@ -365,8 +365,7 @@ async def test_client_parses_homepage(
     assert user_data.overpower.value == pytest.approx(4878.18)
     assert user_data.overpower.progress == pytest.approx(0.0568)
 
-    assert user_data.rating.current == pytest.approx(15.10)
-    assert user_data.rating.max == pytest.approx(15.13)
+    assert user_data.rating == pytest.approx(15.10)
 
     assert user_data.emblem is None
     assert user_data.medal is None
@@ -469,8 +468,7 @@ async def test_client_parses_playerdata(
     assert user_data.overpower.value == pytest.approx(4878.18)
     assert user_data.overpower.progress == pytest.approx(0.0568)
 
-    assert user_data.rating.current == pytest.approx(15.10)
-    assert user_data.rating.max == pytest.approx(15.13)
+    assert user_data.rating == pytest.approx(15.10)
 
     assert user_data.currency is not None
     assert user_data.currency.owned == 133500
