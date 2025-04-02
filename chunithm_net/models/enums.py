@@ -22,7 +22,7 @@ class Difficulty(Enum):
             case 1:
                 return 0xF47900
             case 2:
-                return 0xE92829
+                return 0xFE908F
             case 3:
                 return 0x8C1BE1
             case 4:
