@@ -91,9 +91,7 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
     if not whoami_data["success"]:
         raise web.HTTPInternalServerError
 
-    message = (
-        "Your accounts are now linked! You can close this page and use the bot now."
-    )
+    message = "Your accounts are now linked!"
 
     async with bot.begin_db_session() as db_session, db_session.begin():
         if cookie is None:
