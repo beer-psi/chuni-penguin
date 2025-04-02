@@ -328,7 +328,7 @@ def render_b30(
 
     # header: player name and credits
     # draw a background for the player name
-    b30_draw.rectangle((0, 0, b30_image.width, 124), fill="#9BF7C8")
+    b30_draw.rectangle((0, 0, b30_image.width, 124), fill="#D2AEF2")
 
     # draw the player name
     b30_draw.text((20, 0), player_name, fill="#000000", font=NOTO_SANS_JP_80)
@@ -359,7 +359,7 @@ def render_b30(
     # draw a background for the subheader
     b30_draw.rectangle(
         (0, 124, b30_image.width, 214),
-        fill="#B8F5CE",
+        fill="#E7C4F3",
     )
 
     total_rating = sum(
