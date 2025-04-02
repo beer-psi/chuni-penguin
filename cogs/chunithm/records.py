@@ -1098,7 +1098,8 @@ class RecordsCog(commands.Cog, name="Records"):
         ctx: Context,
         user: discord.User | discord.Member | None = None,
         *,
-        image: bool = False,
+        image: bool | None = None,
+        classic: bool = False,
         kamaitachi: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
@@ -1146,7 +1147,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     new_records = await self.utils.hydrate_records(await client.new20())
                     new_record_slots = 20
 
-            if not image:
+            if classic:
                 if new_records is not None:
                     view = B30N20View(ctx, records, new_records)
                 else:
@@ -1166,7 +1167,25 @@ class RecordsCog(commands.Cog, name="Records"):
                 current_rating=current_rating,
             )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+
+            if image:
+                if ctx.interaction is None:
+                    image_flag = "`-i` flag"
+                    classic_flag = "`-c` flag"
+                else:
+                    image_flag = "`image: True` option"
+                    classic_flag = "`classic: True` option"
+
+                content = (
+                    f"The {image_flag} is not needed anymore, because generating an image is now the default. "
+                    "Using it will cause a hard error in a future update. "
+                    f"If you wish to view your scores with Discord embeds, please use the {classic_flag}."
+                )
+            else:
+                content = None
+
             await ctx.reply(
+                content=content,
                 file=discord.File(
                     b30_image, filename=f"chuni-penguin-b30-{generation_timestamp}.png"
                 ),
@@ -1180,14 +1199,15 @@ class RecordsCog(commands.Cog, name="Records"):
 
         **Parameters**:
         `user`: The user to get scores for.
-        `-i, --image`: Render an image of your best 50 scores instead of viewing
-        with Discord embeds
+        `-c, --classic`: View your scores with Discord embeds instead of generating
+        an image.
         `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
         has that linked.
         """
 
         parser = DiscordArguments()
         parser.add_argument("-i", "--image", action="store_true")
+        parser.add_argument("-c", "--classic", action="store_true")
         parser.add_argument("-k", "--kamaitachi", action="store_true")
 
         try:
@@ -1204,7 +1224,11 @@ class RecordsCog(commands.Cog, name="Records"):
                     break
 
         await self._best50_inner(
-            ctx, user, image=args.image, kamaitachi=args.kamaitachi
+            ctx,
+            user,
+            image=args.image,
+            classic=args.classic,
+            kamaitachi=args.kamaitachi,
         )
 
     @app_commands.command(name="best50", description="View top plays")
@@ -1212,6 +1236,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @app_commands.describe(
         user="The user to get best50 for",
         image="Render an image of your best 50 scores",
+        classic="View your best 50 scores using Discord embeds instead of an image",
         kamaitachi="Get your best 50 from Kamaitachi if linked",
     )
     @logged_app_command
@@ -1220,12 +1245,15 @@ class RecordsCog(commands.Cog, name="Records"):
         interaction: Interaction,
         user: discord.User | discord.Member | None = None,
         *,
-        image: bool = False,
+        image: bool | None = None,
+        classic: bool = False,
         kamaitachi: bool = False,
     ):
         ctx = await Context.from_interaction(interaction)
 
-        await self._best50_inner(ctx, user, image=image, kamaitachi=kamaitachi)
+        await self._best50_inner(
+            ctx, user, image=image, classic=classic, kamaitachi=kamaitachi
+        )
 
     @commands.command("recent10", aliases=["r10"], hidden=True)
     @logged_prefix_command
