@@ -103,10 +103,10 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
 
             if cookie.cookie:
                 message += (
-                    "\nYou can now use `c>kamaitachi sync` to sync your recent scores.\n"
+                    f"\nYou can now use `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores.\n"
                     "\n"
-                    "**It is recommended that you run `c>kamaitachi sync` to sync your recent scores first, "
-                    "before syncing your personal bests with `c>kamaitachi sync pb`.**"
+                    f"**It is recommended that you run `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores first, "
+                    f"before syncing your personal bests with `{config.bot.default_prefix}kamaitachi sync pb`.**"
                 )
 
     return web.Response(text=message, content_type="text/plain")
