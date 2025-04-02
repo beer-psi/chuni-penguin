@@ -1,13 +1,16 @@
 import contextlib
 import io
+import random
 import sys
 from dataclasses import dataclass
 from http.cookiejar import LWPCookieJar
 from typing import TYPE_CHECKING, Optional, Sequence, TypeVar
 
 import httpx
-from discord.ext import commands
+import msgspec
+from discord.ext import commands, tasks
 from discord.ext.commands import Context
+from discord.utils import MISSING
 from rapidfuzz import fuzz, process
 from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload
@@ -71,13 +74,62 @@ class SongSearchResult:
     similarity: float
 
 
+class KeiyoushiUserAgents(msgspec.Struct):
+    recommended: str
+    desktop: list[str]
+    mobile: list[str]
+
+
 class UtilsCog(commands.Cog, name="Utils"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
         self.alias_cache: list[CachedAlias] = []
 
+        self.random = random.Random()
+        self.random.seed()
+
+        self.user_agents: KeiyoushiUserAgents = MISSING
+
     async def cog_load(self) -> None:
-        return await self._reload_alias_cache()
+        self._update_user_agents.start()
+        await self._reload_alias_cache()
+
+    async def cog_unload(self) -> None:
+        self._update_user_agents.stop()
+
+    @tasks.loop(hours=24)
+    async def _update_user_agents(self):
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                "https://keiyoushi.github.io/user-agents/user-agents.min.json"
+            )
+
+            if resp.status_code != 200:
+                logger.warning(
+                    "could not update user agents",
+                    tag="update_user_agent_failed",
+                    status_code=resp.status_code,
+                )
+                return
+
+            try:
+                self.user_agents = msgspec.json.decode(
+                    resp.content, type=KeiyoushiUserAgents
+                )
+                logger.debug(
+                    "updated user agents",
+                    tag="update_user_agent_success",
+                    count=len(self.user_agents.desktop)
+                    + len(self.user_agents.mobile)
+                    + 1,  # for recommended UA
+                )
+            except msgspec.DecodeError as e:
+                logger.exception(
+                    "could not parse user agents",
+                    tag="update_user_agent_failed",
+                    exc_info=e,
+                )
+                return
 
     async def _reload_alias_cache(self) -> None:
         async with self.bot.begin_db_session() as session:
@@ -145,6 +197,9 @@ class UtilsCog(commands.Cog, name="Utils"):
         jar = await self.login_check(ctx_or_id)
 
         session = ChuniNet(jar)
+        session.session.headers["user-agent"] = self.random.choice(
+            self.user_agents.desktop
+        )
         try:
             yield session
         finally:

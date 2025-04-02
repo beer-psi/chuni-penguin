@@ -53,6 +53,13 @@ class ChuniNet:
             timeout=httpx.Timeout(timeout=60.0),
             follow_redirects=True,
             transport=httpx.AsyncHTTPTransport(retries=5),
+            headers={
+                # clients are recommended to update this user agent
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0",
+                "accept-language": "en-US,en;q=0.5",
+                "upgrade-insecure-requests": "1",
+                "referer": "https://chunithm-net-eng.com/",
+            },
         )
 
     async def __aenter__(self):
