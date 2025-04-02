@@ -138,12 +138,13 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     cookie.kamaitachi_token = token
                     await session.merge(cookie)
 
-                    content += (
-                        f"\nYou can now use `{ctx.prefix}kamaitachi sync` to sync your recent scores.\n"
-                        "\n"
-                        f"**It is recommended that you run `{ctx.prefix}kamaitachi sync` to sync your recent scores first, "
-                        f"before syncing your personal bests with `{ctx.prefix}kamaitachi sync pb`.**"
-                    )
+                    if cookie.cookie:
+                        content += (
+                            f"\nYou can now use `{ctx.prefix}kamaitachi sync` to sync your recent scores.\n"
+                            "\n"
+                            f"**It is recommended that you run `{ctx.prefix}kamaitachi sync` to sync your recent scores first, "
+                            f"before syncing your personal bests with `{ctx.prefix}kamaitachi sync pb`.**"
+                        )
 
             return await ctx.reply(
                 content=content,
