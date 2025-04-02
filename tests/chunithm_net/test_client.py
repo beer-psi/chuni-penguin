@@ -730,7 +730,7 @@ async def test_client_parses_music_for_rating(
 
     async with ChuniNet(jar) as client:
         best30 = await client.best30()
-        recent10 = await client.recent10()
+        new20 = await client.new20()
 
     assert len(best30) == 30
 
@@ -739,12 +739,12 @@ async def test_client_parses_music_for_rating(
     assert best30[0].score == 1005037
     assert best30[0].difficulty == Difficulty.EXPERT
 
-    assert len(recent10) == 10
+    assert len(new20) == 10
 
-    assert recent10[0].extras.get(KEY_SONG_ID) == 2340
-    assert recent10[0].title == "To：Be Continued"  # noqa: RUF001
-    assert recent10[0].score == 1000449
-    assert recent10[0].difficulty == Difficulty.EXPERT
+    assert new20[0].extras.get(KEY_SONG_ID) == 2340
+    assert new20[0].title == "To：Be Continued"  # noqa: RUF001
+    assert new20[0].score == 1000449
+    assert new20[0].difficulty == Difficulty.EXPERT
 
 
 @pytest.mark.asyncio

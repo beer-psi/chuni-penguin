@@ -353,15 +353,15 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
                 payload += serialize_number(course_lamp.value, 1, max=7)
 
             await message.edit(
-                content="Fetching recent10...",
+                content="Fetching new20...",
                 allowed_mentions=AllowedMentions.none(),
             )
-            recent10 = await client.recent10()
+            new20 = await client.new20()
 
-            payload += serialize_number(len(recent10), 3)
+            payload += serialize_number(len(new20), 3)
             payload += "R"  # marker for course array
 
-            for recent in recent10:
+            for recent in new20:
                 payload += serialize_number(
                     recent.extras[KEY_SONG_ID] % 20480
                     + recent.difficulty.value * 20480,
