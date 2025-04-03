@@ -5,6 +5,8 @@ from discord import app_commands
 from discord.ext import commands
 from rapidfuzz import fuzz, process
 
+from utils.constants import SIMILARITY_THRESHOLD
+
 if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.botutils import UtilsCog
@@ -35,7 +37,7 @@ class AutocompletersCog(commands.Cog, name="Autocompleters"):
             scorer=fuzz.QRatio,
             processor=str.lower,
             limit=50,
-            score_cutoff=70,
+            score_cutoff=SIMILARITY_THRESHOLD,
         )
         titles = {aliases[r[2]].title for r in results}
 
