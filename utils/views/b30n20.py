@@ -70,4 +70,7 @@ class B30N20View(PaginationView):
             msg = f"Unknown button label: {button.label}"
             raise ValueError(msg)
 
+        self.clear_items()
+        self.fill_items()
+        self.add_item(self.toggle_rating_views)
         await self.show_page(interaction, 0)
