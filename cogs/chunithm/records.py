@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 
 import discord
 import httpx
+import msgspec
 from discord import AllowedMentions, Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -40,13 +41,18 @@ from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.config import config
-from utils.constants import SIMILARITY_THRESHOLD
+from utils.constants import CURRENT_CHUNITHM_VERSION_KT, SIMILARITY_THRESHOLD
 from utils.converters import (
     AliasNameConverter,
     AliasNameTransformer,
     DifficultyConverter,
 )
-from utils.kamaitachi import convert_kt_pbs_to_records, convert_kt_scores_to_records
+from utils.kamaitachi import (
+    KTChunithmPersonalBestResponseBody,
+    convert_kt_pbs_to_records,
+    convert_kt_scores_to_records,
+    convert_kt_to_record,
+)
 from utils.logging import logged_app_command, logged_prefix_command
 from utils.views import (
     B30N20View,
@@ -1101,6 +1107,7 @@ class RecordsCog(commands.Cog, name="Records"):
         image: bool | None = None,
         classic: bool = False,
         kamaitachi: bool = False,
+        new_rating: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
 
@@ -1115,24 +1122,87 @@ class RecordsCog(commands.Cog, name="Records"):
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
                     player_name = data["body"]["username"]
+                    current_rating = None
 
-                    resp = await client.get(
-                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
-                    )
+                    if new_rating:
+                        resp = await client.get(
+                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
+                        )
+                    else:
+                        resp = await client.get(
+                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                        )
+
                     data = json_loads(resp.content)
 
                 if not data["success"]:
                     msg = f"Could not retrieve your best scores from Kamaitachi: {data['description']}"
                     raise commands.CommandError(msg)
 
-                pbs = convert_kt_pbs_to_records(data["body"])
+                if new_rating:
+                    raw_body = msgspec.convert(
+                        data["body"], KTChunithmPersonalBestResponseBody
+                    )
+                    song_id_map = {s.id: s for s in raw_body.songs}
+                    chart_id_map = {c.chart_id: c for c in raw_body.charts}
 
-                records = pbs[:50]
-                record_slots = 50
-                new_records = None
-                new_record_slots = 0
+                    old_pbs = [
+                        pb
+                        for pb in raw_body.pbs
+                        if song_id_map[pb.song_id].data.display_version
+                        != CURRENT_CHUNITHM_VERSION_KT
+                    ]
+                    old_pbs.sort(key=lambda pb: pb.calculated_data.rating, reverse=True)
+                    records = [
+                        convert_kt_to_record(
+                            pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                        )
+                        for pb in old_pbs[:30]
+                    ]
+                    records = await self.utils.hydrate_records(records)
+                    record_slots = 30
 
-                current_rating = None
+                    new_pbs = [
+                        pb
+                        for pb in raw_body.pbs
+                        if song_id_map[pb.song_id].data.display_version
+                        == CURRENT_CHUNITHM_VERSION_KT
+                    ]
+                    new_pbs.sort(key=lambda pb: pb.calculated_data.rating, reverse=True)
+                    new_records = [
+                        convert_kt_to_record(
+                            pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                        )
+                        for pb in new_pbs[:20]
+                    ]
+                    new_records = await self.utils.hydrate_records(new_records)
+                    new_record_slots = 20
+
+                    current_rating = float(
+                        floor_to_ndp(
+                            (
+                                sum(
+                                    (r.extras[KEY_PLAY_RATING] for r in records),
+                                    Decimal(0),
+                                )
+                                + sum(
+                                    (r.extras[KEY_PLAY_RATING] for r in new_records),
+                                    Decimal(0),
+                                )
+                            )
+                            / 50,
+                            2,
+                        )
+                    )
+                else:
+                    pbs = convert_kt_pbs_to_records(data["body"])
+                    pbs = await self.utils.hydrate_records(pbs)
+
+                    records = pbs[:50]
+                    record_slots = 50
+
+                    new_records = None
+                    new_record_slots = 0
 
                 records = await self.utils.hydrate_records(records)
             else:
@@ -1192,6 +1262,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 mention_author=False,
             )
 
+    @commands.cooldown(15, 600, commands.BucketType.member)
     @commands.command("best50", aliases=["b30", "best30", "b50"])
     @logged_prefix_command
     async def best50(self, ctx: Context, *, query: str = ""):
@@ -1203,12 +1274,15 @@ class RecordsCog(commands.Cog, name="Records"):
         an image.
         `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
         has that linked.
+        `-n, --new-rating`: For Kamaitachi, calculates best30 + new20 instead of best50.
+        Does nothing for official network.
         """
 
         parser = DiscordArguments()
         parser.add_argument("-i", "--image", action="store_true")
         parser.add_argument("-c", "--classic", action="store_true")
         parser.add_argument("-k", "--kamaitachi", action="store_true")
+        parser.add_argument("-n", "--new-rating", action="store_true")
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
@@ -1229,16 +1303,20 @@ class RecordsCog(commands.Cog, name="Records"):
             image=args.image,
             classic=args.classic,
             kamaitachi=args.kamaitachi,
+            new_rating=args.new_rating,
         )
 
     @app_commands.command(name="best50", description="View top plays")
+    @app_commands.checks.cooldown(15, 600, key=lambda i: i.user.id)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
         user="The user to get best50 for",
         image="Render an image of your best 50 scores",
         classic="View your best 50 scores using Discord embeds instead of an image",
         kamaitachi="Get your best 50 from Kamaitachi if linked",
+        new_rating="(Kamaitachi) Calculates best30+new20 instead of best50",
     )
+    @app_commands.rename(new_rating="new-rating")
     @logged_app_command
     async def best50_slash(
         self,
@@ -1248,11 +1326,17 @@ class RecordsCog(commands.Cog, name="Records"):
         image: bool | None = None,
         classic: bool = False,
         kamaitachi: bool = False,
+        new_rating: bool = False,
     ):
         ctx = await Context.from_interaction(interaction)
 
         await self._best50_inner(
-            ctx, user, image=image, classic=classic, kamaitachi=kamaitachi
+            ctx,
+            user,
+            image=image,
+            classic=classic,
+            kamaitachi=kamaitachi,
+            new_rating=new_rating,
         )
 
     @commands.command("recent10", aliases=["r10"], hidden=True)

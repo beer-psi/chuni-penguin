@@ -252,7 +252,7 @@ KTImportPollStatusResponse = KTResponse[
 KTStatusResponse = KTResponse[KTStatusResponseBody]
 
 
-def _convert_kt_to_record(
+def convert_kt_to_record(
     score: KTChunithmScore | KTChunithmPersonalBest,
     song: KTChunithmSong,
     chart: KTChunithmChart,
@@ -331,7 +331,7 @@ def convert_kt_pbs_to_records(raw_body: Any) -> list[Record]:
     charts_by_id = {c.chart_id: c for c in body.charts}
 
     return [
-        _convert_kt_to_record(pb, songs_by_id[pb.song_id], charts_by_id[pb.chart_id])
+        convert_kt_to_record(pb, songs_by_id[pb.song_id], charts_by_id[pb.chart_id])
         for pb in body.pbs
     ]
 
@@ -343,7 +343,7 @@ def convert_kt_scores_to_records(raw_body: Any) -> list[Record]:
     charts_by_id = {c.chart_id: c for c in body.charts}
 
     return [
-        _convert_kt_to_record(
+        convert_kt_to_record(
             score, songs_by_id[score.song_id], charts_by_id[score.chart_id]
         )
         for score in body.scores
