@@ -1152,7 +1152,14 @@ class RecordsCog(commands.Cog, name="Records"):
                         if song_id_map[pb.song_id].data.display_version
                         != CURRENT_CHUNITHM_VERSION_KT
                     ]
-                    old_pbs.sort(key=lambda pb: pb.calculated_data.rating, reverse=True)
+                    old_pbs.sort(
+                        key=lambda pb: (
+                            pb.calculated_data.rating,
+                            pb.score_data.score,
+                            chart_id_map[pb.chart_id].level_num,
+                        ),
+                        reverse=True,
+                    )
                     records = [
                         convert_kt_to_record(
                             pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
@@ -1168,7 +1175,14 @@ class RecordsCog(commands.Cog, name="Records"):
                         if song_id_map[pb.song_id].data.display_version
                         == CURRENT_CHUNITHM_VERSION_KT
                     ]
-                    new_pbs.sort(key=lambda pb: pb.calculated_data.rating, reverse=True)
+                    new_pbs.sort(
+                        key=lambda pb: (
+                            pb.calculated_data.rating,
+                            pb.score_data.score,
+                            chart_id_map[pb.chart_id].level_num,
+                        ),
+                        reverse=True,
+                    )
                     new_records = [
                         convert_kt_to_record(
                             pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
