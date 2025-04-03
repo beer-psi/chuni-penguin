@@ -85,9 +85,6 @@ class UtilsCog(commands.Cog, name="Utils"):
         self.bot = bot
         self.alias_cache: list[CachedAlias] = []
 
-        self.random = random.Random()
-        self.random.seed()
-
         self.user_agents: KeiyoushiUserAgents = MISSING
 
     async def cog_load(self) -> None:
@@ -200,9 +197,11 @@ class UtilsCog(commands.Cog, name="Utils"):
         jar = await self.login_check(ctx_or_id)
 
         session = ChuniNet(jar)
-        session.session.headers["user-agent"] = self.random.choice(
-            self.user_agents.desktop
-        )
+
+        rand = random.Random()
+        rand.seed(id)
+        session.session.headers["user-agent"] = rand.choice(self.user_agents.desktop)
+
         try:
             yield session
         finally:
