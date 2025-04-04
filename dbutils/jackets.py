@@ -166,6 +166,12 @@ async def update_jackets(
                 "jacket_url": f"https://maimaidx-eng.com/maimai-mobile/img/Music/{song.image_url}",
             }
         )
+        jackets.append(
+            {
+                "song_id": db_song.id,
+                "jacket_url": f"https://mimixd.app/images/render/cover/{song.image_url}",
+            }
+        )
 
     async with async_session() as session:
         logger.info("Upserting %d jacket URLs.", len(jackets))
