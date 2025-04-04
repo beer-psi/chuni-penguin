@@ -10,7 +10,7 @@ MAX_DIFFICULTY = 15.7
 # drops in international and we can just get the n15 list
 # directly from the web UI.
 CURRENT_CHUNITHM_VERSION = "VERSE"
-CURRENT_CHUNITHM_VERSION_KT = "verse"
+CURRENT_CHUNITHM_VERSION_KT = f"CHUNITHM {CURRENT_CHUNITHM_VERSION}"
 
 # The version names are just my favorite CHUNITHM songs
 # in no particular order.
