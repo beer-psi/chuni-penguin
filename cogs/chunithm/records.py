@@ -995,7 +995,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
 
                         if len(song.title) <= 5:
-                            msg += f" This could be because the title is too short for PB search. Try using `{ctx.prefix}info` then `{ctx.prefix}compare`."
+                            msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
 
                         await ctx.reply(msg, mention_author=False)
 
