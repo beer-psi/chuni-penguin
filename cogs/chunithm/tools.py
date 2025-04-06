@@ -1,6 +1,5 @@
 import asyncio
 import itertools
-import random
 from decimal import Decimal
 from io import BytesIO
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
