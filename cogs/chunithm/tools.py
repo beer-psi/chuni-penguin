@@ -426,13 +426,13 @@ class ToolsCog(commands.Cog, name="Tools"):
             ]
 
             if not course_mode:
-                if XL_TECHNO_JUMPSCARE in master_song_ids:
+                if XL_TECHNO_SONG_ID in master_song_ids:
                     await ctx.reply(XL_TECHNO_JUMPSCARE, mention_author=False)
                     return
                 if VOLCANIC_SONG_ID in master_song_ids:
                     await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
                     return
-                if FORSAKEN_TALE_SONG_ID in master_song_ids and random.random() < 0.5:
+                if FORSAKEN_TALE_SONG_ID in master_song_ids:
                     await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
                     return
 
