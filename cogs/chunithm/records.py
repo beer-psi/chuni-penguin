@@ -46,6 +46,8 @@ from utils.converters import (
     AliasNameConverter,
     AliasNameTransformer,
     DifficultyConverter,
+    GenreConverter,
+    RankConverter,
 )
 from utils.kamaitachi import (
     KTChunithmPersonalBestResponseBody,
@@ -1529,32 +1531,6 @@ class RecordsCog(commands.Cog, name="Records"):
         `c>top @player -r sss -d mas`: View @player's best scores for SSS rank on MASTER difficulty.
         """
 
-        def genre(arg: str) -> Genres:
-            genre = None
-            genre_lower = arg.lower()
-            if genre_lower.startswith("pops"):
-                genre = Genres.POPS_AND_ANIME
-            elif genre_lower.startswith("nico"):
-                genre = Genres.NICONICO
-            elif genre_lower.startswith(("touhou", "toho", "東方")):
-                genre = Genres.TOUHOU_PROJECT
-            elif genre_lower.startswith(("original", "chunithm")):
-                genre = Genres.ORIGINAL
-            elif genre_lower.startswith("variety"):
-                genre = Genres.VARIETY
-            elif genre_lower.startswith("irodori"):
-                genre = Genres.IRODORIMIDORI
-            elif genre_lower.startswith(("geki", "ゲキ")):
-                genre = Genres.GEKIMAI
-            else:
-                msg = "Invalid genre."
-                raise ValueError(msg)
-
-            return genre
-
-        def rank(arg: str) -> Rank:
-            return Rank[arg.upper().replace("+", "p")]
-
         def sort_type(arg: str) -> str:
             if arg not in {
                 "score",
@@ -1578,18 +1554,21 @@ class RecordsCog(commands.Cog, name="Records"):
         parser.add_argument("-s", "--sort", type=sort_type, required=False)
 
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("-g", "--genre", type=genre, required=False)
-        group.add_argument("-r", "--rank", type=rank, required=False)
+        group.add_argument("-g", "--genre", type=str, required=False)
+        group.add_argument("-r", "--rank", type=str, required=False)
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        if args.difficulty:
-            difficulty = await DifficultyConverter().convert(ctx, args.difficulty)
-        else:
-            difficulty = None
+        difficulty = (
+            await DifficultyConverter().convert(ctx, args.difficulty)
+            if args.difficulty
+            else None
+        )
+        genre = await GenreConverter().convert(ctx, args.genre) if args.genre else None
+        rank = await RankConverter().convert(ctx, args.rank) if args.rank else None
 
         if (args.genre or args.rank) and not difficulty:
             msg = "Must specify a difficulty when searching by genre or rank."
@@ -1611,8 +1590,8 @@ class RecordsCog(commands.Cog, name="Records"):
             user is not None
             and str_level is None
             and difficulty is None
-            and args.genre is None
-            and args.rank is None
+            and genre is None
+            and rank is None
         ):
             await self._best50_inner(ctx, user, image=True)
             return None
@@ -1649,9 +1628,9 @@ class RecordsCog(commands.Cog, name="Records"):
         ):
             records = await client.music_record_by_folder(
                 level=level,
-                genre=args.genre,
+                genre=genre,
                 difficulty=difficulty,
-                rank=args.rank,
+                rank=rank,
             )
             assert records is not None
 
