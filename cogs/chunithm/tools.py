@@ -372,25 +372,9 @@ class ToolsCog(commands.Cog, name="Tools"):
             )
 
             charts: Sequence[Chart]
-            course_mode = level.lower() in {
-                "i",
-                "ii",
-                "iii",
-                "iv",
-                "v",
-                "inf",
-                "infinite",
-                "random",
-                "wallpanic",
-            }
+            course_mode = level.lower() in course_levels or level.lower() == "infinite"
 
             if course_mode:
-                # TODO: Remove the VERSE condition when VERSE drops next month
-                stmt = stmt.where(
-                    (Song.version != "VERSE")
-                    & (Chart.version.is_(None) | (Chart.version != "VERSE"))
-                )
-                # stmt = stmt.where((Song.version != "VERSE") & (Chart.version != "VERSE"))
                 charts = []
                 course_class = level.lower()
 
