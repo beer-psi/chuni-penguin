@@ -771,6 +771,16 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             return None
 
+    @commands.hybrid_command("odex")
+    @logged_prefix_command
+    async def odex(self, ctx: Context):
+        """Read the Codex."""
+
+        await ctx.reply(
+            content="[Read the Codex.](https://chunithm.org)",
+            mention_author=False,
+        )
+
 
 XL_TECHNO_SONG_ID = 2035
 XL_TECHNO_JUMPSCARE = """恐怖！XL TECHNO -More Dance Remix-
