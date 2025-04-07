@@ -434,7 +434,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if FORSAKEN_TALE_SONG_ID in master_song_ids:
                     await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
                     return
-                if TOA_CHAN_TOYBOX_JUMPSCARE in master_song_ids:
+                if TOA_CHAN_TOYBOX_SONG_ID in master_song_ids:
                     await ctx.reply(TOA_CHAN_TOYBOX_JUMPSCARE, mention_author=False)
                     return
 
