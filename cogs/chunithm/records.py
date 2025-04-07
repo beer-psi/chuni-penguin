@@ -126,6 +126,11 @@ def _render_b30_entry(
                 / "jackets"
                 / f"2698_vividstasis_{record.difficulty.value}.png"
             )
+        elif user_config.synthesis_alt_jacket == "none":
+            jacket_path = ASSETS_DIR / "jackets" / "__nonexistent.png"
+            jacket_prerendered_path = (
+                ASSETS_DIR / "jackets" / f"__nonexistent_{record.difficulty.value}.png"
+            )
 
     if jacket_prerendered_path.exists():
         with Image.open(jacket_prerendered_path) as jacket_prerendered:
