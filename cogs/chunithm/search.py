@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Annotated
+from urllib.parse import quote
 
 import discord
 from discord import Embed, app_commands
@@ -548,6 +549,14 @@ class SearchCog(commands.Cog, name="Search"):
                 song_embeds.append(embed)
 
             view = EmbedPaginationView(ctx, song_embeds)
+            view.add_item(
+                discord.ui.Button(
+                    style=discord.ButtonStyle.link,
+                    label="wikiwiki",
+                    url=f"https://wikiwiki.jp/chunithmwiki/{quote(result.songs[0].title)}",
+                    row=1,
+                )
+            )
             await view.start()
             return None
 
