@@ -226,3 +226,12 @@ class GuessScore(Base):
         nullable=False, default=-1, server_default=text("-1")
     )
     score: Mapped[int] = mapped_column(nullable=False)
+
+
+class UserConfig(Base):
+    __tablename__ = "user_configs"
+    __table_args__ = (Index("ix_user_configs_discord_id", "discord_id", unique=True),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    discord_id: Mapped[int] = mapped_column(BigInteger(), unique=True)
+    synthesis_alt_jacket: Mapped[str] = mapped_column()

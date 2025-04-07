@@ -227,7 +227,7 @@ async def merge_options(
                             extract_and_make_b30_difficulty_cards,
                             song_id_int,
                             cytus2_alt,
-                            "_cytusii",
+                            "_cytus2",
                         )
 
                     if vividstasis_alt.exists():

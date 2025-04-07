@@ -4,16 +4,18 @@ from argparse import ArgumentError
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from io import BytesIO
-from typing import TYPE_CHECKING, Optional, override
+from typing import TYPE_CHECKING, Literal, Optional, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from PIL import Image
+from sqlalchemy import select, update
 
 from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
+from database.models import UserConfig
 from utils import json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.logging import logged_app_command, logged_prefix_command
@@ -394,6 +396,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         await self._chunithm_inner(ctx, user, kamaitachi=kamaitachi)
 
     @commands.hybrid_command(name="rename")
+    @logged_prefix_command
     async def rename(self, ctx: Context, *, new_name: str):
         """Use magical powers to change your IGN.
 
@@ -424,6 +427,77 @@ class ProfileCog(commands.Cog, name="Profile"):
                     raise commands.BadArgument(msg) from None
 
                 raise
+
+    @commands.hybrid_command("config")
+    @logged_prefix_command
+    async def config(
+        self,
+        ctx: Context,
+        key: Literal["synthesis-alt-jacket"],
+        value: str | None = None,
+    ):
+        """Adjust your experience with the bot.
+
+        Currently, only one config option is supported:
+        - `synthesis-alt-jacket`: Changes the Synthesis jacket art used for rendering your best 50 image. The possible options are `none` (black background), `default` (use CHUNITHM's jacket art), `cytus2` and `vividstasis`.
+
+        **Parameters:**
+        `key`: The option you want to change or view.
+        `value`: The value to change the option to. Leave blank to see the current value for the given option.
+
+        **Examples:**
+        `/config synthesis-alt-jacket cytus2`
+        """
+
+        if key != "synthesis-alt-jacket":
+            msg = "Expected option to be synthesis-alt-jacket"
+            raise ValueError(msg)
+
+        if value is not None and value not in (
+            "none",
+            "default",
+            "cytus2",
+            "vividstasis",
+        ):
+            msg = "Invalid option for `synthesis-alt-jacket`. Expected one of `none`, `default`, `cytus2`, `vividstasis`."
+            raise commands.BadArgument(msg)
+
+        async with self.bot.begin_db_session() as session:
+            query = select(UserConfig).where(UserConfig.discord_id == ctx.author.id)
+            result = await session.execute(query)
+            user_config = result.scalar_one_or_none()
+
+        if value is None:
+            current_value = (
+                user_config.synthesis_alt_jacket if user_config else "default"
+            )
+
+            await ctx.reply(
+                content=f"Your current config for `{key}` is `{current_value}`.",
+                mention_author=False,
+            )
+            return
+
+        async with self.bot.begin_db_session() as session:
+            if user_config:
+                query = (
+                    update(UserConfig)
+                    .where(UserConfig.discord_id == ctx.author.id)
+                    .values(synthesis_alt_jacket=value)
+                )
+                await session.execute(query)
+            else:
+                user_config = UserConfig(
+                    discord_id=ctx.author.id, synthesis_alt_jacket=value
+                )
+                session.add(user_config)
+
+            await session.commit()
+
+        await ctx.reply(
+            content=f"Set your config for `{key}` to `{value}`.",
+            mention_author=False,
+        )
 
 
 async def setup(bot: "ChuniBot"):

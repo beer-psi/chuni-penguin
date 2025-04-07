@@ -36,7 +36,7 @@ from chunithm_net.models.record import (
     RecentRecord,
     Record,
 )
-from database.models import Chart, SongJacket
+from database.models import Chart, SongJacket, UserConfig
 from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
@@ -104,12 +104,28 @@ def _render_b30_entry(
     i: int,
     x: int,
     y: int,
+    user_config: UserConfig | None = None,
 ):
     song_id = record.extras[KEY_SONG_ID]
+
     jacket_path = ASSETS_DIR / "jackets" / f"{song_id}.png"
     jacket_prerendered_path = (
         ASSETS_DIR / "jackets" / f"{song_id}_{record.difficulty.value}.png"
     )
+
+    if song_id == 2698 and user_config is not None:
+        if user_config.synthesis_alt_jacket == "cytus2":
+            jacket_path = ASSETS_DIR / "jackets" / "2698_cytus2.png"
+            jacket_prerendered_path = (
+                ASSETS_DIR / "jackets" / f"2698_cytus2_{record.difficulty.value}.png"
+            )
+        elif user_config.synthesis_alt_jacket == "vividstasis":
+            jacket_path = ASSETS_DIR / "jackets" / "2698_vividstasis.png"
+            jacket_prerendered_path = (
+                ASSETS_DIR
+                / "jackets"
+                / f"2698_vividstasis_{record.difficulty.value}.png"
+            )
 
     if jacket_prerendered_path.exists():
         with Image.open(jacket_prerendered_path) as jacket_prerendered:
@@ -299,6 +315,7 @@ def render_b30(
     new_records: list[Record] | None = None,
     new_record_slots: int = 20,
     current_rating: float | None = None,
+    user_config: UserConfig | None = None,
 ):
     if len(records) > record_slots:
         msg = "More records provided than number of record slots"
@@ -436,7 +453,9 @@ def render_b30(
         x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
         y = 30 + 214 + (i // 5) * (B30_ENTRY_HEIGHT + 15)
 
-        b30_image = _render_b30_entry(b30_image, jacket_shadow_base, record, i, x, y)
+        b30_image = _render_b30_entry(
+            b30_image, jacket_shadow_base, record, i, x, y, user_config
+        )
 
     if new_records is not None:
         for i, record in enumerate(new_records):
@@ -1116,12 +1135,19 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         target_id = ctx.author.id if user is None else user.id
 
-        kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
-            == "kamaitachi"
-        )
-
         async with ctx.typing():
+            kamaitachi = (
+                await self.utils.choose_preferred_network(
+                    target_id, kamaitachi=kamaitachi
+                )
+                == "kamaitachi"
+            )
+
+            async with self.bot.begin_db_session() as session:
+                query = select(UserConfig).where(UserConfig.discord_id == target_id)
+                result = await session.execute(query)
+                user_config = result.scalar_one_or_none()
+
             if kamaitachi:
                 async with self.utils.kamaitachi_client(target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
@@ -1254,6 +1280,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 new_records=new_records,
                 new_record_slots=new_record_slots,
                 current_rating=current_rating,
+                user_config=user_config,
             )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
 
