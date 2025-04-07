@@ -1,7 +1,10 @@
 import random
 from typing import TYPE_CHECKING
 
-from discord import app_commands
+from discord import (
+    DeletedReferencedMessage,
+    app_commands,
+)
 from discord.ext import commands
 from discord.ext.commands import Context
 
@@ -38,7 +41,9 @@ EIGHT_BALL_RESPONSES = [
 
 
 class FluffCog(commands.Cog, name="Fluff"):
-    def __init__(self) -> None:
+    def __init__(self, bot: "ChuniBot") -> None:
+        self.bot: "ChuniBot" = bot
+
         self.random = random.Random()
         self.random.seed()
 
@@ -61,6 +66,29 @@ class FluffCog(commands.Cog, name="Fluff"):
             content=self.random.choice(EIGHT_BALL_RESPONSES), mention_author=False
         )
 
+    @commands.hybrid_command("quitting")
+    @logged_prefix_command
+    async def quitting(self, ctx: Context):
+        """I'LL NEVER PLAY THIS CRAPPY GAME AGAIN!"""
+
+        if (
+            (reference := ctx.message.reference) is not None
+            and reference.message_id is not None
+            and not isinstance(reference.resolved, DeletedReferencedMessage)
+        ):
+            channel = self.bot.get_partial_messageable(
+                reference.channel_id,
+                guild_id=reference.guild_id,
+            )
+            target = channel.get_partial_message(reference.message_id)
+        else:
+            target = ctx.message
+
+        await target.reply(
+            content="https://cdn.discordapp.com/attachments/1091952903016697947/1358802119179636786/mfw-quitting.jpg",
+            mention_author=False,
+        )
+
 
 async def setup(bot: "ChuniBot"):
-    await bot.add_cog(FluffCog())
+    await bot.add_cog(FluffCog(bot))
