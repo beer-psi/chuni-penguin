@@ -434,6 +434,9 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if FORSAKEN_TALE_SONG_ID in master_song_ids:
                     await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
                     return
+                if TOA_CHAN_TOYBOX_JUMPSCARE in master_song_ids:
+                    await ctx.reply(TOA_CHAN_TOYBOX_JUMPSCARE, mention_author=False)
+                    return
 
             embeds: list[discord.Embed] = [ChartCardEmbed(chart) for chart in charts]
             await ctx.reply(content=content, embeds=embeds, mention_author=False)
@@ -823,6 +826,33 @@ FORSAKEN_TALE_JUMPSCARE = """恐怖！Forsaken Tale！
      😡     😡
           😠
 """  # noqa: RUF001
+
+TOA_CHAN_TOYBOX_SONG_ID = 2428
+TOA_CHAN_TOYBOX_JUMPSCARE = """恐怖！とあちゃんのおもちゃ箱！
+😂🟦🟦 
+      🟦     🟦
+      🟦     ⚡       
+      🟦          ⚡          
+😂🟦               😂           
+      🟦             ➡️
+      🟦       ➡️
+      🟦➡️
+      🟦       ⬅️
+      🟦             ⬅️
+      🟦       ➡️
+      🟦➡️
+      🟦       ⬅️
+      🟦             ⬅️
+      🟦       ➡️
+      🟦➡️
+      🟦       ⬅️  
+      🟦             ⬅️
+      🟦     😡
+      🟦           😡
+      🟦     😡
+      🟦           😡
+      🟦    😡
+      🟦          😡"""  # noqa: RUF001, W291
 
 
 async def setup(bot: "ChuniBot"):
