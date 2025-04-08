@@ -9,6 +9,19 @@ ONE_MISS_IN_ATTACK = 2
 
 
 def calculate_border(notecount: int) -> dict[str | Rank, Judgements]:
+    # "tolerance" is the number of justices you can have without falling
+    # below this score, assuming it's an AJ.
+    #
+    # this is computed by the fact that a justice is 100/101 units of a
+    # justice critical, therefore you can simplify the operation from:
+    #    justice_deduction_per_note = (1_010_000 / notecount) * (101 - 100) / 101
+    #                               = (1_010_000 / notecount) * 1 / 101
+    #                               = (1_010_000 * 1 / 101) / notecount
+    #                               = 10_000 / notecount
+    #    tolerance_sssp = (1_010_000 - 1_009_000) / justice_deduction_per_note
+    #                   = 1_000 / (10_000 / notecount)
+    #                   = 1_000 * (notecount / 10_000)
+    #                   = notecount / 10
     tolerance_99aj = notecount // 100
     tolerance_sssp = notecount // 10
     tolerance_sss = notecount // 4
@@ -17,6 +30,13 @@ def calculate_border(notecount: int) -> dict[str | Rank, Judgements]:
     tolerance_sp = notecount * 2
     tolerance_s = floor(notecount * 3.5)
 
+    # the border_miss and border_atk values are just cut out from tolerance at
+    # specific ratios, so instead of having a 444-0-0 SSS+ you could have a 87-7-0 SSS+
+    # instead, which is somewhat more realistic.
+    #
+    # for example, on SS+ rank, every 300 justices turn into 1 miss, and every 58
+    # justices turn into 1 attack, but you also have to subtract from the stuff already
+    # allocated to misses.
     border_miss_sssp = 0
     border_miss_sss = 0
     border_miss_ssp = tolerance_ssp // 300
