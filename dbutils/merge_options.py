@@ -6,7 +6,7 @@ from typing import Optional, overload
 from xml.etree import ElementTree
 
 import httpx
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -45,8 +45,15 @@ WE_LEVEL_OVERRIDES = {
     8248: "分☆☆☆ (2anyFirst)",
     8249: "分☆☆☆ (Alt Futur)",
 }
-B30_ENTRY_WIDTH = 350
-B30_ENTRY_HEIGHT = 180
+B30_JACKET_WIDTH = 110
+B30_JACKET_HEIGHT = 110
+B30_BASE_IMAGES = {
+    Difficulty.BASIC: Image.open(ASSETS_DIR / "b50" / "b50_base_0.png"),
+    Difficulty.ADVANCED: Image.open(ASSETS_DIR / "b50" / "b50_base_1.png"),
+    Difficulty.EXPERT: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
+    Difficulty.MASTER: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
+    Difficulty.ULTIMA: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
+}
 
 
 @overload
@@ -65,21 +72,7 @@ def gettext(
     return default
 
 
-# best30
-# add a gaussian blurred shadow onto the jacket
-# generate the base shadow here so we can just copy it for each jacket later
-JACKET_SHADOW_BASE = Image.new("RGBA", (B30_ENTRY_WIDTH + 20, B30_ENTRY_HEIGHT + 20))
-JACKET_SHADOW_BASE.paste(
-    (0, 0, 0, 200), (5, 5, B30_ENTRY_WIDTH + 15, B30_ENTRY_HEIGHT + 15)
-)
-
-for _ in range(5):
-    JACKET_SHADOW_BASE = JACKET_SHADOW_BASE.filter(ImageFilter.GaussianBlur)
-
-
-def extract_and_make_b30_difficulty_cards(
-    song_id: int, jacket_file: Path, alt_suffix: str = ""
-):
+def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
     with Image.open(jacket_file) as im:
         im = im.convert("RGB")
         im.save(
@@ -88,62 +81,23 @@ def extract_and_make_b30_difficulty_cards(
             optimize=True,
         )
 
-        # world's ends arent going to show up in b30 anytime soon
+        # world's ends arent going to show up in b50 anytime soon
         if song_id >= 8000:
             return
 
-        # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
-        im = im.resize((B30_ENTRY_WIDTH, im.height * B30_ENTRY_WIDTH // im.width))
+        im_small = im.resize((B30_JACKET_WIDTH, B30_JACKET_HEIGHT))
 
-        # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
-        im = im.crop(
-            (
-                (im.width - B30_ENTRY_WIDTH) // 2,
-                (im.height - B30_ENTRY_HEIGHT) // 2,
-                (im.width + B30_ENTRY_WIDTH) // 2,
-                (im.height + B30_ENTRY_HEIGHT) // 2,
-            )
-        )
-
-        # darken the image and blur it
-        im = (
-            ImageEnhance.Brightness(im)
-            .enhance(0.45)
-            .filter(ImageFilter.GaussianBlur(4))
-        )
-
+        # pregenerate jacket art merged with b50 base
         for difficulty in Difficulty:
             if difficulty == Difficulty.WORLDS_END:
                 continue
 
-            difficulty_color = difficulty.color()
-            jacket = im.copy()
-            jacket_draw = ImageDraw.Draw(jacket)
-            jacket_draw.polygon(
-                [
-                    (jacket.width - 55, 0),
-                    (jacket.width, 0),
-                    (jacket.width, 55),
-                ],
-                # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
-                # passing a number.
-                (
-                    (difficulty_color >> 16) & 0xFF,
-                    (difficulty_color >> 8) & 0xFF,
-                    difficulty_color & 0xFF,
-                ),
-            )
-
-            # add a gaussian blurred shadow onto the jacket
-            jacket_shadow = JACKET_SHADOW_BASE.copy()
-
-            jacket_shadow.paste(jacket, (10, 10))
-
-            jacket_shadow.save(
+            b30_base_image = B30_BASE_IMAGES[difficulty].copy()
+            b30_base_image.paste(im_small, (10, 60))
+            b30_base_image.save(
                 ASSETS_DIR
                 / "jackets"
                 / f"{song_id}{alt_suffix}_{difficulty.value}.png",
-                "PNG",
                 optimize=True,
             )
 
@@ -211,7 +165,7 @@ async def merge_options(
                     continue
 
                 pool.submit(
-                    extract_and_make_b30_difficulty_cards,
+                    extract_jacket,
                     song_id_int,
                     xml_path.parent / jacket_file,
                 )
@@ -224,7 +178,7 @@ async def merge_options(
 
                     if cytus2_alt.exists():
                         pool.submit(
-                            extract_and_make_b30_difficulty_cards,
+                            extract_jacket,
                             song_id_int,
                             cytus2_alt,
                             "_cytus2",
@@ -232,7 +186,7 @@ async def merge_options(
 
                     if vividstasis_alt.exists():
                         pool.submit(
-                            extract_and_make_b30_difficulty_cards,
+                            extract_jacket,
                             song_id_int,
                             vividstasis_alt,
                             "_vividstasis",
