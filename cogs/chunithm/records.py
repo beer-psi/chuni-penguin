@@ -124,45 +124,52 @@ def _render_b30_entry(
     y: int,
     user_config: UserConfig | None = None,
 ):
-    # draw the base image based on difficulty
-    b30_base_image_path = ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.png"
-    with Image.open(b30_base_image_path) as b30_base_image:
-        b30_base_image_padded = Image.new("RGBA", b30_image.size)
-        b30_base_image_padded.paste(b30_base_image, (x, y))
-        b30_image = Image.alpha_composite(b30_image, b30_base_image_padded)
-
     # get the jacket
     song_id = record.extras[KEY_SONG_ID]
-
-    jacket_path = ASSETS_DIR / "jackets" / f"{song_id}.png"
+    jacket_basename = f"{song_id}"
 
     if song_id == 2698 and user_config is not None:
         if user_config.synthesis_alt_jacket == "cytus2":
-            jacket_path = ASSETS_DIR / "jackets" / "2698_cytus2.png"
+            jacket_basename = "2698_cytus2"
         elif user_config.synthesis_alt_jacket == "vividstasis":
-            jacket_path = ASSETS_DIR / "jackets" / "2698_vividstasis.png"
+            jacket_basename = "2698_vividstasis"
         elif user_config.synthesis_alt_jacket == "none":
-            jacket_path = ASSETS_DIR / "jackets" / "__nonexistent.png"    
+            jacket_basename = "__nonexistent"
 
-    # we use try/catch on jacket processing to gracefully fail to a black image
-    # if the jacket is missing or corrupted
-    try:
-        with Image.open(jacket_path) as jacket:
-            # convert the jacket to RGB since ImageEnhance explodes in different modes
-            # resize the jacket
-            jacket = jacket.convert("RGB").resize(
-                (B30_JACKET_WIDTH, B30_JACKET_HEIGHT)
-            )
+    jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.png"
+    prerendered_path = (
+        ASSETS_DIR / "jackets" / f"{jacket_basename}_{record.difficulty.value}.png"
+    )
 
-    except (FileNotFoundError, ValueError):
-        # fallback to a black background if anything fails
-        jacket = Image.new("RGB", (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), 0)
+    if prerendered_path.exists():
+        with Image.open(prerendered_path) as prerendered:
+            b30_image.paste(prerendered, (x, y), prerendered)
+    else:
+        # draw the base image based on the difficulty
+        b30_base_image_path = (
+            ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.png"
+        )
 
-    jacket_padded = Image.new("RGBA", b30_image.size)
-    jacket_padded.paste(jacket, (x + 10, y + 60))
+        with Image.open(b30_base_image_path) as b30_base_image:
+            b30_image.paste(b30_base_image, (x, y), b30_base_image)
 
-    # finally, paste the edited jacket onto the image.
-    b30_image = Image.alpha_composite(b30_image, jacket_padded)
+        # we use try/catch on jacket processing to gracefully fail to a black image
+        # if the jacket is missing or corrupted
+        try:
+            with Image.open(jacket_path) as jacket:
+                # convert the jacket to RGB since ImageEnhance explodes in different modes
+                # resize the jacket
+                jacket = jacket.convert("RGB").resize(
+                    (B30_JACKET_WIDTH, B30_JACKET_HEIGHT)
+                )
+
+        except (FileNotFoundError, ValueError):
+            # fallback to a black background if anything fails
+            jacket = Image.new("RGB", (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), 0)
+
+        # draw the jacket art onto the card
+        b30_image.paste(jacket, (x + 10, y + 60))
+
     b30_draw = ImageDraw.Draw(b30_image)
 
     # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
