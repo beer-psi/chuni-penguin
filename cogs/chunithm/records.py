@@ -135,52 +135,31 @@ def _render_b30_entry(
     song_id = record.extras[KEY_SONG_ID]
 
     jacket_path = ASSETS_DIR / "jackets" / f"{song_id}.png"
-    jacket_prerendered_path = (
-        ASSETS_DIR / "jackets" / f"{song_id}_{record.difficulty.value}.png"
-    )
 
     if song_id == 2698 and user_config is not None:
         if user_config.synthesis_alt_jacket == "cytus2":
             jacket_path = ASSETS_DIR / "jackets" / "2698_cytus2.png"
-            jacket_prerendered_path = (
-                ASSETS_DIR / "jackets" / f"2698_cytus2_{record.difficulty.value}.png"
-            )
         elif user_config.synthesis_alt_jacket == "vividstasis":
             jacket_path = ASSETS_DIR / "jackets" / "2698_vividstasis.png"
-            jacket_prerendered_path = (
-                ASSETS_DIR
-                / "jackets"
-                / f"2698_vividstasis_{record.difficulty.value}.png"
-            )
         elif user_config.synthesis_alt_jacket == "none":
-            jacket_path = ASSETS_DIR / "jackets" / "__nonexistent.png"
-            jacket_prerendered_path = (
-                ASSETS_DIR / "jackets" / f"__nonexistent_{record.difficulty.value}.png"
+            jacket_path = ASSETS_DIR / "jackets" / "__nonexistent.png"    
+
+    # we use try/catch on jacket processing to gracefully fail to a black image
+    # if the jacket is missing or corrupted
+    try:
+        with Image.open(jacket_path) as jacket:
+            # convert the jacket to RGB since ImageEnhance explodes in different modes
+            # resize the jacket
+            jacket = jacket.convert("RGB").resize(
+                (B30_JACKET_WIDTH, B30_JACKET_HEIGHT)
             )
 
-    if jacket_prerendered_path.exists():
-        with Image.open(jacket_prerendered_path) as jacket_prerendered:
-            jacket_padded = Image.new("RGBA", b30_image.size)
-            jacket_padded.paste(
-                jacket_prerendered, (x - 10, y - 10), jacket_prerendered
-            )
-    else:
-        # we use try/catch on jacket processing to gracefully fail to a black image
-        # if the jacket is missing or corrupted
-        try:
-            with Image.open(jacket_path) as jacket:
-                # convert the jacket to RGB since ImageEnhance explodes in different modes
-                # resize the jacket
-                jacket = jacket.convert("RGB").resize(
-                    (B30_JACKET_WIDTH, B30_JACKET_HEIGHT)
-                )
+    except (FileNotFoundError, ValueError):
+        # fallback to a black background if anything fails
+        jacket = Image.new("RGB", (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), 0)
 
-        except (FileNotFoundError, ValueError):
-            # fallback to a black background if anything fails
-            jacket = Image.new("RGB", (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), 0)
-
-        jacket_padded = Image.new("RGBA", b30_image.size)
-        jacket_padded.paste(jacket, (x + 10, y + 60))
+    jacket_padded = Image.new("RGBA", b30_image.size)
+    jacket_padded.paste(jacket, (x + 10, y + 60))
 
     # finally, paste the edited jacket onto the image.
     b30_image = Image.alpha_composite(b30_image, jacket_padded)
@@ -190,7 +169,7 @@ def _render_b30_entry(
     title = record.title
     title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
 
-    while title_length > B30_ENTRY_WIDTH - 15:
+    while title_length > B30_ENTRY_WIDTH - 25:
         title = title[:-1]
         title_length = b30_draw.textlength(title + "...", NOTO_SANS_JP_32_BOLD)
 
@@ -252,7 +231,7 @@ def _render_b30_entry(
 
     if isinstance(record, DetailedRecentRecord):
         if extra_info != "":
-            extra_info += f" | + {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}"  # noqa: RUF001
+            extra_info += f" | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}"  # noqa: RUF001
         else:
             extra_info += f"{record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}"  # noqa: RUF001
 
@@ -407,14 +386,6 @@ def render_b30(
         font=NOTO_SANS_JP_64_BOLD,
     )
 
-    # draw the text "RATING"
-    b30_draw.text(
-        (790, 22),
-        "RATING",
-        fill="#DDDDDD",
-        font=INTER_32,
-    )
-
     # get rating values
     total_rating = sum(
         (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
@@ -424,9 +395,11 @@ def render_b30(
 
     # draw the rating information
     if new_records is None:
+        rating_title = "NAIVE RATING"
         raw_rating_text = f"({average:.4f})"
-        final_rating = average
+        final_rating = floor_to_ndp(average, 2)
     else:
+        rating_title = "RATING"
         new_total_rating = sum(
             (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
         )
@@ -438,7 +411,15 @@ def render_b30(
             (total_rating + new_total_rating) / (record_slots + new_record_slots), 4
         )
         raw_rating_text = f"({overall_average:.4f})"
-        final_rating = overall_average
+        final_rating = floor_to_ndp(overall_average, 2)
+
+    # draw the text "RATING"
+    b30_draw.text(
+        (790, 22),
+        rating_title,
+        fill="#DDDDDD",
+        font=INTER_32,
+    )
 
     if current_rating is not None:
         final_rating = current_rating
