@@ -17,7 +17,7 @@ from discord import AllowedMentions, Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -72,8 +72,8 @@ if TYPE_CHECKING:
 
 
 ASSETS_DIR = Path(__file__).parent.parent.parent / "assets"
-NOTO_SANS_JP_80 = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 80
+NOTO_SANS_JP_24 = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 24
 )
 NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Medium.ttf", 28
@@ -81,9 +81,28 @@ NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
 NOTO_SANS_JP_32_BOLD = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 32
 )
+NOTO_SANS_JP_40_BOLD = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 40
+)
+NOTO_SANS_JP_64_BOLD = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 64
+)
 INTER_32 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Regular.ttf", 32)
+INTER_40_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 40)
+INTER_44_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 44)
+
+B30_HEADER_HEIGHT = 220
+B30_HEADER_SPACING = 185
+B30_OLD_NEW_SPACING = 130
+B30_FOOTER_SPACING = 95
+B30_FOOTER_HEIGHT = 70
 B30_ENTRY_WIDTH = 350
-B30_ENTRY_HEIGHT = 180
+B30_ENTRY_HEIGHT = 215
+B30_ENTRY_WIDTH_SPACING = 15
+B30_ENTRY_HEIGHT_SPACING = 25
+B30_JACKET_WIDTH = 110
+B30_JACKET_HEIGHT = 110
+INVITE_LINK = "https://chunithm.beerpsi.cc/invite"
 
 
 class reversor:
@@ -99,120 +118,71 @@ class reversor:
 
 def _render_b30_entry(
     b30_image: Image.Image,
-    jacket_shadow_base: Image.Image,
     record: Record,
     i: int,
     x: int,
     y: int,
     user_config: UserConfig | None = None,
 ):
+    # get the jacket
     song_id = record.extras[KEY_SONG_ID]
-
-    jacket_path = ASSETS_DIR / "jackets" / f"{song_id}.png"
-    jacket_prerendered_path = (
-        ASSETS_DIR / "jackets" / f"{song_id}_{record.difficulty.value}.png"
-    )
+    jacket_basename = f"{song_id}"
 
     if song_id == 2698 and user_config is not None:
         if user_config.synthesis_alt_jacket == "cytus2":
-            jacket_path = ASSETS_DIR / "jackets" / "2698_cytus2.png"
-            jacket_prerendered_path = (
-                ASSETS_DIR / "jackets" / f"2698_cytus2_{record.difficulty.value}.png"
-            )
+            jacket_basename = "2698_cytus2"
         elif user_config.synthesis_alt_jacket == "vividstasis":
-            jacket_path = ASSETS_DIR / "jackets" / "2698_vividstasis.png"
-            jacket_prerendered_path = (
-                ASSETS_DIR
-                / "jackets"
-                / f"2698_vividstasis_{record.difficulty.value}.png"
-            )
+            jacket_basename = "2698_vividstasis"
         elif user_config.synthesis_alt_jacket == "none":
-            jacket_path = ASSETS_DIR / "jackets" / "__nonexistent.png"
-            jacket_prerendered_path = (
-                ASSETS_DIR / "jackets" / f"__nonexistent_{record.difficulty.value}.png"
-            )
+            jacket_basename = "__nonexistent"
 
-    if jacket_prerendered_path.exists():
-        with Image.open(jacket_prerendered_path) as jacket_prerendered:
-            jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
-            jacket_padded.paste(
-                jacket_prerendered, (x - 10, y - 10), jacket_prerendered
-            )
+    jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.png"
+    prerendered_path = (
+        ASSETS_DIR / "jackets" / f"{jacket_basename}_{record.difficulty.value}.png"
+    )
+
+    if prerendered_path.exists():
+        with Image.open(prerendered_path) as prerendered:
+            b30_image.paste(prerendered, (x, y), prerendered)
     else:
+        # draw the base image based on the difficulty
+        b30_base_image_path = (
+            ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.png"
+        )
+
+        with Image.open(b30_base_image_path) as b30_base_image:
+            b30_image.paste(b30_base_image, (x, y), b30_base_image)
+
         # we use try/catch on jacket processing to gracefully fail to a black image
         # if the jacket is missing or corrupted
         try:
             with Image.open(jacket_path) as jacket:
                 # convert the jacket to RGB since ImageEnhance explodes in different modes
-                # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
+                # resize the jacket
                 jacket = jacket.convert("RGB").resize(
-                    (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
+                    (B30_JACKET_WIDTH, B30_JACKET_HEIGHT)
                 )
 
-                # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
-                jacket = jacket.crop(
-                    (
-                        (jacket.width - B30_ENTRY_WIDTH) // 2,
-                        (jacket.height - B30_ENTRY_HEIGHT) // 2,
-                        (jacket.width + B30_ENTRY_WIDTH) // 2,
-                        (jacket.height + B30_ENTRY_HEIGHT) // 2,
-                    )
-                )
-
-                # darken the image and blur it
-                jacket = (
-                    ImageEnhance.Brightness(jacket)
-                    .enhance(0.45)
-                    .filter(ImageFilter.GaussianBlur(4))
-                )
         except (FileNotFoundError, ValueError):
             # fallback to a black background if anything fails
-            jacket = Image.new("RGB", (B30_ENTRY_WIDTH, B30_ENTRY_HEIGHT), 0)
+            jacket = Image.new("RGB", (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), 0)
 
-        # draw the difficulty colored triangle on the jacket, instead of on the b30 image.
-        # this ensures that the triangle is flush with the top right corner of the jacket instead of
-        # being slightly off by 1-2 pixels
-        difficulty_color = record.difficulty.color()
-        jacket_draw = ImageDraw.Draw(jacket)
-        jacket_draw.polygon(
-            [
-                (jacket.width - 55, 0),
-                (jacket.width, 0),
-                (jacket.width, 55),
-            ],
-            # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
-            # passing a number.
-            (
-                (difficulty_color >> 16) & 0xFF,
-                (difficulty_color >> 8) & 0xFF,
-                difficulty_color & 0xFF,
-            ),
-        )
+        # draw the jacket art onto the card
+        b30_image.paste(jacket, (x + 10, y + 60))
 
-        # add a gaussian blurred shadow onto the jacket
-        jacket_shadow = jacket_shadow_base.copy()
-
-        jacket_shadow.paste(jacket, (10, 10))
-
-        jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
-
-        jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
-
-    # finally, paste the edited jacket onto the image.
-    b30_image = Image.alpha_composite(b30_image, jacket_padded)
     b30_draw = ImageDraw.Draw(b30_image)
 
     # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
     title = record.title
     title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
 
-    while title_length > B30_ENTRY_WIDTH - 15:
+    while title_length > B30_ENTRY_WIDTH - 25:
         title = title[:-1]
         title_length = b30_draw.textlength(title + "...", NOTO_SANS_JP_32_BOLD)
 
     # draw the title
     b30_draw.text(
-        (x + 10, y + 7),
+        (x + 10, y),
         title + ("..." if title != record.title else ""),
         fill="#FFFFFF",
         font=NOTO_SANS_JP_32_BOLD,
@@ -220,13 +190,13 @@ def _render_b30_entry(
 
     # draw the score
     b30_draw.text(
-        (x + 10, y + 47),
+        (x + 132, y + 50),
         f"{record.score:,}",
         fill="#FFFFFF",
         font=NOTO_SANS_JP_32_BOLD,
     )
 
-    # draw the rank, next to the score
+    # draw the lamps
     lamps = f"[{record.rank}]"
 
     if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
@@ -237,52 +207,15 @@ def _render_b30_entry(
         lamps += " [FC]"
 
     b30_draw.text(
-        (
-            x
-            + 10
-            + b30_draw.textlength(f"{record.score:,}", NOTO_SANS_JP_32_BOLD)
-            + 10,
-            y + 50,
-        ),
+        (x + 132, y + 88),
         lamps,
         fill="#FFFFFF",
         font=NOTO_SANS_JP_28_MEDIUM,
     )
 
-    # draw judgements, if they're available
-    if isinstance(record, DetailedRecentRecord):
-        b30_draw.text(
-            (x + 10, y + 89),
-            f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f} | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}",  # noqa: RUF001
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_28_MEDIUM,
-        )
+    # draw the timestamp and judgements if available
+    extra_info = ""
 
-    # draw the rank of the b30 entry
-    b30_draw.text(
-        (x + 10, y + 125),
-        f"#{i + 1}",
-        fill="#FFFFFF",
-        font=NOTO_SANS_JP_32_BOLD,
-    )
-
-    # draw the internal level and rating value
-    if isinstance(record, DetailedRecentRecord):
-        rating_text = f"({record.extras.get(KEY_PLAY_RATING):.2f})"
-    else:
-        rating_text = f"({record.extras.get(KEY_INTERNAL_LEVEL):.1f} > {record.extras.get(KEY_PLAY_RATING):.2f})"
-
-    b30_draw.text(
-        (
-            x + 10 + b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_32_BOLD) + 10,
-            y + 128,
-        ),
-        rating_text,
-        fill="#FFFFFF",
-        font=NOTO_SANS_JP_28_MEDIUM,
-    )
-
-    # draw the timestamp
     if isinstance(record, RecentRecord) and record.date.timestamp() > 0:
         difference = datetime.now(UTC) - record.date
 
@@ -301,14 +234,48 @@ def _render_b30_entry(
         else:
             delta = "0s"
 
-        delta_length = b30_draw.textlength(delta, NOTO_SANS_JP_28_MEDIUM)
+        extra_info = delta
 
-        b30_draw.text(
-            (int(x + B30_ENTRY_WIDTH - delta_length - 10), y + 128),
-            delta,
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_28_MEDIUM,
-        )
+    if isinstance(record, DetailedRecentRecord):
+        if extra_info != "":
+            extra_info += f" | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}"  # noqa: RUF001
+        else:
+            extra_info += f"{record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}"  # noqa: RUF001
+
+    b30_draw.text(
+        (x + 10, y + 176),
+        extra_info,
+        fill="#BBBBBB",
+        font=NOTO_SANS_JP_24,
+    )
+
+    # draw the rank of the b30 entry
+    rank_text_length = b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_28_MEDIUM)
+    b30_draw.text(
+        (x + B30_ENTRY_WIDTH - 10 - rank_text_length, y + 174),
+        f"#{i + 1}",
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_28_MEDIUM,
+    )
+
+    # draw the internal level
+    b30_draw.text(
+        (x + 132, y + 128),
+        f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f}",
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_28_MEDIUM,
+    )
+
+    # draw the rating value
+    rating_text_length = b30_draw.textlength(
+        f"{record.extras.get(KEY_PLAY_RATING):.2f}", NOTO_SANS_JP_40_BOLD
+    )
+    b30_draw.text(
+        (x + B30_ENTRY_WIDTH - 10 - rating_text_length, y + 118),
+        f"{record.extras.get(KEY_PLAY_RATING):.2f}",
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_40_BOLD,
+    )
 
     return b30_image
 
@@ -332,19 +299,24 @@ def render_b30(
 
     row_num = ceil(record_slots / 5)
 
-    # 214 height for the header + 30 for spacing between header and b30
-    # each b30 entry has 15 padding
-    image_height = 214 + 30 + (B30_ENTRY_HEIGHT + 15) * row_num + 15
+    # calculate image height
+    image_height = (
+        B30_HEADER_HEIGHT
+        + B30_HEADER_SPACING
+        + (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING) * row_num
+        + B30_FOOTER_SPACING
+        + B30_FOOTER_HEIGHT
+    )
 
-    # Add a 45 pixel gap between old rating and new rating, if it is provided
+    # Add a gap between old rating and new rating, if it is provided
     if new_records is not None:
         new_row_num = ceil(new_record_slots / 5)
-        image_height += 30 + (B30_ENTRY_HEIGHT + 15) * new_row_num + 15
+        image_height += B30_OLD_NEW_SPACING + (B30_ENTRY_HEIGHT + 15) * new_row_num
 
     b30_image = Image.new("RGBA", size=(1872, image_height), color="#FFFFFF")
-    b30_draw = ImageDraw.Draw(b30_image)
 
-    with Image.open(ASSETS_DIR / "b30_bg.png") as im:
+    # draw background
+    with Image.open(ASSETS_DIR / "b50" / "b50_bg.png") as im:
         im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
         im = im.crop(
             (
@@ -354,130 +326,274 @@ def render_b30(
                 (im.height + b30_image.height) / 2,
             )
         )
-        b30_image.paste(im.filter(ImageFilter.GaussianBlur(8)))
+        b30_image.paste(im.filter(ImageFilter.GaussianBlur(5)))
 
-    # header: player name and credits
-    # draw a background for the player name
-    b30_draw.rectangle((0, 0, b30_image.width, 124), fill="#D2AEF2")
+    # draw background overlay
+    with Image.open(ASSETS_DIR / "b50" / "b50_overlay.png") as im:
+        im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
+        im = im.crop(
+            (
+                (im.width - b30_image.width) / 2,
+                (im.height - b30_image.height) / 2,
+                (im.width + b30_image.width) / 2,
+                (im.height + b30_image.height) / 2,
+            )
+        )
+        b30_image = Image.alpha_composite(
+            b30_image, im.filter(ImageFilter.GaussianBlur(5))
+        )
 
-    # draw the player name
-    b30_draw.text((20, 0), player_name, fill="#000000", font=NOTO_SANS_JP_80)
+    # draw header overlay
+    with Image.open(ASSETS_DIR / "b50" / "b50_part_header.png") as im:
+        header_padded = Image.new("RGBA", b30_image.size)
+        header_padded.paste(im, (0, 0))
+        b30_image = Image.alpha_composite(b30_image, header_padded)
 
-    # determine the width/height of the credits text to right-align it with Math
-    credits_bbox = b30_draw.multiline_textbbox(
-        (0, 0),
-        "Generated by chuni penguin#3217\nhttps://chunithm.beerpsi.cc/invite",
-        INTER_32,
-        spacing=12,
-    )
-    credits_width = credits_bbox[2] - credits_bbox[0]
-    credits_height = credits_bbox[3] - credits_bbox[1]
+    # draw logo
+    with Image.open(ASSETS_DIR / "b50" / "b50_logo.png") as im:
+        logo_padded = Image.new("RGBA", b30_image.size)
+        logo_padded.paste(im, (1442, 10))
+        b30_image = Image.alpha_composite(b30_image, logo_padded)
 
-    # draw the credit text
-    b30_draw.multiline_text(
+    # draw generated date overlay
+    with Image.open(ASSETS_DIR / "b50" / "b50_part_date.png") as im:
+        date_padded = Image.new("RGBA", b30_image.size)
+        date_padded.paste(im, (1492, 310))
+        b30_image = Image.alpha_composite(b30_image, date_padded)
+
+    # draw semitransparent rectangles to darken footer
+    b30_semitransparent_base = Image.new("RGBA", b30_image.size)
+    b30_semitransparent_draw = ImageDraw.Draw(b30_semitransparent_base)
+    # draw footer separation line
+    b30_semitransparent_draw.rectangle(
         (
-            b30_image.width - credits_width - 30,
-            (124 - credits_height) // 2 - 6,
+            0,
+            b30_image.height - B30_FOOTER_HEIGHT - 2,
+            b30_image.width,
+            b30_image.height - B30_FOOTER_HEIGHT,
         ),
-        "Generated by chuni penguin#3217\nhttps://chunithm.beerpsi.cc/invite",
-        fill="#000000",
-        font=INTER_32,
-        spacing=12,
+        fill=(0, 0, 0, 200),
+    )
+    # darken footer
+    b30_semitransparent_draw.rectangle(
+        (0, b30_image.height - B30_FOOTER_HEIGHT, b30_image.width, b30_image.height),
+        fill=(0, 0, 0, 120),
+    )
+    # paste the darkened parts onto the image
+    b30_image = Image.alpha_composite(b30_image, b30_semitransparent_base)
+
+    b30_draw = ImageDraw.Draw(b30_image)
+
+    # draw player name
+    player_name_length = b30_draw.textlength(player_name, NOTO_SANS_JP_64_BOLD)
+    b30_draw.text(
+        (390 - player_name_length / 2, 64),
+        player_name,
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_64_BOLD,
     )
 
-    # subheader: rating information and generation date
-    # draw a background for the subheader
-    b30_draw.rectangle(
-        (0, 124, b30_image.width, 214),
-        fill="#E7C4F3",
-    )
-
+    # get rating values
     total_rating = sum(
         (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
     )
     average = floor_to_ndp(total_rating / record_slots, 4)
+    new_average = 0
 
-    # draw the rating information in the subheader
-    # if there's no new rating, we just call it average
-    # but if there's new rating, we need to differentiate between new rating and old rating.
+    # draw the rating information
     if new_records is None:
-        rating_text = f"AVERAGE {average:.4f}"
+        rating_title = "NAIVE RATING"
+        raw_rating_text = f"({average:.4f})"
+        final_rating = floor_to_ndp(average, 2)
     else:
+        rating_title = "RATING"
+        new_total_rating = sum(
+            (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
+        )
         new_average = floor_to_ndp(
-            sum(
-                (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
-            )
-            / new_record_slots,
+            new_total_rating / new_record_slots,
             4,
         )
-        rating_text = f"OLD {average:.4f} / NEW {new_average:.4f}"
+        overall_average = floor_to_ndp(
+            (total_rating + new_total_rating) / (record_slots + new_record_slots), 4
+        )
+        raw_rating_text = f"({overall_average:.4f})"
+        final_rating = floor_to_ndp(overall_average, 2)
+
+    # draw the text "RATING"
+    b30_draw.text(
+        (790, 22),
+        rating_title,
+        fill="#DDDDDD",
+        font=INTER_32,
+    )
 
     if current_rating is not None:
-        rating_text = f"RATING {current_rating:.2f} / {rating_text}"
+        final_rating = current_rating
 
+    rating_text = f"{final_rating:.2f}"
+
+    # set rating color
+    rating_thresholds = [
+        (17.00, 10),
+        (16.00, 9),
+        (15.25, 8),
+        (14.50, 7),
+        (13.25, 6),
+        (12.00, 5),
+        (10.00, 4),
+        (7.00, 3),
+        (4.00, 2),
+    ]
+
+    rating_tier = 1
+    for threshold, tier in rating_thresholds:
+        if final_rating >= threshold:
+            rating_tier = tier
+            break
+
+    # draw the rating number
+    digit_x = 810
+    digit_count = 0
+    if final_rating < 10:
+        digit_x = 835
+        digit_count = 1
+
+    for char in rating_text:
+        # draw each digit of the rating number
+        digit_count += 1
+        image_name = (
+            f"rating_{rating_tier}_{char}.png"
+            if char != "."
+            else f"rating_{rating_tier}_dot.png"
+        )
+        digit_path = ASSETS_DIR / "b50" / image_name
+
+        with Image.open(digit_path).convert("RGBA") as digit_im:
+            digit_padded = Image.new("RGBA", b30_image.size)
+            digit_padded.paste(digit_im, (digit_x, 58))
+            b30_image = Image.alpha_composite(b30_image, digit_padded)
+
+        digit_x += 40
+        if digit_count == 1 or digit_count == 4:
+            digit_x += 10
+
+    b30_draw = ImageDraw.Draw(b30_image)
+
+    # determine the size of raw rating text to properly right-align it
+    raw_rating_text_length = b30_draw.textlength(raw_rating_text, INTER_32)
+
+    # draw the raw rating
     b30_draw.text(
-        (30, 151),
-        rating_text,
-        fill="#000000",
+        (1090 - raw_rating_text_length, 162),
+        raw_rating_text,
+        fill="#DDDDDD",
         font=INTER_32,
     )
 
     # determine the size of the timestamp to properly right-align it
-    updated_text = f"Generated at {datetime.now(UTC).strftime('%Y-%m-%d')}"
-    updated_length = b30_draw.textlength(updated_text, INTER_32)
+    updated_text = f"{datetime.now(UTC).strftime('%Y-%m-%d')}"
+    updated_length = b30_draw.textlength(updated_text, INTER_40_BOLD)
 
+    # draw the timestamp
     b30_draw.text(
         (
-            b30_image.width - updated_length - 30,
-            151,
+            b30_image.width - updated_length - 40,
+            318,
         ),
         updated_text,
-        fill="#000000",
+        fill="#DDDDDD",
+        font=INTER_40_BOLD,
+    )
+
+    # draw the credits
+    b30_draw.text(
+        (30, b30_image.height - 57),
+        "Generated by chuni penguin#3127",
+        fill="#DDDDDD",
+        font=INTER_32,
+    )
+
+    # determine the size of invite link to properly right-align it
+    invite_link_text_length = b30_draw.textlength(INVITE_LINK, INTER_32)
+
+    # draw the invite link
+    b30_draw.text(
+        (b30_image.width - 30 - invite_link_text_length, b30_image.height - 57),
+        INVITE_LINK,
+        fill="#DDDDDD",
         font=INTER_32,
     )
 
     # best30
-    # add a gaussian blurred shadow onto the jacket
-    # generate the base shadow here so we can just copy it for each jacket later
-    jacket_shadow_base = Image.new(
-        "RGBA", (B30_ENTRY_WIDTH + 20, B30_ENTRY_HEIGHT + 20)
-    )
-    jacket_shadow_base.paste(
-        (0, 0, 0, 200), (5, 5, B30_ENTRY_WIDTH + 15, B30_ENTRY_HEIGHT + 15)
-    )
-
-    for _ in range(5):
-        jacket_shadow_base = jacket_shadow_base.filter(ImageFilter.GaussianBlur)
-
     for i, record in enumerate(records):
         # top left corner of each b30 entry
-        # - the initial 30 is left/top margin
+        # - the initial 30 is left margin
         # - the (i % 5) and (i // 5) are the b30's position on the grid, so this goes
         # left to right, top to bottom
-        # - the width/height is added by 15 to space out the entries
-        x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
-        y = 30 + 214 + (i // 5) * (B30_ENTRY_HEIGHT + 15)
-
-        b30_image = _render_b30_entry(
-            b30_image, jacket_shadow_base, record, i, x, y, user_config
+        x = 30 + (i % 5) * (B30_ENTRY_WIDTH + B30_ENTRY_WIDTH_SPACING)
+        y = (
+            B30_HEADER_HEIGHT
+            + B30_HEADER_SPACING
+            + (i // 5) * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
         )
 
+        b30_image = _render_b30_entry(b30_image, record, i, x, y, user_config)
+
     if new_records is not None:
+        # draw the "OLD CHARTS" and "NEW CHARTS" separators
+        with Image.open(ASSETS_DIR / "b50" / "b50_part_old.png") as im:
+            old_padded = Image.new("RGBA", b30_image.size)
+            old_padded.paste(im, (0, 300))
+            b30_image = Image.alpha_composite(b30_image, old_padded)
+
+        with Image.open(ASSETS_DIR / "b50" / "b50_part_new.png") as im:
+            new_padded = Image.new("RGBA", b30_image.size)
+            new_padded.paste(im, (0, 1870))
+            b30_image = Image.alpha_composite(b30_image, new_padded)
+
+        b30_draw = ImageDraw.Draw(b30_image)
+
+        # draw b30 average
+        b30_draw.text(
+            (40, 316),
+            "OLD CHARTS",
+            fill="#FFFFFF",
+            font=INTER_40_BOLD,
+        )
+        b30_draw.text(
+            (420, 314),
+            f"{average:.4f}",
+            fill="#000000",
+            font=INTER_44_BOLD,
+        )
+
+        # draw n20 average
+        b30_draw.text(
+            (40, 1886),
+            "NEW CHARTS",
+            fill="#FFFFFF",
+            font=INTER_40_BOLD,
+        )
+        b30_draw.text(
+            (420, 1884),
+            f"{new_average:.4f}",
+            fill="#000000",
+            font=INTER_44_BOLD,
+        )
+
         for i, record in enumerate(new_records):
-            x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
+            x = 30 + (i % 5) * (B30_ENTRY_WIDTH + B30_ENTRY_WIDTH_SPACING)
 
-            # start 60 pixels after the last b30 row, denoted by the 30 + 214 + 6 * ... + 60 part
             y = (
-                30
-                + 214
-                + 6 * (B30_ENTRY_HEIGHT + 15)
-                + 45
-                + (i // 5) * (B30_ENTRY_HEIGHT + 15)
+                B30_HEADER_HEIGHT
+                + B30_HEADER_SPACING
+                + 6 * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
+                + B30_OLD_NEW_SPACING
+                + (i // 5) * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
             )
 
-            b30_image = _render_b30_entry(
-                b30_image, jacket_shadow_base, record, i, x, y
-            )
+            b30_image = _render_b30_entry(b30_image, record, i, x, y)
 
     # crop any extra bits we don't need, however we might need them later...
     # b30_image = b30_image.crop((0, 0, b30_image.width, 1429))
