@@ -232,6 +232,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             Sets the display mode: `default` (Display rating information only) / `aj` (Display OP information for ALL JUSTICE only)
         """
 
+        chart_constant = round(chart_constant, 2)
         res = f"Calculation for chart constant **{chart_constant}**:"
         if mode == "aj":
             separator = "-------------------------"
@@ -304,7 +305,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         """
 
         rating = round(rating, 2)
-        res = f"Score required to achieve **{rating}** play rating:"
+        res = f"Score required to achieve **{rating:.2f}** play rating:"
         res += "\n```Const |   Score\n---------------"
 
         chart_constant_10 = int(rating - 3) * 10
