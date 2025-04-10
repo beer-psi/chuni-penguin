@@ -470,7 +470,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             Number of charts to return. Must be between 1 and 4.
         target_rating: Optional[float]
             Your target play rating. If not provided, it will be automatically set based on your song records
-            on CHUNITHM-NET/Kamaitachi, assuming you're logged in.
+            on CHUNITHM-NET or your Kamaitachi NaiveRating, assuming you're logged in.
         """
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
@@ -479,66 +479,17 @@ class ToolsCog(commands.Cog, name="Tools"):
 
                 if network == "kamaitachi":
                     async with self.utils.kamaitachi_client(ctx) as client:
-                        # TODO: Unsure if need support for NaiveRating recommendations
-                        # if new_rating:
                         resp = await client.get(
-                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
+                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
                         )
-                        # else:
-                        #     resp = await client.get(
-                        #         "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
-                        #     )
                         data = json_loads(resp.content)
 
                         if not data["success"]:
-                            msg = f"Could not retrieve your best scores from Kamaitachi: {data['description']}"
+                            msg = f"Could not get Kamaitachi game stats: {data['description']}"
                             raise commands.CommandError(msg)
 
-                        # if new_rating:
-                        raw_body = msgspec.convert(
-                            data["body"], KTChunithmPersonalBestResponseBody
-                        )
-                        song_id_map = {s.id: s for s in raw_body.songs}
-                        chart_id_map = {c.chart_id: c for c in raw_body.charts}
-
-                        old_pbs = [
-                            pb
-                            for pb in raw_body.pbs
-                            if song_id_map[pb.song_id].data.display_version
-                            != CURRENT_CHUNITHM_VERSION_KT
-                        ]
-                        records = [
-                            convert_kt_to_record(
-                                pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
-                            )
-                            for pb in old_pbs[:30]
-                        ]
-                        records = await self.utils.hydrate_records(records)
-
-                        # TODO: should ideally have separate recommendations for b30 and n20?
-                        # new_pbs = [
-                        #     pb
-                        #     for pb in raw_body.pbs
-                        #     if song_id_map[pb.song_id].data.display_version
-                        #     == CURRENT_CHUNITHM_VERSION_KT
-                        # ]
-                        # new_records = [
-                        #     convert_kt_to_record(
-                        #         pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
-                        #     )
-                        #     for pb in new_pbs[:20]
-                        # ]
-                        # new_records = await self.utils.hydrate_records(new_records)
-
-                        # TODO: Unsure if need support for NaiveRating recommendations
-                        # else:
-                        #     pbs = convert_kt_pbs_to_records(data["body"])
-                        #     pbs = await self.utils.hydrate_records(pbs)
-
-                        #     records = pbs[:50]
-                        #     new_records = None
-
-                        records = await self.utils.hydrate_records(records)
+                        stats = data["body"]
+                        target_rating = stats["gameStats"]["ratings"]["naiveRating"]
                 else:
                     async with self.utils.chuninet(ctx) as client:
                         records = await self.utils.hydrate_records(
@@ -549,20 +500,20 @@ class ToolsCog(commands.Cog, name="Tools"):
                         #     await client.new20()
                         # )
 
-                # get the song with the lowest rating in b30
-                min_rating = min(
-                    (item.extras[KEY_PLAY_RATING] for item in records),
-                    default=Decimal(0),
-                )
-                # set target rating to be 0.01 above the song with lowest rating in b30
-                target_rating = float(min_rating) + 0.01
+                        # get the song with the lowest rating in b30
+                        min_rating = min(
+                            (item.extras[KEY_PLAY_RATING] for item in records),
+                            default=Decimal(0),
+                        )
+                        # set target rating to be 0.01 above the song with lowest rating in b30
+                        target_rating = float(min_rating) + 0.01
 
             # set minimum target rating to 1 to prevent funny things from happening
-            if target_rating < 1 or target_rating is None:
+            if target_rating is None or target_rating < 1:
                 target_rating = 1
 
             # Determine min-max const to recommend based on target rating.
-            min_level = target_rating - 2.15
+            min_level = target_rating - 2.1501
             max_level = target_rating
 
             stmt = (
