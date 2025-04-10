@@ -36,8 +36,8 @@ def calculate_rating(score: int, internal_level: Optional[float]) -> Decimal:
 
 
 def calculate_score_for_rating(rating: float, internal_level: float) -> Optional[int]:
-    rating10000 = int(rating * 10000)
-    internal_level_10000 = int(internal_level * 10000)
+    rating10000 = int(round(rating, 2) * 10000)
+    internal_level_10000 = int(round(internal_level, 2) * 10000)
     coeff = rating10000 - internal_level_10000
 
     req = None
