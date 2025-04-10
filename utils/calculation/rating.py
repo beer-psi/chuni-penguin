@@ -42,7 +42,7 @@ def calculate_score_for_rating(rating: float, internal_level: float) -> Optional
 
     req = None
 
-    if coeff >= 21_500:
+    if coeff > 21_500:
         req = None
     elif coeff >= 20_000:
         req = 1_007_500 + coeff - 20_000
