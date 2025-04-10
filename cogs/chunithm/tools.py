@@ -303,12 +303,13 @@ class ToolsCog(commands.Cog, name="Tools"):
             Play rating you want to achieve
         """
 
+        rating = round(rating, 2)
         res = f"Score required to achieve **{rating}** play rating:"
         res += "\n```Const |   Score\n---------------"
 
         chart_constant_10 = int(rating - 3) * 10
-        rating_10 = round(rating * 10, 1)
-        max_10 = round(MAX_DIFFICULTY * 10, 1)
+        rating_10 = rating * 10
+        max_10 = MAX_DIFFICULTY * 10
 
         if chart_constant_10 < 1:
             chart_constant_10 = 1
