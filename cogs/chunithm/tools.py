@@ -232,6 +232,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             Sets the display mode: `default` (Display rating information only) / `aj` (Display OP information for ALL JUSTICE only)
         """
 
+        chart_constant = round(chart_constant, 2)
         res = f"Calculation for chart constant **{chart_constant}**:"
         if mode == "aj":
             separator = "-------------------------"
@@ -293,7 +294,7 @@ class ToolsCog(commands.Cog, name="Tools"):
     @commands.hybrid_command("rating")
     @logged_prefix_command
     async def rating(
-        self, ctx: Context, rating: Range[float, 1.0, MAX_DIFFICULTY + 2.15]
+        self, ctx: Context, rating: Range[float, 1.0, round(MAX_DIFFICULTY + 2.15, 2)]
     ):
         """Calculate score required to achieve the specified play rating.
 
@@ -303,7 +304,8 @@ class ToolsCog(commands.Cog, name="Tools"):
             Play rating you want to achieve
         """
 
-        res = f"Score required to achieve **{rating}** play rating:"
+        rating = round(rating, 2)
+        res = f"Score required to achieve **{rating:.2f}** play rating:"
         res += "\n```Const |   Score\n---------------"
 
         chart_constant_10 = int(rating - 3) * 10
@@ -506,8 +508,8 @@ class ToolsCog(commands.Cog, name="Tools"):
                 target_rating = 1
 
             # Determine min-max const to recommend based on target rating.
-            min_level = target_rating - 2.1501
-            max_level = target_rating
+            min_level = round(target_rating - 2.15, 2)
+            max_level = round(target_rating, 2)
 
             stmt = (
                 select(Chart)
