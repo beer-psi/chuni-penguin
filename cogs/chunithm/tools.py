@@ -353,7 +353,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "iv": ["13+", "14", "14+"],
             "v": ["14", "14+", "15"],
             "inf": ["14+", "15", "15+"],
-            "random": ["12", "13", None],
+            "random": [None, None, None],
             "wallpanic": ["10+", "11", "11+"],
         }
         course_condition: dict[str, str] = {
@@ -362,7 +362,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "iii": "CLASS III: 30 LIFE, MISS -1",
             "iv": "CLASS IV: 500 LIFE, JUSTICE or lower -1",
             "v": "CLASS V: 300 LIFE, JUSTICE or lower -1",
-            "inf": "CLASS ∞: 150 LIFE, JUSTICE or lower -1",
+            "inf": "CLASS ∞: 200 LIFE, JUSTICE or lower -1",
             "random": "CLASS EXTRA - RANDOM: 50 LIFE, MISS -1",
             "wallpanic": "CLASS EXTRA - Wall Panic!: 400 LIFE, JUSTICE or lower -1, JUSTICE CRITICAL +1, field wall gets further back as LIFE decreases",
         }
