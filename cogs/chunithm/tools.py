@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
 
 import discord
 import httpx
-import msgspec
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context, Range
@@ -34,16 +33,10 @@ from utils.calculation.overpower import (
 from utils.calculation.rating import calculate_rating, calculate_score_for_rating
 from utils.components import ChartCardEmbed
 from utils.constants import (
-    CURRENT_CHUNITHM_VERSION_KT,
     MAX_DIFFICULTY,
     SIMILARITY_THRESHOLD,
 )
 from utils.converters import DifficultyConverter
-from utils.kamaitachi import (
-    KTChunithmPersonalBestResponseBody,
-    convert_kt_pbs_to_records,
-    convert_kt_to_record,
-)
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
