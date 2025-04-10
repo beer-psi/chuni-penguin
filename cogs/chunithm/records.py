@@ -207,10 +207,10 @@ def _render_b30_entry(
         lamps += " [FC]"
 
     b30_draw.text(
-        (x + 132, y + 88),
+        (x + 132, y + 90),
         lamps,
-        fill="#FFFFFF",
-        font=NOTO_SANS_JP_28_MEDIUM,
+        fill="#DDDDDD",
+        font=NOTO_SANS_JP_24,
     )
 
     # draw the timestamp and judgements if available
@@ -270,10 +270,13 @@ def _render_b30_entry(
     rating_text_length = b30_draw.textlength(
         f"{record.extras.get(KEY_PLAY_RATING):.2f}", NOTO_SANS_JP_40_BOLD
     )
+    rating_value_color = "#FFFFFF"
+    if record.score >= 1_009_000:
+        rating_value_color = "#FAFFA5"
     b30_draw.text(
         (x + B30_ENTRY_WIDTH - 10 - rating_text_length, y + 118),
         f"{record.extras.get(KEY_PLAY_RATING):.2f}",
-        fill="#FFFFFF",
+        fill=rating_value_color,
         font=NOTO_SANS_JP_40_BOLD,
     )
 
