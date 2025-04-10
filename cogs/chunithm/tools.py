@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
 
 import discord
 import httpx
+import msgspec
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context, Range
@@ -14,6 +15,7 @@ from PIL import Image
 from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
+from chunithm_net.consts import KEY_PLAY_RATING
 from chunithm_net.models.enums import Difficulty, Rank
 from database.models import Chart, Song
 from utils import (
@@ -31,8 +33,17 @@ from utils.calculation.overpower import (
 )
 from utils.calculation.rating import calculate_rating, calculate_score_for_rating
 from utils.components import ChartCardEmbed
-from utils.constants import MAX_DIFFICULTY, SIMILARITY_THRESHOLD
+from utils.constants import (
+    CURRENT_CHUNITHM_VERSION_KT,
+    MAX_DIFFICULTY,
+    SIMILARITY_THRESHOLD,
+)
 from utils.converters import DifficultyConverter
+from utils.kamaitachi import (
+    KTChunithmPersonalBestResponseBody,
+    convert_kt_pbs_to_records,
+    convert_kt_to_record,
+)
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
@@ -447,7 +458,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         self,
         ctx: Context,
         count: Range[int, 1, 4] = 3,
-        max_rating: Optional[float] = None,
+        target_rating: Optional[float] = None,
     ):
         """Get random chart recommendations with target scores based on your rating.
 
@@ -457,46 +468,102 @@ class ToolsCog(commands.Cog, name="Tools"):
         ----------
         count: int
             Number of charts to return. Must be between 1 and 4.
-        max_rating: Optional[float]
-            Your maximum rating. If not provided, your rating will be fetched from CHUNITHM-NET/Kamaitachi,
-            assuming you're logged in.
+        target_rating: Optional[float]
+            Your target play rating. If not provided, it will be automatically set based on your song records
+            on CHUNITHM-NET/Kamaitachi, assuming you're logged in.
         """
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
-            if max_rating is None:
+            if target_rating is None:
                 network = await self.utils.choose_preferred_network(ctx)
 
                 if network == "kamaitachi":
                     async with self.utils.kamaitachi_client(ctx) as client:
+                        # TODO: Unsure if need support for NaiveRating recommendations
+                        # if new_rating:
                         resp = await client.get(
-                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
+                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
                         )
+                        # else:
+                        #     resp = await client.get(
+                        #         "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                        #     )
                         data = json_loads(resp.content)
 
                         if not data["success"]:
-                            msg = f"Could not get Kamaitachi game stats: {data['description']}"
+                            msg = f"Could not retrieve your best scores from Kamaitachi: {data['description']}"
                             raise commands.CommandError(msg)
 
-                        stats = data["body"]
-                        max_rating = stats["gameStats"]["ratings"]["naiveRating"]
+                        # if new_rating:
+                        raw_body = msgspec.convert(
+                            data["body"], KTChunithmPersonalBestResponseBody
+                        )
+                        song_id_map = {s.id: s for s in raw_body.songs}
+                        chart_id_map = {c.chart_id: c for c in raw_body.charts}
+
+                        old_pbs = [
+                            pb
+                            for pb in raw_body.pbs
+                            if song_id_map[pb.song_id].data.display_version
+                            != CURRENT_CHUNITHM_VERSION_KT
+                        ]
+                        records = [
+                            convert_kt_to_record(
+                                pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                            )
+                            for pb in old_pbs[:30]
+                        ]
+                        records = await self.utils.hydrate_records(records)
+
+                        # TODO: should ideally have separate recommendations for b30 and n20?
+                        # new_pbs = [
+                        #     pb
+                        #     for pb in raw_body.pbs
+                        #     if song_id_map[pb.song_id].data.display_version
+                        #     == CURRENT_CHUNITHM_VERSION_KT
+                        # ]
+                        # new_records = [
+                        #     convert_kt_to_record(
+                        #         pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                        #     )
+                        #     for pb in new_pbs[:20]
+                        # ]
+                        # new_records = await self.utils.hydrate_records(new_records)
+
+                        # TODO: Unsure if need support for NaiveRating recommendations
+                        # else:
+                        #     pbs = convert_kt_pbs_to_records(data["body"])
+                        #     pbs = await self.utils.hydrate_records(pbs)
+
+                        #     records = pbs[:50]
+                        #     new_records = None
+
+                        records = await self.utils.hydrate_records(records)
                 else:
                     async with self.utils.chuninet(ctx) as client:
-                        basic_player_data = await client.authenticate()
-                        max_rating = basic_player_data.rating
+                        records = await self.utils.hydrate_records(
+                            await client.best30()
+                        )
+                        # TODO: should ideally have separate recommendations for b30 and n20?
+                        # new_records = await self.utils.hydrate_records(
+                        #     await client.new20()
+                        # )
 
-            if max_rating is None:
-                msg = "No rating data found. Please play a song first."
-                raise commands.BadArgument(msg)
+                # get the song with the lowest rating in b30
+                min_rating = min(
+                    (item.extras[KEY_PLAY_RATING] for item in records),
+                    default=Decimal(0),
+                )
+                # set target rating to be 0.01 above the song with lowest rating in b30
+                target_rating = float(min_rating) + 0.01
 
-            # Determine min-max const to recommend based on user rating. Formula is intentionally confusing.
-            min_level = max_rating * 1.05 - 3.05
-            max_level = max_rating * 0.85 + 0.95
-            if min_level < 7:
-                min_level = 7
-            if max_level < 14:
-                max_level += (14 - max_level) * 0.2
-            if max_level < min_level + 1:
-                max_level = min_level + 1
+            # set minimum target rating to 1 to prevent funny things from happening
+            if target_rating < 1 or target_rating is None:
+                target_rating = 1
+
+            # Determine min-max const to recommend based on target rating.
+            min_level = target_rating - 2.15
+            max_level = target_rating
 
             stmt = (
                 select(Chart)
@@ -520,17 +587,10 @@ class ToolsCog(commands.Cog, name="Tools"):
             for chart in charts:
                 assert chart.const is not None
 
-                target_score = calculate_score_for_rating(max_rating, chart.const)
+                target_score = calculate_score_for_rating(target_rating, chart.const)
                 if target_score is None:
                     target_score = 1_009_000
-                elif 0 <= target_score < 1_000_000:
-                    target_score = round_to_nearest(target_score, 5000)
-                elif target_score < 1_006_000:
-                    target_score = round_to_nearest(target_score, 2500)
-                elif target_score < 1_008_500:
-                    target_score = round_to_nearest(target_score, 1000)
-                elif target_score < 1_009_000:
-                    target_score = round_to_nearest(target_score, 500)
+                target_score = round_to_nearest(target_score, 50)
 
                 embeds.append(ChartCardEmbed(chart, target_score=target_score))
             await ctx.reply(embeds=embeds, mention_author=False)
