@@ -1579,7 +1579,7 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         if level is None and difficulty is None and genre is None and rank is None:
             ctx = await Context.from_interaction(interaction)
-            await self._best50_inner(ctx, user, image=True)
+            await self._best50_inner(ctx, user)
             return None
 
         await interaction.response.defer()
@@ -1697,7 +1697,7 @@ class RecordsCog(commands.Cog, name="Records"):
             return arg
 
         if query is None:
-            await self._best50_inner(ctx, image=True)
+            await self._best50_inner(ctx)
             return None
 
         parser = DiscordArguments()
@@ -1744,7 +1744,7 @@ class RecordsCog(commands.Cog, name="Records"):
             and genre is None
             and rank is None
         ):
-            await self._best50_inner(ctx, user, image=True)
+            await self._best50_inner(ctx, user)
             return None
 
         level = None
