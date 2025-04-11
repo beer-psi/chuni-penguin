@@ -22,11 +22,12 @@ from chunithm_net.consts import (
     KEY_OVERPOWER_BASE,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
+    KEY_SONG_GENRE,
     KEY_SONG_ID,
     KEY_SONG_VERSION,
     KEY_TOTAL_COMBO,
 )
-from chunithm_net.models.enums import Rank
+from chunithm_net.models.enums import Genres, Rank
 from chunithm_net.models.record import Record
 from database.models import Alias, Cookie, Song
 from utils import get_jacket_url
@@ -381,6 +382,9 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             if record.rank == Rank.D:
                 record.rank = Rank.from_score(record.score)
+
+            if KEY_SONG_GENRE not in record.extras:
+                record.extras[KEY_SONG_GENRE] = Genres(song.chunithm_catcode)
 
             hydrated_records.append(record)
 

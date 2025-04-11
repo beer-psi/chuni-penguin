@@ -25,9 +25,11 @@ from chunithm_net.consts import (
     INTERNATIONAL_JACKET_BASE,
     JACKET_BASE,
     KEY_INTERNAL_LEVEL,
+    KEY_LEVEL,
     KEY_OVERPOWER_BASE,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
+    KEY_SONG_GENRE,
     KEY_SONG_ID,
 )
 from chunithm_net.models.enums import ComboType, Difficulty, Genres, Rank
@@ -1179,7 +1181,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             return None
 
-    @commands.command("scores")
+    @commands.command("scores", aliases=["score"])
     @logged_prefix_command
     async def scores(
         self,
@@ -1537,6 +1539,7 @@ class RecordsCog(commands.Cog, name="Records"):
         genre="Genre to search for.",
         rank="Rank to search for.",
         sort="Sort records by a criteria (default rating).",
+        kamaitachi="Get scores from Kamaitachi, if the target user has a linked account",
     )
     @app_commands.choices(
         level=[
@@ -1547,10 +1550,9 @@ class RecordsCog(commands.Cog, name="Records"):
                         app_commands.Choice(name=f"{i}", value=f"{i}"),
                         app_commands.Choice(name=f"{i}+", value=f"{i}+"),
                     )
-                    for i in range(7, 15)
+                    for i in range(7, 16)
                 ]
             ),
-            app_commands.Choice(name="15", value="15"),
         ],
         difficulty=[
             app_commands.Choice(name=str(x), value=x.value)
@@ -1576,77 +1578,109 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Optional[Genres] = None,
         rank: Optional[Rank] = None,
         sort: Literal["rating", "score", "overpower", "overpower %"] = "rating",
+        kamaitachi: bool = False,
     ):
-        if level is None and difficulty is None and genre is None and rank is None:
-            ctx = await Context.from_interaction(interaction)
+        ctx = await Context.from_interaction(interaction)
+        target_user_id = interaction.user.id if user is None else user.id
+        network = await self.utils.choose_preferred_network(
+            target_user_id, kamaitachi=kamaitachi
+        )
+
+        if (
+            level is None
+            and difficulty is None
+            and genre is None
+            and rank is None
+            and network == "chuninet"
+        ):
             await self._best50_inner(ctx, user)
             return None
 
         await interaction.response.defer()
 
-        if (genre or rank) and not difficulty:
+        if network == "chuninet" and (genre or rank) and not difficulty:
             return await interaction.followup.send(
                 "Difficulty must be set if genre or rank is set."
             )
 
-        async with self.utils.chuninet(
-            interaction.user.id if user is None else user.id
-        ) as client:
-            records = await client.music_record_by_folder(
-                level=level, genre=genre, difficulty=difficulty, rank=rank
+        if network == "chuninet":
+            async with self.utils.chuninet(target_user_id) as client:
+                records = await client.music_record_by_folder(
+                    level=level, genre=genre, difficulty=difficulty, rank=rank
+                )
+                assert records is not None
+
+                if len(records) == 0:
+                    return await interaction.followup.send("No scores found.")
+
+                records = await self.utils.hydrate_records(records)
+        elif network == "kamaitachi":
+            async with self.utils.kamaitachi_client(target_user_id) as client:
+                resp = await client.get(
+                    "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
+                )
+                data = resp.json()
+                records = convert_kt_pbs_to_records(data["body"])
+
+                if level is not None:
+                    records = [r for r in records if r.extras[KEY_LEVEL] == level]
+                if difficulty is not None:
+                    records = [r for r in records if r.difficulty == difficulty]
+                if rank is not None:
+                    records = [r for r in records if r.rank == rank]
+
+                records = await self.utils.hydrate_records(records)
+
+                if genre is not None:
+                    records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
+        else:
+            msg = "Invalid network. Expected chuninet or kamaitachi."
+            raise ValueError(msg)
+
+        if sort == "rating":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                ),
             )
-            assert records is not None
+        elif sort == "score":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.score,
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                ),
+            )
+        elif sort == "overpower":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                ),
+            )
+        elif sort == "overpower %":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.extras[KEY_OVERPOWER_BASE] / x.extras[KEY_OVERPOWER_MAX],
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                ),
+            )
+        else:
+            msg = f"Invalid sort type {sort}. Expected one of score, rating, overpower, overpower %."
+            raise commands.BadArgument(msg)
 
-            if len(records) == 0:
-                return await interaction.followup.send("No scores found.")
-
-            records = await self.utils.hydrate_records(records)
-
-            if sort == "rating":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.score,
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                    ),
-                )
-            elif sort == "score":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.score,
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                    ),
-                )
-            elif sort == "overpower":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.score,
-                    ),
-                )
-            elif sort == "overpower %":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.extras[KEY_OVERPOWER_BASE] / x.extras[KEY_OVERPOWER_MAX],
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.score,
-                    ),
-                )
-            else:
-                msg = f"Invalid sort type {sort}. Expected one of score, rating, overpower, overpower %."
-                raise commands.BadArgument(msg)
-
-            ctx = await Context.from_interaction(interaction)
-            view = B30View(ctx, records, show_average=False, show_reachable=False)
-            await view.start()
-            return None
+        view = B30View(ctx, records, show_average=False, show_reachable=False)
+        await view.start()
+        return None
 
     @commands.command("top")
     @logged_prefix_command
@@ -1661,11 +1695,12 @@ class RecordsCog(commands.Cog, name="Records"):
 
         **Parameters:**
         `user`: Discord username of the player. Yourself, if not provided.
-        `level`: Level (from 1 to 15) to search for.
+        `level`: Level (from 1 to 15+) to search for.
         `-d`: Difficulty to search for. Must be one of `EASY`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
         `-g`: Genre to search for. Must be one of `POPS&ANIME`, `niconico`, `Touhou Project`, `ORIGINAL`, `VARIETY`, `Irodorimidori`, or `Gekimai`, if specified.
         `-r`: Rank to search for. Anywhere between "S" and "SSS+" (inclusive), if specified.
         `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`.
+        `-k`: Get scores from Kamaitachi, if the target user has a linked account.
 
         Genre and rank cannot be set at the same time. If genre or rank is set, difficulty must also be set.
 
@@ -1703,6 +1738,7 @@ class RecordsCog(commands.Cog, name="Records"):
         parser = DiscordArguments()
         parser.add_argument("-d", "--difficulty", type=str, required=False)
         parser.add_argument("-s", "--sort", type=sort_type, required=False)
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
 
         group = parser.add_mutually_exclusive_group()
         group.add_argument("-g", "--genre", type=str, required=False)
@@ -1736,6 +1772,10 @@ class RecordsCog(commands.Cog, name="Records"):
                     break
 
         str_level = rest[0] if len(rest) > 0 else None
+        target_user_id = ctx if user is None else user.id
+        network = await self.utils.choose_preferred_network(
+            ctx, kamaitachi=args.kamaitachi
+        )
 
         if (
             user is not None
@@ -1743,6 +1783,7 @@ class RecordsCog(commands.Cog, name="Records"):
             and difficulty is None
             and genre is None
             and rank is None
+            and network == "chuninet"
         ):
             await self._best50_inner(ctx, user)
             return None
@@ -1761,7 +1802,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 if internal_level * 10 % 10 >= 5:
                     level += "+"
             elif str_level[-1] == "+" and str_level[:-1].isdigit():
-                if int(str_level[:-1]) not in range(7, 15):
+                if int(str_level[:-1]) not in range(7, 16):
                     raise commands.BadArgument(msg)
 
                 level = str_level
@@ -1773,22 +1814,47 @@ class RecordsCog(commands.Cog, name="Records"):
             else:
                 raise commands.BadArgument(msg)
 
-        async with (
-            ctx.typing(),
-            self.utils.chuninet(ctx if user is None else user.id) as client,
-        ):
-            records = await client.music_record_by_folder(
-                level=level,
-                genre=genre,
-                difficulty=difficulty,
-                rank=rank,
-            )
-            assert records is not None
+        async with ctx.typing():
+            if network == "chuninet":
+                async with self.utils.chuninet(
+                    ctx if user is None else user.id
+                ) as client:
+                    records = await client.music_record_by_folder(
+                        level=level,
+                        genre=genre,
+                        difficulty=difficulty,
+                        rank=rank,
+                    )
+                    assert records is not None
 
-            if len(records) == 0:
-                return await ctx.reply("No scores found.", mention_author=False)
+                    if len(records) == 0:
+                        return await ctx.reply("No scores found.", mention_author=False)
 
-            records = await self.utils.hydrate_records(records)
+                    records = await self.utils.hydrate_records(records)
+            elif network == "kamaitachi":
+                async with self.utils.kamaitachi_client(target_user_id) as client:
+                    resp = await client.get(
+                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
+                    )
+                    data = resp.json()
+                    records = convert_kt_pbs_to_records(data["body"])
+
+                    if level is not None:
+                        records = [r for r in records if r.extras[KEY_LEVEL] == level]
+                    if difficulty is not None:
+                        records = [r for r in records if r.difficulty == difficulty]
+                    if rank is not None:
+                        records = [r for r in records if r.rank == rank]
+
+                    records = await self.utils.hydrate_records(records)
+
+                    if genre is not None:
+                        records = [
+                            r for r in records if r.extras[KEY_SONG_GENRE] == genre
+                        ]
+            else:
+                msg = "Invalid network. Expected chuninet or kamaitachi."
+                raise ValueError(msg)
 
             if args.sort is None or args.sort == "rating":
                 records.sort(
