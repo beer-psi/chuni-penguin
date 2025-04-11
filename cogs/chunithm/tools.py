@@ -316,7 +316,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             chart_constant_10 = 1
         while chart_constant_10 <= rating_10 and chart_constant_10 <= max_10:
             required_score = calculate_score_for_rating(
-                rating_10 / 10, chart_constant_10 / 10
+                round(rating_10 / 10, 2), round(chart_constant_10 / 10, 1)
             )
 
             if required_score is not None and required_score >= Rank.S.min_score:

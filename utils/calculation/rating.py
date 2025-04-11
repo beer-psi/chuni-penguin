@@ -1,6 +1,8 @@
 from decimal import Decimal
 from typing import Optional
 
+from utils import round_to_nearest
+
 
 def calculate_rating(score: int, internal_level: Optional[float]) -> Decimal:
     internal_level_10000 = int((internal_level or 0) * 10000)
@@ -53,7 +55,11 @@ def calculate_score_for_rating(rating: float, internal_level: float) -> Optional
     elif coeff >= 0:
         req = 975_000 + coeff * 5 / 2
 
+    # Fix rounding issues
+    if req is not None:
+        return round_to_nearest(int(req), 50)
+
     # Calculation for scores below 975,000 is very complex so it is skipped for now
     # (If your score is below 975,000 you should just git gud)
 
-    return int(req) if req is not None else None
+    return None
