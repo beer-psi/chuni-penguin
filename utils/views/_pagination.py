@@ -199,8 +199,15 @@ class PaginationView(discord.ui.View, Generic[PageT]):
 
     @override
     async def on_timeout(self) -> None:
+        for item in self.children:
+            if (
+                not isinstance(item, discord.ui.Button)
+                or item.style != discord.ButtonStyle.link
+            ):
+                self.remove_item(item)
+
         if self.message is not None:
-            await self.message.edit(view=None)
+            await self.message.edit(view=self)
 
     @override
     async def on_error(
