@@ -788,10 +788,11 @@ class RecordsCog(commands.Cog, name="Records"):
                         x async for x in ctx.channel.history(limit=50) if check(x)
                     ]
                 except discord.errors.Forbidden as e:
-                    msg = (
-                        "Bot requires the Read Message History permission to fetch recent scores. "
-                        f"Alternatively, run `{ctx.prefix}compare` while replying to the score you want to compare."
-                    )
+                    msg = "Bot requires the Read Message History permission to fetch recent scores."
+
+                    if ctx.interaction is None:
+                        msg += f" Alternatively, run `{ctx.prefix}compare` while replying to the score you want to compare."
+
                     raise commands.CheckFailure(msg) from e
 
                 if len(messages) == 0:
