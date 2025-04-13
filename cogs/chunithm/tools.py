@@ -597,17 +597,23 @@ class ToolsCog(commands.Cog, name="Tools"):
                 records = await self.utils.hydrate_records(await client.best30())
                 new_records = await self.utils.hydrate_records(await client.new20())
 
-                # get the song with the lowest rating in b30
+                # check the number of songs in b30
                 record_count = len(records)
+                # check the number of songs in n20
                 new_record_count = len(new_records)
+
+                # get the song with lowest rating in b30
                 min_rating = min(
                     (item.extras[KEY_PLAY_RATING] for item in records),
                     default=Decimal(0),
                 )
+                # get the song with lowest rating in n20
                 new_min_rating = min(
                     (item.extras[KEY_PLAY_RATING] for item in new_records),
                     default=Decimal(0),
                 )
+
+                # calculate raw rating
                 total_rating = sum(
                     (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
                 )
