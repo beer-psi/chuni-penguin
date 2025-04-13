@@ -917,18 +917,20 @@ class RecordsCog(commands.Cog, name="Records"):
                         raise commands.CommandError(msg)
 
                     raw_records = convert_kt_pbs_to_records(data["body"])
-
-                    if len(raw_records) == 0:
-                        await ctx.reply(
-                            f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi.",
-                            mention_author=False,
-                        )
-                        return
-
-                    network = " on Kamaitachi"
                     records = [
                         pb for pb in raw_records if pb.extras[KEY_SONG_ID] == song.id
                     ]
+
+                    if len(records) == 0:
+                        msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
+
+                        if len(song.title) <= 5:
+                            msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
+
+                        await ctx.reply(msg, mention_author=False)
+                        return
+
+                    network = " on Kamaitachi"
                     records = await self.utils.hydrate_records(records)
                     records.sort(key=lambda r: r.difficulty.value)
             else:
