@@ -563,7 +563,9 @@ class ToolsCog(commands.Cog, name="Tools"):
         """
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
+            play_rating = round(play_rating, 2)
             if current_play_rating is not None:
+                current_play_rating = round(current_play_rating, 2)
                 if play_rating < current_play_rating:
                     # swap the input parameters because we're nice
                     play_rating, current_play_rating = current_play_rating, play_rating
