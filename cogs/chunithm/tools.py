@@ -312,8 +312,8 @@ class ToolsCog(commands.Cog, name="Tools"):
         rating_10 = rating * 10
         max_10 = MAX_DIFFICULTY * 10
 
-        if chart_constant_10 < 1:
-            chart_constant_10 = 1
+        if chart_constant_10 < 10:
+            chart_constant_10 = 10
         while chart_constant_10 <= rating_10 and chart_constant_10 <= max_10:
             required_score = calculate_score_for_rating(
                 round(rating_10 / 10, 2), round(chart_constant_10 / 10, 1)
