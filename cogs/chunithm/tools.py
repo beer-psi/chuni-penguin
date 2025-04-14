@@ -37,6 +37,7 @@ from utils.constants import (
     SIMILARITY_THRESHOLD,
 )
 from utils.converters import DifficultyConverter
+from utils.kamaitachi import convert_kt_pbs_to_records
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
@@ -579,17 +580,50 @@ class ToolsCog(commands.Cog, name="Tools"):
             network = await self.utils.choose_preferred_network(ctx)
 
             if network == "kamaitachi":
-                if current_play_rating is None:
-                    # calculating rating increase for Kamaitachi would require getting song records from
-                    # /api/v1/users/:userID/games/:game/:playtype/pbs/all, which is rate limited
-                    res = "whatif for Kamaitachi is currently not supported."
-                    res += "\nTo calculate the rating increase, specify both play_rating and current_play_rating."
-                    res += "\nIf the chart you're playing isn't in your best 50, then for current_play_rating, use the play rating of your lowest rating chart currently in your best 50."
-                    await ctx.reply(res, mention_author=False)
-                    return
-                rating_increase = (play_rating - current_play_rating) / 50
-                res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
-                res += f"\n• Rating: **+{rating_increase:.4f}**"
+                async with self.utils.kamaitachi_client(ctx) as client:
+                    resp = await client.get(
+                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                    )
+                    data = json_loads(resp.content)
+                    pbs = convert_kt_pbs_to_records(data["body"])
+                    pbs = await self.utils.hydrate_records(pbs)
+                    records = pbs[:50]
+                    records = await self.utils.hydrate_records(records)
+                    record_count = len(records)
+
+                    # get the song with lowest rating in b50
+                    min_rating = min(
+                        (item.extras[KEY_PLAY_RATING] for item in records),
+                        default=Decimal(0),
+                    )
+
+                    # calculate raw NaiveRating
+                    total_rating = sum(
+                        (item.extras[KEY_PLAY_RATING] for item in records),
+                        start=Decimal(0),
+                    )
+                    overall_average = floor_to_ndp(total_rating / 50, 4)
+
+                    if current_play_rating is not None:
+                        rating_increase = Decimal(
+                            (play_rating - current_play_rating) / 50
+                        )
+                        updated_rating = overall_average + rating_increase
+                        res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
+                        res += f"\n• NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                    else:
+                        res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
+
+                        rating_increase = max(
+                            (Decimal(play_rating) - min_rating) / 50, 0
+                        )
+                        if record_count < 50:
+                            rating_increase = Decimal(play_rating) / 50
+                        updated_rating = overall_average + rating_increase
+                        res += f"\n• NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                        if record_count == 50 and rating_increase > 0:
+                            res += f", replacing a {min_rating} rating play"
+
                 await ctx.reply(res, mention_author=False)
                 return
 
