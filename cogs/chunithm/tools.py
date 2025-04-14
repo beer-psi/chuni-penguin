@@ -563,7 +563,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             Leave blank if the chart is currently not included in your best 50 scores.
         """
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
+        async with ctx.typing():
             play_rating = round(play_rating, 2)
             if current_play_rating is not None:
                 current_play_rating = round(current_play_rating, 2)
