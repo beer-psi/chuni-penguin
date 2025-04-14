@@ -624,8 +624,8 @@ class ToolsCog(commands.Cog, name="Tools"):
                         if record_count == 50 and rating_increase > 0:
                             res += f", replacing a {min_rating} rating play"
 
-                await ctx.reply(res, mention_author=False)
-                return
+                    await ctx.reply(res, mention_author=False)
+                    return
 
             async with self.utils.chuninet(ctx) as client:
                 records = await self.utils.hydrate_records(await client.best30())
