@@ -37,6 +37,7 @@ from utils.constants import (
     SIMILARITY_THRESHOLD,
 )
 from utils.converters import DifficultyConverter
+from utils.kamaitachi import convert_kt_pbs_to_records
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
@@ -540,6 +541,153 @@ class ToolsCog(commands.Cog, name="Tools"):
 
                 embeds.append(ChartCardEmbed(chart, target_score=target_score))
             await ctx.reply(embeds=embeds, mention_author=False)
+
+    @commands.hybrid_command("whatif")
+    @logged_prefix_command
+    async def whatif(
+        self,
+        ctx: Context,
+        play_rating: Range[float, 0.0, round(MAX_DIFFICULTY + 2.15, 2)],
+        current_play_rating: Optional[
+            Range[float, 0.0, round(MAX_DIFFICULTY + 2.15, 2)]
+        ] = None,
+    ):
+        """What if you get a new play with a certain play rating?
+
+        Parameters
+        ----------
+        play_rating: float
+            The play rating you would achieve.
+        current_play_rating: Optional[float]
+            The current play rating of the chart if it is already in your best 50 scores.
+            Leave blank if the chart is currently not included in your best 50 scores.
+        """
+
+        async with ctx.typing(), self.bot.begin_db_session() as session:
+            play_rating = round(play_rating, 2)
+            if current_play_rating is not None:
+                current_play_rating = round(current_play_rating, 2)
+                if play_rating < current_play_rating:
+                    # swap the input parameters because we're nice
+                    play_rating, current_play_rating = current_play_rating, play_rating
+                elif play_rating == current_play_rating:
+                    await ctx.reply(
+                        "That wouldn't give you any rating increase! What are you expecting?",
+                        mention_author=False,
+                    )
+                    return
+
+            network = await self.utils.choose_preferred_network(ctx)
+
+            if network == "kamaitachi":
+                async with self.utils.kamaitachi_client(ctx) as client:
+                    resp = await client.get(
+                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                    )
+                    data = json_loads(resp.content)
+                    pbs = convert_kt_pbs_to_records(data["body"])
+                    pbs = await self.utils.hydrate_records(pbs)
+                    records = pbs[:50]
+                    records = await self.utils.hydrate_records(records)
+                    record_count = len(records)
+
+                    # get the song with lowest rating in b50
+                    min_rating = min(
+                        (item.extras[KEY_PLAY_RATING] for item in records),
+                        default=Decimal(0),
+                    )
+
+                    # calculate raw NaiveRating
+                    total_rating = sum(
+                        (item.extras[KEY_PLAY_RATING] for item in records),
+                        start=Decimal(0),
+                    )
+                    overall_average = floor_to_ndp(total_rating / 50, 4)
+
+                    if current_play_rating is not None:
+                        rating_increase = Decimal(
+                            (play_rating - current_play_rating) / 50
+                        )
+                        updated_rating = overall_average + rating_increase
+                        res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
+                        res += f"\n• NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                    else:
+                        res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
+
+                        rating_increase = max(
+                            (Decimal(play_rating) - min_rating) / 50, 0
+                        )
+                        if record_count < 50:
+                            rating_increase = Decimal(play_rating) / 50
+                        updated_rating = overall_average + rating_increase
+                        res += f"\n• NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                        if record_count == 50 and rating_increase > 0:
+                            res += f", replacing a {min_rating} rating play"
+
+                    await ctx.reply(res, mention_author=False)
+                    return
+
+            async with self.utils.chuninet(ctx) as client:
+                records = await self.utils.hydrate_records(await client.best30())
+                new_records = await self.utils.hydrate_records(await client.new20())
+
+                # check the number of songs in b30
+                record_count = len(records)
+                # check the number of songs in n20
+                new_record_count = len(new_records)
+
+                # get the song with lowest rating in b30
+                min_rating = min(
+                    (item.extras[KEY_PLAY_RATING] for item in records),
+                    default=Decimal(0),
+                )
+                # get the song with lowest rating in n20
+                new_min_rating = min(
+                    (item.extras[KEY_PLAY_RATING] for item in new_records),
+                    default=Decimal(0),
+                )
+
+                # calculate raw rating
+                total_rating = sum(
+                    (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
+                )
+                new_total_rating = sum(
+                    (item.extras[KEY_PLAY_RATING] for item in new_records),
+                    start=Decimal(0),
+                )
+                overall_average = floor_to_ndp(
+                    (total_rating + new_total_rating) / 50, 4
+                )
+
+                if current_play_rating is not None:
+                    rating_increase = Decimal((play_rating - current_play_rating) / 50)
+                    updated_rating = overall_average + rating_increase
+                    res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
+                    res += f"\n• Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                else:
+                    res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
+
+                    # calculation in case of old chart
+                    rating_increase = max((Decimal(play_rating) - min_rating) / 50, 0)
+                    if record_count < 30:
+                        rating_increase = Decimal(play_rating) / 50
+                    updated_rating = overall_average + rating_increase
+                    res += f"\n• Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is an old chart"
+                    if record_count == 30 and rating_increase > 0:
+                        res += f", replacing a {min_rating} rating play"
+
+                    # calculation in case of new chart
+                    rating_increase = max(
+                        (Decimal(play_rating) - new_min_rating) / 50, 0
+                    )
+                    if new_record_count < 20:
+                        rating_increase = Decimal(play_rating) / 50
+                    updated_rating = overall_average + rating_increase
+                    res += f"\n• Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is a new chart"
+                    if new_record_count == 20 and rating_increase > 0:
+                        res += f", replacing a {new_min_rating} rating play"
+
+                await ctx.reply(res, mention_author=False)
 
     async def song_title_autocomplete(
         self, interaction: discord.Interaction, current: str
