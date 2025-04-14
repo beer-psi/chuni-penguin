@@ -32,7 +32,7 @@ class DifficultyConverter(commands.Converter[Difficulty]):
             return Difficulty.from_short_form(argument[:3])
 
         # give up
-        msg = f'Could not infer difficuty name from "{argument}"'
+        msg = f'Could not infer difficulty name from "{argument}"'
         raise commands.BadArgument(msg)
 
 

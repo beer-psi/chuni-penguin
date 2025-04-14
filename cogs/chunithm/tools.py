@@ -610,7 +610,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                         )
                         updated_rating = overall_average + rating_increase
                         res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
-                        res += f"\n• NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                        res += f"\n- NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
                     else:
                         res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
 
@@ -620,7 +620,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                         if record_count < 50:
                             rating_increase = Decimal(play_rating) / 50
                         updated_rating = overall_average + rating_increase
-                        res += f"\n• NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                        res += f"\n- NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
                         if record_count == 50 and rating_increase > 0:
                             res += f", replacing a {min_rating} rating play"
 
@@ -663,7 +663,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     rating_increase = Decimal((play_rating - current_play_rating) / 50)
                     updated_rating = overall_average + rating_increase
                     res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
-                    res += f"\n• Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                    res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
                 else:
                     res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
 
@@ -672,7 +672,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     if record_count < 30:
                         rating_increase = Decimal(play_rating) / 50
                     updated_rating = overall_average + rating_increase
-                    res += f"\n• Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is an old chart"
+                    res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is an old chart"
                     if record_count == 30 and rating_increase > 0:
                         res += f", replacing a {min_rating} rating play"
 
@@ -683,7 +683,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     if new_record_count < 20:
                         rating_increase = Decimal(play_rating) / 50
                     updated_rating = overall_average + rating_increase
-                    res += f"\n• Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is a new chart"
+                    res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is a new chart"
                     if new_record_count == 20 and rating_increase > 0:
                         res += f", replacing a {new_min_rating} rating play"
 
