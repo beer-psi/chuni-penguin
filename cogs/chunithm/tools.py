@@ -125,8 +125,8 @@ class ToolsCog(commands.Cog, name="Tools"):
         crit_overlap_1000 = max(66667 - note_distance_1000, 0)
         jus_overlap_1000 = max(133333 - note_distance_1000, 0)
         res = f"At **{bpm}** BPM, the distance between two **1/{note_density}** notes is `{note_distance_1000 // 100 / 10}ms`."
-        res += f"\n• The JUSTICE CRITICAL overlap duration is `{crit_overlap_1000 // 100 / 10}ms`"
-        res += f"\n• The JUSTICE overlap duration is `{jus_overlap_1000 // 100 / 10}ms`"
+        res += f"\n- The JUSTICE CRITICAL overlap duration is `{crit_overlap_1000 // 100 / 10}ms`"
+        res += f"\n- The JUSTICE overlap duration is `{jus_overlap_1000 // 100 / 10}ms`"
 
         if crit_overlap_1000 > 0:
             res += "\n\n:white_check_mark: If these notes appear vertically, you can rub the ground slider and will not get JUSTICE and below."
@@ -162,6 +162,13 @@ class ToolsCog(commands.Cog, name="Tools"):
             Chart constant of the chart. Use the `info` command to find this.
         """
 
+        if chart_constant is None and score < 900000:
+            res = "Rating calculation for scores below 900,000 is dependent on chart constant."
+            res += "\nPlease specify chart constant to view detailed calculations."
+            # (You really should just git gud though)
+            await ctx.reply(res, mention_author=False)
+            return
+
         if chart_constant is not None and (
             chart_constant < 1 or chart_constant > MAX_DIFFICULTY
         ):
@@ -180,27 +187,27 @@ class ToolsCog(commands.Cog, name="Tools"):
             sign = "+"
 
         res = f"A score of **{score}**{const_text} will give:"
-        res += f"\n• Rating: **{sign}{floor_to_ndp(rating, 2)}**"
+        res += f"\n- Rating: **{sign}{floor_to_ndp(rating, 2)}**"
 
         if chart_constant is not None:
             overpower_max = calculate_overpower_max(chart_constant)
             overpower_max_floored = floor_to_ndp(overpower_max, 2)
 
             if score == 1010000:
-                res += f"\n• OVER POWER: **{overpower_max_floored} / {overpower_max_floored} (100.00%)**"
+                res += f"\n- OVER POWER: **{overpower_max_floored} / {overpower_max_floored} (100.00%)**"
             elif score < 500000:
-                res += f"\n• OVER POWER: **0.00 / {overpower_max_floored} (0.00%)**"
+                res += f"\n- OVER POWER: **0.00 / {overpower_max_floored} (0.00%)**"
             else:
                 overpower_base = calculate_overpower_base(score, chart_constant)
 
-                res += "\n• OVER POWER:"
+                res += "\n- OVER POWER:"
 
                 if score >= 1000000:
                     overpower = overpower_base + Decimal(1)
                     overpower_fc_percentage = floor_to_ndp(
                         overpower / overpower_max * 100, 2
                     )
-                    res += f"\n▸ AJ: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+                    res += f"\n  - AJ: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
 
                 overpower = overpower_base + Decimal("0.5")
                 overpower_fc_percentage = floor_to_ndp(
@@ -210,8 +217,8 @@ class ToolsCog(commands.Cog, name="Tools"):
                     overpower_base / overpower_max * 100, 2
                 )
 
-                res += f"\n▸ FC: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
-                res += f"\n▸ Non-FC: **{floor_to_ndp(overpower_base, 2)} / {overpower_max_floored} ({overpower_base_percentage}%)**"
+                res += f"\n  - FC: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+                res += f"\n  - Non-FC: **{floor_to_ndp(overpower_base, 2)} / {overpower_max_floored} ({overpower_base_percentage}%)**"
 
         await ctx.reply(res, mention_author=False)
 
@@ -622,7 +629,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                         updated_rating = overall_average + rating_increase
                         res += f"\n- NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
                         if record_count == 50 and rating_increase > 0:
-                            res += f", replacing a {min_rating} rating play"
+                            res += f", replacing a {min_rating:.2f} rating play"
 
                     await ctx.reply(res, mention_author=False)
                     return
@@ -674,7 +681,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     updated_rating = overall_average + rating_increase
                     res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is an old chart"
                     if record_count == 30 and rating_increase > 0:
-                        res += f", replacing a {min_rating} rating play"
+                        res += f", replacing a {min_rating:.2f} rating play"
 
                     # calculation in case of new chart
                     rating_increase = max(
@@ -685,7 +692,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     updated_rating = overall_average + rating_increase
                     res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is a new chart"
                     if new_record_count == 20 and rating_increase > 0:
-                        res += f", replacing a {new_min_rating} rating play"
+                        res += f", replacing a {new_min_rating:.2f} rating play"
 
                 await ctx.reply(res, mention_author=False)
 
