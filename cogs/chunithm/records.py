@@ -1826,7 +1826,7 @@ class RecordsCog(commands.Cog, name="Records"):
         async with ctx.typing():
             if network == "chuninet":
                 async with self.utils.chuninet(
-                    ctx if user is None else user.id
+                    ctx, ctx.author.id if user is None else user.id
                 ) as client:
                     records = await client.music_record_by_folder(
                         level=level,
