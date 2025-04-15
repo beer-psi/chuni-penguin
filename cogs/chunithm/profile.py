@@ -434,6 +434,18 @@ class ProfileCog(commands.Cog, name="Profile"):
                 raise
 
     @commands.hybrid_command("config")
+    @app_commands.describe(
+        key="The option you want to change or view.",
+        value="The value to change the option to. Leave blank to see the current value.",
+    )
+    @app_commands.choices(
+        key=[
+            app_commands.Choice(
+                name="synthesis-alt-jacket", value="synthesis-alt-jacket"
+            ),
+            app_commands.Choice(name="privacy", value="privacy"),
+        ]
+    )
     @logged_prefix_command
     async def config(
         self,
