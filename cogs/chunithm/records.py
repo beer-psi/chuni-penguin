@@ -1859,6 +1859,9 @@ class RecordsCog(commands.Cog, name="Records"):
                         records = [
                             r for r in records if r.extras[KEY_SONG_GENRE] == genre
                         ]
+
+                    if len(records) == 0:
+                        return await ctx.reply("No scores found.", mention_author=False)
             else:
                 msg = "Invalid network. Expected chuninet or kamaitachi."
                 raise ValueError(msg)
@@ -1910,6 +1913,9 @@ class RecordsCog(commands.Cog, name="Records"):
                     for r in records
                     if r.extras.get(KEY_INTERNAL_LEVEL) == internal_level
                 ]
+
+                if len(records) == 0:
+                    return await ctx.reply("No scores found.", mention_author=False)
 
             view = B30View(ctx, records, show_average=False, show_reachable=False)
             await view.start()
