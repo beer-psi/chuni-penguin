@@ -1781,9 +1781,9 @@ class RecordsCog(commands.Cog, name="Records"):
                     break
 
         str_level = rest[0] if len(rest) > 0 else None
-        target_user_id = ctx if user is None else user.id
+        target_user_id = ctx.author.id if user is None else user.id
         network = await self.utils.choose_preferred_network(
-            ctx, kamaitachi=args.kamaitachi
+            ctx, target_user_id, kamaitachi=args.kamaitachi
         )
 
         if (
@@ -1825,9 +1825,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         async with ctx.typing():
             if network == "chuninet":
-                async with self.utils.chuninet(
-                    ctx, ctx.author.id if user is None else user.id
-                ) as client:
+                async with self.utils.chuninet(ctx, target_user_id) as client:
                     records = await client.music_record_by_folder(
                         level=level,
                         genre=genre,
@@ -1841,7 +1839,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     records = await self.utils.hydrate_records(records)
             elif network == "kamaitachi":
-                async with self.utils.kamaitachi_client(target_user_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
                     resp = await client.get(
                         "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
                     )
