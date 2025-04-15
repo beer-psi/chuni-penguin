@@ -627,13 +627,15 @@ class RecordsCog(commands.Cog, name="Records"):
         target_id = ctx.author.id if user is None else user.id
 
         kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            await self.utils.choose_preferred_network(
+                ctx, target_id, kamaitachi=kamaitachi
+            )
             == "kamaitachi"
         )
 
         async with ctx.typing():
             if kamaitachi:
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
 
@@ -667,7 +669,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     )
                     return
 
-            ctxmgr = self.utils.chuninet(target_id)
+            ctxmgr = self.utils.chuninet(ctx, target_id)
             client = await ctxmgr.__aenter__()
             userinfo = await client.authenticate()
             recents = await client.recent_record()
@@ -743,7 +745,9 @@ class RecordsCog(commands.Cog, name="Records"):
         target_id = ctx.author.id if user is None else user.id
 
         kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            await self.utils.choose_preferred_network(
+                ctx, target_id, kamaitachi=kamaitachi
+            )
             == "kamaitachi"
         )
 
@@ -897,7 +901,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     await ctx.reply(embed=embed, mention_author=False)
                     return
 
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
 
@@ -934,7 +938,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     records = await self.utils.hydrate_records(records)
                     records.sort(key=lambda r: r.difficulty.value)
             else:
-                async with self.utils.chuninet(target_id) as client:
+                async with self.utils.chuninet(ctx, target_id) as client:
                     userinfo = await client.authenticate()
                     username = userinfo.name
                     network = ""
@@ -1050,7 +1054,9 @@ class RecordsCog(commands.Cog, name="Records"):
         target_id = ctx.author.id if user is None else user.id
 
         kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            await self.utils.choose_preferred_network(
+                ctx, target_id, kamaitachi=kamaitachi
+            )
             == "kamaitachi"
         )
 
@@ -1117,7 +1123,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 raise commands.BadArgument(msg)
 
             if kamaitachi:
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
 
@@ -1155,7 +1161,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     records = await self.utils.hydrate_records(records)
                     records.sort(key=lambda r: r.difficulty.value)
             else:
-                async with self.utils.chuninet(target_id) as client:
+                async with self.utils.chuninet(ctx, target_id) as client:
                     user_info = await client.authenticate()
                     username = user_info.name
                     network = ""
@@ -1267,7 +1273,7 @@ class RecordsCog(commands.Cog, name="Records"):
         async with ctx.typing():
             kamaitachi = (
                 await self.utils.choose_preferred_network(
-                    target_id, kamaitachi=kamaitachi
+                    ctx, target_id, kamaitachi=kamaitachi
                 )
                 == "kamaitachi"
             )
@@ -1278,7 +1284,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 user_config = result.scalar_one_or_none()
 
             if kamaitachi:
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
                     player_name = data["body"]["username"]
@@ -1380,7 +1386,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 records = await self.utils.hydrate_records(records)
             else:
-                async with self.utils.chuninet(target_id) as client:
+                async with self.utils.chuninet(ctx, target_id) as client:
                     player_data = await client.player_data()
                     player_name = player_data.name
                     current_rating = player_data.rating
@@ -1586,7 +1592,7 @@ class RecordsCog(commands.Cog, name="Records"):
         ctx = await Context.from_interaction(interaction)
         target_user_id = interaction.user.id if user is None else user.id
         network = await self.utils.choose_preferred_network(
-            target_user_id, kamaitachi=kamaitachi
+            ctx, target_user_id, kamaitachi=kamaitachi
         )
 
         if (
@@ -1607,7 +1613,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
         if network == "chuninet":
-            async with self.utils.chuninet(target_user_id) as client:
+            async with self.utils.chuninet(ctx, target_user_id) as client:
                 records = await client.music_record_by_folder(
                     level=level, genre=genre, difficulty=difficulty, rank=rank
                 )
@@ -1618,7 +1624,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 records = await self.utils.hydrate_records(records)
         elif network == "kamaitachi":
-            async with self.utils.kamaitachi_client(target_user_id) as client:
+            async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
                 resp = await client.get(
                     "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
                 )

@@ -235,3 +235,6 @@ class UserConfig(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     discord_id: Mapped[int] = mapped_column(BigInteger(), unique=True)
     synthesis_alt_jacket: Mapped[str] = mapped_column()
+    privacy_mode: Mapped[bool] = mapped_column(
+        default=False, server_default=text("FALSE")
+    )

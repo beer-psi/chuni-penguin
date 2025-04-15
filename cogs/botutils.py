@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Optional, Sequence, TypeVar
 
 import httpx
 import msgspec
+from discord import Interaction
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
 from discord.utils import MISSING
@@ -29,7 +30,7 @@ from chunithm_net.consts import (
 )
 from chunithm_net.models.enums import Genres, Rank
 from chunithm_net.models.record import Record
-from database.models import Alias, Cookie, Song
+from database.models import Alias, Cookie, Song, UserConfig
 from utils import get_jacket_url
 from utils.calculation.overpower import (
     calculate_overpower_base,
@@ -166,16 +167,29 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         return self.bot.prefixes.get(ctx.guild.id, default_prefix)
 
-    async def login_check(self, ctx_or_id: Context | int) -> LWPCookieJar:
-        is_interaction = isinstance(ctx_or_id, Context) and ctx_or_id.interaction
-        id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
-        clal = await self.fetch_cookie(id)
+    async def login_check(
+        self,
+        author_id: int,
+        target_id: int | None = None,
+        *,
+        is_interaction: bool = False,
+    ) -> LWPCookieJar:
+        target_id = target_id or author_id
+        clal = await self.fetch_cookie(target_id)
+        user_config = await self.fetch_user_config(target_id)
 
-        if clal is None:
-            msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
-            raise commands.CommandError(msg)
+        if clal is None or (user_config.privacy_mode and author_id != target_id):
+            logged_out_msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
+            raise commands.CommandError(logged_out_msg)
 
         return clal
+
+    async def fetch_user_config(self, id: int) -> UserConfig:
+        async with self.bot.begin_db_session() as session:
+            stmt = select(UserConfig).where(UserConfig.discord_id == id)
+            return (await session.execute(stmt)).scalar_one_or_none() or UserConfig(
+                discord_id=id, synthesis_alt_jacket="default", privacy_mode=False
+            )
 
     async def fetch_cookie(self, id: int) -> LWPCookieJar | None:
         async with self.bot.begin_db_session() as session:
@@ -193,14 +207,19 @@ class UtilsCog(commands.Cog, name="Utils"):
         return jar
 
     @contextlib.asynccontextmanager
-    async def chuninet(self, ctx_or_id: Context | int):
-        id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
-        jar = await self.login_check(ctx_or_id)
+    async def chuninet(self, ctx: Context | Interaction, id: int | None = None):
+        author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
+        target_id = id or author_id
+        jar = await self.login_check(
+            author_id,
+            target_id,
+            is_interaction=isinstance(ctx, Interaction) or ctx.interaction is not None,
+        )
 
         session = ChuniNet(jar)
 
         rand = random.Random()
-        rand.seed(id)
+        rand.seed(target_id)
         session.session.headers["user-agent"] = rand.choice(self.user_agents.desktop)
 
         try:
@@ -209,7 +228,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             async with self.bot.begin_db_session() as db_session:
                 await db_session.execute(
                     update(Cookie)
-                    .where(Cookie.discord_id == id)
+                    .where(Cookie.discord_id == target_id)
                     .values(cookie=f"#LWP-Cookies-2.0\n{jar.as_lwp_str()}")
                 )
                 await db_session.commit()
@@ -217,14 +236,24 @@ class UtilsCog(commands.Cog, name="Utils"):
             await session.close()
 
     @contextlib.asynccontextmanager
-    async def kamaitachi_client(self, ctx_or_id: Context | int):
-        id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
-        is_interaction = isinstance(ctx_or_id, Context) and ctx_or_id.interaction
+    async def kamaitachi_client(
+        self, ctx: Context | Interaction, id: int | None = None
+    ):
+        author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
+        target_id = id or author_id
+        is_interaction = isinstance(ctx, Interaction) or ctx.interaction is not None
+        user_config = await self.fetch_user_config(target_id)
 
         async with self.bot.begin_db_session() as session:
-            cookie = await session.scalar(select(Cookie).where(Cookie.discord_id == id))
+            cookie = await session.scalar(
+                select(Cookie).where(Cookie.discord_id == target_id)
+            )
 
-            if cookie is None or cookie.kamaitachi_token is None:
+            if (
+                cookie is None
+                or cookie.kamaitachi_token is None
+                or (user_config.privacy_mode and author_id != target_id)
+            ):
                 msg = f"You have not linked your Kamaitachi account. Please send `{'/' if is_interaction else config.bot.default_prefix}kamaitachi link` in my DMs to get started."
                 raise commands.CommandError(msg)
 
@@ -242,16 +271,22 @@ class UtilsCog(commands.Cog, name="Utils"):
             yield client
 
     async def choose_preferred_network(
-        self, ctx_or_id: Context | int, *, kamaitachi: bool = False
+        self,
+        ctx: Context | Interaction,
+        id: int | None = None,
+        *,
+        kamaitachi: bool = False,
     ):
-        id = ctx_or_id if isinstance(ctx_or_id, int) else ctx_or_id.author.id
-        is_interaction = isinstance(ctx_or_id, Context) and ctx_or_id.interaction
+        author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
+        target_id = id or author_id
+        is_interaction = isinstance(ctx, Interaction) or ctx.interaction is not None
+        user_config = await self.fetch_user_config(target_id)
 
         async with self.bot.begin_db_session() as session:
-            stmt = select(Cookie).where(Cookie.discord_id == id)
+            stmt = select(Cookie).where(Cookie.discord_id == target_id)
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
-            if cookie is None:
+            if cookie is None or (user_config.privacy_mode and author_id != target_id):
                 msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
                 raise commands.CommandError(msg)
 

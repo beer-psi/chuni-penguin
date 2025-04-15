@@ -266,7 +266,7 @@ class AuthCog(commands.Cog, name="Auth"):
         """
 
         async with ctx.typing():
-            jar = await self.utils.login_check(ctx)
+            jar = await self.utils.login_check(ctx.author.id)
 
             for cookie in jar:
                 if (
