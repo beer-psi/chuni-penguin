@@ -1174,6 +1174,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
             await ctx.reply(
+                content="chuni penguin will upgrade to CHUNITHM VERSE on <t:1744822800:f> (<t:1744822800:R>)! Please render your LUMINOUS PLUS best 30 image before then.",
                 file=discord.File(
                     b30_image, filename=f"chuni-penguin-b30-{generation_timestamp}.png"
                 ),
