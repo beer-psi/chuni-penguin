@@ -1872,9 +1872,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 records.sort(
                     reverse=True,
                     key=lambda x: (
-                        x.extras.get(KEY_PLAY_RATING),
+                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
-                        x.extras.get(KEY_OVERPOWER_BASE),
+                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                     ),
                 )
             elif args.sort == "score":
@@ -1882,16 +1882,16 @@ class RecordsCog(commands.Cog, name="Records"):
                     reverse=True,
                     key=lambda x: (
                         x.score,
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.extras.get(KEY_OVERPOWER_BASE),
+                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
+                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                     ),
                 )
             elif args.sort in {"overpower", "op"}:
                 records.sort(
                     reverse=True,
                     key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                        x.extras.get(KEY_PLAY_RATING),
+                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
+                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                     ),
                 )
@@ -1899,9 +1899,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 records.sort(
                     reverse=True,
                     key=lambda x: (
-                        x.extras[KEY_OVERPOWER_BASE] / x.extras[KEY_OVERPOWER_MAX],
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                        x.extras.get(KEY_PLAY_RATING),
+                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0))
+                        / x.extras.get(KEY_OVERPOWER_MAX, Decimal(1)),
+                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
+                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                     ),
                 )
