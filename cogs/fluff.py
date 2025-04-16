@@ -82,7 +82,7 @@ class FluffCog(commands.Cog, name="Fluff"):
             )
             target = channel.get_partial_message(reference.message_id)
         else:
-            target = ctx.message
+            target = ctx
 
         await target.reply(
             content="https://cdn.discordapp.com/attachments/1091952903016697947/1358802119179636786/mfw-quitting.jpg",
