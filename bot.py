@@ -8,7 +8,7 @@ import sys
 import time
 from pathlib import Path
 from types import FrameType
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, cast
 
 import discord
 import discord.utils
@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from cogs import COG_LIST
 from database.models import Prefix
 from utils import json_dumps, json_loads
+from utils.command_tree import VersionableCommandTree
 from utils.config import config
 from utils.evtloop import get_event_loop
 from utils.help import HelpCommand
@@ -91,6 +92,7 @@ class ChuniBot(commands.Bot):
             command_prefix=command_prefix,
             help_command=help_command,
             intents=intents,
+            tree_cls=VersionableCommandTree,
         )
 
         self.dev = config.dangerous.dev
@@ -205,6 +207,25 @@ class ChuniBot(commands.Bot):
 
         if config.dangerous.dev:
             await self.load_extension("cogs.hotreload")
+
+        tree = cast(VersionableCommandTree, self.tree)
+        current_tree_hash = await tree.get_hash()
+
+        # very much an abuse but i can't be asked to add yet another database table
+        # nor use a temp file since i have to parse string back to number
+        async with self.begin_db_session() as session:
+            result = await session.execute(text("PRAGMA user_version"))
+            old_tree_hash: int | None = result.scalar_one_or_none()
+
+            if old_tree_hash != current_tree_hash:
+                await logger.ainfo(
+                    "Command tree updated",
+                    tag="command_tree_updated",
+                    old_hash=old_tree_hash,
+                    new_hash=current_tree_hash,
+                )
+                await self.tree.sync()
+                await session.execute(text(f"PRAGMA user_version={current_tree_hash}"))
 
     async def close(self) -> None:
         gaming: "GamingCog | None" = self.get_cog("Games")  # pyright: ignore[reportAssignmentType]

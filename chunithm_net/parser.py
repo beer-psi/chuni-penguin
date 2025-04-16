@@ -1,6 +1,10 @@
 # pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false
+import logging
+import re
+from pathlib import Path
 from typing import cast
 
+import msgspec
 from bs4 import BeautifulSoup, Tag
 
 from .consts import _KEY_DETAILED_PARAMS, KEY_SONG_ID
@@ -15,11 +19,10 @@ from .models.enums import (
 )
 from .models.player_data import (
     Currency,
-    Nameplate,
     Overpower,
     PlayerData,
-    Rating,
     Team,
+    Title,
     UserAvatar,
 )
 from .models.record import (
@@ -43,6 +46,21 @@ from .utils import (
     parse_time,
 )
 
+_logger = logging.getLogger(__name__)
+
+RE_CSS_BACKGROUND_IMAGE = re.compile(
+    r"background-image\s*:\s*url\(['\"]?(?P<url>.+?)['\"]?\)"
+)
+
+
+class SpecialTitle(msgspec.Struct):
+    content: str
+    rarity: str
+
+
+with (Path(__file__).parent / "assets" / "titles.json").open(encoding="utf-8") as f:
+    SPECIAL_TITLES = msgspec.json.decode(f.read(), type=dict[str, SpecialTitle])
+
 
 def parse_player_card_and_avatar(soup: BeautifulSoup):
     if (e := soup.select_one(".player_chara")) is not None:
@@ -62,15 +80,44 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     team_name_elem = soup.select_one(".player_team_name")
     team_name = team_name_elem.get_text() if team_name_elem else None
 
-    nameplate_content = soup.select_one(".player_honor_text").get_text()
-    nameplate_rarity = (
-        str(soup.select_one(".player_honor_short")["style"])
-        .split("_")[-1]
-        .split(".")[0]
-    )
+    title_elements = soup.select(".player_honor_short")
+    titles: list[Title] = []
+
+    for element in title_elements:
+        title_style = element.get("style")
+
+        if title_style is None:
+            continue
+
+        title_background_url_match = RE_CSS_BACKGROUND_IMAGE.search(str(title_style))
+
+        if title_background_url_match is None:
+            continue
+
+        title_background_url: str = title_background_url_match.group("url")
+        title_background_filename = title_background_url.split("/")[-1]
+
+        if title_background_filename.startswith("honor_bg_"):
+            title_content_elem = element.select_one(".player_honor_text span")
+
+            if title_content_elem is None:
+                msg = "Invalid title (missing title content on normal titles)"
+                raise ValueError(msg)
+
+            title_content = title_content_elem.get_text()
+            title_rarity = extract_last_part(title_background_filename)
+        elif special_title := SPECIAL_TITLES.get(title_background_filename):
+            title_content = special_title.content
+            title_rarity = special_title.rarity
+        else:
+            _logger.warning(
+                "Ignoring unknown special title with URL %s", title_background_url
+            )
+            continue
+
+        titles.append(Title(title_content, title_rarity))
 
     rating = parse_player_rating(soup.select(".player_rating_num_block img"))
-    max_rating = float(soup.select_one(".player_rating_max").get_text())
 
     overpower = soup.select_one(".player_overpower_text").get_text().split(" ")
     overpower_value = float(overpower[0])
@@ -139,8 +186,8 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
         reborn=reborn,
         possession=possession,
         team=Team(name=team_name) if team_name else None,
-        nameplate=Nameplate(content=nameplate_content, rarity=nameplate_rarity),
-        rating=Rating(rating, max_rating),
+        titles=titles,
+        rating=rating,
         overpower=Overpower(overpower_value, overpower_progress),
         last_play_date=last_play_date,
         emblem=emblem,

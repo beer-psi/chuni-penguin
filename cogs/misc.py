@@ -137,40 +137,36 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         if self.bot.user is not None and self.bot.user.avatar is not None:
             embed.set_thumbnail(url=self.bot.user.avatar.url)
 
+        version = await asyncio.to_thread(_get_version_from_pyproject)
+
         try:
             process = await asyncio.create_subprocess_exec(
                 "git",
-                "describe",
-                "--tags",
+                "rev-parse",
+                "--short",
+                "HEAD",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
             stdout, _ = await process.communicate()
             revision = stdout.decode("utf-8").replace("\n", "")
-
-            # vX.Y.Z-n-gHASH
-            if "-" in revision:
-                revision = revision.rsplit("-", 1)[0]
         except FileNotFoundError:
             revision = "unknown"
 
-        if not revision or revision == "unknown":
-            revision = await asyncio.to_thread(_get_version_from_pyproject)
+        version_name = VERSION_NAMES.get(version)
 
-        version_name = VERSION_NAMES.get(revision.split("-", 1)[0])
+        version_field = version
 
-        if version_name is None:  # switched to vYEAR.MONTH
-            year, month = revision.split(".", 1)
-            version_name = VERSION_NAMES.get(f"{year}.{month}")
+        if version_name is not None:
+            version_field += f" ({version_name})"
+
+        if revision != "unknown":
+            version_field += f" [{revision}]"
 
         async with self.bot.begin_db_session() as session:
             users = await session.scalar(select(func.count()).select_from(Cookie))
 
-        embed.add_field(
-            name="Version",
-            value=revision + (f" ({version_name})" if version_name else ""),
-            inline=False,
-        )
+        embed.add_field(name="Version", value=version_field, inline=False)
         embed.add_field(
             name="Python",
             value=f"[{platform.python_version()}](https://www.python.org/)",

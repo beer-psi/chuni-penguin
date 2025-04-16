@@ -4,16 +4,18 @@ from argparse import ArgumentError
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from io import BytesIO
-from typing import TYPE_CHECKING, Optional, override
+from typing import TYPE_CHECKING, Literal, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from PIL import Image
+from sqlalchemy import select
 
 from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
+from database.models import UserConfig
 from utils import json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.logging import logged_app_command, logged_prefix_command
@@ -141,12 +143,15 @@ class ProfileCog(commands.Cog, name="Profile"):
     @commands.hybrid_command(name="avatar")
     @logged_prefix_command
     async def avatar(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
+        self,
+        ctx: Context,
+        *,
+        user: discord.User | discord.Member = commands.Author,
     ):
         """View your CHUNITHM avatar."""
         async with (
             ctx.typing(),
-            self.utils.chuninet(ctx if user is None else user.id) as client,
+            self.utils.chuninet(ctx, user.id) as client,
         ):
             basic_data = await client.authenticate()
             avatar_urls = basic_data.avatar
@@ -176,8 +181,8 @@ class ProfileCog(commands.Cog, name="Profile"):
             mention_author=False,
         )
 
-    async def _kamaitachi_profile_card(self, user_id: int):
-        async with self.utils.kamaitachi_client(user_id) as client:
+    async def _kamaitachi_profile_card(self, ctx: Context, user_id: int):
+        async with self.utils.kamaitachi_client(ctx, user_id) as client:
             resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
             data = json_loads(resp.content)
 
@@ -242,11 +247,12 @@ class ProfileCog(commands.Cog, name="Profile"):
 
         return embed
 
-    async def _chunithm_net_profile_card(self, user_id: int):
-        async with self.utils.chuninet(user_id) as client:
+    async def _chunithm_net_profile_card(self, ctx: Context, user_id: int):
+        async with self.utils.chuninet(ctx, user_id) as client:
             player_data = await client.player_data()
 
             optional_data: list[str] = []
+
             if player_data.team is not None:
                 optional_data.append(f"Team {player_data.team.name}")
             if player_data.medal is not None:
@@ -258,13 +264,18 @@ class ProfileCog(commands.Cog, name="Profile"):
             optional_data_joined = "\n".join(optional_data)
 
             level = str(player_data.lv)
+
             if player_data.reborn > 0:
                 level = f"{player_data.reborn}⭐ + {level}"
 
+            titles = "\n".join([f"**{t.content}**" for t in player_data.titles])
+
             description = (
+                f"{titles}\n"
+                f"### {player_data.name}\n"
                 f"{optional_data_joined}\n"
                 f"▸ **Level**: {level}\n"
-                f"▸ **Rating**: {player_data.rating.current:.2f} (MAX {player_data.rating.max:.2f})\n"
+                f"▸ **Rating**: {player_data.rating:.2f}\n"
                 f"▸ **OVER POWER**: {player_data.overpower.value:.2f} ({player_data.overpower.progress * 100:.2f}%)\n"
                 f"▸ **Plays**: {player_data.playcount}\n"
             )
@@ -273,10 +284,9 @@ class ProfileCog(commands.Cog, name="Profile"):
                 description += f"▸ **Last played**: <t:{int(player_data.last_play_date.timestamp())}:f>\n"
 
             embed = discord.Embed(
-                title=player_data.name,
                 description=description,
                 color=player_data.possession.color(),
-            ).set_author(name=player_data.nameplate.content)
+            )
 
             if player_data.character_frame is None:
                 files = []
@@ -316,18 +326,20 @@ class ProfileCog(commands.Cog, name="Profile"):
         target_id = ctx.author.id if user is None else user.id
 
         kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            await self.utils.choose_preferred_network(
+                ctx, target_id, kamaitachi=kamaitachi
+            )
             == "kamaitachi"
         )
 
         async with ctx.typing():
             if kamaitachi:
-                embed = await self._kamaitachi_profile_card(target_id)
+                embed = await self._kamaitachi_profile_card(ctx, target_id)
 
                 await ctx.reply(embed=embed, mention_author=False)
             else:
                 profile_data, embed, files = await self._chunithm_net_profile_card(
-                    target_id
+                    ctx, target_id
                 )
                 view = ProfileView(ctx, profile_data)
                 view.message = await ctx.reply(
@@ -389,6 +401,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         await self._chunithm_inner(ctx, user, kamaitachi=kamaitachi)
 
     @commands.hybrid_command(name="rename")
+    @logged_prefix_command
     async def rename(self, ctx: Context, *, new_name: str):
         """Use magical powers to change your IGN.
 
@@ -419,6 +432,123 @@ class ProfileCog(commands.Cog, name="Profile"):
                     raise commands.BadArgument(msg) from None
 
                 raise
+
+    @commands.hybrid_command("config")
+    @app_commands.describe(
+        key="The option you want to change or view.",
+        value="The value to change the option to. Leave blank to see the current value.",
+    )
+    @app_commands.choices(
+        key=[
+            app_commands.Choice(
+                name="synthesis-alt-jacket", value="synthesis-alt-jacket"
+            ),
+            app_commands.Choice(name="privacy", value="privacy"),
+        ]
+    )
+    @logged_prefix_command
+    async def config(
+        self,
+        ctx: Context,
+        key: Literal["synthesis-alt-jacket", "privacy"],
+        value: str | None = None,
+    ):
+        """Adjust your experience with the bot.
+
+        Currently, these options are supported:
+        - `synthesis-alt-jacket`: Changes the Synthesis. jacket art used for rendering your best 50 image. The possible options are `none` (black background), `default` (use CHUNITHM's jacket art), `cytus2`, `vividstasis`, `musedash`.
+        - `privacy`: Do not allow other users to view your profile and scores using the bot. You can still use commands, but to others it will seem like you're not logged in. The possible options are `true` (enabled) and `false` (disabled).
+
+        **Parameters:**
+        `key`: The option you want to change or view.
+        `value`: The value to change the option to. Leave blank to see the current value for the given option.
+
+        **Examples:**
+        `/config synthesis-alt-jacket cytus2`
+        `/config privacy true`
+        """
+
+        if key != "synthesis-alt-jacket" and key != "privacy":
+            msg = "Expected option to be `synthesis-alt-jacket` or `privacy`."
+            raise ValueError(msg)
+
+        new_config = False
+
+        async with self.bot.begin_db_session() as session:
+            query = select(UserConfig).where(UserConfig.discord_id == ctx.author.id)
+            result = await session.execute(query)
+            user_config = result.scalar_one_or_none()
+
+        if value is None:
+            if key == "synthesis-alt-jacket":
+                current_value = (
+                    user_config.synthesis_alt_jacket if user_config else "default"
+                )
+            else:
+                current_value = (
+                    str(user_config.privacy_mode) if user_config else "False"
+                )
+
+            await ctx.reply(
+                content=f"Your current config for `{key}` is `{current_value}`.",
+                mention_author=False,
+            )
+            return
+
+        value = value.lower()
+
+        if user_config is None:
+            new_config = True
+            user_config = UserConfig(
+                discord_id=ctx.author.id,
+                synthesis_alt_jacket="default",
+                privacy_mode=False,
+            )
+
+        if key == "synthesis-alt-jacket":
+            if value not in (
+                "none",
+                "default",
+                "cytus2",
+                "vividstasis",
+                "musedash",
+            ):
+                msg = "Invalid option for `synthesis-alt-jacket`. Expected one of `none`, `default`, `cytus2`, `vividstasis`, `musedash`."
+                raise commands.BadArgument(msg)
+
+            user_config.synthesis_alt_jacket = value
+        else:
+            if value not in (
+                "1",
+                "true",
+                "t",
+                "yes",
+                "y",
+                "on",
+                "0",
+                "false",
+                "f",
+                "no",
+                "n",
+                "off",
+            ):
+                msg = "Invalid option for `privacy`. Expected one of `true` or `false`."
+                raise commands.BadArgument(msg)
+
+            user_config.privacy_mode = value in ("1", "true", "t", "yes", "y", "on")
+
+        async with self.bot.begin_db_session() as session:
+            if new_config:
+                session.add(user_config)
+            else:
+                await session.merge(user_config)
+
+            await session.commit()
+
+        await ctx.reply(
+            content=f"Set your config for `{key}` to `{value}`.",
+            mention_author=False,
+        )
 
 
 async def setup(bot: "ChuniBot"):

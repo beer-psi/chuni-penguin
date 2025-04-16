@@ -1,6 +1,5 @@
 import asyncio
 import itertools
-import random
 from decimal import Decimal
 from io import BytesIO
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
@@ -15,6 +14,7 @@ from PIL import Image
 from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
+from chunithm_net.consts import KEY_PLAY_RATING
 from chunithm_net.models.enums import Difficulty, Rank
 from database.models import Chart, Song
 from utils import (
@@ -32,8 +32,12 @@ from utils.calculation.overpower import (
 )
 from utils.calculation.rating import calculate_rating, calculate_score_for_rating
 from utils.components import ChartCardEmbed
-from utils.constants import MAX_DIFFICULTY, SIMILARITY_THRESHOLD
+from utils.constants import (
+    MAX_DIFFICULTY,
+    SIMILARITY_THRESHOLD,
+)
 from utils.converters import DifficultyConverter
+from utils.kamaitachi import convert_kt_pbs_to_records
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
@@ -121,8 +125,8 @@ class ToolsCog(commands.Cog, name="Tools"):
         crit_overlap_1000 = max(66667 - note_distance_1000, 0)
         jus_overlap_1000 = max(133333 - note_distance_1000, 0)
         res = f"At **{bpm}** BPM, the distance between two **1/{note_density}** notes is `{note_distance_1000 // 100 / 10}ms`."
-        res += f"\n• The JUSTICE CRITICAL overlap duration is `{crit_overlap_1000 // 100 / 10}ms`"
-        res += f"\n• The JUSTICE overlap duration is `{jus_overlap_1000 // 100 / 10}ms`"
+        res += f"\n- The JUSTICE CRITICAL overlap duration is `{crit_overlap_1000 // 100 / 10}ms`"
+        res += f"\n- The JUSTICE overlap duration is `{jus_overlap_1000 // 100 / 10}ms`"
 
         if crit_overlap_1000 > 0:
             res += "\n\n:white_check_mark: If these notes appear vertically, you can rub the ground slider and will not get JUSTICE and below."
@@ -158,6 +162,13 @@ class ToolsCog(commands.Cog, name="Tools"):
             Chart constant of the chart. Use the `info` command to find this.
         """
 
+        if chart_constant is None and score < 900000:
+            res = "Rating calculation for scores below 900,000 is dependent on chart constant."
+            res += "\nPlease specify chart constant to view detailed calculations."
+            # (You really should just git gud though)
+            await ctx.reply(res, mention_author=False)
+            return
+
         if chart_constant is not None and (
             chart_constant < 1 or chart_constant > MAX_DIFFICULTY
         ):
@@ -176,27 +187,27 @@ class ToolsCog(commands.Cog, name="Tools"):
             sign = "+"
 
         res = f"A score of **{score}**{const_text} will give:"
-        res += f"\n• Rating: **{sign}{floor_to_ndp(rating, 2)}**"
+        res += f"\n- Rating: **{sign}{floor_to_ndp(rating, 2)}**"
 
         if chart_constant is not None:
             overpower_max = calculate_overpower_max(chart_constant)
             overpower_max_floored = floor_to_ndp(overpower_max, 2)
 
             if score == 1010000:
-                res += f"\n• OVER POWER: **{overpower_max_floored} / {overpower_max_floored} (100.00%)**"
+                res += f"\n- OVER POWER: **{overpower_max_floored} / {overpower_max_floored} (100.00%)**"
             elif score < 500000:
-                res += f"\n• OVER POWER: **0.00 / {overpower_max_floored} (0.00%)**"
+                res += f"\n- OVER POWER: **0.00 / {overpower_max_floored} (0.00%)**"
             else:
                 overpower_base = calculate_overpower_base(score, chart_constant)
 
-                res += "\n• OVER POWER:"
+                res += "\n- OVER POWER:"
 
                 if score >= 1000000:
                     overpower = overpower_base + Decimal(1)
                     overpower_fc_percentage = floor_to_ndp(
                         overpower / overpower_max * 100, 2
                     )
-                    res += f"\n▸ AJ: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+                    res += f"\n  - AJ: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
 
                 overpower = overpower_base + Decimal("0.5")
                 overpower_fc_percentage = floor_to_ndp(
@@ -206,8 +217,8 @@ class ToolsCog(commands.Cog, name="Tools"):
                     overpower_base / overpower_max * 100, 2
                 )
 
-                res += f"\n▸ FC: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
-                res += f"\n▸ Non-FC: **{floor_to_ndp(overpower_base, 2)} / {overpower_max_floored} ({overpower_base_percentage}%)**"
+                res += f"\n  - FC: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+                res += f"\n  - Non-FC: **{floor_to_ndp(overpower_base, 2)} / {overpower_max_floored} ({overpower_base_percentage}%)**"
 
         await ctx.reply(res, mention_author=False)
 
@@ -229,6 +240,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             Sets the display mode: `default` (Display rating information only) / `aj` (Display OP information for ALL JUSTICE only)
         """
 
+        chart_constant = round(chart_constant, 2)
         res = f"Calculation for chart constant **{chart_constant}**:"
         if mode == "aj":
             separator = "-------------------------"
@@ -290,7 +302,7 @@ class ToolsCog(commands.Cog, name="Tools"):
     @commands.hybrid_command("rating")
     @logged_prefix_command
     async def rating(
-        self, ctx: Context, rating: Range[float, 1.0, MAX_DIFFICULTY + 2.15]
+        self, ctx: Context, rating: Range[float, 1.0, round(MAX_DIFFICULTY + 2.15, 2)]
     ):
         """Calculate score required to achieve the specified play rating.
 
@@ -300,18 +312,19 @@ class ToolsCog(commands.Cog, name="Tools"):
             Play rating you want to achieve
         """
 
-        res = f"Score required to achieve **{rating}** play rating:"
+        rating = round(rating, 2)
+        res = f"Score required to achieve **{rating:.2f}** play rating:"
         res += "\n```Const |   Score\n---------------"
 
         chart_constant_10 = int(rating - 3) * 10
         rating_10 = rating * 10
         max_10 = MAX_DIFFICULTY * 10
 
-        if chart_constant_10 < 1:
-            chart_constant_10 = 1
+        if chart_constant_10 < 10:
+            chart_constant_10 = 10
         while chart_constant_10 <= rating_10 and chart_constant_10 <= max_10:
             required_score = calculate_score_for_rating(
-                rating_10 / 10, chart_constant_10 / 10
+                round(rating_10 / 10, 2), round(chart_constant_10 / 10, 1)
             )
 
             if required_score is not None and required_score >= Rank.S.min_score:
@@ -346,9 +359,9 @@ class ToolsCog(commands.Cog, name="Tools"):
             "ii": ["11+", "12", "12+"],
             "iii": ["12+", "13", "13+"],
             "iv": ["13+", "14", "14+"],
-            "v": ["14", "14+", "14+"],
-            "inf": ["14", "14+", "15"],
-            "random": ["12", "13", None],
+            "v": ["14", "14+", "15"],
+            "inf": ["14+", "15", "15+"],
+            "random": [None, None, None],
             "wallpanic": ["10+", "11", "11+"],
         }
         course_condition: dict[str, str] = {
@@ -357,7 +370,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "iii": "CLASS III: 30 LIFE, MISS -1",
             "iv": "CLASS IV: 500 LIFE, JUSTICE or lower -1",
             "v": "CLASS V: 300 LIFE, JUSTICE or lower -1",
-            "inf": "CLASS ∞: 150 LIFE, JUSTICE or lower -1",
+            "inf": "CLASS ∞: 200 LIFE, JUSTICE or lower -1",
             "random": "CLASS EXTRA - RANDOM: 50 LIFE, MISS -1",
             "wallpanic": "CLASS EXTRA - Wall Panic!: 400 LIFE, JUSTICE or lower -1, JUSTICE CRITICAL +1, field wall gets further back as LIFE decreases",
         }
@@ -372,25 +385,9 @@ class ToolsCog(commands.Cog, name="Tools"):
             )
 
             charts: Sequence[Chart]
-            course_mode = level.lower() in {
-                "i",
-                "ii",
-                "iii",
-                "iv",
-                "v",
-                "inf",
-                "infinite",
-                "random",
-                "wallpanic",
-            }
+            course_mode = level.lower() in course_levels or level.lower() == "infinite"
 
             if course_mode:
-                # TODO: Remove the VERSE condition when VERSE drops next month
-                stmt = stmt.where(
-                    (Song.version != "VERSE")
-                    & (Chart.version.is_(None) | (Chart.version != "VERSE"))
-                )
-                # stmt = stmt.where((Song.version != "VERSE") & (Chart.version != "VERSE"))
                 charts = []
                 course_class = level.lower()
 
@@ -442,14 +439,17 @@ class ToolsCog(commands.Cog, name="Tools"):
             ]
 
             if not course_mode:
-                if XL_TECHNO_JUMPSCARE in master_song_ids:
+                if XL_TECHNO_SONG_ID in master_song_ids:
                     await ctx.reply(XL_TECHNO_JUMPSCARE, mention_author=False)
                     return
                 if VOLCANIC_SONG_ID in master_song_ids:
                     await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
                     return
-                if FORSAKEN_TALE_SONG_ID in master_song_ids and random.random() < 0.5:
+                if FORSAKEN_TALE_SONG_ID in master_song_ids:
                     await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
+                    return
+                if TOA_CHAN_TOYBOX_SONG_ID in master_song_ids:
+                    await ctx.reply(TOA_CHAN_TOYBOX_JUMPSCARE, mention_author=False)
                     return
 
             embeds: list[discord.Embed] = [ChartCardEmbed(chart) for chart in charts]
@@ -461,7 +461,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         self,
         ctx: Context,
         count: Range[int, 1, 4] = 3,
-        max_rating: Optional[float] = None,
+        target_rating: Optional[float] = None,
     ):
         """Get random chart recommendations with target scores based on your rating.
 
@@ -471,13 +471,13 @@ class ToolsCog(commands.Cog, name="Tools"):
         ----------
         count: int
             Number of charts to return. Must be between 1 and 4.
-        max_rating: Optional[float]
-            Your maximum rating. If not provided, your rating will be fetched from CHUNITHM-NET/Kamaitachi,
-            assuming you're logged in.
+        target_rating: Optional[float]
+            Your target play rating. If not provided, it will be automatically set based on your song records
+            on CHUNITHM-NET or your Kamaitachi NaiveRating, assuming you're logged in.
         """
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
-            if max_rating is None:
+            if target_rating is None:
                 network = await self.utils.choose_preferred_network(ctx)
 
                 if network == "kamaitachi":
@@ -492,25 +492,32 @@ class ToolsCog(commands.Cog, name="Tools"):
                             raise commands.CommandError(msg)
 
                         stats = data["body"]
-                        max_rating = stats["gameStats"]["ratings"]["naiveRating"]
+                        target_rating = stats["gameStats"]["ratings"]["naiveRating"]
                 else:
                     async with self.utils.chuninet(ctx) as client:
-                        basic_player_data = await client.authenticate()
-                        max_rating = basic_player_data.rating.max
+                        records = await self.utils.hydrate_records(
+                            await client.best30()
+                        )
+                        # TODO: should ideally have separate recommendations for b30 and n20?
+                        # new_records = await self.utils.hydrate_records(
+                        #     await client.new20()
+                        # )
 
-            if max_rating is None:
-                msg = "No rating data found. Please play a song first."
-                raise commands.BadArgument(msg)
+                        # get the song with the lowest rating in b30
+                        min_rating = min(
+                            (item.extras[KEY_PLAY_RATING] for item in records),
+                            default=Decimal(0),
+                        )
+                        # set target rating to be 0.01 above the song with lowest rating in b30
+                        target_rating = float(min_rating) + 0.01
 
-            # Determine min-max const to recommend based on user rating. Formula is intentionally confusing.
-            min_level = max_rating * 1.05 - 3.05
-            max_level = max_rating * 0.85 + 0.95
-            if min_level < 7:
-                min_level = 7
-            if max_level < 14:
-                max_level += (14 - max_level) * 0.2
-            if max_level < min_level + 1:
-                max_level = min_level + 1
+            # set minimum target rating to 1 to prevent funny things from happening
+            if target_rating is None or target_rating < 1:
+                target_rating = 1
+
+            # Determine min-max const to recommend based on target rating.
+            min_level = round(target_rating - 2.15, 2)
+            max_level = round(target_rating, 2)
 
             stmt = (
                 select(Chart)
@@ -534,20 +541,160 @@ class ToolsCog(commands.Cog, name="Tools"):
             for chart in charts:
                 assert chart.const is not None
 
-                target_score = calculate_score_for_rating(max_rating, chart.const)
+                target_score = calculate_score_for_rating(target_rating, chart.const)
                 if target_score is None:
                     target_score = 1_009_000
-                elif 0 <= target_score < 1_000_000:
-                    target_score = round_to_nearest(target_score, 5000)
-                elif target_score < 1_006_000:
-                    target_score = round_to_nearest(target_score, 2500)
-                elif target_score < 1_008_500:
-                    target_score = round_to_nearest(target_score, 1000)
-                elif target_score < 1_009_000:
-                    target_score = round_to_nearest(target_score, 500)
+                target_score = round_to_nearest(target_score, 50)
 
                 embeds.append(ChartCardEmbed(chart, target_score=target_score))
             await ctx.reply(embeds=embeds, mention_author=False)
+
+    @commands.hybrid_command("whatif")
+    @logged_prefix_command
+    async def whatif(
+        self,
+        ctx: Context,
+        play_rating: Range[float, 0.0, round(MAX_DIFFICULTY + 2.15, 2)],
+        current_play_rating: Optional[
+            Range[float, 0.0, round(MAX_DIFFICULTY + 2.15, 2)]
+        ] = None,
+    ):
+        """What if you get a new play with a certain play rating?
+
+        Parameters
+        ----------
+        play_rating: float
+            The play rating you would achieve.
+        current_play_rating: Optional[float]
+            The current play rating of the chart if it is already in your best 50 scores.
+            Leave blank if the chart is currently not included in your best 50 scores.
+        """
+
+        async with ctx.typing():
+            play_rating = round(play_rating, 2)
+            if current_play_rating is not None:
+                current_play_rating = round(current_play_rating, 2)
+                if play_rating < current_play_rating:
+                    # swap the input parameters because we're nice
+                    play_rating, current_play_rating = current_play_rating, play_rating
+                elif play_rating == current_play_rating:
+                    await ctx.reply(
+                        "That wouldn't give you any rating increase! What are you expecting?",
+                        mention_author=False,
+                    )
+                    return
+
+            network = await self.utils.choose_preferred_network(ctx)
+
+            if network == "kamaitachi":
+                async with self.utils.kamaitachi_client(ctx) as client:
+                    resp = await client.get(
+                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                    )
+                    data = json_loads(resp.content)
+                    pbs = convert_kt_pbs_to_records(data["body"])
+                    pbs = await self.utils.hydrate_records(pbs)
+                    records = pbs[:50]
+                    records = await self.utils.hydrate_records(records)
+                    record_count = len(records)
+
+                    # get the song with lowest rating in b50
+                    min_rating = min(
+                        (item.extras[KEY_PLAY_RATING] for item in records),
+                        default=Decimal(0),
+                    )
+
+                    # calculate raw NaiveRating
+                    total_rating = sum(
+                        (item.extras[KEY_PLAY_RATING] for item in records),
+                        start=Decimal(0),
+                    )
+                    overall_average = floor_to_ndp(total_rating / 50, 4)
+
+                    if current_play_rating is not None:
+                        rating_increase = Decimal(
+                            (play_rating - current_play_rating) / 50
+                        )
+                        updated_rating = overall_average + rating_increase
+                        res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
+                        res += f"\n- NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                    else:
+                        res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
+
+                        rating_increase = max(
+                            (Decimal(play_rating) - min_rating) / 50, 0
+                        )
+                        if record_count < 50:
+                            rating_increase = Decimal(play_rating) / 50
+                        updated_rating = overall_average + rating_increase
+                        res += f"\n- NaiveRating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                        if record_count == 50 and rating_increase > 0:
+                            res += f", replacing a {min_rating:.2f} rating play"
+
+                    await ctx.reply(res, mention_author=False)
+                    return
+
+            async with self.utils.chuninet(ctx) as client:
+                records = await self.utils.hydrate_records(await client.best30())
+                new_records = await self.utils.hydrate_records(await client.new20())
+
+                # check the number of songs in b30
+                record_count = len(records)
+                # check the number of songs in n20
+                new_record_count = len(new_records)
+
+                # get the song with lowest rating in b30
+                min_rating = min(
+                    (item.extras[KEY_PLAY_RATING] for item in records),
+                    default=Decimal(0),
+                )
+                # get the song with lowest rating in n20
+                new_min_rating = min(
+                    (item.extras[KEY_PLAY_RATING] for item in new_records),
+                    default=Decimal(0),
+                )
+
+                # calculate raw rating
+                total_rating = sum(
+                    (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
+                )
+                new_total_rating = sum(
+                    (item.extras[KEY_PLAY_RATING] for item in new_records),
+                    start=Decimal(0),
+                )
+                overall_average = floor_to_ndp(
+                    (total_rating + new_total_rating) / 50, 4
+                )
+
+                if current_play_rating is not None:
+                    rating_increase = Decimal((play_rating - current_play_rating) / 50)
+                    updated_rating = overall_average + rating_increase
+                    res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
+                    res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
+                else:
+                    res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
+
+                    # calculation in case of old chart
+                    rating_increase = max((Decimal(play_rating) - min_rating) / 50, 0)
+                    if record_count < 30:
+                        rating_increase = Decimal(play_rating) / 50
+                    updated_rating = overall_average + rating_increase
+                    res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is an old chart"
+                    if record_count == 30 and rating_increase > 0:
+                        res += f", replacing a {min_rating:.2f} rating play"
+
+                    # calculation in case of new chart
+                    rating_increase = max(
+                        (Decimal(play_rating) - new_min_rating) / 50, 0
+                    )
+                    if new_record_count < 20:
+                        rating_increase = Decimal(play_rating) / 50
+                    updated_rating = overall_average + rating_increase
+                    res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is a new chart"
+                    if new_record_count == 20 and rating_increase > 0:
+                        res += f", replacing a {new_min_rating:.2f} rating play"
+
+                await ctx.reply(res, mention_author=False)
 
     async def song_title_autocomplete(
         self, interaction: discord.Interaction, current: str
@@ -788,6 +935,16 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             return None
 
+    @commands.hybrid_command("odex")
+    @logged_prefix_command
+    async def odex(self, ctx: Context):
+        """Read the Codex."""
+
+        await ctx.reply(
+            content="[Read the Codex.](https://chunithm.org)",
+            mention_author=False,
+        )
+
 
 XL_TECHNO_SONG_ID = 2035
 XL_TECHNO_JUMPSCARE = """恐怖！XL TECHNO -More Dance Remix-
@@ -830,6 +987,33 @@ FORSAKEN_TALE_JUMPSCARE = """恐怖！Forsaken Tale！
      😡     😡
           😠
 """  # noqa: RUF001
+
+TOA_CHAN_TOYBOX_SONG_ID = 2428
+TOA_CHAN_TOYBOX_JUMPSCARE = """恐怖！とあちゃんのおもちゃ箱！
+😂🟦🟦 
+      🟦     🟦
+      🟦     ⚡       
+      🟦          ⚡          
+😂🟦               😂           
+      🟦             ➡️
+      🟦       ➡️
+      🟦➡️
+      🟦       ⬅️
+      🟦             ⬅️
+      🟦       ➡️
+      🟦➡️
+      🟦       ⬅️
+      🟦             ⬅️
+      🟦       ➡️
+      🟦➡️
+      🟦       ⬅️  
+      🟦             ⬅️
+      🟦     😡
+      🟦           😡
+      🟦     😡
+      🟦           😡
+      🟦    😡
+      🟦          😡"""  # noqa: RUF001, W291
 
 
 async def setup(bot: "ChuniBot"):

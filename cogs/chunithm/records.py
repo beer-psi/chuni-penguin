@@ -12,11 +12,12 @@ from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 
 import discord
 import httpx
+import msgspec
 from discord import AllowedMentions, Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -24,11 +25,12 @@ from chunithm_net.consts import (
     INTERNATIONAL_JACKET_BASE,
     JACKET_BASE,
     KEY_INTERNAL_LEVEL,
+    KEY_LEVEL,
     KEY_OVERPOWER_BASE,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
+    KEY_SONG_GENRE,
     KEY_SONG_ID,
-    KEY_SONG_VERSION,
 )
 from chunithm_net.models.enums import ComboType, Difficulty, Genres, Rank
 from chunithm_net.models.record import (
@@ -36,18 +38,25 @@ from chunithm_net.models.record import (
     RecentRecord,
     Record,
 )
-from database.models import Chart, SongJacket
+from database.models import Chart, SongJacket, UserConfig
 from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.config import config
-from utils.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
+from utils.constants import CURRENT_CHUNITHM_VERSION_KT, SIMILARITY_THRESHOLD
 from utils.converters import (
     AliasNameConverter,
     AliasNameTransformer,
     DifficultyConverter,
+    GenreConverter,
+    RankConverter,
 )
-from utils.kamaitachi import convert_kt_pbs_to_records, convert_kt_scores_to_records
+from utils.kamaitachi import (
+    KTChunithmPersonalBestResponseBody,
+    convert_kt_pbs_to_records,
+    convert_kt_scores_to_records,
+    convert_kt_to_record,
+)
 from utils.logging import logged_app_command, logged_prefix_command
 from utils.views import (
     B30N20View,
@@ -65,8 +74,8 @@ if TYPE_CHECKING:
 
 
 ASSETS_DIR = Path(__file__).parent.parent.parent / "assets"
-NOTO_SANS_JP_80 = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 80
+NOTO_SANS_JP_24 = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 24
 )
 NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Medium.ttf", 28
@@ -74,9 +83,28 @@ NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
 NOTO_SANS_JP_32_BOLD = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 32
 )
+NOTO_SANS_JP_40_BOLD = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 40
+)
+NOTO_SANS_JP_64_BOLD = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 64
+)
 INTER_32 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Regular.ttf", 32)
+INTER_40_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 40)
+INTER_44_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 44)
+
+B30_HEADER_HEIGHT = 220
+B30_HEADER_SPACING = 185
+B30_OLD_NEW_SPACING = 130
+B30_FOOTER_SPACING = 95
+B30_FOOTER_HEIGHT = 70
 B30_ENTRY_WIDTH = 350
-B30_ENTRY_HEIGHT = 180
+B30_ENTRY_HEIGHT = 215
+B30_ENTRY_WIDTH_SPACING = 15
+B30_ENTRY_HEIGHT_SPACING = 25
+B30_JACKET_WIDTH = 110
+B30_JACKET_HEIGHT = 110
+INVITE_LINK = "https://chunithm.beerpsi.cc/invite"
 
 
 class reversor:
@@ -92,99 +120,73 @@ class reversor:
 
 def _render_b30_entry(
     b30_image: Image.Image,
-    jacket_shadow_base: Image.Image,
     record: Record,
     i: int,
     x: int,
     y: int,
+    user_config: UserConfig | None = None,
 ):
+    # get the jacket
     song_id = record.extras[KEY_SONG_ID]
-    jacket_path = ASSETS_DIR / "jackets" / f"{song_id}.png"
-    jacket_prerendered_path = (
-        ASSETS_DIR / "jackets" / f"{song_id}_{record.difficulty.value}.png"
+    jacket_basename = f"{song_id}"
+
+    if song_id == 2698 and user_config is not None:
+        if user_config.synthesis_alt_jacket == "cytus2":
+            jacket_basename = "2698_cytus2"
+        elif user_config.synthesis_alt_jacket == "vividstasis":
+            jacket_basename = "2698_vividstasis"
+        elif user_config.synthesis_alt_jacket == "musedash":
+            jacket_basename = "2698_musedash"
+        elif user_config.synthesis_alt_jacket == "none":
+            jacket_basename = "__nonexistent"
+
+    jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.png"
+    prerendered_path = (
+        ASSETS_DIR / "jackets" / f"{jacket_basename}_{record.difficulty.value}.png"
     )
 
-    if jacket_prerendered_path.exists():
-        with Image.open(jacket_prerendered_path) as jacket_prerendered:
-            jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
-            jacket_padded.paste(
-                jacket_prerendered, (x - 10, y - 10), jacket_prerendered
-            )
+    if prerendered_path.exists():
+        with Image.open(prerendered_path) as prerendered:
+            b30_image.paste(prerendered, (x, y), prerendered)
     else:
+        # draw the base image based on the difficulty
+        b30_base_image_path = (
+            ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.png"
+        )
+
+        with Image.open(b30_base_image_path) as b30_base_image:
+            b30_image.paste(b30_base_image, (x, y), b30_base_image)
+
         # we use try/catch on jacket processing to gracefully fail to a black image
         # if the jacket is missing or corrupted
         try:
             with Image.open(jacket_path) as jacket:
                 # convert the jacket to RGB since ImageEnhance explodes in different modes
-                # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
+                # resize the jacket
                 jacket = jacket.convert("RGB").resize(
-                    (B30_ENTRY_WIDTH, jacket.height * B30_ENTRY_WIDTH // jacket.width)
+                    (B30_JACKET_WIDTH, B30_JACKET_HEIGHT)
                 )
 
-                # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
-                jacket = jacket.crop(
-                    (
-                        (jacket.width - B30_ENTRY_WIDTH) // 2,
-                        (jacket.height - B30_ENTRY_HEIGHT) // 2,
-                        (jacket.width + B30_ENTRY_WIDTH) // 2,
-                        (jacket.height + B30_ENTRY_HEIGHT) // 2,
-                    )
-                )
-
-                # darken the image and blur it
-                jacket = (
-                    ImageEnhance.Brightness(jacket)
-                    .enhance(0.45)
-                    .filter(ImageFilter.GaussianBlur(4))
-                )
         except (FileNotFoundError, ValueError):
             # fallback to a black background if anything fails
-            jacket = Image.new("RGB", (B30_ENTRY_WIDTH, B30_ENTRY_HEIGHT), 0)
+            jacket = Image.new("RGB", (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), 0)
 
-        # draw the difficulty colored triangle on the jacket, instead of on the b30 image.
-        # this ensures that the triangle is flush with the top right corner of the jacket instead of
-        # being slightly off by 1-2 pixels
-        difficulty_color = record.difficulty.color()
-        jacket_draw = ImageDraw.Draw(jacket)
-        jacket_draw.polygon(
-            [
-                (jacket.width - 55, 0),
-                (jacket.width, 0),
-                (jacket.width, 55),
-            ],
-            # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
-            # passing a number.
-            (
-                (difficulty_color >> 16) & 0xFF,
-                (difficulty_color >> 8) & 0xFF,
-                difficulty_color & 0xFF,
-            ),
-        )
+        # draw the jacket art onto the card
+        b30_image.paste(jacket, (x + 10, y + 60))
 
-        # add a gaussian blurred shadow onto the jacket
-        jacket_shadow = jacket_shadow_base.copy()
-
-        jacket_shadow.paste(jacket, (10, 10))
-
-        jacket_padded = Image.new("RGBA", (b30_image.width, b30_image.height))
-
-        jacket_padded.paste(jacket_shadow, (x - 10, y - 10), jacket_shadow)
-
-    # finally, paste the edited jacket onto the image.
-    b30_image = Image.alpha_composite(b30_image, jacket_padded)
     b30_draw = ImageDraw.Draw(b30_image)
 
     # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
     title = record.title
     title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
 
-    while title_length > B30_ENTRY_WIDTH - 15:
+    while title_length > B30_ENTRY_WIDTH - 25:
         title = title[:-1]
         title_length = b30_draw.textlength(title + "...", NOTO_SANS_JP_32_BOLD)
 
     # draw the title
     b30_draw.text(
-        (x + 10, y + 7),
+        (x + 10, y),
         title + ("..." if title != record.title else ""),
         fill="#FFFFFF",
         font=NOTO_SANS_JP_32_BOLD,
@@ -192,13 +194,13 @@ def _render_b30_entry(
 
     # draw the score
     b30_draw.text(
-        (x + 10, y + 47),
+        (x + 132, y + 50),
         f"{record.score:,}",
         fill="#FFFFFF",
         font=NOTO_SANS_JP_32_BOLD,
     )
 
-    # draw the rank, next to the score
+    # draw the lamps
     lamps = f"[{record.rank}]"
 
     if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
@@ -209,52 +211,15 @@ def _render_b30_entry(
         lamps += " [FC]"
 
     b30_draw.text(
-        (
-            x
-            + 10
-            + b30_draw.textlength(f"{record.score:,}", NOTO_SANS_JP_32_BOLD)
-            + 10,
-            y + 50,
-        ),
+        (x + 132, y + 90),
         lamps,
-        fill="#FFFFFF",
-        font=NOTO_SANS_JP_28_MEDIUM,
+        fill="#DDDDDD",
+        font=NOTO_SANS_JP_24,
     )
 
-    # draw judgements, if they're available
-    if isinstance(record, DetailedRecentRecord):
-        b30_draw.text(
-            (x + 10, y + 89),
-            f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f} | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}",  # noqa: RUF001
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_28_MEDIUM,
-        )
+    # draw the timestamp and judgements if available
+    extra_info = ""
 
-    # draw the rank of the b30 entry
-    b30_draw.text(
-        (x + 10, y + 125),
-        f"#{i + 1}",
-        fill="#FFFFFF",
-        font=NOTO_SANS_JP_32_BOLD,
-    )
-
-    # draw the internal level and rating value
-    if isinstance(record, DetailedRecentRecord):
-        rating_text = f"({record.extras.get(KEY_PLAY_RATING):.2f})"
-    else:
-        rating_text = f"({record.extras.get(KEY_INTERNAL_LEVEL):.1f} > {record.extras.get(KEY_PLAY_RATING):.2f})"
-
-    b30_draw.text(
-        (
-            x + 10 + b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_32_BOLD) + 10,
-            y + 128,
-        ),
-        rating_text,
-        fill="#FFFFFF",
-        font=NOTO_SANS_JP_28_MEDIUM,
-    )
-
-    # draw the timestamp
     if isinstance(record, RecentRecord) and record.date.timestamp() > 0:
         difference = datetime.now(UTC) - record.date
 
@@ -273,14 +238,51 @@ def _render_b30_entry(
         else:
             delta = "0s"
 
-        delta_length = b30_draw.textlength(delta, NOTO_SANS_JP_28_MEDIUM)
+        extra_info = delta
 
-        b30_draw.text(
-            (int(x + B30_ENTRY_WIDTH - delta_length - 10), y + 128),
-            delta,
-            fill="#FFFFFF",
-            font=NOTO_SANS_JP_28_MEDIUM,
-        )
+    if isinstance(record, DetailedRecentRecord):
+        if extra_info != "":
+            extra_info += f" | {record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}"  # noqa: RUF001
+        else:
+            extra_info += f"{record.judgements.jcrit} – {record.judgements.justice} – {record.judgements.attack} – {record.judgements.miss}"  # noqa: RUF001
+
+    b30_draw.text(
+        (x + 10, y + 176),
+        extra_info,
+        fill="#BBBBBB",
+        font=NOTO_SANS_JP_24,
+    )
+
+    # draw the rank of the b30 entry
+    rank_text_length = b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_28_MEDIUM)
+    b30_draw.text(
+        (x + B30_ENTRY_WIDTH - 10 - rank_text_length, y + 174),
+        f"#{i + 1}",
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_28_MEDIUM,
+    )
+
+    # draw the internal level
+    b30_draw.text(
+        (x + 132, y + 128),
+        f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f}",
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_28_MEDIUM,
+    )
+
+    # draw the rating value
+    rating_text_length = b30_draw.textlength(
+        f"{record.extras.get(KEY_PLAY_RATING):.2f}", NOTO_SANS_JP_40_BOLD
+    )
+    rating_value_color = "#FFFFFF"
+    if record.score >= 1_009_000:
+        rating_value_color = "#FAFFA5"
+    b30_draw.text(
+        (x + B30_ENTRY_WIDTH - 10 - rating_text_length, y + 118),
+        f"{record.extras.get(KEY_PLAY_RATING):.2f}",
+        fill=rating_value_color,
+        font=NOTO_SANS_JP_40_BOLD,
+    )
 
     return b30_image
 
@@ -292,7 +294,7 @@ def render_b30(
     new_records: list[Record] | None = None,
     new_record_slots: int = 20,
     current_rating: float | None = None,
-    max_rating: float | None = None,
+    user_config: UserConfig | None = None,
 ):
     if len(records) > record_slots:
         msg = "More records provided than number of record slots"
@@ -304,153 +306,301 @@ def render_b30(
 
     row_num = ceil(record_slots / 5)
 
-    # 214 height for the header + 30 for spacing between header and b30
-    # each b30 entry has 15 padding
-    image_height = 214 + 30 + (B30_ENTRY_HEIGHT + 15) * row_num + 15
+    # calculate image height
+    image_height = (
+        B30_HEADER_HEIGHT
+        + B30_HEADER_SPACING
+        + (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING) * row_num
+        + B30_FOOTER_SPACING
+        + B30_FOOTER_HEIGHT
+    )
 
-    # Add a 45 pixel gap between old rating and new rating, if it is provided
+    # Add a gap between old rating and new rating, if it is provided
     if new_records is not None:
         new_row_num = ceil(new_record_slots / 5)
-        image_height += 30 + (B30_ENTRY_HEIGHT + 15) * new_row_num + 15
+        image_height += B30_OLD_NEW_SPACING + (B30_ENTRY_HEIGHT + 15) * new_row_num
 
     b30_image = Image.new("RGBA", size=(1872, image_height), color="#FFFFFF")
+
+    # draw background
+    with Image.open(ASSETS_DIR / "b50" / "b50_bg.png") as im:
+        im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
+        im = im.crop(
+            (
+                (im.width - b30_image.width) / 2,
+                (im.height - b30_image.height) / 2,
+                (im.width + b30_image.width) / 2,
+                (im.height + b30_image.height) / 2,
+            )
+        )
+        b30_image.paste(im.filter(ImageFilter.GaussianBlur(5)))
+
+    # draw background overlay
+    with Image.open(ASSETS_DIR / "b50" / "b50_overlay.png") as im:
+        im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
+        im = im.crop(
+            (
+                (im.width - b30_image.width) / 2,
+                (im.height - b30_image.height) / 2,
+                (im.width + b30_image.width) / 2,
+                (im.height + b30_image.height) / 2,
+            )
+        )
+        b30_image = Image.alpha_composite(
+            b30_image, im.filter(ImageFilter.GaussianBlur(5))
+        )
+
+    # draw header overlay
+    with Image.open(ASSETS_DIR / "b50" / "b50_part_header.png") as im:
+        header_padded = Image.new("RGBA", b30_image.size)
+        header_padded.paste(im, (0, 0))
+        b30_image = Image.alpha_composite(b30_image, header_padded)
+
+    # draw logo
+    with Image.open(ASSETS_DIR / "b50" / "b50_logo.png") as im:
+        logo_padded = Image.new("RGBA", b30_image.size)
+        logo_padded.paste(im, (1442, 10))
+        b30_image = Image.alpha_composite(b30_image, logo_padded)
+
+    # draw generated date overlay
+    with Image.open(ASSETS_DIR / "b50" / "b50_part_date.png") as im:
+        date_padded = Image.new("RGBA", b30_image.size)
+        date_padded.paste(im, (1492, 310))
+        b30_image = Image.alpha_composite(b30_image, date_padded)
+
+    # draw semitransparent rectangles to darken footer
+    b30_semitransparent_base = Image.new("RGBA", b30_image.size)
+    b30_semitransparent_draw = ImageDraw.Draw(b30_semitransparent_base)
+    # draw footer separation line
+    b30_semitransparent_draw.rectangle(
+        (
+            0,
+            b30_image.height - B30_FOOTER_HEIGHT - 2,
+            b30_image.width,
+            b30_image.height - B30_FOOTER_HEIGHT,
+        ),
+        fill=(0, 0, 0, 200),
+    )
+    # darken footer
+    b30_semitransparent_draw.rectangle(
+        (0, b30_image.height - B30_FOOTER_HEIGHT, b30_image.width, b30_image.height),
+        fill=(0, 0, 0, 120),
+    )
+    # paste the darkened parts onto the image
+    b30_image = Image.alpha_composite(b30_image, b30_semitransparent_base)
+
     b30_draw = ImageDraw.Draw(b30_image)
 
-    with Image.open(ASSETS_DIR / "b30_bg.png") as im:
-        im = im.resize((im.width * b30_image.height // im.height, b30_image.height))
-        b30_image.paste(im.filter(ImageFilter.GaussianBlur(8)))
-
-    # header: player name and credits
-    # draw a background for the player name
-    b30_draw.rectangle((0, 0, b30_image.width, 124), fill="#F2ACE0")
-
-    # draw the player name
-    b30_draw.text((20, 0), player_name, fill="#000000", font=NOTO_SANS_JP_80)
-
-    # determine the width/height of the credits text to right-align it with Math
-    credits_bbox = b30_draw.multiline_textbbox(
-        (0, 0),
-        "Generated by chuni penguin#3217\nhttps://chunithm.beerpsi.cc/invite",
-        INTER_32,
-        spacing=12,
-    )
-    credits_width = credits_bbox[2] - credits_bbox[0]
-    credits_height = credits_bbox[3] - credits_bbox[1]
-
-    # draw the credit text
-    b30_draw.multiline_text(
-        (
-            b30_image.width - credits_width - 30,
-            (124 - credits_height) // 2 - 6,
-        ),
-        "Generated by chuni penguin#3217\nhttps://chunithm.beerpsi.cc/invite",
-        fill="#000000",
-        font=INTER_32,
-        spacing=12,
+    # draw player name
+    player_name_length = b30_draw.textlength(player_name, NOTO_SANS_JP_64_BOLD)
+    b30_draw.text(
+        (390 - player_name_length / 2, 64),
+        player_name,
+        fill="#FFFFFF",
+        font=NOTO_SANS_JP_64_BOLD,
     )
 
-    # subheader: rating information and generation date
-    # draw a background for the subheader
-    b30_draw.rectangle(
-        (0, 124, b30_image.width, 214),
-        fill="#F2D0F0",
-    )
-
+    # get rating values
     total_rating = sum(
         (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
     )
     average = floor_to_ndp(total_rating / record_slots, 4)
+    new_average = 0
 
-    # draw the rating information in the subheader
-    # if there's no new rating, we just call it average
-    # but if there's new rating, we need to differentiate between new rating and old rating.
+    # draw the rating information
     if new_records is None:
-        rating_text = f"AVERAGE {average:.4f}"
+        rating_title = "NAIVE RATING"
+        raw_rating_text = f"({average:.4f})"
+        final_rating = floor_to_ndp(average, 2)
     else:
+        rating_title = "RATING"
+        new_total_rating = sum(
+            (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
+        )
         new_average = floor_to_ndp(
-            sum(
-                (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
-            )
-            / new_record_slots,
+            new_total_rating / new_record_slots,
             4,
         )
-        rating_text = f"OLD {average:.4f} / NEW {new_average:.4f}"
+        overall_average = floor_to_ndp(
+            (total_rating + new_total_rating) / (record_slots + new_record_slots), 4
+        )
+        raw_rating_text = f"({overall_average:.4f})"
+        final_rating = floor_to_ndp(overall_average, 2)
 
-    # basic guard for old rating system, since there's no more
-    # "reachable" rating in the new system
-    if record_slots == 30 and new_records is None:
-        max_play_rating = max(item.extras[KEY_PLAY_RATING] for item in records)
-        reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
-
-        rating_text += f" / REACHABLE {reachable:.4f}"
-
-    if max_rating is not None:
-        rating_text = f"MAX {max_rating:.2f} / {rating_text}"
+    # draw the text "RATING"
+    b30_draw.text(
+        (790, 22),
+        rating_title,
+        fill="#DDDDDD",
+        font=INTER_32,
+    )
 
     if current_rating is not None:
-        rating_text = f"RATING {current_rating:.2f} / {rating_text}"
+        final_rating = current_rating
 
+    rating_text = f"{final_rating:.2f}"
+
+    # set rating color
+    rating_thresholds = [
+        (17.00, 10),
+        (16.00, 9),
+        (15.25, 8),
+        (14.50, 7),
+        (13.25, 6),
+        (12.00, 5),
+        (10.00, 4),
+        (7.00, 3),
+        (4.00, 2),
+    ]
+
+    rating_tier = 1
+    for threshold, tier in rating_thresholds:
+        if final_rating >= threshold:
+            rating_tier = tier
+            break
+
+    # draw the rating number
+    digit_x = 810
+    digit_count = 0
+    if final_rating < 10:
+        digit_x = 835
+        digit_count = 1
+
+    for char in rating_text:
+        # draw each digit of the rating number
+        digit_count += 1
+        image_name = (
+            f"rating_{rating_tier}_{char}.png"
+            if char != "."
+            else f"rating_{rating_tier}_dot.png"
+        )
+        digit_path = ASSETS_DIR / "b50" / image_name
+
+        with Image.open(digit_path).convert("RGBA") as digit_im:
+            digit_padded = Image.new("RGBA", b30_image.size)
+            digit_padded.paste(digit_im, (digit_x, 58))
+            b30_image = Image.alpha_composite(b30_image, digit_padded)
+
+        digit_x += 40
+        if digit_count == 1 or digit_count == 4:
+            digit_x += 10
+
+    b30_draw = ImageDraw.Draw(b30_image)
+
+    # determine the size of raw rating text to properly right-align it
+    raw_rating_text_length = b30_draw.textlength(raw_rating_text, INTER_32)
+
+    # draw the raw rating
     b30_draw.text(
-        (30, 151),
-        rating_text,
-        fill="#000000",
+        (1090 - raw_rating_text_length, 162),
+        raw_rating_text,
+        fill="#DDDDDD",
         font=INTER_32,
     )
 
     # determine the size of the timestamp to properly right-align it
-    updated_text = f"Generated at {datetime.now(UTC).strftime('%Y-%m-%d')}"
-    updated_length = b30_draw.textlength(updated_text, INTER_32)
+    updated_text = f"{datetime.now(UTC).strftime('%Y-%m-%d')}"
+    updated_length = b30_draw.textlength(updated_text, INTER_40_BOLD)
 
+    # draw the timestamp
     b30_draw.text(
         (
-            b30_image.width - updated_length - 30,
-            151,
+            b30_image.width - updated_length - 40,
+            318,
         ),
         updated_text,
-        fill="#000000",
+        fill="#DDDDDD",
+        font=INTER_40_BOLD,
+    )
+
+    # draw the credits
+    b30_draw.text(
+        (30, b30_image.height - 57),
+        "Generated by chuni penguin#3127",
+        fill="#DDDDDD",
+        font=INTER_32,
+    )
+
+    # determine the size of invite link to properly right-align it
+    invite_link_text_length = b30_draw.textlength(INVITE_LINK, INTER_32)
+
+    # draw the invite link
+    b30_draw.text(
+        (b30_image.width - 30 - invite_link_text_length, b30_image.height - 57),
+        INVITE_LINK,
+        fill="#DDDDDD",
         font=INTER_32,
     )
 
     # best30
-    # add a gaussian blurred shadow onto the jacket
-    # generate the base shadow here so we can just copy it for each jacket later
-    jacket_shadow_base = Image.new(
-        "RGBA", (B30_ENTRY_WIDTH + 20, B30_ENTRY_HEIGHT + 20)
-    )
-    jacket_shadow_base.paste(
-        (0, 0, 0, 200), (5, 5, B30_ENTRY_WIDTH + 15, B30_ENTRY_HEIGHT + 15)
-    )
-
-    for _ in range(5):
-        jacket_shadow_base = jacket_shadow_base.filter(ImageFilter.GaussianBlur)
-
     for i, record in enumerate(records):
         # top left corner of each b30 entry
-        # - the initial 30 is left/top margin
+        # - the initial 30 is left margin
         # - the (i % 5) and (i // 5) are the b30's position on the grid, so this goes
         # left to right, top to bottom
-        # - the width/height is added by 15 to space out the entries
-        x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
-        y = 30 + 214 + (i // 5) * (B30_ENTRY_HEIGHT + 15)
+        x = 30 + (i % 5) * (B30_ENTRY_WIDTH + B30_ENTRY_WIDTH_SPACING)
+        y = (
+            B30_HEADER_HEIGHT
+            + B30_HEADER_SPACING
+            + (i // 5) * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
+        )
 
-        b30_image = _render_b30_entry(b30_image, jacket_shadow_base, record, i, x, y)
+        b30_image = _render_b30_entry(b30_image, record, i, x, y, user_config)
 
     if new_records is not None:
+        # draw the "OLD CHARTS" and "NEW CHARTS" separators
+        with Image.open(ASSETS_DIR / "b50" / "b50_part_old.png") as im:
+            old_padded = Image.new("RGBA", b30_image.size)
+            old_padded.paste(im, (0, 300))
+            b30_image = Image.alpha_composite(b30_image, old_padded)
+
+        with Image.open(ASSETS_DIR / "b50" / "b50_part_new.png") as im:
+            new_padded = Image.new("RGBA", b30_image.size)
+            new_padded.paste(im, (0, 1870))
+            b30_image = Image.alpha_composite(b30_image, new_padded)
+
+        b30_draw = ImageDraw.Draw(b30_image)
+
+        # draw b30 average
+        b30_draw.text(
+            (40, 316),
+            "OLD CHARTS",
+            fill="#FFFFFF",
+            font=INTER_40_BOLD,
+        )
+        b30_draw.text(
+            (420, 314),
+            f"{average:.4f}",
+            fill="#000000",
+            font=INTER_44_BOLD,
+        )
+
+        # draw n20 average
+        b30_draw.text(
+            (40, 1886),
+            "NEW CHARTS",
+            fill="#FFFFFF",
+            font=INTER_40_BOLD,
+        )
+        b30_draw.text(
+            (420, 1884),
+            f"{new_average:.4f}",
+            fill="#000000",
+            font=INTER_44_BOLD,
+        )
+
         for i, record in enumerate(new_records):
-            x = 30 + (i % 5) * (B30_ENTRY_WIDTH + 15)
+            x = 30 + (i % 5) * (B30_ENTRY_WIDTH + B30_ENTRY_WIDTH_SPACING)
 
-            # start 60 pixels after the last b30 row, denoted by the 30 + 214 + 6 * ... + 60 part
             y = (
-                30
-                + 214
-                + 6 * (B30_ENTRY_HEIGHT + 15)
-                + 45
-                + (i // 5) * (B30_ENTRY_HEIGHT + 15)
+                B30_HEADER_HEIGHT
+                + B30_HEADER_SPACING
+                + 6 * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
+                + B30_OLD_NEW_SPACING
+                + (i // 5) * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
             )
 
-            b30_image = _render_b30_entry(
-                b30_image, jacket_shadow_base, record, i, x, y
-            )
+            b30_image = _render_b30_entry(b30_image, record, i, x, y)
 
     # crop any extra bits we don't need, however we might need them later...
     # b30_image = b30_image.crop((0, 0, b30_image.width, 1429))
@@ -479,13 +629,15 @@ class RecordsCog(commands.Cog, name="Records"):
         target_id = ctx.author.id if user is None else user.id
 
         kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            await self.utils.choose_preferred_network(
+                ctx, target_id, kamaitachi=kamaitachi
+            )
             == "kamaitachi"
         )
 
         async with ctx.typing():
             if kamaitachi:
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
 
@@ -519,7 +671,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     )
                     return
 
-            ctxmgr = self.utils.chuninet(target_id)
+            ctxmgr = self.utils.chuninet(ctx, target_id)
             client = await ctxmgr.__aenter__()
             userinfo = await client.authenticate()
             recents = await client.recent_record()
@@ -595,7 +747,9 @@ class RecordsCog(commands.Cog, name="Records"):
         target_id = ctx.author.id if user is None else user.id
 
         kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            await self.utils.choose_preferred_network(
+                ctx, target_id, kamaitachi=kamaitachi
+            )
             == "kamaitachi"
         )
 
@@ -640,10 +794,11 @@ class RecordsCog(commands.Cog, name="Records"):
                         x async for x in ctx.channel.history(limit=50) if check(x)
                     ]
                 except discord.errors.Forbidden as e:
-                    msg = (
-                        "Bot requires the Read Message History permission to fetch recent scores. "
-                        f"Alternatively, run `{ctx.prefix}compare` while replying to the score you want to compare."
-                    )
+                    msg = "Bot requires the Read Message History permission to fetch recent scores."
+
+                    if ctx.interaction is None:
+                        msg += f" Alternatively, run `{ctx.prefix}compare` while replying to the score you want to compare."
+
                     raise commands.CheckFailure(msg) from e
 
                 if len(messages) == 0:
@@ -748,7 +903,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     await ctx.reply(embed=embed, mention_author=False)
                     return
 
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
 
@@ -768,22 +923,24 @@ class RecordsCog(commands.Cog, name="Records"):
                         raise commands.CommandError(msg)
 
                     raw_records = convert_kt_pbs_to_records(data["body"])
-
-                    if len(raw_records) == 0:
-                        await ctx.reply(
-                            f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi.",
-                            mention_author=False,
-                        )
-                        return
-
-                    network = " on Kamaitachi"
                     records = [
                         pb for pb in raw_records if pb.extras[KEY_SONG_ID] == song.id
                     ]
+
+                    if len(records) == 0:
+                        msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
+
+                        if len(song.title) <= 5:
+                            msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
+
+                        await ctx.reply(msg, mention_author=False)
+                        return
+
+                    network = " on Kamaitachi"
                     records = await self.utils.hydrate_records(records)
                     records.sort(key=lambda r: r.difficulty.value)
             else:
-                async with self.utils.chuninet(target_id) as client:
+                async with self.utils.chuninet(ctx, target_id) as client:
                     userinfo = await client.authenticate()
                     username = userinfo.name
                     network = ""
@@ -899,7 +1056,9 @@ class RecordsCog(commands.Cog, name="Records"):
         target_id = ctx.author.id if user is None else user.id
 
         kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
+            await self.utils.choose_preferred_network(
+                ctx, target_id, kamaitachi=kamaitachi
+            )
             == "kamaitachi"
         )
 
@@ -966,7 +1125,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 raise commands.BadArgument(msg)
 
             if kamaitachi:
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
 
@@ -986,22 +1145,25 @@ class RecordsCog(commands.Cog, name="Records"):
                         raise commands.CommandError(msg)
 
                     raw_records = convert_kt_pbs_to_records(data["body"])
-
-                    if len(raw_records) == 0:
-                        await ctx.reply(
-                            f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi.",
-                            mention_author=False,
-                        )
-                        return None
-
-                    network = " on Kamaitachi"
                     records = [
                         pb for pb in raw_records if pb.extras[KEY_SONG_ID] == song.id
                     ]
+
+                    if len(records) == 0:
+                        msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
+
+                        if len(song.title) <= 5:
+                            msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
+
+                        await ctx.reply(msg, mention_author=False)
+
+                        return None
+
+                    network = " on Kamaitachi"
                     records = await self.utils.hydrate_records(records)
                     records.sort(key=lambda r: r.difficulty.value)
             else:
-                async with self.utils.chuninet(target_id) as client:
+                async with self.utils.chuninet(ctx, target_id) as client:
                     user_info = await client.authenticate()
                     username = user_info.name
                     network = ""
@@ -1030,7 +1192,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             return None
 
-    @commands.command("scores")
+    @commands.command("scores", aliases=["score"])
     @logged_prefix_command
     async def scores(
         self,
@@ -1098,66 +1260,151 @@ class RecordsCog(commands.Cog, name="Records"):
 
         await self._scores_inner(ctx, query, user, kamaitachi=kamaitachi)
 
-    async def _best30_inner(
+    async def _best50_inner(
         self,
         ctx: Context,
         user: discord.User | discord.Member | None = None,
         *,
-        image: bool = False,
+        image: bool | None = None,
+        classic: bool = False,
         kamaitachi: bool = False,
-        n: int = 30,
+        new_rating: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
 
-        kamaitachi = (
-            await self.utils.choose_preferred_network(target_id, kamaitachi=kamaitachi)
-            == "kamaitachi"
-        )
-
-        if n == 50 and not kamaitachi:
-            msg = "Best 50 isn't currently supported yet! Please come back when CHUNITHM VERSE releases."
-            raise commands.CommandError(msg)
-
         async with ctx.typing():
+            kamaitachi = (
+                await self.utils.choose_preferred_network(
+                    ctx, target_id, kamaitachi=kamaitachi
+                )
+                == "kamaitachi"
+            )
+
+            async with self.bot.begin_db_session() as session:
+                query = select(UserConfig).where(UserConfig.discord_id == target_id)
+                result = await session.execute(query)
+                user_config = result.scalar_one_or_none()
+
             if kamaitachi:
-                async with self.utils.kamaitachi_client(target_id) as client:
+                async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
                     player_name = data["body"]["username"]
+                    current_rating = None
 
-                    resp = await client.get(
-                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
-                    )
+                    if new_rating:
+                        resp = await client.get(
+                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
+                        )
+                    else:
+                        resp = await client.get(
+                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                        )
+
                     data = json_loads(resp.content)
 
                 if not data["success"]:
                     msg = f"Could not retrieve your best scores from Kamaitachi: {data['description']}"
                     raise commands.CommandError(msg)
 
-                pbs = convert_kt_pbs_to_records(data["body"])
-                records = pbs[:50]
-                record_slots = 50
-                current_rating = None
-                max_rating = None
+                if new_rating:
+                    raw_body = msgspec.convert(
+                        data["body"], KTChunithmPersonalBestResponseBody
+                    )
+                    song_id_map = {s.id: s for s in raw_body.songs}
+                    chart_id_map = {c.chart_id: c for c in raw_body.charts}
 
-                records = await self.utils.hydrate_records(records)
-            else:
-                async with self.utils.chuninet(target_id) as client:
-                    player_data = await client.player_data()
-                    player_name = player_data.name
-                    current_rating = player_data.rating.current
-                    max_rating = player_data.rating.max
-                    records = await client.best30()
+                    old_pbs = [
+                        pb
+                        for pb in raw_body.pbs
+                        if song_id_map[pb.song_id].data.display_version
+                        != CURRENT_CHUNITHM_VERSION_KT
+                    ]
+                    old_pbs.sort(
+                        key=lambda pb: (
+                            pb.calculated_data.rating,
+                            pb.score_data.score,
+                            chart_id_map[pb.chart_id].level_num,
+                        ),
+                        reverse=True,
+                    )
+                    records = [
+                        convert_kt_to_record(
+                            pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                        )
+                        for pb in old_pbs[:30]
+                    ]
                     records = await self.utils.hydrate_records(records)
                     record_slots = 30
 
-            if not image:
-                view = B30View(
-                    ctx,
-                    records,
-                    rating_slots=record_slots,
-                    show_reachable=record_slots == 30,
-                )
+                    new_pbs = [
+                        pb
+                        for pb in raw_body.pbs
+                        if song_id_map[pb.song_id].data.display_version
+                        == CURRENT_CHUNITHM_VERSION_KT
+                    ]
+                    new_pbs.sort(
+                        key=lambda pb: (
+                            pb.calculated_data.rating,
+                            pb.score_data.score,
+                            chart_id_map[pb.chart_id].level_num,
+                        ),
+                        reverse=True,
+                    )
+                    new_records = [
+                        convert_kt_to_record(
+                            pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                        )
+                        for pb in new_pbs[:20]
+                    ]
+                    new_records = await self.utils.hydrate_records(new_records)
+                    new_record_slots = 20
+
+                    current_rating = float(
+                        floor_to_ndp(
+                            (
+                                sum(
+                                    (r.extras[KEY_PLAY_RATING] for r in records),
+                                    Decimal(0),
+                                )
+                                + sum(
+                                    (r.extras[KEY_PLAY_RATING] for r in new_records),
+                                    Decimal(0),
+                                )
+                            )
+                            / 50,
+                            2,
+                        )
+                    )
+                else:
+                    pbs = convert_kt_pbs_to_records(data["body"])
+                    pbs = await self.utils.hydrate_records(pbs)
+
+                    records = pbs[:50]
+                    record_slots = 50
+
+                    new_records = None
+                    new_record_slots = 0
+
+                records = await self.utils.hydrate_records(records)
+            else:
+                async with self.utils.chuninet(ctx, target_id) as client:
+                    player_data = await client.player_data()
+                    player_name = player_data.name
+                    current_rating = player_data.rating
+
+                    records = await self.utils.hydrate_records(await client.best30())
+                    record_slots = 30
+
+                    new_records = await self.utils.hydrate_records(await client.new20())
+                    new_record_slots = 20
+
+            if classic:
+                if new_records is not None:
+                    view = B30N20View(ctx, records, new_records)
+                else:
+                    view = B30View(ctx, records, record_slots, show_reachable=False)
+
                 await view.start()
 
                 return
@@ -1167,36 +1414,58 @@ class RecordsCog(commands.Cog, name="Records"):
                 player_name,
                 records=records,
                 record_slots=record_slots,
-                # new_records=new20,
-                # new_record_slots=20,
+                new_records=new_records,
+                new_record_slots=new_record_slots,
                 current_rating=current_rating,
-                max_rating=max_rating,
+                user_config=user_config,
             )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+
+            if image:
+                if ctx.interaction is None:
+                    image_flag = "`-i` flag"
+                    classic_flag = "`-c` flag"
+                else:
+                    image_flag = "`image: True` option"
+                    classic_flag = "`classic: True` option"
+
+                content = (
+                    f"The {image_flag} is not needed anymore, because generating an image is now the default. "
+                    "Using it will cause a hard error in a future update. "
+                    f"If you wish to view your scores with Discord embeds, please use the {classic_flag}."
+                )
+            else:
+                content = None
+
             await ctx.reply(
-                content="chuni penguin will upgrade to CHUNITHM VERSE on <t:1744822800:f> (<t:1744822800:R>)! Please render your LUMINOUS PLUS best 30 image before then.",
+                content=content,
                 file=discord.File(
                     b30_image, filename=f"chuni-penguin-b30-{generation_timestamp}.png"
                 ),
                 mention_author=False,
             )
 
-    @commands.command("best30", aliases=["b30", "best50", "b50"])
+    @commands.cooldown(15, 600, commands.BucketType.member)
+    @commands.command("best50", aliases=["b30", "best30", "b50"])
     @logged_prefix_command
-    async def best30(self, ctx: Context, *, query: str = ""):
-        """View top 30 scores of you or another player.
+    async def best50(self, ctx: Context, *, query: str = ""):
+        """View top 50 scores of you or another player.
 
         **Parameters**:
         `user`: The user to get scores for.
-        `-i, --image`: Render an image of your best 30 scores instead of viewing
-        with Discord embeds
-        `-k, --kamaitachi`: Get the best 30 scores from Kamaitachi, if the user
+        `-c, --classic`: View your scores with Discord embeds instead of generating
+        an image.
+        `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
         has that linked.
+        `-n, --new-rating`: For Kamaitachi, calculates best30 + new20 instead of best50.
+        Does nothing for official network.
         """
 
         parser = DiscordArguments()
         parser.add_argument("-i", "--image", action="store_true")
+        parser.add_argument("-c", "--classic", action="store_true")
         parser.add_argument("-k", "--kamaitachi", action="store_true")
+        parser.add_argument("-n", "--new-rating", action="store_true")
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
@@ -1211,114 +1480,68 @@ class RecordsCog(commands.Cog, name="Records"):
                     user = await converter().convert(ctx, rest[0])
                     break
 
-        n = 30
-
-        if ctx.message.content.startswith((f"{ctx.prefix}b50", f"{ctx.prefix}best50")):
-            n = 50
-
-        await self._best30_inner(
-            ctx, user, image=args.image, kamaitachi=args.kamaitachi, n=n
+        await self._best50_inner(
+            ctx,
+            user,
+            image=args.image,
+            classic=args.classic,
+            kamaitachi=args.kamaitachi,
+            new_rating=args.new_rating,
         )
 
-    @app_commands.command(name="best30", description="View top plays")
+    @app_commands.command(name="best50", description="View top plays")
+    @app_commands.checks.cooldown(15, 600, key=lambda i: i.user.id)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
-        user="The user to get best30 for",
-        image="Render an image of your best 30 scores",
-        kamaitachi="Get your best 30 from Kamaitachi if linked",
+        user="The user to get best50 for",
+        image="Render an image of your best 50 scores",
+        classic="View your best 50 scores using Discord embeds instead of an image",
+        kamaitachi="Get your best 50 from Kamaitachi if linked",
+        new_rating="(Kamaitachi) Calculates best30+new20 instead of best50",
     )
+    @app_commands.rename(new_rating="new-rating")
     @logged_app_command
-    async def best30_slash(
+    async def best50_slash(
         self,
         interaction: Interaction,
         user: discord.User | discord.Member | None = None,
         *,
-        image: bool = False,
+        image: bool | None = None,
+        classic: bool = False,
         kamaitachi: bool = False,
+        new_rating: bool = False,
     ):
         ctx = await Context.from_interaction(interaction)
 
-        await self._best30_inner(ctx, user, image=image, kamaitachi=kamaitachi)
-
-    @commands.hybrid_command("recent10", aliases=["r10"])
-    @logged_prefix_command
-    async def recent10(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
-    ):
-        """View top recent plays
-
-        Parameters
-        ----------
-        user: Optional[discord.User | discord.Member]
-            The user to get scores for.
-        """
-
-        async with (
-            ctx.typing(),
-            self.utils.chuninet(ctx if user is None else user.id) as client,
-        ):
-            recent10 = await client.recent10()
-            recent10 = await self.utils.hydrate_records(recent10)
-
-            view = B30View(ctx, recent10, rating_slots=10, show_reachable=False)
-            await view.start()
-
-    @commands.hybrid_command("new20", aliases=["n10", "n15", "n20", "new10", "new15"])
-    @logged_prefix_command
-    async def new20(
-        self, ctx: Context, *, user: Optional[discord.User | discord.Member] = None
-    ):
-        """Calculate your rating in the new CHUNITHM VERSE system (latest version is
-        LUMINOUS PLUS).
-
-        Parameters
-        ----------
-        user: Optional[discord.User | discord.Member]
-            The user to get scores for.
-        """
-
-        ctx_or_id = ctx if user is None else user.id
-        message = await ctx.reply("Fetching scores...", mention_author=False)
-        all_records: list[Record] = []
-
-        async with self.utils.chuninet(ctx_or_id) as client:
-            for difficulty in Difficulty:
-                if difficulty == Difficulty.WORLDS_END:
-                    continue
-
-                await message.edit(
-                    content=f"Fetching {difficulty} scores...",
-                    allowed_mentions=AllowedMentions.none(),
-                )
-
-                all_records.extend(
-                    await client.music_record_by_folder(difficulty=difficulty)
-                )
-
-        hydrated_records = await self.utils.hydrate_records(all_records)
-        old_records = [
-            x
-            for x in hydrated_records
-            if x.extras.get(KEY_SONG_VERSION) != CURRENT_CHUNITHM_VERSION
-        ]
-        new_records = [
-            x
-            for x in hydrated_records
-            if x.extras.get(KEY_SONG_VERSION) == CURRENT_CHUNITHM_VERSION
-        ]
-
-        old_records.sort(
-            key=lambda x: (x.extras.get(KEY_PLAY_RATING), x.score), reverse=True
-        )
-        new_records.sort(
-            key=lambda x: (x.extras.get(KEY_PLAY_RATING), x.score), reverse=True
+        await self._best50_inner(
+            ctx,
+            user,
+            image=image,
+            classic=classic,
+            kamaitachi=kamaitachi,
+            new_rating=new_rating,
         )
 
-        best30 = old_records[:30]
-        new20 = new_records[:20]
+    @commands.command("recent10", aliases=["r10"], hidden=True)
+    @logged_prefix_command
+    async def recent10(self, ctx: Context):
+        msg = (
+            "This command has been disabled due to rating changes in CHUNITHM VERSE. "
+            "It will be fully removed in a future update."
+        )
+        raise commands.CommandError(msg)
 
-        view = B30N20View(ctx, best30, new20)
-        await view.start()
+    @commands.command(
+        "new20", aliases=["n10", "n15", "n20", "new10", "new15"], hidden=True
+    )
+    @logged_prefix_command
+    async def new20(self, ctx: Context):
+        msg = (
+            "This command has been disabled because the new rating system is now official. "
+            "It will be fully removed in a future update.\n\n"
+            f"Please use the `{ctx.prefix}best50` command to see your new rating."
+        )
+        raise commands.CommandError(msg)
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(
@@ -1327,6 +1550,7 @@ class RecordsCog(commands.Cog, name="Records"):
         genre="Genre to search for.",
         rank="Rank to search for.",
         sort="Sort records by a criteria (default rating).",
+        kamaitachi="Get scores from Kamaitachi, if the target user has a linked account",
     )
     @app_commands.choices(
         level=[
@@ -1337,10 +1561,9 @@ class RecordsCog(commands.Cog, name="Records"):
                         app_commands.Choice(name=f"{i}", value=f"{i}"),
                         app_commands.Choice(name=f"{i}+", value=f"{i}+"),
                     )
-                    for i in range(7, 15)
+                    for i in range(7, 16)
                 ]
             ),
-            app_commands.Choice(name="15", value="15"),
         ],
         difficulty=[
             app_commands.Choice(name=str(x), value=x.value)
@@ -1366,77 +1589,109 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Optional[Genres] = None,
         rank: Optional[Rank] = None,
         sort: Literal["rating", "score", "overpower", "overpower %"] = "rating",
+        kamaitachi: bool = False,
     ):
-        if level is None and difficulty is None and genre is None and rank is None:
-            ctx = await Context.from_interaction(interaction)
-            await self._best30_inner(ctx, user, image=True)
+        ctx = await Context.from_interaction(interaction)
+        target_user_id = interaction.user.id if user is None else user.id
+        network = await self.utils.choose_preferred_network(
+            ctx, target_user_id, kamaitachi=kamaitachi
+        )
+
+        if (
+            level is None
+            and difficulty is None
+            and genre is None
+            and rank is None
+            and network == "chuninet"
+        ):
+            await self._best50_inner(ctx, user)
             return None
 
         await interaction.response.defer()
 
-        if (genre or rank) and not difficulty:
+        if network == "chuninet" and (genre or rank) and not difficulty:
             return await interaction.followup.send(
                 "Difficulty must be set if genre or rank is set."
             )
 
-        async with self.utils.chuninet(
-            interaction.user.id if user is None else user.id
-        ) as client:
-            records = await client.music_record_by_folder(
-                level=level, genre=genre, difficulty=difficulty, rank=rank
+        if network == "chuninet":
+            async with self.utils.chuninet(ctx, target_user_id) as client:
+                records = await client.music_record_by_folder(
+                    level=level, genre=genre, difficulty=difficulty, rank=rank
+                )
+                assert records is not None
+
+                if len(records) == 0:
+                    return await interaction.followup.send("No scores found.")
+
+                records = await self.utils.hydrate_records(records)
+        elif network == "kamaitachi":
+            async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
+                resp = await client.get(
+                    "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
+                )
+                data = resp.json()
+                records = convert_kt_pbs_to_records(data["body"])
+
+                if level is not None:
+                    records = [r for r in records if r.extras[KEY_LEVEL] == level]
+                if difficulty is not None:
+                    records = [r for r in records if r.difficulty == difficulty]
+                if rank is not None:
+                    records = [r for r in records if r.rank == rank]
+
+                records = await self.utils.hydrate_records(records)
+
+                if genre is not None:
+                    records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
+        else:
+            msg = "Invalid network. Expected chuninet or kamaitachi."
+            raise ValueError(msg)
+
+        if sort == "rating":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                ),
             )
-            assert records is not None
+        elif sort == "score":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.score,
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                ),
+            )
+        elif sort == "overpower":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                ),
+            )
+        elif sort == "overpower %":
+            records.sort(
+                reverse=True,
+                key=lambda x: (
+                    x.extras[KEY_OVERPOWER_BASE] / x.extras[KEY_OVERPOWER_MAX],
+                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                ),
+            )
+        else:
+            msg = f"Invalid sort type {sort}. Expected one of score, rating, overpower, overpower %."
+            raise commands.BadArgument(msg)
 
-            if len(records) == 0:
-                return await interaction.followup.send("No scores found.")
-
-            records = await self.utils.hydrate_records(records)
-
-            if sort == "rating":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.score,
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                    ),
-                )
-            elif sort == "score":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.score,
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                    ),
-                )
-            elif sort == "overpower":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.score,
-                    ),
-                )
-            elif sort == "overpower %":
-                records.sort(
-                    reverse=True,
-                    key=lambda x: (
-                        x.extras[KEY_OVERPOWER_BASE] / x.extras[KEY_OVERPOWER_MAX],
-                        x.extras.get(KEY_OVERPOWER_BASE),
-                        x.extras.get(KEY_PLAY_RATING),
-                        x.score,
-                    ),
-                )
-            else:
-                msg = f"Invalid sort type {sort}. Expected one of score, rating, overpower, overpower %."
-                raise commands.BadArgument(msg)
-
-            ctx = await Context.from_interaction(interaction)
-            view = B30View(ctx, records, show_average=False, show_reachable=False)
-            await view.start()
-            return None
+        view = B30View(ctx, records, show_average=False, show_reachable=False)
+        await view.start()
+        return None
 
     @commands.command("top")
     @logged_prefix_command
@@ -1451,11 +1706,12 @@ class RecordsCog(commands.Cog, name="Records"):
 
         **Parameters:**
         `user`: Discord username of the player. Yourself, if not provided.
-        `level`: Level (from 1 to 15) to search for.
+        `level`: Level (from 1 to 15+) to search for.
         `-d`: Difficulty to search for. Must be one of `EASY`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
         `-g`: Genre to search for. Must be one of `POPS&ANIME`, `niconico`, `Touhou Project`, `ORIGINAL`, `VARIETY`, `Irodorimidori`, or `Gekimai`, if specified.
         `-r`: Rank to search for. Anywhere between "S" and "SSS+" (inclusive), if specified.
         `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`.
+        `-k`: Get scores from Kamaitachi, if the target user has a linked account.
 
         Genre and rank cannot be set at the same time. If genre or rank is set, difficulty must also be set.
 
@@ -1472,32 +1728,6 @@ class RecordsCog(commands.Cog, name="Records"):
         `c>top @player -r sss -d mas`: View @player's best scores for SSS rank on MASTER difficulty.
         """
 
-        def genre(arg: str) -> Genres:
-            genre = None
-            genre_lower = arg.lower()
-            if genre_lower.startswith("pops"):
-                genre = Genres.POPS_AND_ANIME
-            elif genre_lower.startswith("nico"):
-                genre = Genres.NICONICO
-            elif genre_lower.startswith(("touhou", "toho", "東方")):
-                genre = Genres.TOUHOU_PROJECT
-            elif genre_lower.startswith(("original", "chunithm")):
-                genre = Genres.ORIGINAL
-            elif genre_lower.startswith("variety"):
-                genre = Genres.VARIETY
-            elif genre_lower.startswith("irodori"):
-                genre = Genres.IRODORIMIDORI
-            elif genre_lower.startswith(("geki", "ゲキ")):
-                genre = Genres.GEKIMAI
-            else:
-                msg = "Invalid genre."
-                raise ValueError(msg)
-
-            return genre
-
-        def rank(arg: str) -> Rank:
-            return Rank[arg.upper().replace("+", "p")]
-
         def sort_type(arg: str) -> str:
             if arg not in {
                 "score",
@@ -1513,26 +1743,30 @@ class RecordsCog(commands.Cog, name="Records"):
             return arg
 
         if query is None:
-            await self._best30_inner(ctx, image=True)
+            await self._best50_inner(ctx)
             return None
 
         parser = DiscordArguments()
         parser.add_argument("-d", "--difficulty", type=str, required=False)
         parser.add_argument("-s", "--sort", type=sort_type, required=False)
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
 
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("-g", "--genre", type=genre, required=False)
-        group.add_argument("-r", "--rank", type=rank, required=False)
+        group.add_argument("-g", "--genre", type=str, required=False)
+        group.add_argument("-r", "--rank", type=str, required=False)
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        if args.difficulty:
-            difficulty = await DifficultyConverter().convert(ctx, args.difficulty)
-        else:
-            difficulty = None
+        difficulty = (
+            await DifficultyConverter().convert(ctx, args.difficulty)
+            if args.difficulty
+            else None
+        )
+        genre = await GenreConverter().convert(ctx, args.genre) if args.genre else None
+        rank = await RankConverter().convert(ctx, args.rank) if args.rank else None
 
         if (args.genre or args.rank) and not difficulty:
             msg = "Must specify a difficulty when searching by genre or rank."
@@ -1549,15 +1783,20 @@ class RecordsCog(commands.Cog, name="Records"):
                     break
 
         str_level = rest[0] if len(rest) > 0 else None
+        target_user_id = ctx.author.id if user is None else user.id
+        network = await self.utils.choose_preferred_network(
+            ctx, target_user_id, kamaitachi=args.kamaitachi
+        )
 
         if (
             user is not None
             and str_level is None
             and difficulty is None
-            and args.genre is None
-            and args.rank is None
+            and genre is None
+            and rank is None
+            and network == "chuninet"
         ):
-            await self._best30_inner(ctx, user, image=True)
+            await self._best50_inner(ctx, user)
             return None
 
         level = None
@@ -1574,7 +1813,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 if internal_level * 10 % 10 >= 5:
                     level += "+"
             elif str_level[-1] == "+" and str_level[:-1].isdigit():
-                if int(str_level[:-1]) not in range(7, 15):
+                if int(str_level[:-1]) not in range(7, 16):
                     raise commands.BadArgument(msg)
 
                 level = str_level
@@ -1586,22 +1825,48 @@ class RecordsCog(commands.Cog, name="Records"):
             else:
                 raise commands.BadArgument(msg)
 
-        async with (
-            ctx.typing(),
-            self.utils.chuninet(ctx if user is None else user.id) as client,
-        ):
-            records = await client.music_record_by_folder(
-                level=level,
-                genre=args.genre,
-                difficulty=difficulty,
-                rank=args.rank,
-            )
-            assert records is not None
+        async with ctx.typing():
+            if network == "chuninet":
+                async with self.utils.chuninet(ctx, target_user_id) as client:
+                    records = await client.music_record_by_folder(
+                        level=level,
+                        genre=genre,
+                        difficulty=difficulty,
+                        rank=rank,
+                    )
+                    assert records is not None
 
-            if len(records) == 0:
-                return await ctx.reply("No scores found.", mention_author=False)
+                    if len(records) == 0:
+                        return await ctx.reply("No scores found.", mention_author=False)
 
-            records = await self.utils.hydrate_records(records)
+                    records = await self.utils.hydrate_records(records)
+            elif network == "kamaitachi":
+                async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
+                    resp = await client.get(
+                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
+                    )
+                    data = resp.json()
+                    records = convert_kt_pbs_to_records(data["body"])
+
+                    if level is not None:
+                        records = [r for r in records if r.extras[KEY_LEVEL] == level]
+                    if difficulty is not None:
+                        records = [r for r in records if r.difficulty == difficulty]
+                    if rank is not None:
+                        records = [r for r in records if r.rank == rank]
+
+                    records = await self.utils.hydrate_records(records)
+
+                    if genre is not None:
+                        records = [
+                            r for r in records if r.extras[KEY_SONG_GENRE] == genre
+                        ]
+
+                    if len(records) == 0:
+                        return await ctx.reply("No scores found.", mention_author=False)
+            else:
+                msg = "Invalid network. Expected chuninet or kamaitachi."
+                raise ValueError(msg)
 
             if args.sort is None or args.sort == "rating":
                 records.sort(
@@ -1650,6 +1915,9 @@ class RecordsCog(commands.Cog, name="Records"):
                     for r in records
                     if r.extras.get(KEY_INTERNAL_LEVEL) == internal_level
                 ]
+
+                if len(records) == 0:
+                    return await ctx.reply("No scores found.", mention_author=False)
 
             view = B30View(ctx, records, show_average=False, show_reachable=False)
             await view.start()

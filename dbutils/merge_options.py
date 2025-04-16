@@ -1,3 +1,4 @@
+import concurrent.futures
 import csv
 import itertools
 from pathlib import Path
@@ -5,7 +6,7 @@ from typing import Optional, overload
 from xml.etree import ElementTree
 
 import httpx
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -44,8 +45,15 @@ WE_LEVEL_OVERRIDES = {
     8248: "分☆☆☆ (2anyFirst)",
     8249: "分☆☆☆ (Alt Futur)",
 }
-B30_ENTRY_WIDTH = 350
-B30_ENTRY_HEIGHT = 180
+B30_JACKET_WIDTH = 110
+B30_JACKET_HEIGHT = 110
+B30_BASE_IMAGES = {
+    Difficulty.BASIC: Image.open(ASSETS_DIR / "b50" / "b50_base_0.png"),
+    Difficulty.ADVANCED: Image.open(ASSETS_DIR / "b50" / "b50_base_1.png"),
+    Difficulty.EXPERT: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
+    Difficulty.MASTER: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
+    Difficulty.ULTIMA: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
+}
 
 
 @overload
@@ -64,81 +72,32 @@ def gettext(
     return default
 
 
-# best30
-# add a gaussian blurred shadow onto the jacket
-# generate the base shadow here so we can just copy it for each jacket later
-JACKET_SHADOW_BASE = Image.new("RGBA", (B30_ENTRY_WIDTH + 20, B30_ENTRY_HEIGHT + 20))
-JACKET_SHADOW_BASE.paste(
-    (0, 0, 0, 200), (5, 5, B30_ENTRY_WIDTH + 15, B30_ENTRY_HEIGHT + 15)
-)
-
-for _ in range(5):
-    JACKET_SHADOW_BASE = JACKET_SHADOW_BASE.filter(ImageFilter.GaussianBlur)
-
-
-def extract_and_make_b30_difficulty_cards(song_id: int, jacket_file: Path):
+def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
     with Image.open(jacket_file) as im:
         im = im.convert("RGB")
         im.save(
-            ASSETS_DIR / "jackets" / f"{song_id}.png",
+            ASSETS_DIR / "jackets" / f"{song_id}{alt_suffix}.png",
             format="PNG",
             optimize=True,
         )
 
-        # world's ends arent going to show up in b30 anytime soon
+        # world's ends arent going to show up in b50 anytime soon
         if song_id >= 8000:
             return
 
-        # resize the jacket to B30_ENTRY_WIDTH so we can crop the center out
-        im = im.resize((B30_ENTRY_WIDTH, im.height * B30_ENTRY_WIDTH // im.width))
+        im_small = im.resize((B30_JACKET_WIDTH, B30_JACKET_HEIGHT))
 
-        # crop the center so we have a B30_ENTRY_WIDTH * B30_ENTRY_HEIGHT image
-        im = im.crop(
-            (
-                (im.width - B30_ENTRY_WIDTH) // 2,
-                (im.height - B30_ENTRY_HEIGHT) // 2,
-                (im.width + B30_ENTRY_WIDTH) // 2,
-                (im.height + B30_ENTRY_HEIGHT) // 2,
-            )
-        )
-
-        # darken the image and blur it
-        im = (
-            ImageEnhance.Brightness(im)
-            .enhance(0.45)
-            .filter(ImageFilter.GaussianBlur(4))
-        )
-
+        # pregenerate jacket art merged with b50 base
         for difficulty in Difficulty:
             if difficulty == Difficulty.WORLDS_END:
                 continue
 
-            difficulty_color = difficulty.color()
-            jacket = im.copy()
-            jacket_draw = ImageDraw.Draw(jacket)
-            jacket_draw.polygon(
-                [
-                    (jacket.width - 55, 0),
-                    (jacket.width, 0),
-                    (jacket.width, 55),
-                ],
-                # difficulty_color is a number of type 0xRRGGBB, but Pillow expects 0xBBGGRR when
-                # passing a number.
-                (
-                    (difficulty_color >> 16) & 0xFF,
-                    (difficulty_color >> 8) & 0xFF,
-                    difficulty_color & 0xFF,
-                ),
-            )
-
-            # add a gaussian blurred shadow onto the jacket
-            jacket_shadow = JACKET_SHADOW_BASE.copy()
-
-            jacket_shadow.paste(jacket, (10, 10))
-
-            jacket_shadow.save(
-                ASSETS_DIR / "jackets" / f"{song_id}_{difficulty.value}.png",
-                "PNG",
+            b30_base_image = B30_BASE_IMAGES[difficulty].copy()
+            b30_base_image.paste(im_small, (10, 60))
+            b30_base_image.save(
+                ASSETS_DIR
+                / "jackets"
+                / f"{song_id}{alt_suffix}_{difficulty.value}.png",
                 optimize=True,
             )
 
@@ -171,152 +130,191 @@ async def merge_options(
     inserted_songs = []
     inserted_charts = []
 
-    for xml_path in xml_paths:
-        tree = ElementTree.parse(xml_path)
-        root = tree.getroot()
+    with concurrent.futures.ProcessPoolExecutor() as pool:
+        for xml_path in xml_paths:
+            tree = ElementTree.parse(xml_path)
+            root = tree.getroot()
 
-        if root.tag != "MusicData":
-            logger.warning("%s: Invalid XML (missing MusicData root)", xml_path)
-            continue
-
-        song_id = gettext(root, "./name/id")
-        catcode = gettext(root, "./genreNames/list/StringID/id")
-        genre = gettext(root, "./genreNames/list/StringID/str")
-        we_tag_name = gettext(root, "./worldsEndTagName/str")
-        release_tag_id = gettext(root, path="./releaseTagName/id")
-
-        if (
-            song_id is None
-            or catcode is None
-            or genre is None
-            or we_tag_name is None
-            or release_tag_id is None
-        ):
-            logger.warning("%s: Invalid XML (missing required tags)", xml_path)
-            continue
-
-        logger.debug("Reading music ID %s", song_id)
-
-        if extract_jackets:
-            jacket_file = gettext(root, "./jaketFile/path")
-
-            if not jacket_file:
+            if root.tag != "MusicData":
+                logger.warning("%s: Invalid XML (missing MusicData root)", xml_path)
                 continue
 
-            extract_and_make_b30_difficulty_cards(
-                int(song_id), xml_path.parent / jacket_file
-            )
-
-        if we_tag_name != "Invalid":
-            genre = "WORLD'S END"
-
-        release_date = gettext(root, "./releaseDate")
-
-        inserted_song = {
-            "id": int(song_id),
-            "title": gettext(root, "./name/str"),
-            "chunithm_catcode": int(catcode),
-            "genre": genre,
-            "artist": gettext(root, "./artistName/str"),
-            "release": f"{release_date[:4]}-{release_date[4:6]}-{release_date[6:]}"
-            if release_date
-            else None,
-            "version": VERSIONS[int(release_tag_id)],
-            "bpm": None,
-            "min_bpm": None,
-            "max_bpm": None,
-            "jacket": jacket_by_id.get(int(song_id)),
-            "available": gettext(root, "./disableFlag") != "true",
-            "removed": False,
-        }
-
-        for idx, chart in enumerate(
-            root.findall("./fumens/MusicFumenData[enable='true']")
-        ):
-            difficulty = gettext(chart, "./type/data")
-            chart_filename = gettext(chart, "./file/path")
-            level_str = gettext(chart, "./level")
-            level_decimal_str = gettext(chart, "./levelDecimal")
+            song_id = gettext(root, "./name/id")
+            catcode = gettext(root, "./genreNames/list/StringID/id")
+            genre = gettext(root, "./genreNames/list/StringID/str")
+            we_tag_name = gettext(root, "./worldsEndTagName/str")
+            release_tag_id = gettext(root, path="./releaseTagName/id")
 
             if (
-                difficulty is None
-                or chart_filename is None
-                or level_str is None
-                or level_decimal_str is None
+                song_id is None
+                or catcode is None
+                or genre is None
+                or we_tag_name is None
+                or release_tag_id is None
             ):
-                logger.warning(
-                    "%s: Invalid MusicFumenData at index %d (missing required tags)",
-                    xml_path,
-                    idx,
-                )
+                logger.warning("%s: Invalid XML (missing required tags)", xml_path)
                 continue
 
-            logger.debug("Reading music ID %s, difficulty %s", song_id, difficulty)
+            logger.debug("Reading music ID %s", song_id)
+            song_id_int = int(song_id)
 
-            level_decimal = int(level_decimal_str)
+            if extract_jackets:
+                jacket_file = gettext(root, "./jaketFile/path")
 
-            if genre == "WORLD'S END":
-                if int(song_id) in WE_LEVEL_OVERRIDES:
-                    displayed_level = WE_LEVEL_OVERRIDES[int(song_id)]
-                else:
-                    star_dif_type = int(gettext(root, "./starDifType", "0"))
-                    displayed_level = we_tag_name
+                if not jacket_file:
+                    continue
 
-                    for _ in range(-1, star_dif_type, 2):
-                        displayed_level += "☆"
+                pool.submit(
+                    extract_jacket,
+                    song_id_int,
+                    xml_path.parent / jacket_file,
+                )
 
-                const = None
-            else:
-                displayed_level = level_str + ("+" if level_decimal >= 50 else "")
-                const = float(f"{level_str}.{level_decimal_str}")
+                if song_id_int == 2698:
+                    cytus2_alt = xml_path.parent / "CHU_UI_Jacket_2698_CytusII.dds"
+                    vividstasis_alt = (
+                        xml_path.parent / "CHU_UI_Jacket_2698_vividstasis.dds"
+                    )
+                    musedash_alt = xml_path.parent / "CHU_UI_Jacket_2698_MuseDash.dds"
 
-            inserted_chart = {
-                "song_id": int(song_id),
-                "difficulty": "WE" if difficulty == "WORLD'S END" else difficulty[:3],
-                "level": displayed_level,
-                "const": const,
+                    if cytus2_alt.exists():
+                        pool.submit(
+                            extract_jacket,
+                            song_id_int,
+                            cytus2_alt,
+                            "_cytus2",
+                        )
+
+                    if vividstasis_alt.exists():
+                        pool.submit(
+                            extract_jacket,
+                            song_id_int,
+                            vividstasis_alt,
+                            "_vividstasis",
+                        )
+
+                    if musedash_alt.exists():
+                        pool.submit(
+                            extract_jacket,
+                            song_id_int,
+                            musedash_alt,
+                            "_musedash",
+                        )
+
+            if we_tag_name != "Invalid":
+                genre = "WORLD'S END"
+
+            release_date = gettext(root, "./releaseDate")
+
+            inserted_song = {
+                "id": song_id_int,
+                "title": gettext(root, "./name/str"),
+                "chunithm_catcode": int(catcode),
+                "genre": genre,
+                "artist": gettext(root, "./artistName/str"),
+                "release": f"{release_date[:4]}-{release_date[4:6]}-{release_date[6:]}"
+                if release_date
+                else None,
+                "version": VERSIONS[int(release_tag_id)],
+                "bpm": None,
+                "min_bpm": None,
+                "max_bpm": None,
+                "jacket": jacket_by_id.get(song_id_int),
+                "available": gettext(root, "./disableFlag") != "true",
+                "removed": False,
             }
 
-            with xml_path.with_name(chart_filename).open(encoding="utf-8") as f:
-                rd = csv.reader(f, delimiter="\t")
+            for idx, chart in enumerate(
+                root.findall("./fumens/MusicFumenData[enable='true']")
+            ):
+                difficulty = gettext(chart, "./type/data")
+                chart_filename = gettext(chart, "./file/path")
+                level_str = gettext(chart, "./level")
+                level_decimal_str = gettext(chart, "./levelDecimal")
 
-                for row in rd:
-                    if len(row) == 0:
-                        continue
+                if (
+                    difficulty is None
+                    or chart_filename is None
+                    or level_str is None
+                    or level_decimal_str is None
+                ):
+                    logger.warning(
+                        "%s: Invalid MusicFumenData at index %d (missing required tags)",
+                        xml_path,
+                        idx,
+                    )
+                    continue
 
-                    command = row[0]
+                logger.debug("Reading music ID %s, difficulty %s", song_id, difficulty)
 
-                    if command == "BPM_DEF" and inserted_song.get("bpm") is None:
-                        inserted_song["bpm"] = float(row[2])
-                    if command == "BPM":
-                        bpm = float(row[3])
+                level_decimal = int(level_decimal_str)
 
-                        if (
-                            min_bpm := inserted_song.get("min_bpm")
-                        ) is None or bpm < min_bpm:
-                            inserted_song["min_bpm"] = bpm
-                        if (
-                            max_bpm := inserted_song.get("max_bpm")
-                        ) is None or bpm > max_bpm:
-                            inserted_song["max_bpm"] = bpm
-                    elif command == "T_JUDGE_ALL":
-                        inserted_chart["maxcombo"] = int(row[1])
-                    elif command == "T_JUDGE_TAP":
-                        inserted_chart["tap"] = int(row[1])
-                    elif command == "T_JUDGE_HLD":
-                        inserted_chart["hold"] = int(row[1])
-                    elif command == "T_JUDGE_SLD":
-                        inserted_chart["slide"] = int(row[1])
-                    elif command == "T_JUDGE_AIR":
-                        inserted_chart["air"] = int(row[1])
-                    elif command == "T_JUDGE_FLK":
-                        inserted_chart["flick"] = int(row[1])
-                    elif command == "CREATOR":
-                        inserted_chart["charter"] = row[1]
+                if genre == "WORLD'S END":
+                    if song_id_int in WE_LEVEL_OVERRIDES:
+                        displayed_level = WE_LEVEL_OVERRIDES[song_id_int]
+                    else:
+                        star_dif_type = int(gettext(root, "./starDifType", "0"))
+                        displayed_level = we_tag_name
 
-            inserted_charts.append(inserted_chart)
+                        for _ in range(-1, star_dif_type, 2):
+                            displayed_level += "☆"
 
-        inserted_songs.append(inserted_song)
+                    const = None
+                else:
+                    displayed_level = level_str + ("+" if level_decimal >= 50 else "")
+                    const = float(f"{level_str}.{level_decimal_str}")
+
+                inserted_chart = {
+                    "song_id": song_id_int,
+                    "difficulty": "WE"
+                    if difficulty == "WORLD'S END"
+                    else difficulty[:3],
+                    "level": displayed_level,
+                    "const": const,
+                }
+
+                with xml_path.with_name(chart_filename).open(encoding="utf-8") as f:
+                    rd = csv.reader(f, delimiter="\t")
+
+                    for row in rd:
+                        if len(row) == 0:
+                            continue
+
+                        command = row[0]
+
+                        if command == "BPM_DEF" and inserted_song.get("bpm") is None:
+                            inserted_song["bpm"] = float(row[2])
+                        if command == "BPM":
+                            bpm = float(row[3])
+
+                            if (
+                                min_bpm := inserted_song.get("min_bpm")
+                            ) is None or bpm < min_bpm:
+                                inserted_song["min_bpm"] = bpm
+                            if (
+                                max_bpm := inserted_song.get("max_bpm")
+                            ) is None or bpm > max_bpm:
+                                inserted_song["max_bpm"] = bpm
+                        elif command == "T_JUDGE_ALL":
+                            inserted_chart["maxcombo"] = int(row[1])
+                        elif command == "T_JUDGE_TAP":
+                            inserted_chart["tap"] = int(row[1])
+                        elif command == "T_JUDGE_HLD":
+                            inserted_chart["hold"] = int(row[1])
+                        elif command == "T_JUDGE_SLD":
+                            inserted_chart["slide"] = int(row[1])
+                        elif command == "T_JUDGE_AIR":
+                            inserted_chart["air"] = int(row[1])
+                        elif command == "T_JUDGE_FLK":
+                            inserted_chart["flick"] = int(row[1])
+                        elif command == "CREATOR":
+                            inserted_chart["charter"] = row[1]
+
+                inserted_charts.append(inserted_chart)
+
+            inserted_songs.append(inserted_song)
+
+        pool.shutdown(wait=True)
 
     async with async_session() as session, session.begin():
         logger.info(

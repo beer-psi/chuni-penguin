@@ -365,8 +365,7 @@ async def test_client_parses_homepage(
     assert user_data.overpower.value == pytest.approx(4878.18)
     assert user_data.overpower.progress == pytest.approx(0.0568)
 
-    assert user_data.rating.current == pytest.approx(15.10)
-    assert user_data.rating.max == pytest.approx(15.13)
+    assert user_data.rating == pytest.approx(15.10)
 
     assert user_data.emblem is None
     assert user_data.medal is None
@@ -397,6 +396,12 @@ async def test_client_parses_playerdata(
         == "https://chunithm-net-eng.com/mobile/img/2c20c7ac326c1a9d.png"
     )
     assert user_data.name == "ＢｏＡｎｈＤＬＢ"  # noqa: RUF001
+
+    assert len(user_data.titles) == 2
+    assert user_data.titles[0].content == "ネコぱら"
+    assert user_data.titles[0].rarity == "silver"
+    assert user_data.titles[1].content == "SPIRIT of PARADISE LOST"
+    assert user_data.titles[1].rarity == "version1"
 
     assert (
         user_data.avatar.base
@@ -469,8 +474,7 @@ async def test_client_parses_playerdata(
     assert user_data.overpower.value == pytest.approx(4878.18)
     assert user_data.overpower.progress == pytest.approx(0.0568)
 
-    assert user_data.rating.current == pytest.approx(15.10)
-    assert user_data.rating.max == pytest.approx(15.13)
+    assert user_data.rating == pytest.approx(15.10)
 
     assert user_data.currency is not None
     assert user_data.currency.owned == 133500
@@ -730,7 +734,7 @@ async def test_client_parses_music_for_rating(
 
     async with ChuniNet(jar) as client:
         best30 = await client.best30()
-        recent10 = await client.recent10()
+        new20 = await client.new20()
 
     assert len(best30) == 30
 
@@ -739,12 +743,12 @@ async def test_client_parses_music_for_rating(
     assert best30[0].score == 1005037
     assert best30[0].difficulty == Difficulty.EXPERT
 
-    assert len(recent10) == 10
+    assert len(new20) == 10
 
-    assert recent10[0].extras.get(KEY_SONG_ID) == 2340
-    assert recent10[0].title == "To：Be Continued"  # noqa: RUF001
-    assert recent10[0].score == 1000449
-    assert recent10[0].difficulty == Difficulty.EXPERT
+    assert new20[0].extras.get(KEY_SONG_ID) == 2340
+    assert new20[0].title == "To：Be Continued"  # noqa: RUF001
+    assert new20[0].score == 1000449
+    assert new20[0].difficulty == Difficulty.EXPERT
 
 
 @pytest.mark.asyncio

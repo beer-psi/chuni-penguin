@@ -1,6 +1,6 @@
 [project]
 name = "chuni-penguin"
-version = "2025.3"
+version = "2025.4"
 description = "Add your description here"
 authors = [{ name = "beerpsi", email = "beerpsi@duck.com" }]
 dependencies = [

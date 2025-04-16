@@ -47,7 +47,8 @@ async def handle_add_friend_interaction(
     utils: "UtilsCog" = cast(
         "UtilsCog", cast("ChuniBot", interaction.client).get_cog("Utils")
     )
-    ctx = utils.chuninet(interaction.user.id)
+
+    ctx = utils.chuninet(interaction, interaction.user.id)
 
     try:
         client = await ctx.__aenter__()

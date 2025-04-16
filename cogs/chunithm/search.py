@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Annotated
+from urllib.parse import quote
 
 import discord
 from discord import Embed, app_commands
@@ -436,7 +437,6 @@ class SearchCog(commands.Cog, name="Search"):
                 )
 
             song_embeds: list[Embed] = []
-            verse_chart_constant_notice = False
 
             for song in result.songs:
                 stmt = (
@@ -454,16 +454,6 @@ class SearchCog(commands.Cog, name="Search"):
                         song_description += "**This song is removed.**\n\n"
                     else:
                         song_description += "**This song is not available in CHUNITHM International.**\n\n"
-
-                if (
-                    not verse_chart_constant_notice
-                    and (
-                        song.version == "VERSE"
-                        or any((x.version == "VERSE" for x in charts))
-                    )
-                    and any((x.const is not None and x.const >= 14.7 for x in charts))
-                ):
-                    verse_chart_constant_notice = True
 
                 displayed_version = song.version
                 displayed_bpm = "Unknown"
@@ -558,14 +548,16 @@ class SearchCog(commands.Cog, name="Search"):
                 embed.description = song_description
                 song_embeds.append(embed)
 
-            content = (
-                "Chart constants follow CHUNITHM VERSE's scale."
-                if verse_chart_constant_notice
-                else None
-            )
-
             view = EmbedPaginationView(ctx, song_embeds)
-            await view.start(content=content)
+            view.add_item(
+                discord.ui.Button(
+                    style=discord.ButtonStyle.link,
+                    label="wikiwiki",
+                    url=f"https://wikiwiki.jp/chunithmwiki/{quote(result.songs[0].title)}",
+                    row=1,
+                )
+            )
+            await view.start()
             return None
 
 

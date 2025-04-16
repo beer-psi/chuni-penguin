@@ -57,7 +57,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             (
                 "[Kamaitachi](https://kamai.tachi.ac) is a modern, invite-only, arcade rhythm game score tracker.\n"
                 "You can link your Kamaitachi account to the bot to sync your scores with a simple command.\n"
-                "To get started, DM me with `c>kamaitachi link` for instructions."
+                f"To get started, DM me with `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link` for instructions."
             ),
             mention_author=False,
         )
@@ -138,12 +138,13 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     cookie.kamaitachi_token = token
                     await session.merge(cookie)
 
-                    content += (
-                        "\nYou can now use `c>kamaitachi sync` to sync your recent scores.\n"
-                        "\n"
-                        "**It is recommended that you run `c>kamaitachi sync` to sync your recent scores first, "
-                        "before syncing your personal bests with `c>kamaitachi sync pb`.**"
-                    )
+                    if cookie.cookie:
+                        content += (
+                            f"\nYou can now use `{ctx.prefix}kamaitachi sync` to sync your recent scores.\n"
+                            "\n"
+                            f"**It is recommended that you run `{ctx.prefix}kamaitachi sync` to sync your recent scores first, "
+                            f"before syncing your personal bests with `{ctx.prefix}kamaitachi sync pb`.**"
+                        )
 
             return await ctx.reply(
                 content=content,
@@ -155,7 +156,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             color=0xCA1961,
             description=(
                 f"Retrive an API key from https://kamai.tachi.ac/client-file-flow/{self.kt_client_id} then "
-                "run `c>kamaitachi link <token>` in DMs."
+                f"run `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link <token>` in DMs."
             ),
         )
         if self.bot.app is not None:
@@ -209,13 +210,13 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
 
         if cookie is None:
             return await ctx.reply(
-                content="Please login with `c>login` first before syncing with Kamaitachi.",
+                content=f"Please login with `{ctx.prefix}login` first before syncing with Kamaitachi.",
                 mention_author=False,
             )
 
         if cookie.kamaitachi_token is None:
             return await ctx.reply(
-                content="You are not linked with Kamaitachi. DM me with `c>kamaitachi link` for instructions.",
+                content=f"You are not linked with Kamaitachi. DM me with `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link` for instructions.",
                 mention_author=False,
             )
 

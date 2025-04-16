@@ -138,7 +138,7 @@ class ChuniNet:
 
         return parse_music_for_rating(soup)
 
-    async def recent10(self) -> list[Record]:
+    async def new20(self) -> list[Record]:
         soup = await self._request_soup(
             "GET", "/mobile/home/playerData/ratingDetailRecent/"
         )

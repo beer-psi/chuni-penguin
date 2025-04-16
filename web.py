@@ -91,6 +91,8 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
     if not whoami_data["success"]:
         raise web.HTTPInternalServerError
 
+    message = "Your accounts are now linked!"
+
     async with bot.begin_db_session() as db_session, db_session.begin():
         if cookie is None:
             cookie = Cookie(discord_id=discord_id, cookie="", kamaitachi_token=token)
@@ -99,10 +101,15 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
             cookie.kamaitachi_token = token
             await db_session.merge(cookie)
 
-    return web.Response(
-        text="Your accounts are now linked! You can close this page and use the bot now.",
-        content_type="text/plain",
-    )
+            if cookie.cookie:
+                message += (
+                    f"\nYou can now use `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores.\n"
+                    "\n"
+                    f"**It is recommended that you run `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores first, "
+                    f"before syncing your personal bests with `{config.bot.default_prefix}kamaitachi sync pb`.**"
+                )
+
+    return web.Response(text=message, content_type="text/plain")
 
 
 @router.get("/invite")

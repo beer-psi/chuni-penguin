@@ -1,6 +1,5 @@
 ## chuni penguin
 
-[![Deploy](https://github.com/beer-psi/chuni-penguin/actions/workflows/deploy.yaml/badge.svg)](https://github.com/beer-psi/chuni-penguin/actions/workflows/deploy.yaml)
 [![State-of-the-art Shitcode](https://img.shields.io/static/v1?label=State-of-the-art&message=Shitcode&color=7B5804)](https://github.com/trekhleb/state-of-the-art-shitcode)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Support server](https://dcbadge.limes.pink/api/server/https://discord.gg/DyYrrzQQ9W)](https://discord.gg/DyYrrzQQ9W)
@@ -10,12 +9,6 @@ Discord bot for CHUNITHM International version.
 I have a hosted instance that you can invite
 [here](https://discord.com/oauth2/authorize?client_id=1091948342101155950&scope=bot+applications.commands&permissions=274877983744),
 though uptime is sometimes flaky.
-
-### Notice
-
-I will not be actively developing the bot anymore. There's not much left I think
-the bot actually needs, and my motivation has been slowly waning to implement
-them. I'll still fix any reported bugs and review any PRs.
 
 ### Features
 
@@ -34,6 +27,9 @@ them. I'll still fix any reported bugs and review any PRs.
 
 ### Setup instructions
 
+You can clone from either the `develop` branch or the `trunk` branch. Only the
+`trunk` branch is guaranteed to work at all commits.
+
 0. Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 1. Copy `bot.example.ini` to `bot.ini` and fill in values based on the comments.
 2. Run `uv sync` to install dependencies.
@@ -46,6 +42,11 @@ them. I'll still fix any reported bugs and review any PRs.
    [here](https://nightly.link/beer-psi/chuni-penguin/workflows/test_creating_db.yaml/trunk/database.zip),
    for your convenience.
 5. `uv run bot.py`
+
+### Contributions
+
+Pull requests are welcome. Please make them to the `develop` branch. Most
+bugfixes will be cherry-picked back to the `trunk` branch after I merge it.
 
 ### Credits
 
@@ -67,18 +68,8 @@ Thanks to all the
 [contributors](https://github.com/beer-psi/chuni-penguin/graphs/contributors)
 who took part.
 
-<details>
-    <summary>Donation</summary>
-
-chuni-penguin is entirely free (as in both free beer and free speech), but you
-can monetarily support its development by donating through
-[Ko-fi](https://ko-fi.com/beerpsi_) or directly if you live in Vietnam:
-
-- Bank: Vietcombank
-- Account: beerpsi
-
-Thank you to everyone who donated:
+Thanks to all the people who have sponsored my work through
+[Ko-fi](https://ko-fi.com/beerpsi_) and through direct donations:
 
 - [Tukkun](https://github.com/tukkun1995)
-
-</details>
+- @tadanahh

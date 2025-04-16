@@ -75,23 +75,23 @@ from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
             """
             <div class="play_musicdata_icon clearfix">
                 <!-- ◆クリア -->
-                <img src="https://chunithm-net-eng.com/mobile/images/icon_absolutep.png">
-                <!-- ◆ランク -->
-                <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
-            </div>
-            """,
-            (Rank.SSSp, ClearType.ABSOLUTE_PLUS, ComboType.NONE, ChainType.NONE),
-        ),
-        (
-            """
-            <div class="play_musicdata_icon clearfix">
-                <!-- ◆クリア -->
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_absolute.png">
                 <!-- ◆ランク -->
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
             (Rank.SSSp, ClearType.ABSOLUTE, ComboType.NONE, ChainType.NONE),
+        ),
+        (
+            """
+            <div class="play_musicdata_icon clearfix">
+                <!-- ◆クリア -->
+                <img src="https://chunithm-net-eng.com/mobile/images/icon_brave.png">
+                <!-- ◆ランク -->
+                <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
+            </div>
+            """,
+            (Rank.SSSp, ClearType.BRAVE, ComboType.NONE, ChainType.NONE),
         ),
         (
             """

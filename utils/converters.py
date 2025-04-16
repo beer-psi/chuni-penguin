@@ -4,7 +4,7 @@ from typing import override
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from chunithm_net.models.enums import Difficulty
+from chunithm_net.models.enums import Difficulty, Genres, Rank
 
 
 class DifficultyConverter(commands.Converter[Difficulty]):
@@ -32,8 +32,42 @@ class DifficultyConverter(commands.Converter[Difficulty]):
             return Difficulty.from_short_form(argument[:3])
 
         # give up
-        msg = f'Could not infer difficuty name from "{argument}"'
+        msg = f'Could not infer difficulty name from "{argument}"'
         raise commands.BadArgument(msg)
+
+
+class GenreConverter(commands.Converter[Genres]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> Genres:
+        genre_lower = argument.lower()
+
+        if genre_lower.startswith(("pops", "anime")):
+            return Genres.POPS_AND_ANIME
+        if genre_lower.startswith("nico"):
+            return Genres.NICONICO
+        if genre_lower.startswith(("touhou", "toho", "東方")):
+            return Genres.TOUHOU_PROJECT
+        if genre_lower.startswith(("original", "chunithm")):
+            return Genres.ORIGINAL
+        if genre_lower.startswith("variety"):
+            return Genres.VARIETY
+        if genre_lower.startswith("irodori"):
+            return Genres.IRODORIMIDORI
+        if genre_lower.startswith(("geki", "ゲキ", "mai", "マイ")):
+            return Genres.GEKIMAI
+
+        msg = f'Could not infer genre name from "{argument}".'
+        raise commands.CommandError(msg)
+
+
+class RankConverter(commands.Converter[Rank]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> Rank:
+        try:
+            return Rank[argument.upper().replace("+", "p")]
+        except ValueError as e:
+            msg = f'Could not infer rank from "{argument}".'
+            raise commands.CommandError(msg) from e
 
 
 # TODO: Consider inheriting from commands.clean_content instead so we

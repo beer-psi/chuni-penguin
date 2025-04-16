@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from chunithm_net.models.enums import Genres
 from chunithm_net.models.record import DetailedParams
 from chunithm_net.models.type_paired_dict import TypePairedDictKey
 
@@ -9,6 +10,7 @@ INTERNATIONAL_JACKET_BASE = "https://chunithm-net-eng.com/mobile/img"
 _KEY_DETAILED_PARAMS = TypePairedDictKey[DetailedParams]()
 KEY_SONG_ID = TypePairedDictKey[int]()
 KEY_SONG_VERSION = TypePairedDictKey[str]()
+KEY_SONG_GENRE = TypePairedDictKey[Genres]()
 KEY_LEVEL = TypePairedDictKey[str]()
 KEY_INTERNAL_LEVEL = TypePairedDictKey[float]()
 KEY_PLAY_RATING = TypePairedDictKey[Decimal]()

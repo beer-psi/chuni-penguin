@@ -31,7 +31,9 @@ class B30PageSource(ListPageSource["Record"]):
             (record.extras[KEY_PLAY_RATING] for record in records),
             start=Decimal(0),
         )
-        max_play_rating = max(record.extras[KEY_PLAY_RATING] for record in records)
+        max_play_rating = max(
+            (record.extras[KEY_PLAY_RATING] for record in records), default=Decimal(0)
+        )
 
         self.average = floor_to_ndp(total_rating / rating_slots, 4)
         self.reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
