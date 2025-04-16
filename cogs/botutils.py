@@ -314,6 +314,12 @@ class UtilsCog(commands.Cog, name="Utils"):
             song_id = record.extras.get(KEY_SONG_ID)
 
             if song_id is not None:
+                if song_id == 723:
+                    # sega revived an old song under a different ID for whatever reason, and people have scores on both of them.
+                    # we only have scores on ID 808 though. this is quite a bodge.
+                    song_id = 808
+                    record.extras[KEY_SONG_ID] = 808
+
                 song_ids.add(song_id)
             elif record.jacket is not None:
                 jackets.add(record.jacket.split("/")[-1])
