@@ -456,7 +456,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         """Adjust your experience with the bot.
 
         Currently, these options are supported:
-        - `synthesis-alt-jacket`: Changes the Synthesis. jacket art used for rendering your best 50 image. The possible options are `none` (black background), `default` (use CHUNITHM's jacket art), `cytus2` and `vividstasis`.
+        - `synthesis-alt-jacket`: Changes the Synthesis. jacket art used for rendering your best 50 image. The possible options are `none` (black background), `default` (use CHUNITHM's jacket art), `cytus2`, `vividstasis`, `musedash`.
         - `privacy`: Do not allow other users to view your profile and scores using the bot. You can still use commands, but to others it will seem like you're not logged in. The possible options are `true` (enabled) and `false` (disabled).
 
         **Parameters:**
@@ -511,8 +511,9 @@ class ProfileCog(commands.Cog, name="Profile"):
                 "default",
                 "cytus2",
                 "vividstasis",
+                "musedash",
             ):
-                msg = "Invalid option for `synthesis-alt-jacket`. Expected one of `none`, `default`, `cytus2`, `vividstasis`."
+                msg = "Invalid option for `synthesis-alt-jacket`. Expected one of `none`, `default`, `cytus2`, `vividstasis`, `musedash`."
                 raise commands.BadArgument(msg)
 
             user_config.synthesis_alt_jacket = value
