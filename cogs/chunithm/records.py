@@ -77,6 +77,9 @@ ASSETS_DIR = Path(__file__).parent.parent.parent / "assets"
 NOTO_SANS_JP_24 = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 24
 )
+NOTO_SANS_JP_24_BOLD = ImageFont.truetype(
+    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 24
+)
 NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Medium.ttf", 28
 )
@@ -214,10 +217,10 @@ def _render_b30_entry(
 
         if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
             combo_lamp = "[AJC]"
-            combo_lamp_color = "#FAFFA5"
+            combo_lamp_color = "#FFDF75"
         elif record.combo_lamp == ComboType.ALL_JUSTICE:
             combo_lamp = "[AJ]"
-            combo_lamp_color = "#FAFFA5"
+            combo_lamp_color = "#FFDF75"
         elif record.combo_lamp == ComboType.FULL_COMBO:
             combo_lamp = "[FC]"
             combo_lamp_color = "#28F31A"
@@ -229,7 +232,7 @@ def _render_b30_entry(
             (x + 132 + rank_lamp_width, y + 90),
             combo_lamp,
             fill=combo_lamp_color,
-            font=NOTO_SANS_JP_24,
+            font=NOTO_SANS_JP_24_BOLD,
         )
 
     # draw the timestamp and judgements if available
