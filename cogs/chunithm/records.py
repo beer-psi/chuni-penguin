@@ -201,21 +201,36 @@ def _render_b30_entry(
     )
 
     # draw the lamps
-    lamps = f"[{record.rank}]"
-
-    if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
-        lamps += " [AJC]"
-    elif record.combo_lamp == ComboType.ALL_JUSTICE:
-        lamps += " [AJ]"
-    elif record.combo_lamp == ComboType.FULL_COMBO:
-        lamps += " [FC]"
-
+    rank_lamp = f"[{record.rank}]"
     b30_draw.text(
         (x + 132, y + 90),
-        lamps,
+        rank_lamp,
         fill="#DDDDDD",
         font=NOTO_SANS_JP_24,
     )
+
+    if record.combo_lamp != ComboType.NONE:
+        rank_lamp_width = b30_draw.textlength(rank_lamp + " ", NOTO_SANS_JP_24)
+
+        if record.combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
+            combo_lamp = "[AJC]"
+            combo_lamp_color = "#FAFFA5"
+        elif record.combo_lamp == ComboType.ALL_JUSTICE:
+            combo_lamp = "[AJ]"
+            combo_lamp_color = "#FAFFA5"
+        elif record.combo_lamp == ComboType.FULL_COMBO:
+            combo_lamp = "[FC]"
+            combo_lamp_color = "#28F31A"
+        else:
+            msg = f"unhandled combo lamp {record.combo_lamp}"
+            raise ValueError(msg)
+
+        b30_draw.text(
+            (x + 132 + rank_lamp_width, y + 90),
+            combo_lamp,
+            fill=combo_lamp_color,
+            font=NOTO_SANS_JP_24,
+        )
 
     # draw the timestamp and judgements if available
     extra_info = ""
