@@ -89,6 +89,14 @@ class FluffCog(commands.Cog, name="Fluff"):
             mention_author=False,
         )
 
+    @commands.hybrid_command("ock")
+    @logged_prefix_command
+    async def ock(self, ctx: Context):
+        await ctx.reply(
+            content="https://tenor.com/view/dripping-cock-chicken-among-us-drip-gif-21478744",
+            mention_author=False,
+        )
+
 
 async def setup(bot: "ChuniBot"):
     await bot.add_cog(FluffCog(bot))
