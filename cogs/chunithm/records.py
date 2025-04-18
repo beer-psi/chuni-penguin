@@ -618,7 +618,7 @@ def render_b30(
                 + (i // 5) * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
             )
 
-            b30_image = _render_b30_entry(b30_image, record, i, x, y)
+            b30_image = _render_b30_entry(b30_image, record, i, x, y, user_config)
 
     # crop any extra bits we don't need, however we might need them later...
     # b30_image = b30_image.crop((0, 0, b30_image.width, 1429))
