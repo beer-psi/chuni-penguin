@@ -1298,10 +1298,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 == "kamaitachi"
             )
 
-            async with self.bot.begin_db_session() as session:
-                query = select(UserConfig).where(UserConfig.discord_id == target_id)
-                result = await session.execute(query)
-                user_config = result.scalar_one_or_none()
+            user_config = await self.utils.fetch_user_config(target_id)
 
             if kamaitachi:
                 async with self.utils.kamaitachi_client(ctx, target_id) as client:
