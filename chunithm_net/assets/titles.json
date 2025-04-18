@@ -215,8 +215,16 @@
         "content": "LEGEND of LUMINOUS PLUS",
         "rarity": "version3"
     },
+    "9a17b52448b6e580.png": {
+        "content": "KING of Performai 4th International ver. BEST 8",
+        "rarity": "kop"
+    },
     "abd6de4e61aa444a.png": {
         "content": "KING of Performai 5th International ver. BEST 8",
+        "rarity": "kop"
+    },
+    "f0bec13d274ba04f.png": {
+        "content": "KING of Performai 6th International ver. BEST 8",
         "rarity": "kop"
     }
 }
