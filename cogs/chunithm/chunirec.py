@@ -1,4 +1,5 @@
 import binascii
+import random
 import string
 from enum import IntEnum, IntFlag, auto
 from typing import TYPE_CHECKING, overload
@@ -56,7 +57,12 @@ class ChunirecCourseLamp(IntFlag):
     ALL_JUSTICE_CRITICAL = auto()
 
 
-BASE62_ALPHABET = string.digits + string.ascii_uppercase + string.ascii_lowercase
+BASE62_ALPHABET = (
+    "BA"
+    + string.digits[::-1]
+    + string.ascii_lowercase[::-1]
+    + string.ascii_uppercase[:1:-1]
+)
 TITLE_RARITIES = [
     "x",
     "normal",
@@ -135,7 +141,12 @@ def serialize_number(
             max *= 62
             max += 61
 
-    return to_base_n(clamp(value, min, max), len(alphabet), alphabet).zfill(length)
+    out = to_base_n(clamp(value, min, max), len(alphabet), alphabet)
+
+    if len(out) < length:
+        out = alphabet[0] * (length - len(out)) + out
+
+    return out
 
 
 def serialize_string(
@@ -175,22 +186,6 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
         self.bot: ChuniBot = bot
         self.utils: UtilsCog = bot.get_cog("Utils")  # pyright: ignore[reportAttributeAccessIssue]
 
-        self.http_client: httpx.AsyncClient = httpx.AsyncClient(
-            timeout=httpx.Timeout(timeout=60.0),
-            follow_redirects=True,
-            transport=httpx.AsyncHTTPTransport(retries=5),
-        )
-        self.http_client.headers.update(
-            {
-                "accept-language": "en-US,en;q=0.5",
-                "origin": "https://new.chunithm-net.com",
-                "referer": "https://new.chunithm-net.com/",
-                "sec-fetch-dest": "empty",
-                "sec-fetch-mode": "cors",
-                "sec-fetch-site": "cross-site",
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0",
-            }
-        )
         self.region_code = "jp2"
 
     @commands.hybrid_group("chunirec", invoke_without_command=True)
@@ -215,7 +210,26 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             msg = "Please open your DMs to sync scores to chunirec."
             raise commands.PrivateMessageOnly(msg) from e
 
-        resp = await self.http_client.get(
+        rand = random.Random()
+        rand.seed(ctx.author.id)
+
+        http_client: httpx.AsyncClient = httpx.AsyncClient(
+            timeout=httpx.Timeout(timeout=60.0),
+            follow_redirects=True,
+            transport=httpx.AsyncHTTPTransport(retries=5),
+        )
+        http_client.headers.update(
+            {
+                "accept-language": "en-US,en;q=0.5",
+                "origin": "https://new.chunithm-net.com",
+                "referer": "https://new.chunithm-net.com/",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "cross-site",
+                "user-agent": rand.choice(self.utils.user_agents.desktop),
+            }
+        )
+        resp = await http_client.get(
             f"https://api.chunirec.net/2.0/pttgr/status.json?region={self.region_code}"
         )
         status = msgspec.json.decode(resp.content, type=ChunirecStatus)
@@ -229,12 +243,14 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
             raise commands.CommandError(msg)
 
         message = await ctx.reply("Fetching player data...", mention_author=False)
-        payload = "06"  # version number
+        payload = serialize_number(6, 2)  # version number
 
         async with self.utils.chuninet(ctx) as client:
             player_data = await client.player_data()
 
-            payload += serialize_number(player_data.lv, 3, max=9999)
+            payload += serialize_number(
+                player_data.reborn * 100 + player_data.lv, 3, max=9999
+            )
 
             # Since max rating has been removed in CHUNITHM VERSE, the player's rating is
             # just serialized twice.
@@ -264,10 +280,12 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
 
                 payload += serialize_number(title_rarity, 1, max=9)
 
-            payload += "0"  # seemingly deprecated field
-            payload += "3"  # region index: paralost = 1, intl = 2, jp = 3
-            payload += "0"  # net battle rank
-            payload += "000"  # net battle playcount
+            payload += serialize_number(1, length=1)  # seemingly deprecated field
+            payload += serialize_number(
+                3, length=1
+            )  # region index: paralost = 1, intl = 2, jp = 3
+            payload += serialize_number(0, length=1)  # net battle rank
+            payload += serialize_number(0, length=3)  # net battle playcount
             payload += serialize_string(player_data.name, 2)
 
             for title in player_data.titles:
@@ -371,12 +389,21 @@ class ChunirecCog(commands.Cog, name="chunirec", command_attrs={"hidden": True})
                 )
                 payload += serialize_number(recent.score, 4, max=1_010_000)
 
-            payload += "000B"  # unused array, presumably for best30
-            payload += "000O"  # unused array, presumably for best40
+            payload += serialize_number(0, length=3)
+            payload += "B"  # unused array, presumably for best30
 
-            payload += serialize_number(binascii.crc32(payload.encode()), 6)
+            payload += serialize_number(0, length=3)
+            payload += "O"  # unused array, presumably for best40
 
-        resp = await self.http_client.post(
+            payload_hash = binascii.crc32(payload.encode())
+            payload_hash = (payload_hash & 4042322160) >> 4 | (
+                payload_hash & 252645135
+            ) << 4
+            payload_hash ^= 3058941945
+
+            payload += serialize_number(payload_hash, 6)
+
+        resp = await http_client.post(
             "https://api.chunirec.net/2.0/pttgr/gdhtts.json",
             data={"data": payload},
         )
