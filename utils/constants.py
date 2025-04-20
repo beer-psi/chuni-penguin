@@ -22,4 +22,5 @@ VERSION_NAMES = {
     "v2025.1": "Cries, beyond The End",
     "v2025.3": "[CRYSTAL_ACCESS]",
     "v2025.4": "Oracle",
+    "v2025.5": "黎命に殉ず",
 }
