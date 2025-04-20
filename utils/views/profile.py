@@ -59,7 +59,7 @@ async def handle_add_friend_interaction(
         embed.description = f"Sent a friend request to {name}."
         embed.color = discord.Color.green()
     except AlreadyAddedAsFriend:
-        embed.description = "You've already added this player as a friend!"
+        embed.description = "You've already sent this player a friend request, or you're already friends with this player."
     except InvalidFriendCode:
         embed.description = "Could not send a friend request because the friend code was invalid, or you're trying to send a friend request to yourself."
     except ChuniNetError as e:
