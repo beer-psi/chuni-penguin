@@ -1408,10 +1408,61 @@ class RecordsCog(commands.Cog, name="Records"):
                     player_name = player_data.name
                     current_rating = player_data.rating
 
-                    records = await self.utils.hydrate_records(await client.best30())
+                    # in order to get extra lamp information, we get the charts that are in a player's
+                    # best30/new20 from the music for rating list, but we fetch the player's PBs.
+                    best30_charts = [
+                        (x.extras[KEY_SONG_ID], x.difficulty)
+                        for x in await client.best30()
+                    ]
+                    new20_charts = [
+                        (x.extras[KEY_SONG_ID], x.difficulty)
+                        for x in await client.new20()
+                    ]
+
+                    # optimization trick: only fetch PBs for difficulties in the player's b50
+                    difficulties = sorted(
+                        {x[1] for x in itertools.chain(best30_charts, new20_charts)},
+                        key=lambda x: x.value,
+                    )
+                    records: list[Record] | None = []
+                    new_records: list[Record] | None = []
+
+                    for difficulty in difficulties:
+                        difficulty_records = await client.music_record_by_folder(
+                            difficulty=difficulty
+                        )
+                        records.extend(
+                            [
+                                x
+                                for x in difficulty_records
+                                if (x.extras[KEY_SONG_ID], x.difficulty)
+                                in best30_charts
+                            ]
+                        )
+                        new_records.extend(
+                            [
+                                x
+                                for x in difficulty_records
+                                if (x.extras[KEY_SONG_ID], x.difficulty) in new20_charts
+                            ]
+                        )
+
+                    records = await self.utils.hydrate_records(records)
+                    new_records = await self.utils.hydrate_records(new_records)
+
+                    # sort the fetched best30/new20 by their position in the original b30/n20 list
+                    records.sort(
+                        key=lambda x: best30_charts.index(
+                            (x.extras[KEY_SONG_ID], x.difficulty)
+                        )
+                    )
                     record_slots = 30
 
-                    new_records = await self.utils.hydrate_records(await client.new20())
+                    new_records.sort(
+                        key=lambda x: new20_charts.index(
+                            (x.extras[KEY_SONG_ID], x.difficulty)
+                        )
+                    )
                     new_record_slots = 20
 
             if classic:
