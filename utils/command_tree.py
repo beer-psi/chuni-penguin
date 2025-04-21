@@ -1,4 +1,5 @@
 import asyncio
+import struct
 import zlib
 
 import msgspec
@@ -6,7 +7,7 @@ from discord.app_commands import CommandTree
 
 
 class VersionableCommandTree(CommandTree):
-    async def get_hash(self):
+    async def get_hash(self) -> int:
         commands = sorted(
             self._get_all_commands(guild=None), key=lambda c: c.qualified_name
         )
@@ -22,4 +23,5 @@ class VersionableCommandTree(CommandTree):
         else:
             payload = [command.to_dict(self) for command in commands]
 
-        return zlib.crc32(msgspec.msgpack.encode(payload))
+        unsigned_hash = zlib.crc32(msgspec.msgpack.encode(payload))
+        return struct.unpack("<i", struct.pack("<I", unsigned_hash))[0]
