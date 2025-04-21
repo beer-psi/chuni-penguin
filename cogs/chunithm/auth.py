@@ -170,7 +170,7 @@ class AuthCog(commands.Cog, name="Auth"):
                 "(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)"
             )
         elif clal is not None:
-            if await self._verify_and_login(ctx.author.id, clal) is None:
+            if (e := await self._verify_and_login(ctx.author.id, clal)) is None:
                 await logger.adebug(
                     "User logged in.", tag="user_logged_in", user_id=ctx.author.id
                 )
@@ -183,7 +183,7 @@ class AuthCog(commands.Cog, name="Auth"):
                 user_id=ctx.author.id,
             )
 
-            msg = "Invalid cookie."
+            msg = f"Invalid cookie: {e}"
             raise commands.BadArgument(msg)
 
         passcode = str(self.random.randrange(10**5, 10**6))
@@ -211,7 +211,7 @@ class AuthCog(commands.Cog, name="Auth"):
         try:
             clal = await self.bot.wait_for(f"chunithm_login_{passcode}", timeout=300)
 
-            if await self._verify_and_login(ctx.author.id, clal) is None:  # type: ignore[reportGeneralTypeIssues]
+            if (e := await self._verify_and_login(ctx.author.id, clal)) is None:  # type: ignore[reportGeneralTypeIssues]
                 await logger.adebug(
                     "User logged in.", tag="user_logged_in", user_id=ctx.author.id
                 )
@@ -237,7 +237,7 @@ class AuthCog(commands.Cog, name="Auth"):
                     embed=discord.Embed(
                         color=discord.Color.red(),
                         title="Failed to login",
-                        description="Invalid cookie.",
+                        description=f"Invalid cookie: {e}",
                     ),
                     view=None,
                 )
