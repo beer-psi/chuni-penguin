@@ -63,7 +63,8 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
                         color=discord.Color.red(),
                         title="Error",
                         description="Invalid username or password.",
-                    )
+                    ),
+                    ephemeral=True,
                 )
                 return
             clal = client.cookies.get("clal", domain="lng-tgk-aime-gw.am-all.net")
@@ -74,7 +75,8 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
                         color=discord.Color.red(),
                         title="Error",
                         description="Login was successful, but could not retrieve token.",
-                    )
+                    ),
+                    ephemeral=True,
                 )
                 return
 
@@ -85,7 +87,8 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
                     color=discord.Color.green(),
                     title="Success",
                     description="Login successful.",
-                )
+                ),
+                ephemeral=True,
             )
 
 
