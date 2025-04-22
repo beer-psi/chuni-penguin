@@ -56,7 +56,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         await ctx.reply(
             (
                 "[Kamaitachi](https://kamai.tachi.ac) is a modern, invite-only, arcade rhythm game score tracker.\n"
-                "You can link your Kamaitachi account to the bot to sync your scores with a simple command.\n"
+                "You can link your Kamaitachi account to the bot to sync scores from CHUNITHM-NET International, or view your scores with the bot.\n"
                 f"To get started, DM me with `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link` for instructions."
             ),
             mention_author=False,
