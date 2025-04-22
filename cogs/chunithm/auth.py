@@ -113,8 +113,8 @@ class AuthCog(commands.Cog, name="Auth"):
 
         Parameters
         ----------
-        clal: str
-            The `clal` cookie from CHUNITHM-NET. Run this command without arguments to get instructions.
+        clal: Optional[str]
+            IGNORE IF YOU DON'T KNOW WHAT THIS IS FOR. You will get instructions on how to log in.
         """
 
         channel = ctx.channel
