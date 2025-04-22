@@ -38,6 +38,12 @@ class ScoreCardEmbed(discord.Embed):
         if show_lamps:
             lamps: list[ChainType | ClearType | ComboType] = [record.clear_lamp]
 
+            if (
+                record.combo_lamp != ComboType.NONE
+                or record.chain_lamp != ChainType.NONE
+            ) and record.clear_lamp == ClearType.CLEAR:
+                lamps = []
+
             if record.combo_lamp != ComboType.NONE:
                 lamps.append(record.combo_lamp)
             if record.chain_lamp != ChainType.NONE:
