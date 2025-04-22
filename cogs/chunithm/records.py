@@ -1755,7 +1755,9 @@ class RecordsCog(commands.Cog, name="Records"):
             msg = f"Invalid sort type {sort}. Expected one of score, rating, overpower, overpower %."
             raise commands.BadArgument(msg)
 
-        view = B30View(ctx, records, show_average=False, show_reachable=False)
+        view = B30View(
+            ctx, records, show_average=False, show_reachable=False, show_lamps=True
+        )
         await view.start()
         return None
 
@@ -1986,7 +1988,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 if len(records) == 0:
                     return await ctx.reply("No scores found.", mention_author=False)
 
-            view = B30View(ctx, records, show_average=False, show_reachable=False)
+            view = B30View(
+                ctx, records, show_average=False, show_reachable=False, show_lamps=True
+            )
             await view.start()
             return None
 
