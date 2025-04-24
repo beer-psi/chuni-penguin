@@ -135,11 +135,12 @@ def get_jacket_url(song: "Song") -> str:
     current_time = datetime.now(TOKYO_TZ)
     is_maintenance = 4 <= current_time.hour <= 7
 
-    if song.available and not is_maintenance:
-        return f"{INTERNATIONAL_JACKET_BASE}/{song.jacket}"
+    if song.jacket is not None:
+        if song.available and not is_maintenance:
+            return f"{INTERNATIONAL_JACKET_BASE}/{song.jacket}"
 
-    if not song.removed:
-        return f"{JACKET_BASE}/{song.jacket}"
+        if not song.removed:
+            return f"{JACKET_BASE}/{song.jacket}"
 
     if config.web.serve_assets and config.web.base_url is not None:
         url = httpx.URL(config.web.base_url)
