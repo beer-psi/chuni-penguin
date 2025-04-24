@@ -1465,6 +1465,44 @@ class RecordsCog(commands.Cog, name="Records"):
                     )
                     new_record_slots = 20
 
+                    # sega hides theatore creatore 💔
+                    # there's definitely a better way to genericize this but i can't really
+                    # bother to right now
+                    theatore_creatore_ult = discord.utils.find(
+                        lambda r: r.difficulty == Difficulty.ULTIMA,
+                        await client.music_record(2712),
+                    )
+
+                    if theatore_creatore_ult is not None:
+                        theatore_creatore_ult = await self.utils.hydrate_record(
+                            theatore_creatore_ult
+                        )
+
+                        if len(new_records) >= 20:
+                            # there definitely exists a min rating score
+                            # because there are at least 20 scores
+                            min_rating_score = min(
+                                new_records,
+                                key=lambda r: r.extras[KEY_PLAY_RATING],
+                            )
+
+                            if (
+                                theatore_creatore_ult.extras[KEY_PLAY_RATING]
+                                > min_rating_score.extras[KEY_PLAY_RATING]
+                            ):
+                                new_records.remove(min_rating_score)
+                                new_records.append(theatore_creatore_ult)
+                                new_records.sort(
+                                    key=lambda r: r.extras[KEY_PLAY_RATING],
+                                    reverse=True,
+                                )
+                        else:
+                            new_records.append(theatore_creatore_ult)
+                            new_records.sort(
+                                key=lambda r: r.extras[KEY_PLAY_RATING],
+                                reverse=True,
+                            )
+
             if classic:
                 if new_records is not None:
                     view = B30N20View(ctx, records, new_records)
