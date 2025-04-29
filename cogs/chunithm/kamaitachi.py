@@ -185,6 +185,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         cookie.kamaitachi_token = None
         async with self.bot.begin_db_session() as session:
             await session.merge(cookie)
+            await session.commit()
 
         return await ctx.reply(
             content="Successfully unlinked with Kamaitachi.", mention_author=False
