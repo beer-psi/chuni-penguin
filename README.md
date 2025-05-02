@@ -70,10 +70,14 @@ Thanks to all the
 [contributors](https://github.com/beer-psi/chuni-penguin/graphs/contributors)
 who took part.
 
-<!-- GitAds-Verify: B9MP9Q2Q52ID6R8OE518698ZTN33IG3A -->
-
 Thanks to all the people who have sponsored my work through
 [Ko-fi](https://ko-fi.com/beerpsi_) and through direct donations:
 
 - [Tukkun](https://github.com/tukkun1995)
 - @tadanahh
+
+
+### GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=beer-psi/chuni-penguin@github)](https://gitads.dev/v1/ad-track?source=beer-psi/chuni-penguin@github)
+
+<!-- GitAds-Verify: B9MP9Q2Q52ID6R8OE518698ZTN33IG3A -->
