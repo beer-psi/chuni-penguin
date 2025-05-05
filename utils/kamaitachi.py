@@ -24,8 +24,11 @@ from utils import floor_to_ndp
 
 T = TypeVar("T", bound=msgspec.Struct)
 
-KTChunithmLamp = Literal[
-    "FAILED", "CLEAR", "FULL COMBO", "ALL JUSTICE", "ALL JUSTICE CRITICAL"
+KTChunithmNoteLamp = Literal[
+    "NONE", "FULL COMBO", "ALL JUSTICE", "ALL JUSTICE CRITICAL"
+]
+KTChunithmClearLamp = Literal[
+    "FAILED", "CLEAR", "HARD", "BRAVE", "ABSOLUTE", "CATASTROPHY"
 ]
 KTChunithmDifficulty = Literal["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"]
 KTChunithmClass = Literal[
@@ -62,7 +65,8 @@ class KTChunithmOptionalData(msgspec.Struct, rename="camel"):
 
 class KTChunithmScoreData(msgspec.Struct, rename="camel"):
     score: int
-    lamp: KTChunithmLamp
+    note_lamp: KTChunithmNoteLamp
+    clear_lamp: KTChunithmClearLamp
     judgements: KTChunithmJudgements
     optional: KTChunithmOptionalData
     grade: Literal[
@@ -180,7 +184,8 @@ class KTBatchManualChunithmMeta(msgspec.Struct):
 
 class KTBatchManualChunithmScore(msgspec.Struct, rename="camel"):
     score: int
-    lamp: KTChunithmLamp
+    note_lamp: KTChunithmNoteLamp
+    clear_lamp: KTChunithmClearLamp
     match_type: Literal["inGameID", "songTitle", "tachiSongID"]
     identifier: str
     difficulty: KTChunithmDifficulty
@@ -252,6 +257,29 @@ KTImportPollStatusResponse = KTResponse[
 KTStatusResponse = KTResponse[KTStatusResponseBody]
 
 
+KT_CLEAR_LAMP_MAP: dict[KTChunithmClearLamp, ClearType] = {
+    "CATASTROPHY": ClearType.CATASTROPHY,
+    "ABSOLUTE": ClearType.ABSOLUTE,
+    "BRAVE": ClearType.BRAVE,
+    "HARD": ClearType.HARD,
+    "CLEAR": ClearType.CLEAR,
+    "FAILED": ClearType.FAILED,
+}
+KT_REVERSE_CLEAR_LAMP_MAP: dict[ClearType, KTChunithmClearLamp] = {
+    v: k for k, v in KT_CLEAR_LAMP_MAP.items()
+}
+
+KT_NOTE_LAMP_MAP: dict[KTChunithmNoteLamp, ComboType] = {
+    "ALL JUSTICE CRITICAL": ComboType.ALL_JUSTICE_CRITICAL,
+    "ALL JUSTICE": ComboType.ALL_JUSTICE,
+    "FULL COMBO": ComboType.FULL_COMBO,
+    "NONE": ComboType.NONE,
+}
+KT_REVERSE_NOTE_LAMP_MAP: dict[ComboType, KTChunithmNoteLamp] = {
+    v: k for k, v in KT_NOTE_LAMP_MAP.items()
+}
+
+
 def convert_kt_to_record(
     score: KTChunithmScore | KTChunithmPersonalBest,
     song: KTChunithmSong,
@@ -263,14 +291,8 @@ def convert_kt_to_record(
         difficulty=getattr(Difficulty, chart.difficulty),
         score=score.score_data.score,
         rank=getattr(Rank, score.score_data.grade.replace("+", "p")),
-        clear_lamp=(
-            ClearType.CLEAR if score.score_data.lamp != "FAILED" else ClearType.FAILED
-        ),
-        combo_lamp=(
-            ComboType.NONE
-            if score.score_data.lamp in ("FAILED", "CLEAR")
-            else getattr(ComboType, score.score_data.lamp.replace(" ", "_"))
-        ),
+        clear_lamp=KT_CLEAR_LAMP_MAP.get(score.score_data.clear_lamp, ClearType.FAILED),
+        combo_lamp=KT_NOTE_LAMP_MAP.get(score.score_data.note_lamp, ComboType.NONE),
     )
     record.extras[KEY_SONG_ID] = chart.data.in_game_id
     record.extras[KEY_LEVEL] = chart.level
@@ -363,22 +385,6 @@ def _to_tachi_class(cls: SkillClass) -> KTChunithmClass:
     return mapping[cls]
 
 
-def _to_tachi_lamp(clear_lamp: ClearType, combo_lamp: ComboType) -> KTChunithmLamp:
-    if combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
-        return "ALL JUSTICE CRITICAL"
-
-    if combo_lamp == ComboType.ALL_JUSTICE:
-        return "ALL JUSTICE"
-
-    if combo_lamp == ComboType.FULL_COMBO:
-        return "FULL COMBO"
-
-    if clear_lamp != ClearType.FAILED:
-        return "CLEAR"
-
-    return "FAILED"
-
-
 def convert_to_kt_batch_manual(
     profile: PlayerData, scores: list[DetailedRecentRecord | RecentRecord | Record]
 ):
@@ -398,7 +404,8 @@ def convert_to_kt_batch_manual(
 
         tachi_score = KTBatchManualChunithmScore(
             score=score.score,
-            lamp=_to_tachi_lamp(score.clear_lamp, score.combo_lamp),
+            note_lamp=KT_REVERSE_NOTE_LAMP_MAP.get(score.combo_lamp, "NONE"),
+            clear_lamp=KT_REVERSE_CLEAR_LAMP_MAP.get(score.clear_lamp, "FAILED"),
             match_type="inGameID",
             identifier=str(song_id),
             difficulty=str(score.difficulty),  # pyright: ignore[reportArgumentType]

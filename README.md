@@ -25,6 +25,8 @@ though uptime is sometimes flaky.
 - [x] Slash command support
 - [x] Minigames (song quiz)
 
+and more...
+
 ### Setup instructions
 
 You can clone from either the `develop` branch or the `trunk` branch. Only the
@@ -73,3 +75,9 @@ Thanks to all the people who have sponsored my work through
 
 - [Tukkun](https://github.com/tukkun1995)
 - @tadanahh
+
+
+### GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=beer-psi/chuni-penguin@github)](https://gitads.dev/v1/ad-track?source=beer-psi/chuni-penguin@github)
+
+<!-- GitAds-Verify: B9MP9Q2Q52ID6R8OE518698ZTN33IG3A -->

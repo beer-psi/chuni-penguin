@@ -67,7 +67,7 @@ class KeyboardInterruptHandler:
         self._pending = True
 
 
-class ChuniBot(commands.Bot):
+class ChuniBot(commands.AutoShardedBot):
     dev: bool = False
 
     engine: "AsyncEngine"
