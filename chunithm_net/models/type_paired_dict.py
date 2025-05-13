@@ -1,11 +1,21 @@
-from typing import Generic, TypeVar, overload
+from typing import Generic, TypeVar, overload, override
 
 KT = TypeVar("KT")
 T = TypeVar("T")
 
 
 class TypePairedDictKey(Generic[KT]):
-    pass
+    def __init__(self, name: str) -> None:
+        super().__init__()
+        self.name = name
+
+    @override
+    def __hash__(self) -> int:
+        return self.name.__hash__()
+
+    @override
+    def __eq__(self, value: object, /) -> bool:
+        return isinstance(value, TypePairedDictKey) and value.name == self.name
 
 
 class TypePairedDict(dict):
