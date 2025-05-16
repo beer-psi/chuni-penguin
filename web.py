@@ -1,5 +1,6 @@
 import string
 import sys
+from datetime import UTC, datetime
 from html import escape
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
@@ -7,11 +8,13 @@ from typing import TYPE_CHECKING, Optional
 import aiohttp
 import discord
 from aiohttp import ClientSession, web
+from async_lru import alru_cache
 from discord.utils import oauth_url
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
-from database.models import Cookie
-from utils import json_dumps, json_loads
+from database.models import Chart, Cookie, Song
+from utils import get_jacket_url, json_dumps, json_loads, sdvxin_link
 from utils.config import config
 
 if TYPE_CHECKING:
@@ -195,6 +198,91 @@ async def login(request: web.Request) -> web.Response:
     )
 
 
+@alru_cache(maxsize=1, ttl=3600)
+async def _get_songlist(bot: "ChuniBot"):
+    async with bot.begin_db_session() as session:
+        query = select(Song).options(
+            joinedload(Song.charts).joinedload(Chart.sdvxin_chart_view),
+            joinedload(Song.aliases),
+        )
+        songs = (await session.execute(query)).scalars().unique()
+
+    return datetime.now(UTC).replace(microsecond=0), [
+        {
+            "id": song.id,
+            "title": song.title,
+            "aliases": [x.alias for x in song.aliases],
+            "artist": song.artist,
+            "release_date": song.release,
+            "version": song.version,
+            "jacket_url": get_jacket_url(song),
+            "bpm": {
+                "min": song.min_bpm,
+                "max": song.max_bpm,
+                "mode": song.bpm,
+            },
+            "availability": {
+                "intl": bool(song.available),
+                "jp": not bool(song.removed),
+            },
+            "charts": [
+                {
+                    "difficulty": x.difficulty,
+                    "level": x.level,
+                    "const": x.const,
+                    "charter": x.charter,
+                    "version": x.version,
+                    "sdvxin_url": sdvxin_link(x.sdvxin_chart_view)
+                    if x.sdvxin_chart_view is not None
+                    else None,
+                    "notecounts": {
+                        "total": x.maxcombo,
+                        "tap": x.tap,
+                        "hold": x.hold,
+                        "slide": x.slide,
+                        "air": x.air,
+                        "flick": x.flick,
+                    },
+                }
+                for x in song.charts
+            ],
+        }
+        for song in songs
+    ]
+
+
+@router.get("/songs")
+async def list_songs(request: web.Request) -> web.Response:
+    bot: ChuniBot = request.config_dict["bot"]
+    result_time, result = await _get_songlist(bot)
+
+    if (if_modified_since := request.headers.get("if-modified-since")) is not None:
+        ims_time = datetime.strptime(
+            if_modified_since, "%a, %d %b %Y %H:%M:%S GMT"
+        ).replace(tzinfo=UTC)
+
+        if ims_time == result_time:
+            return web.Response(
+                status=304,
+                headers={
+                    "last-modified": result_time.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+                },
+            )
+
+    if (if_unmodified_since := request.headers.get("if-unmodified-since")) is not None:
+        ius_time = datetime.strptime(
+            if_unmodified_since, "%a, %d %b %Y %H:%M:%S GMT"
+        ).replace(tzinfo=UTC)
+
+        if ius_time != result_time:
+            return web.Response(status=412)
+
+    return web.json_response(
+        result,
+        headers={"last-modified": result_time.strftime("%a, %d %b %Y %H:%M:%S GMT")},
+    )
+
+
 if (ASSETS_DIR / "jackets").exists() and config.web.serve_assets:
     router.static("/assets/jackets", ASSETS_DIR / "jackets")
 
@@ -206,6 +294,7 @@ async def on_response_prepare(_: web.Request, response: web.StreamResponse):
 
 
 async def on_shutdown(app: web.Application):
+    await _get_songlist.cache_close()
     await app["session"].close()
 
 
