@@ -211,7 +211,7 @@ async def _get_songlist(bot: "ChuniBot"):
         {
             "id": song.id,
             "title": song.title,
-            "aliases": [x.alias for x in song.aliases],
+            "aliases": [x.alias for x in song.aliases if x.guild_id == -1],
             "artist": song.artist,
             "release_date": song.release,
             "version": song.version,
