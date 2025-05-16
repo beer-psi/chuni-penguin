@@ -129,6 +129,15 @@ wheels = [
 ]
 
 [[package]]
+name = "async-lru"
+version = "2.0.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/4d/71ec4d3939dc755264f680f6c2b4906423a304c3d18e96853f0a595dfe97/async_lru-2.0.5.tar.gz", hash = "sha256:481d52ccdd27275f42c43a928b4a50c3bfb2d67af4e78b170e3e0bb39c66e5bb", size = 10380 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/49/d10027df9fce941cb8184e78a02857af36360d33e1721df81c5ed2179a1a/async_lru-2.0.5-py3-none-any.whl", hash = "sha256:ab95404d8d2605310d345932697371a5f40def0487c03d6d0ad9138de52c9943", size = 6069 },
+]
+
+[[package]]
 name = "attrs"
 version = "25.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -298,6 +307,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiosqlite" },
     { name = "alembic" },
+    { name = "async-lru" },
     { name = "beautifulsoup4" },
     { name = "discord-py" },
     { name = "httpx" },
@@ -341,6 +351,7 @@ requires-dist = [
     { name = "aiodns", marker = "sys_platform != 'win32' and extra == 'speedup'", specifier = ">=3.2.0" },
     { name = "aiosqlite", specifier = ">=0.20.0" },
     { name = "alembic", specifier = ">=1.13.3" },
+    { name = "async-lru", specifier = ">=2.0.5" },
     { name = "beautifulsoup4", specifier = ">=4.12.3" },
     { name = "brotli", marker = "extra == 'speedup'", specifier = ">=1.1.0" },
     { name = "discord-py", specifier = ">=2.4.0" },
