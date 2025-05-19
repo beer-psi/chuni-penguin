@@ -1611,7 +1611,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(
-        level="Level (from 1 to 15) to search for.",
+        level="Level (from 1 to 15+) to search for.",
         difficulty="Difficulty to search for.",
         genre="Genre to search for.",
         rank="Rank to search for.",
