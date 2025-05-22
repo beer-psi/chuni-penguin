@@ -42,6 +42,9 @@ class Song(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    chunirec_id: Mapped[str | None] = mapped_column(
+        nullable=True, default=None, server_default=text("NULL")
+    )
 
     title: Mapped[str] = mapped_column(nullable=False)
 

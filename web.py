@@ -210,6 +210,7 @@ async def _get_songlist(bot: "ChuniBot"):
     return datetime.now(UTC).replace(microsecond=0), [
         {
             "id": song.id,
+            "chunirec_id": song.chunirec_id,
             "title": song.title,
             "aliases": [x.alias for x in song.aliases if x.guild_id == -1],
             "artist": song.artist,
