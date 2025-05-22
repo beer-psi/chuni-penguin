@@ -143,7 +143,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                 discord.ui.Button(
                     style=discord.ButtonStyle.link,
                     label="wikiwiki",
-                    url=f"https://wikiwiki.jp/chunithmwiki/{quote(page[0].title)}",
+                    url=f"https://wikiwiki.jp/chunithmwiki/{quote(page[0].wikiwiki_title or page[0].title)}",
                     row=1,
                 )
             )

@@ -47,6 +47,9 @@ class Song(Base):
     )
 
     title: Mapped[str] = mapped_column(nullable=False)
+    wikiwiki_title: Mapped[str | None] = mapped_column(
+        nullable=True, default=None, server_default=text("NULL")
+    )
 
     chunithm_catcode: Mapped[int] = mapped_column(nullable=False)
     genre: Mapped[str] = mapped_column(nullable=False)
