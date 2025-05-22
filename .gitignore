@@ -184,3 +184,10 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 *.sqlite3
+
+cogs/chunithm/chunirec.py
+
+# I often experiment with stuff. This is where the throwaway stuff goes.
+playground/
+
+assets/b50_maimai
