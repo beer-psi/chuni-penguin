@@ -36,4 +36,4 @@ class EmbedPageSource(ListPageSource[discord.Embed]):
 
 class EmbedPaginationView(PaginationView):
     def __init__(self, ctx: Context, items: list[Embed], per_page: int = 1):
-        super().__init__(ctx, EmbedPageSource(items, per_page=1))
+        super().__init__(ctx, EmbedPageSource(items, per_page=per_page))
