@@ -351,7 +351,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             Level to search for. Can be a level (13+), a chart constant (13.5), or a
             course class (`i`, `ii`, `iii`, `iv`, `v`, `inf`, `random`, `wallpanic`).
         count: int
-            Number of charts to return. Must be between 1 and 4. Not respected when
+            Number of charts to return. Must be between 1 and 10. Not respected when
             rolling a random course.
         """
 
