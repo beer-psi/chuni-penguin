@@ -214,6 +214,7 @@ async def _get_songlist(bot: "ChuniBot"):
             "title": song.title,
             "aliases": [x.alias for x in song.aliases if x.guild_id == -1],
             "artist": song.artist,
+            "genre": song.genre,
             "release_date": song.release,
             "version": song.version,
             "jacket_url": get_jacket_url(song),
