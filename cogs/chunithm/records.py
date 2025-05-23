@@ -865,7 +865,8 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if len(jackets) > 1:
                 view = SelectToCompareView(
-                    [(x.song.title, i) for i, x in enumerate(jackets)]
+                    ctx,
+                    [(x.song.title, i) for i, x in enumerate(jackets)],
                 )
                 compare_message = await ctx.reply(
                     "Select a score to compare with:", view=view, mention_author=False
@@ -1114,6 +1115,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     options.append((title, i))
                 view = SelectToCompareView(
+                    ctx,
                     options=options,
                     placeholder="Select a song...",
                 )
