@@ -1,5 +1,6 @@
 import asyncio
 import itertools
+import random
 from decimal import Decimal
 from io import BytesIO
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
@@ -341,7 +342,7 @@ class ToolsCog(commands.Cog, name="Tools"):
 
     @commands.hybrid_command("random")
     @logged_prefix_command
-    async def random(self, ctx: Context, level: str, count: Range[int, 1, 4] = 3):
+    async def random(self, ctx: Context, level: str, count: Range[int, 1, 10] = 3):
         """Get random charts based on level/course/chart constant.
 
         Parameters
@@ -445,7 +446,12 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if VOLCANIC_SONG_ID in master_song_ids:
                     await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
                     return
-                if FORSAKEN_TALE_SONG_ID in master_song_ids:
+                if FORSAKEN_TALE_SONG_ID in master_song_ids and (
+                    # since there's only 3 15.7s in the game as of current,
+                    # if we do a random 15.7 then the jumpscare will always show up
+                    # without this guard.
+                    level != "15.7" or random.random() < 0.25
+                ):
                     await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
                     return
                 if TOA_CHAN_TOYBOX_SONG_ID in master_song_ids:
