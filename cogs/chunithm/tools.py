@@ -446,6 +446,23 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if VOLCANIC_SONG_ID in master_song_ids:
                     await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
                     return
+                if (
+                    CROSSMYTHOS_RHAPSODIA_SONG_ID in master_song_ids
+                    and FORSAKEN_TALE_SONG_ID in master_song_ids
+                    and (
+                        # since there's only 4 15.7s in the game as of current,
+                        # if we do a random 15.7 then the jumpscare will always show up
+                        # without this guard.
+                        level != "15.7" or random.random() < 0.25
+                    )
+                ):
+                    await ctx.reply(
+                        random.choice(
+                            [CROSSMYTHOS_RHAPSODIA_JUMPSCARE, FORSAKEN_TALE_JUMPSCARE]
+                        ),
+                        mention_author=False,
+                    )
+                    return
                 if CROSSMYTHOS_RHAPSODIA_SONG_ID in master_song_ids and (
                     # since there's only 4 15.7s in the game as of current,
                     # if we do a random 15.7 then the jumpscare will always show up
