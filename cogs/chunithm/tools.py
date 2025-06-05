@@ -446,8 +446,18 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if VOLCANIC_SONG_ID in master_song_ids:
                     await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
                     return
+                if CROSSMYTHOS_RHAPSODIA_SONG_ID in master_song_ids and (
+                    # since there's only 4 15.7s in the game as of current,
+                    # if we do a random 15.7 then the jumpscare will always show up
+                    # without this guard.
+                    level != "15.7" or random.random() < 0.25
+                ):
+                    await ctx.reply(
+                        CROSSMYTHOS_RHAPSODIA_JUMPSCARE, mention_author=False
+                    )
+                    return
                 if FORSAKEN_TALE_SONG_ID in master_song_ids and (
-                    # since there's only 3 15.7s in the game as of current,
+                    # since there's only 4 15.7s in the game as of current,
                     # if we do a random 15.7 then the jumpscare will always show up
                     # without this guard.
                     level != "15.7" or random.random() < 0.25
@@ -1020,6 +1030,23 @@ TOA_CHAN_TOYBOX_JUMPSCARE = """恐怖！とあちゃんのおもちゃ箱！
       🟦           😡
       🟦    😡
       🟦          😡"""  # noqa: RUF001, W291
+
+CROSSMYTHOS_RHAPSODIA_SONG_ID = 2802
+CROSSMYTHOS_RHAPSODIA_JUMPSCARE = """恐怖！Crossmythos Rhapsodia
+
+😠　　　😠
+　😡　😡
+　　😡
+　😠　😠
+😡　😡
+　😡
+😠　😠
+　😡　😡
+　　😡
+　😠　😠
+　　😡　😡
+　　　😡
+　　😠　😠"""  # noqa: RUF001
 
 
 async def setup(bot: "ChuniBot"):
