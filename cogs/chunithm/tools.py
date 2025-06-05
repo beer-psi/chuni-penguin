@@ -1049,7 +1049,7 @@ TOA_CHAN_TOYBOX_JUMPSCARE = """恐怖！とあちゃんのおもちゃ箱！
       🟦          😡"""  # noqa: RUF001, W291
 
 CROSSMYTHOS_RHAPSODIA_SONG_ID = 2802
-CROSSMYTHOS_RHAPSODIA_JUMPSCARE = """恐怖！Crossmythos Rhapsodia
+CROSSMYTHOS_RHAPSODIA_JUMPSCARE = """恐怖！Crossmythos Rhapsodia！
 
 😠　　　😠
 　😡　😡
