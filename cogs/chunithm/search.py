@@ -1,28 +1,24 @@
+import hashlib
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Annotated
-from urllib.parse import quote
 
 import discord
-from discord import Embed, app_commands
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown as emd
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
-from chunithm_net.models.enums import Difficulty
 from database.models import Alias, Chart, Song
 from utils import (
     did_you_mean_text,
-    get_jacket_url,
     shlex_split,
-    yt_search_link,
 )
 from utils.config import config
 from utils.constants import SIMILARITY_THRESHOLD
 from utils.converters import AliasNameConverter, AliasNameTransformer
 from utils.logging import logged_app_command, logged_prefix_command
-from utils.views.embeds import EmbedPaginationView
 from utils.views.song_info import SongInfoPaginationView
 from utils.views.songlist import SonglistView
 
@@ -439,6 +435,17 @@ class SearchCog(commands.Cog, name="Search"):
 
             view = SongInfoPaginationView(ctx, result.songs, detailed=detailed)
             await view.start()
+
+            # straight up jorking it
+            if (
+                ctx.guild is not None
+                and hashlib.md5(f"{ctx.guild.id}{query.lower()}".encode()).hexdigest()
+                == "9729fe8bdc6e25a045f8c8028e19aa79"
+            ):
+                await ctx.send(
+                    content="https://cdn.discordapp.com/attachments/1348088922055512197/1358215134937612338/vlc-record-2025-04-05-19h01m28s-2025-04-05_18-57-05.mkv-.mp4"
+                )
+
             return None
 
 
