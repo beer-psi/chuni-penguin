@@ -38,6 +38,17 @@ class SongInfoPageSource(ListPageSource[Song]):
 
                 song_description = ""
 
+                if len(song.aliases) > 0:
+                    song_description = "-# "
+                    song_description += " / ".join(
+                        [
+                            escape_markdown(x.alias)
+                            for x in song.aliases
+                            if x.guild_id == -1
+                        ]
+                    )
+                    song_description += "\n"
+
                 if not song.available:
                     if song.removed:
                         song_description += "**This song is removed.**\n\n"
