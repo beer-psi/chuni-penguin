@@ -47,7 +47,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                             if x.guild_id == -1
                         ]
                     )
-                    song_description += "\n"
+                    song_description += "\n\n"
 
                 if not song.available:
                     if song.removed:
