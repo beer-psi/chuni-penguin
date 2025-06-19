@@ -150,24 +150,26 @@ class SongInfoPageSource(ListPageSource[Song]):
 
             menu.clear_items()
             menu.fill_items()
-            menu.add_item(
-                discord.ui.Button(
-                    style=discord.ButtonStyle.link,
-                    label="wikiwiki",
-                    url=f"https://wikiwiki.jp/chunithmwiki/{quote(page[0].wikiwiki_title or page[0].title)}",
-                    row=1,
-                )
-            )
 
-            if page[0].chunirec_id is not None:
+            if len(page) > 0:
                 menu.add_item(
                     discord.ui.Button(
                         style=discord.ButtonStyle.link,
-                        label="chunirec",
-                        url=f"https://db.chunirec.net/music/{page[0].chunirec_id}",
+                        label="wikiwiki",
+                        url=f"https://wikiwiki.jp/chunithmwiki/{quote(page[0].wikiwiki_title or page[0].title)}",
                         row=1,
                     )
                 )
+
+                if page[0].chunirec_id is not None:
+                    menu.add_item(
+                        discord.ui.Button(
+                            style=discord.ButtonStyle.link,
+                            label="chunirec",
+                            url=f"https://db.chunirec.net/music/{page[0].chunirec_id}",
+                            row=1,
+                        )
+                    )
 
         return {"embeds": embeds}
 
