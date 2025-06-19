@@ -484,6 +484,9 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if TOA_CHAN_TOYBOX_SONG_ID in master_song_ids:
                     await ctx.reply(TOA_CHAN_TOYBOX_JUMPSCARE, mention_author=False)
                     return
+                if SOUTHERN_CROSS_SONG_ID in master_song_ids:
+                    await ctx.reply(SOUTHERN_CROSS_JUMPSCARE, mention_author=False)
+                    return
 
             embeds: list[discord.Embed] = [ChartCardEmbed(chart) for chart in charts]
             await ctx.reply(content=content, embeds=embeds, mention_author=False)
@@ -1064,6 +1067,21 @@ CROSSMYTHOS_RHAPSODIA_JUMPSCARE = """恐怖！Crossmythos Rhapsodia！
 　　😡　😡
 　　　😡
 　　😠　😠"""  # noqa: RUF001
+
+SOUTHERN_CROSS_SONG_ID = 2780
+SOUTHERN_CROSS_JUMPSCARE = """恐怖！Southern Cross！
+　 😡
+😡
+　 😡
+😡　 😠 ↗️
+　 😡
+😡
+　 😡
+😡　 😠 ↗️
+　 😡
+😡
+　 😡
+😡　 😠 ↗️"""  # noqa: RUF001
 
 
 async def setup(bot: "ChuniBot"):
