@@ -36,12 +36,18 @@ class SongInfoPageSource(ListPageSource[Song]):
                 )
                 charts = (await session.execute(stmt)).scalars().all()
 
-                song_description = "-# "
-                song_description += " / ".join(
-                    [escape_markdown(x.alias) for x in song.aliases if x.guild_id == -1]
-                )
+                song_description = ""
 
-                song_description += "\n"
+                if len(song.aliases) > 0:
+                    song_description = "-# "
+                    song_description += " / ".join(
+                        [
+                            escape_markdown(x.alias)
+                            for x in song.aliases
+                            if x.guild_id == -1
+                        ]
+                    )
+                    song_description += "\n"
 
                 if not song.available:
                     if song.removed:
