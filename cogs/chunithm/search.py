@@ -425,7 +425,9 @@ class SearchCog(commands.Cog, name="Search"):
     async def _info_inner(self, ctx: Context, *, query: str, detailed: bool = False):
         async with ctx.typing():
             guild_id = ctx.guild.id if ctx.guild is not None else None
-            result = await self.utils.find_songs(query, guild_id=guild_id)
+            result = await self.utils.find_songs(
+                query, guild_id=guild_id, load_global_aliases=True
+            )
 
             if result.similarity < SIMILARITY_THRESHOLD:
                 return await ctx.reply(

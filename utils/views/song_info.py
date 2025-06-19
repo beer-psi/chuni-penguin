@@ -36,13 +36,20 @@ class SongInfoPageSource(ListPageSource[Song]):
                 )
                 charts = (await session.execute(stmt)).scalars().all()
 
-                song_description = ""
+                song_description = "-# "
+                song_description += " / ".join(
+                    [escape_markdown(x.alias) for x in song.aliases if x.guild_id == -1]
+                )
+
+                song_description += "\n"
 
                 if not song.available:
                     if song.removed:
                         song_description += "**This song is removed.**\n\n"
                     else:
                         song_description += "**This song is not available in CHUNITHM International.**\n\n"
+                else:
+                    song_description += "\n"
 
                 displayed_version = song.version
                 displayed_bpm = "Unknown"
@@ -139,24 +146,26 @@ class SongInfoPageSource(ListPageSource[Song]):
 
             menu.clear_items()
             menu.fill_items()
-            menu.add_item(
-                discord.ui.Button(
-                    style=discord.ButtonStyle.link,
-                    label="wikiwiki",
-                    url=f"https://wikiwiki.jp/chunithmwiki/{quote(page[0].wikiwiki_title or page[0].title)}",
-                    row=1,
-                )
-            )
 
-            if page[0].chunirec_id is not None:
+            if len(page) > 0:
                 menu.add_item(
                     discord.ui.Button(
                         style=discord.ButtonStyle.link,
-                        label="chunirec",
-                        url=f"https://db.chunirec.net/music/{page[0].chunirec_id}",
+                        label="wikiwiki",
+                        url=f"https://wikiwiki.jp/chunithmwiki/{quote(page[0].wikiwiki_title or page[0].title)}",
                         row=1,
                     )
                 )
+
+                if page[0].chunirec_id is not None:
+                    menu.add_item(
+                        discord.ui.Button(
+                            style=discord.ButtonStyle.link,
+                            label="chunirec",
+                            url=f"https://db.chunirec.net/music/{page[0].chunirec_id}",
+                            row=1,
+                        )
+                    )
 
         return {"embeds": embeds}
 

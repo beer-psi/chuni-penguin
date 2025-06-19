@@ -14,7 +14,7 @@ from discord.ext.commands import Context
 from discord.utils import MISSING
 from rapidfuzz import fuzz, process
 from sqlalchemy import select, update
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager, joinedload
 
 from chunithm_net import ChuniNet
 from chunithm_net.consts import (
@@ -129,6 +129,14 @@ class UtilsCog(commands.Cog, name="Utils"):
                     exc_info=e,
                 )
                 return
+
+    @_update_user_agents.error
+    async def _update_user_agents_error(self, exc: BaseException):
+        logger.exception(
+            "unhandled exception updating user agents",
+            tag="update_useragent_failed",
+            exc_info=exc,
+        )
 
     async def _reload_alias_cache(self) -> None:
         async with self.bot.begin_db_session() as session:
@@ -492,8 +500,9 @@ class UtilsCog(commands.Cog, name="Utils"):
         query: str,
         *,
         guild_id: Optional[int] = None,
-        load_charts: bool = False,
         available: Optional[bool] = None,
+        load_charts: bool = False,
+        load_global_aliases: bool = False,
     ) -> SongSearchResult:
         aliases = [x for x in self.alias_cache if x.guild_id in {-1, guild_id}]
         (_, similarity, index) = process.extractOne(
@@ -514,6 +523,11 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             if load_charts:
                 stmt = stmt.options(joinedload(Song.charts))
+
+            if load_global_aliases:
+                stmt = stmt.join(
+                    Alias, (Alias.song_id == Song.id) & (Alias.guild_id == -1)
+                ).options(contains_eager(Song.aliases))
 
             songs = (await session.execute(stmt)).scalars().unique()
 
