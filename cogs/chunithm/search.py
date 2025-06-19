@@ -184,6 +184,7 @@ class SearchCog(commands.Cog, name="Search"):
                         await session.delete(x)
 
                     await session.commit()
+                    await self.utils._reload_alias_cache()
                     return await ctx.reply(
                         f"**{emd(added_alias)}** already exists as a guild-only alias. Promoting to global alias.",
                         mention_author=False,
