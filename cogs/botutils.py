@@ -525,7 +525,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 stmt = stmt.options(joinedload(Song.charts))
 
             if load_global_aliases:
-                stmt = stmt.join(
+                stmt = stmt.outerjoin(
                     Alias, (Alias.song_id == Song.id) & (Alias.guild_id == -1)
                 ).options(contains_eager(Song.aliases))
 
