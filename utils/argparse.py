@@ -30,6 +30,7 @@ from argparse import (
 )
 from gettext import gettext as _
 from inspect import iscoroutinefunction
+from typing import override
 
 from discord.ext.commands import BadArgument
 
@@ -505,3 +506,7 @@ class DiscordArguments(ArgumentParser):
 
         # return the converted value
         return result
+
+    @override
+    def error(self, message: str):
+        raise ArgumentError(None, message)

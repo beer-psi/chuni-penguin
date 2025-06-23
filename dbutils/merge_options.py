@@ -1,6 +1,7 @@
 import concurrent.futures
 import csv
 import itertools
+import subprocess
 from pathlib import Path
 from typing import Optional, overload
 from xml.etree import ElementTree
@@ -102,6 +103,31 @@ def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
             )
 
 
+def extract_audio(song_id: int, cue_file: Path):
+    output_file = cue_file.with_suffix(cue_file.suffix + ".wav")
+    subprocess.check_output(["vgmstream-cli", str(cue_file)])
+
+    if not output_file.exists():
+        msg = "Conversion from AWB to WAV failed: could not find output file"
+        raise Exception(msg)  # noqa: TRY002
+
+    subprocess.check_output(
+        [
+            "ffmpeg",
+            "-i",
+            str(output_file),
+            "-c:a",
+            "libopus",
+            "-b:a",
+            "96000",
+            "-y",
+            str(ASSETS_DIR / "audio" / f"{song_id}.ogg"),
+        ],
+        stderr=subprocess.DEVNULL,
+    )
+    output_file.unlink()
+
+
 async def merge_options(
     logger: BoundLogger,
     async_session: async_sessionmaker[AsyncSession],
@@ -109,6 +135,7 @@ async def merge_options(
     option_dir: Optional[Path],
     *,
     extract_jackets: bool,
+    extract_audios: bool,
 ):
     async with httpx.AsyncClient() as client:
         songlist = (
@@ -119,12 +146,19 @@ async def merge_options(
     if extract_jackets:
         (ASSETS_DIR / "jackets").mkdir(exist_ok=True, parents=True)
 
+    if extract_audios:
+        (ASSETS_DIR / "audio").mkdir(exist_ok=True, parents=True)
+
     xml_paths = data_dir.glob("**/music/**/Music.xml")
+    cue_file_paths = data_dir.glob("**/cueFile/**/CueFile.xml")
 
     if option_dir is not None:
         xml_paths = itertools.chain(
             xml_paths,
             option_dir.glob("**/music/**/Music.xml"),
+        )
+        cue_file_paths = itertools.chain(
+            cue_file_paths, option_dir.glob("**/cueFile/**/CueFile.xml")
         )
 
     inserted_songs = []
@@ -314,6 +348,35 @@ async def merge_options(
 
             inserted_songs.append(inserted_song)
 
+        if extract_audios:
+            for cue_file_path in cue_file_paths:
+                tree = ElementTree.parse(cue_file_path)
+                root = tree.getroot()
+
+                if root.tag != "CueFileData":
+                    logger.warning(
+                        "%s: Invalid XML (missing CueFileData root)", cue_file_path
+                    )
+                    continue
+
+                cue_file_id = gettext(root, "./name/id")
+                awb_file = gettext(root, "./awbFile/path")
+
+                if cue_file_id is None or awb_file is None:
+                    logger.warning(
+                        "%s: Invalid XML (missing ID or awbFile path)", cue_file_path
+                    )
+                    continue
+
+                if (
+                    int(cue_file_id) >= 10000
+                ):  # those are actually "FULL COMBO" sounds of different system voices
+                    continue
+
+                pool.submit(
+                    extract_audio, int(cue_file_id), cue_file_path.parent / awb_file
+                )
+
         pool.shutdown(wait=True)
 
     async with async_session() as session, session.begin():
@@ -337,7 +400,7 @@ async def merge_options(
                 "min_bpm": func.coalesce(insert_stmt.excluded.min_bpm, Song.min_bpm),
                 "max_bpm": func.coalesce(insert_stmt.excluded.max_bpm, Song.max_bpm),
                 # also ignore jackets
-                "available": insert_stmt.excluded.available,
+                "available": Song.available,
                 # also ignore removed state
             },
         )

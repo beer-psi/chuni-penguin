@@ -54,6 +54,11 @@ async def main():
         action="store_true",
         help="If updating from data, extract song jackets to assets/jackets/",
     )
+    update.add_argument(
+        "--extract-audio",
+        action="store_true",
+        help="If updating from data, extract song jackets to assets/audio/",
+    )
 
     args = parser.parse_args()
 
@@ -91,6 +96,7 @@ async def main():
                 args.data_dir,
                 args.option_dir,
                 extract_jackets=args.extract_jackets,
+                extract_audios=args.extract_audio,
             )
 
     await engine.dispose()

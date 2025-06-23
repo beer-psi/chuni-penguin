@@ -1,0 +1,117 @@
+import io
+from typing import override
+
+import discord
+from discord.utils import escape_markdown
+from rapidfuzz import fuzz
+
+from cogs.gaming._session import GuessingGameSession
+from database.models import Song
+
+from .base import GuessingGameState
+from .end_game import (
+    EndGameReachedQuestionLimit,
+    EndGameReachedScoreLimit,
+    EndGameTimedOut,
+    EndGameTooManyWrongAnswers,
+    EndGameUserCanceled,
+)
+from .wait import WaitState
+
+
+class ShowAnswerState(GuessingGameState):
+    def __init__(
+        self,
+        session: GuessingGameSession,
+        song: Song,
+        aliases: list[str],
+        answer_image: io.BufferedIOBase,
+        accepted_answer: discord.Message | None,
+        guess_time: float | None = None,
+        *,
+        timed_out: bool = False,
+        skipped: bool = False,
+    ) -> None:
+        self.session = session
+        self.song = song
+        self.aliases = aliases
+        self.answer_image = answer_image
+        self.accepted_answer = accepted_answer
+        self.guess_time = guess_time
+        self.timed_out = timed_out
+        self.skipped = skipped
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        if self.accepted_answer is not None:
+            accepted_user = self.accepted_answer.author
+
+            await self.accepted_answer.add_reaction("✅")
+            await self.session.increment_score(accepted_user.id)
+
+            if accepted_user.id not in self.session.scores:
+                self.session.scores[accepted_user.id] = 1
+            else:
+                self.session.scores[accepted_user.id] += 1
+
+            accuracy = max(
+                [
+                    fuzz.QRatio(
+                        self.accepted_answer.content, alias, processor=str.lower
+                    )
+                    for alias in self.aliases
+                ]
+            )
+
+            content = (
+                f"{accepted_user.mention} has the correct answer ({accuracy:.2f}%)!"
+            )
+            color = discord.Color.green()
+        elif self.timed_out:
+            content = "Time's up!"
+            color = discord.Color.red()
+        elif self.skipped:
+            content = "Skipped!"
+            color = discord.Color.red()
+        else:
+            content = "Unknown reason."
+            color = discord.Color.red()
+
+        embed = discord.Embed(
+            color=color,
+            description=(
+                f"**Answer**: {'\n'.join([escape_markdown(x) for x in self.aliases])}\n"
+                "\n"
+                f"**Artist**: {escape_markdown(self.song.artist)}\n"
+                f"**Category**: {escape_markdown(self.song.genre)}"
+            ),
+        )
+        embed.set_image(url="attachment://image.png")
+
+        if self.guess_time is not None:
+            embed.set_footer(text=f"Guessed in {self.guess_time:.2f} seconds")
+
+        if self.session.stopped_by:
+            next_state = EndGameUserCanceled(self.session)
+        elif self.session.check_score_limit_reached():
+            next_state = EndGameReachedScoreLimit(self.session)
+        elif self.session.check_question_limit_reached():
+            next_state = EndGameReachedQuestionLimit(self.session)
+        elif self.session.check_wrong_answers_limit_reached():
+            next_state = EndGameTooManyWrongAnswers(self.session)
+        elif self.session.questions_timed_out >= 3:
+            next_state = EndGameTimedOut(self.session, 3)
+        else:
+            content += " Next question in 3 seconds..."
+            next_state = WaitState(
+                self.session, 3, self.session.question_state(self.session)
+            )
+
+        await self.session.channel.send(
+            content=content,
+            embed=embed,
+            file=discord.File(self.answer_image, "image.png"),
+        )
+        self.answer_image.close()
+
+        return next_state

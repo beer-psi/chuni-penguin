@@ -12,7 +12,12 @@ IGNORE_EXTENSIONS: list[str] = ["jishaku"]
 
 
 def path_from_extension(extension: str) -> pathlib.Path:
-    return pathlib.Path(extension.replace(".", os.sep) + ".py")
+    path = pathlib.Path(extension.replace(".", os.sep) + ".py")
+
+    if not path.exists():
+        path = pathlib.Path(extension.replace(".", os.sep)) / "__init__.py"
+
+    return path
 
 
 class HotReload(commands.Cog):
