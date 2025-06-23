@@ -284,7 +284,7 @@ class GuessingGameSession:
             "-acodec",
             "libopus",
             "-filter:a",
-            "volume=0.25",
+            "volume=0.20",
             "pipe:1",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
