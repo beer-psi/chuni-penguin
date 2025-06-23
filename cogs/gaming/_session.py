@@ -333,6 +333,7 @@ class GuessingGameSession:
                 discord_id=user_id,
                 guild_id=guild_id,
                 difficulty=self.difficulty.value,
+                game_type=self.game_type.value,
                 score=1,
             )
             stmt = stmt.on_conflict_do_update(
@@ -340,6 +341,7 @@ class GuessingGameSession:
                     GuessScore.discord_id,
                     GuessScore.guild_id,
                     GuessScore.difficulty,
+                    GuessScore.game_type,
                 ],
                 set_={"score": GuessScore.score + 1},
             )

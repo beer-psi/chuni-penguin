@@ -215,11 +215,19 @@ class GuessScore(Base):
     __table_args__ = (
         Index("ix_guess_leaderboard_guild_id", "guild_id"),
         Index("ix_guess_leaderboard_guild_id_difficulty", "guild_id", "difficulty"),
+        Index("ix_guess_leaderboard_guild_id_game_type", "guild_id", "game_type"),
+        Index(
+            "ix_guess_leaderboard_guild_id_difficulty_game_type",
+            "guild_id",
+            "difficulty",
+            "game_type",
+        ),
         UniqueConstraint(
             "discord_id",
             "guild_id",
             "difficulty",
-            name="_discord_id_guild_id_difficulty_uc",
+            "game_type",
+            name="_discord_id_guild_id_difficulty_game_type_uc",
         ),
     )
 
@@ -230,6 +238,9 @@ class GuessScore(Base):
     )
     difficulty: Mapped[int] = mapped_column(
         nullable=False, default=-1, server_default=text("-1")
+    )
+    game_type: Mapped[str | None] = mapped_column(
+        default=None, server_default=text("NULL")
     )
     score: Mapped[int] = mapped_column(nullable=False)
 
