@@ -37,6 +37,7 @@ class WaitForAnswerState(GuessingGameSkippableState):
             start_time = time.perf_counter_ns()
             msg = await self._task
             end_time = time.perf_counter_ns()
+
             guess_time = (end_time - start_time) / 1_000_000_000
 
             return ShowAnswerState(
@@ -73,6 +74,9 @@ class WaitForAnswerState(GuessingGameSkippableState):
                 timed_out=True,
             )
         finally:
+            if self.session.voice_client is not None:
+                self.session.voice_client.stop()
+
             self.session.questions_done += 1
 
     @override

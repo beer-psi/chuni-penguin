@@ -398,5 +398,10 @@ class GuessingGameSession:
 
             return AskVoiceMessageQuestionState
 
+        if self.game_type == GuessingGameType.VOICE_CHANNEL:
+            from .states.voice_call import AskVoiceCallQuestionState
+
+            return AskVoiceCallQuestionState
+
         msg = "Unsupported gamemode"
         raise ValueError(msg)

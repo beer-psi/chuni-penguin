@@ -200,12 +200,51 @@ class GamingCog(commands.Cog, name="Games"):
             ctx, GuessingGameType.VOICE_MESSAGE, arguments
         )
 
+    @commands.guild_only()
+    @guess.command("voice")
+    @logged_prefix_command
+    async def guess_voice(self, ctx: Context, *, arguments: str = ""):
+        """Starts an audio guessing game in a voice call.
+
+        **Parameters**
+        `-d`, `--difficulty`: The difficulty of the game:
+        - `BASIC` is the default mode, with 15 seconds of the song played.
+        - `ADVANCED` with 10 seconds of the song played.
+        - `EXPERT` with 7 seconds of the song played.
+        - `MASTER` with 4 seconds of the song played.
+        - `ULTIMA` with 2 seconds of the song played.
+        `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
+        `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
+        `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
+        `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
+        """
+
+        assert isinstance(ctx.author, discord.Member)
+
+        if ctx.channel.id in self.game_sessions:
+            msg = "There is already an ongoing session in this channel!"
+            raise commands.CommandError(msg)
+
+        if ctx.voice_client is not None:
+            msg = "Another voice guessing game is already ongoing in this server. Only one voice guessing game can run at a time for each server."
+            raise commands.CommandError(msg)
+
+        if ctx.author.voice is None or ctx.author.voice.channel is None:
+            msg = "You must connect to a voice channel to start this guessing game."
+            raise commands.CommandError(msg)
+
+        await ctx.author.voice.channel.connect(self_deaf=True)
+
+        await self._guess_without_voice_channel(
+            ctx, GuessingGameType.VOICE_CHANNEL, arguments
+        )
+
     async def _guess_without_voice_channel(
         self, ctx: Context, game_type: GuessingGameType, arguments: str
     ):
         if ctx.channel.id in self.game_sessions:
-            await ctx.reply("There is already an ongoing session in this channel!")
-            return
+            msg = "There is already an ongoing session in this channel!"
+            raise commands.CommandError(msg)
 
         args = await self._parse_guess_arguments(ctx, arguments)
 
