@@ -34,6 +34,16 @@ class AskVoiceMessageQuestionState(GuessingGameState):
             description=f"You have {self.session.time_per_question} seconds to guess the song.\nUse `{self.session.ctx.prefix}skip` to skip.",
             color=self.session.difficulty.color(),
         )
+
+        if self.session.question_count is not None:
+            question_embed.set_footer(
+                text=f"Question {self.session.questions_done + 1} / {self.session.question_count}"
+            )
+        else:
+            question_embed.set_footer(
+                text=f"Question {self.session.questions_done + 1}"
+            )
+
         await self.session.channel.send(embed=question_embed, mention_author=False)
 
         with handle_message_parameters(

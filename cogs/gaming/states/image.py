@@ -28,6 +28,15 @@ class AskImageQuestionState(GuessingGameState):
         )
         question_embed.set_image(url="attachment://image.png")
 
+        if self.session.question_count is not None:
+            question_embed.set_footer(
+                text=f"Question {self.session.questions_done + 1} / {self.session.question_count}"
+            )
+        else:
+            question_embed.set_footer(
+                text=f"Question {self.session.questions_done + 1}"
+            )
+
         await self.session.channel.send(
             embed=question_embed,
             file=discord.File(question_image, "image.png"),
