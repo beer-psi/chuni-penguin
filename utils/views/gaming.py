@@ -154,4 +154,4 @@ class GuessLeaderboardView(PaginationView):
 
         button.style = discord.ButtonStyle.green
 
-        await self.show_page(interaction, 0)
+        await self.show_page(interaction, self.current_page)
