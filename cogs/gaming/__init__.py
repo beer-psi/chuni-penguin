@@ -148,7 +148,7 @@ class GamingCog(commands.Cog, name="Games"):
         """Start a guessing game.
 
         **Parameters**
-        `game_type`: The guessing game to play. Either `audio` or `jacket`.
+        `game_type`: The guessing game to play. Either `jacket`, `audio` or `voice`.
         `-d`, `--difficulty`: The difficulty of the game. One of `BASIC`/`ADVANCED`/`EXPERT`/`MASTER`/`ULTIMA`. See help on specific guessing games for details.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
