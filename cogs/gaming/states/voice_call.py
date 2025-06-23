@@ -50,7 +50,12 @@ class AskVoiceCallQuestionState(GuessingGameState):
 
         # if you use the asset extraction scripts provided, audio should always be opus.
         self.session.voice_client.play(
-            discord.FFmpegOpusAudio(audio_buffer, codec="copy", pipe=True),
+            discord.FFmpegOpusAudio(
+                audio_buffer,
+                bitrate=96,
+                codec="copy",
+                pipe=True,
+            ),
             after=lambda _: audio_buffer.close(),
         )
 
