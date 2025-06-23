@@ -96,9 +96,9 @@ class GuessingGameSession:
         if self.difficulty == Difficulty.EXPERT:
             return 7
         if self.difficulty == Difficulty.MASTER:
-            return 5
+            return 4
 
-        return 3
+        return 1
 
     async def get_image_question(self):
         async with self.bot.begin_db_session() as session:

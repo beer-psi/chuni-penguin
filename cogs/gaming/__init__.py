@@ -189,7 +189,7 @@ class GamingCog(commands.Cog, name="Games"):
         - `ADVANCED` with 10 seconds of the song played.
         - `EXPERT` with 7 seconds of the song played.
         - `MASTER` with 4 seconds of the song played.
-        - `ULTIMA` with 2 seconds of the song played.
+        - `ULTIMA` with 1 seconds of the song played.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
@@ -212,7 +212,7 @@ class GamingCog(commands.Cog, name="Games"):
         - `ADVANCED` with 10 seconds of the song played.
         - `EXPERT` with 7 seconds of the song played.
         - `MASTER` with 4 seconds of the song played.
-        - `ULTIMA` with 2 seconds of the song played.
+        - `ULTIMA` with 1 seconds of the song played.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
