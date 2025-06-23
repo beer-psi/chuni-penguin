@@ -4,6 +4,7 @@ database/*.sqlite3
 database/*.sqlite3-*
 discord.log
 assets/jackets
+assets/audio
 options
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
@@ -191,3 +192,4 @@ cogs/chunithm/chunirec.py
 playground/
 
 assets/b50_maimai
+chuni_penguin

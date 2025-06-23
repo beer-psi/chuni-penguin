@@ -1,6 +1,6 @@
 import asyncio
+import binascii
 import struct
-import zlib
 
 import msgspec
 from discord.app_commands import CommandTree
@@ -23,5 +23,5 @@ class VersionableCommandTree(CommandTree):
         else:
             payload = [command.to_dict(self) for command in commands]
 
-        unsigned_hash = zlib.crc32(msgspec.msgpack.encode(payload))
+        unsigned_hash = binascii.crc32(msgspec.msgpack.encode(payload))
         return struct.unpack("<i", struct.pack("<I", unsigned_hash))[0]

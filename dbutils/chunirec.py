@@ -4,7 +4,6 @@ from typing import Literal, Optional
 
 import aiohttp
 import msgspec
-from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
@@ -120,6 +119,7 @@ CHUNITHM_CATCODES = {
 MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     "7a561ab609a0629d": {  # Trackless wilderness【狂】
         "id": "8227",
+        "chunirec_id": "7a561ab609a0629d",
         "catname": "ORIGINAL",
         "newflag": "0",
         "title": "Trackless wilderness",
@@ -136,6 +136,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     },
     "e6605126a95c4c8d": {  # Trrricksters!!【狂】
         "id": "8228",
+        "chunirec_id": "e6605126a95c4c8d",
         "catname": "ORIGINAL",
         "newflag": "0",
         "title": "Trrricksters!!",
@@ -152,6 +153,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     },
     "6502b8cb896a3108": {
         "id": "8025",
+        "chunirec_id": "6502b8cb896a3108",
         "catname": "イロドリミドリ",
         "newflag": "0",
         "title": "Help me, あーりん!",
@@ -168,6 +170,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     },
     "98baa8dadec9674a": {
         "id": "8078",
+        "chunirec_id": "98baa8dadec9674a",
         "catname": "イロドリミドリ",
         "newflag": "0",
         "title": "あねぺったん",
@@ -184,6 +187,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     },
     "108fb090064d84eb": {
         "id": "8116",
+        "chunirec_id": "108fb090064d84eb",
         "catname": "イロドリミドリ",
         "newflag": "0",
         "title": "イロドリミドリ杯花映塚全一決定戦公式テーマソング『ウソテイ』",
@@ -200,6 +204,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     },
     "1ce51015f2293d1a": {
         "id": "8281",
+        "chunirec_id": "1ce51015f2293d1a",
         "catname": "ORIGINAL",
         "newflag": "0",
         "title": "Parad'ox",
@@ -216,6 +221,7 @@ MANUAL_MAPPINGS: dict[str, dict[str, str]] = {
     },
     "67be895064262b87": {
         "id": "8282",
+        "chunirec_id": "67be895064262b87",
         "catname": "ORIGINAL",
         "newflag": "0",
         "title": "otorii INNOVATED -[i]3-",
@@ -245,6 +251,7 @@ for idx, random in enumerate(
     random_id, random_image, random_branch = random
     MANUAL_MAPPINGS[random_id] = {
         "id": str(8244 + idx),
+        "chunirec_id": random_id,
         "catname": "VARIETY",
         "newflag": "0",
         "title": "Random",
@@ -403,6 +410,7 @@ async def update_db(
             version = release_to_chunithm_version(release_date)
         inserted_song = {
             "id": chunithm_id,
+            "chunirec_id": song.meta.id,
             # Don't use song["meta"]["title"]
             "title": chunithm_song.title,
             "chunithm_catcode": chunithm_catcode,
@@ -551,39 +559,43 @@ async def update_db(
         upsert_statement = insert_statement.on_conflict_do_update(
             index_elements=[Song.id],
             set_={
-                "title": insert_statement.excluded.title,
-                "chunithm_catcode": insert_statement.excluded.chunithm_catcode,
-                "genre": insert_statement.excluded.genre,
-                "artist": insert_statement.excluded.artist,
-                "release": insert_statement.excluded.release,
-                "version": insert_statement.excluded.version,
-                "bpm": func.coalesce(insert_statement.excluded.bpm, Song.bpm),
-                "jacket": func.coalesce(insert_statement.excluded.jacket, Song.jacket),
-                "available": insert_statement.excluded.available,
-                "removed": insert_statement.excluded.removed,
+                "chunirec_id": insert_statement.excluded.chunirec_id,
+                # "title": insert_statement.excluded.title,
+                # "chunithm_catcode": insert_statement.excluded.chunithm_catcode,
+                # "genre": insert_statement.excluded.genre,
+                # "artist": insert_statement.excluded.artist,
+                # "release": insert_statement.excluded.release,
+                # "version": insert_statement.excluded.version,
+                # "bpm": func.coalesce(insert_statement.excluded.bpm, Song.bpm),
+                # "jacket": func.coalesce(insert_statement.excluded.jacket, Song.jacket),
+                # "available": insert_statement.excluded.available,
+                # "removed": insert_statement.excluded.removed,
             },
         )
         await session.execute(upsert_statement, inserted_songs)
 
         insert_statement = insert(Chart)
-        upsert_statement = insert_statement.on_conflict_do_update(
-            index_elements=[Chart.song_id, Chart.difficulty],
-            set_={
-                "level": insert_statement.excluded.level,
-                "const": insert_statement.excluded.const,
-                "maxcombo": func.coalesce(
-                    insert_statement.excluded.maxcombo, Chart.maxcombo
-                ),
-                "tap": func.coalesce(insert_statement.excluded.tap, Chart.tap),
-                "hold": func.coalesce(insert_statement.excluded.hold, Chart.hold),
-                "slide": func.coalesce(insert_statement.excluded.slide, Chart.slide),
-                "air": func.coalesce(insert_statement.excluded.air, Chart.air),
-                "flick": func.coalesce(insert_statement.excluded.flick, Chart.flick),
-                "charter": func.coalesce(
-                    insert_statement.excluded.charter, Chart.charter
-                ),
-            },
+        upsert_statement = insert_statement.on_conflict_do_nothing(
+            index_elements=[Chart.song_id, Chart.difficulty]
         )
+        # upsert_statement = insert_statement.on_conflict_do_update(
+        #     index_elements=[Chart.song_id, Chart.difficulty],
+        #     set_={
+        #         "level": insert_statement.excluded.level,
+        #         "const": insert_statement.excluded.const,
+        #         "maxcombo": func.coalesce(
+        #             insert_statement.excluded.maxcombo, Chart.maxcombo
+        #         ),
+        #         "tap": func.coalesce(insert_statement.excluded.tap, Chart.tap),
+        #         "hold": func.coalesce(insert_statement.excluded.hold, Chart.hold),
+        #         "slide": func.coalesce(insert_statement.excluded.slide, Chart.slide),
+        #         "air": func.coalesce(insert_statement.excluded.air, Chart.air),
+        #         "flick": func.coalesce(insert_statement.excluded.flick, Chart.flick),
+        #         "charter": func.coalesce(
+        #             insert_statement.excluded.charter, Chart.charter
+        #         ),
+        #     },
+        # )
         await session.execute(upsert_statement, inserted_charts)
 
         insert_statement = insert(SongJacket)

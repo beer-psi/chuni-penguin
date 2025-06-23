@@ -4,7 +4,7 @@ version = "2025.5"
 description = "Add your description here"
 authors = [{ name = "beerpsi", email = "beerpsi@duck.com" }]
 dependencies = [
-    "discord-py>=2.4.0",
+    "discord-py[voice]>=2.4.0",
     "beautifulsoup4>=4.12.3",
     "pillow>=11.0.0",
     "alembic>=1.13.3",
