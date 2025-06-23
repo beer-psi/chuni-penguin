@@ -23,6 +23,7 @@ RUN apt-get update && apt-get upgrade -y \
   libuv1 \
   curl \
   git \
+  ffmpeg \
   # clear out apt cache
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && apt-get clean -y && rm -rf /var/lib/apt/lists/*
