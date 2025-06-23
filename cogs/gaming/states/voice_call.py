@@ -18,7 +18,7 @@ class AskVoiceCallQuestionState(GuessingGameState):
         (
             song,
             aliases,
-            audio_path,
+            audio_buffer,
             jacket_art,
         ) = await self.session.get_voice_message_question()
 
@@ -40,12 +40,12 @@ class AskVoiceCallQuestionState(GuessingGameState):
         await self.session.channel.send(embed=question_embed, mention_author=False)
 
         # if you use the asset extraction scripts provided, audio should always be opus.
-        source = discord.FFmpegOpusAudio(str(audio_path), codec="copy")
+        source = discord.FFmpegOpusAudio(audio_buffer, codec="copy", pipe=True)
 
         # we should already be in a voice channel if we reach here, so voice_client should not
         # be null. if it's null, it's a bug
         assert self.session.voice_client is not None
-        self.session.voice_client.play(source, after=lambda _: audio_path.unlink())
+        self.session.voice_client.play(source, after=lambda _: audio_buffer.close())
 
         return WaitForAnswerState(
             self.session, song=song, aliases=aliases, answer_image=jacket_art

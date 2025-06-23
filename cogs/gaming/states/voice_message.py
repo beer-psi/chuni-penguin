@@ -22,7 +22,7 @@ class AskVoiceMessageQuestionState(GuessingGameState):
         (
             song,
             aliases,
-            audio_path,
+            audio_buffer,
             jacket_art,
         ) = await self.session.get_voice_message_question()
 
@@ -44,7 +44,7 @@ class AskVoiceMessageQuestionState(GuessingGameState):
         await self.session.channel.send(embed=question_embed, mention_author=False)
 
         with handle_message_parameters(
-            file=discord.File(audio_path, filename="question.ogg"),
+            file=discord.File(audio_buffer, filename="question.ogg"),
             nonce=secrets.randbits(64),
             flags=discord.MessageFlags._from_value(8192),
         ) as params:
@@ -65,7 +65,7 @@ class AskVoiceMessageQuestionState(GuessingGameState):
                 self.session.channel.id, params=params
             )
 
-        audio_path.unlink()
+        audio_buffer.close()
 
         return WaitForAnswerState(
             self.session, song=song, aliases=aliases, answer_image=jacket_art

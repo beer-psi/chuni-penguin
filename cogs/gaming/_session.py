@@ -1,9 +1,7 @@
 import asyncio
 import io
 import random
-import tempfile
 from enum import Enum
-from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 import discord
@@ -272,7 +270,6 @@ class GuessingGameSession:
         audio_start = max(
             random.randrange(0, audio_duration - audio_length), 60 / (song.bpm / 4)
         )
-        audio_crop_dest = tempfile.mktemp(suffix=".ogg")
 
         ffmpeg_process = await asyncio.subprocess.create_subprocess_exec(
             "ffmpeg",
@@ -284,16 +281,18 @@ class GuessingGameSession:
             str(audio_length),
             "-c",
             "copy",
-            audio_crop_dest,
-            stdout=asyncio.subprocess.DEVNULL,
+            "-f",
+            "ogg",
+            "pipe:1",
+            stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
         )
-        await ffmpeg_process.wait()
+        stdout, _ = await ffmpeg_process.communicate()
 
         return (
             song,
             aliases,
-            Path(audio_crop_dest),
+            io.BytesIO(stdout),
             jacket_path.open("rb"),
         )
 
