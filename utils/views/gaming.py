@@ -302,6 +302,7 @@ class RetryGameButton(
             await interaction.user.voice.channel.connect(self_deaf=True)
 
         ctx = await interaction.client.get_context(interaction.message)
+        ctx.author = interaction.user
         ctx.prefix = (
             interaction.client.prefixes.get(
                 interaction.guild_id, config.bot.default_prefix
