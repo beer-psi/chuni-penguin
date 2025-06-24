@@ -32,7 +32,6 @@ async def end_game(
         embed.add_field(name="Hardcore mode", value="Enabled", inline=True)
 
     if session.genres is not None:
-        embed.description = "**This game will not count towards the leaderboard!**"
         embed.add_field(
             name="Genres", value=", ".join([str(g) for g in session.genres])
         )
