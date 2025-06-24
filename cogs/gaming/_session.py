@@ -1,6 +1,7 @@
 import asyncio
 import io
 import random
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, cast
 
@@ -67,6 +68,8 @@ class GuessingGameSession:
         )
 
         self.last_question_was_answered: bool = False
+
+        self._tasks: set[asyncio.Task] = set()
 
     @property
     def bot(self) -> "ChuniBot":
@@ -370,7 +373,18 @@ class GuessingGameSession:
     def create_wait_for_answer_task(self, aliases: list[str]):
         self.last_question_was_answered = False
 
-        def check(m: discord.Message):
+        def on_typing_check(
+            channel: discord.TextChannel | discord.GroupChannel | discord.DMChannel,
+            _user: discord.User | discord.Member,
+            _when: datetime,
+        ):
+            if channel.id == self.channel.id:
+                self.last_question_was_answered = True
+                return True
+
+            return False
+
+        def on_message_check(m: discord.Message):
             if not self.last_question_was_answered and m.channel == self.channel:
                 self.last_question_was_answered = True
 
@@ -385,9 +399,24 @@ class GuessingGameSession:
                 >= 80
             )
 
-        return asyncio.create_task(
-            self.bot.wait_for("message", check=check, timeout=self.time_per_question)
+        typing_task = asyncio.create_task(
+            self.bot.wait_for(
+                "typing", check=on_typing_check, timeout=self.time_per_question
+            )
         )
+        message_task = asyncio.create_task(
+            self.bot.wait_for(
+                "message", check=on_message_check, timeout=self.time_per_question
+            )
+        )
+
+        self._tasks.add(typing_task)
+        self._tasks.add(message_task)
+
+        typing_task.add_done_callback(self._tasks.discard)
+        message_task.add_done_callback(self._tasks.discard)
+
+        return message_task
 
     @property
     def question_state(self):
