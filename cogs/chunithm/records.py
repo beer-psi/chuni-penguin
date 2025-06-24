@@ -1089,7 +1089,9 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if result.similarity < SIMILARITY_THRESHOLD:
                 return await ctx.reply(
-                    did_you_mean_text(result.songs[0], result.matched_alias),
+                    did_you_mean_text(
+                        ctx.prefix, result.songs[0], result.matched_alias
+                    ),
                     mention_author=False,
                 )
 
@@ -2033,7 +2035,9 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
             if song is None or similarity < SIMILARITY_THRESHOLD:
-                await ctx.reply(did_you_mean_text(song, alias), mention_author=False)
+                await ctx.reply(
+                    did_you_mean_text(ctx.prefix, song, alias), mention_author=False
+                )
                 return
 
             song.raise_if_not_available()

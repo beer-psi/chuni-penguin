@@ -812,7 +812,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 )
                 if song is None or similarity < SIMILARITY_THRESHOLD:
                     await ctx.reply(
-                        did_you_mean_text(song, alias), mention_author=False
+                        did_you_mean_text(ctx.prefix, song, alias), mention_author=False
                     )
                     return
 
@@ -886,7 +886,7 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             if song is None or similarity < SIMILARITY_THRESHOLD:
                 return await ctx.reply(
-                    did_you_mean_text(song, alias), mention_author=False
+                    did_you_mean_text(ctx.prefix, song, alias), mention_author=False
                 )
 
             async with self.bot.begin_db_session() as session:

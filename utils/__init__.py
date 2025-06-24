@@ -56,10 +56,12 @@ def shlex_split(s: str) -> list[str]:
 
     while not view.eof:
         view.skip_ws()
+
         if view.eof:
             break
 
         word = view.get_quoted_word()
+
         if word is None:
             break
 
@@ -90,7 +92,9 @@ def round_to_nearest(number: "T", value: int) -> "T":
     )
 
 
-def did_you_mean_text(result: "Song | None", alias: "Alias | None") -> str:
+def did_you_mean_text(
+    prefix: str | None, result: "Song | None", alias: "Alias | None"
+) -> str:
     did_you_mean = ""
     if result is not None:
         did_you_mean = f"Did you mean **{escape_markdown(result.title)}**?"
@@ -99,7 +103,7 @@ def did_you_mean_text(result: "Song | None", alias: "Alias | None") -> str:
 
     reply = f"No songs found. {did_you_mean}".strip()
     if did_you_mean:
-        reply += "\n(You can also use `addalias <title> <alias>` to add the alias for this server.)"
+        reply += f"\n(You can also use `{prefix or config.bot.default_prefix}addalias <title> <alias>` to add the alias for this server.)"
 
     return reply
 

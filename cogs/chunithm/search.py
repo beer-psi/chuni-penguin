@@ -328,7 +328,9 @@ class SearchCog(commands.Cog, name="Search"):
         song, alias, similarity = await self.utils.find_song(query, guild_id=guild_id)
 
         if song is None or similarity < SIMILARITY_THRESHOLD:
-            return await ctx.reply(did_you_mean_text(song, alias), mention_author=False)
+            return await ctx.reply(
+                did_you_mean_text(ctx.prefix, song, alias), mention_author=False
+            )
 
         async with self.bot.begin_db_session() as session:
             stmt = select(Alias).where(Alias.song_id == song.id)
@@ -432,7 +434,9 @@ class SearchCog(commands.Cog, name="Search"):
 
             if result.similarity < SIMILARITY_THRESHOLD:
                 return await ctx.reply(
-                    did_you_mean_text(result.songs[0], result.matched_alias),
+                    did_you_mean_text(
+                        ctx.prefix, result.songs[0], result.matched_alias
+                    ),
                     mention_author=False,
                 )
 
