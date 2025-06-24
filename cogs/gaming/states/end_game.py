@@ -1,6 +1,7 @@
 from typing import override
 
 import discord
+from discord.utils import MISSING
 
 from cogs.gaming._session import GuessingGameSession
 
@@ -15,6 +16,8 @@ async def end_game(
     footer: str | None = None,
     show_lives: bool = True,
 ):
+    from utils.views.gaming import RetryGameButton
+
     embed = discord.Embed(
         color=color,
         title="Game ended",
@@ -42,21 +45,22 @@ async def end_game(
         or f"Use `{session.ctx.prefix}guess lb` to view the server leaderboard."
     )
 
-    from utils.views.gaming import RetryGameButton
-
-    view = discord.ui.View(timeout=None)
-    view.add_item(
-        RetryGameButton(
-            mode=session.game_type,
-            difficulty=session.difficulty,
-            questions=session.question_count or 20,
-            score=session.score_limit,
-            time=session.time_per_question,
-            wrong=session.wrong_answers_limit,
-            hardcore=session.hardcore_mode,
-            genres=session.genres,
-        )
+    retry_btn = RetryGameButton(
+        mode=session.game_type,
+        difficulty=session.difficulty,
+        questions=session.question_count or 20,
+        score=session.score_limit,
+        time=session.time_per_question,
+        wrong=session.wrong_answers_limit,
+        hardcore=session.hardcore_mode,
+        genres=session.genres,
     )
+
+    if len(retry_btn.custom_id) <= 100:
+        view = discord.ui.View(timeout=None)
+        view.add_item(retry_btn)
+    else:
+        view = MISSING
 
     await session.channel.send(embed=embed, view=view)
 

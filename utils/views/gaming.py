@@ -193,7 +193,7 @@ class RetryGameButton(
             discord.ui.Button(
                 style=discord.ButtonStyle.green,
                 label="Retry",
-                custom_id=f"retryguess{mode_id}:{difficulty.value}:{questions}:{score if score is not None else ''}:{time}:{wrong if wrong is not None else ''}:{1 if hardcore else 0}:{','.join([str(g.value) for g in genres]) if genres else ''}",
+                custom_id=f"retryguess{mode_id}:{difficulty.value}:{questions}:{score if score is not None else ''}:{time}:{wrong if wrong is not None else ''}:{'1' if hardcore else '0'}:{','.join([str(g.value) for g in genres]) if genres else ''}",
             ),
             row=row,
         )
