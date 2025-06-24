@@ -20,12 +20,22 @@ async def end_game(
         title="Game ended",
         description=description,
     )
+    embed.add_field(name="Game type", value=session.game_type.value, inline=True)
     embed.add_field(name="Difficulty", value=str(session.difficulty))
 
     if show_lives and session.wrong_answers_limit:
         embed.add_field(name="LIFE", value=session.format_life())
 
     embed.add_field(name="Time to answer", value=session.time_per_question)
+
+    if session.hardcore_mode:
+        embed.add_field(name="Hardcore mode", value="Enabled", inline=True)
+
+    if session.genres is not None:
+        embed.description = "**This game will not count towards the leaderboard!**"
+        embed.add_field(
+            name="Genres", value=", ".join([str(g) for g in session.genres])
+        )
 
     embed.add_field(name="Final Scores", value=session.print_score_list(), inline=False)
     embed.set_footer(
