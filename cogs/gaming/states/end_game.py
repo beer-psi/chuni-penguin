@@ -12,6 +12,7 @@ from .base import GuessingGameState
 STATIC_TIPS = tips = [
     "Your support is humbly requested. https://ko-fi.com/beerpsi_",
     "Don't like how this game works? Help improve it at https://github.com/beer-psi/chuni-penguin",
+    "I sure hope the employer looking at this thinks I'm cool",
     "i'm chuning my shit",
     "WTF sperm slider",
     "TRUENITHM NUKE",
@@ -30,6 +31,13 @@ STATIC_TIPS = tips = [
     "IS THAT ODIN BY GRAM",
     "do you want to buy a controller",
     "repost if you have dementia",
+    "Tips Have The Right To Humour",
+    "'DROP TABLE guess_leaderboard;--",
+    "it's been one week since ya looked at me",
+    "put the maid dress on",
+    "you could be playing balatro right now",
+    "Play UNREAL LIFE",
+    "go ahead, look up the source for these tips, ruin the fun for yourself",
 ]
 
 
