@@ -82,8 +82,13 @@ class ChuniBot(commands.AutoShardedBot):
     command_start_time: dict[commands.Context, int]
 
     def __init__(self):
-        intents = discord.Intents.default()
-        intents.message_content = True
+        intents = discord.Intents(
+            guilds=True,
+            voice_states=True,
+            messages=True,
+            typing=True,
+            message_content=True,
+        )
 
         command_prefix = guild_specific_prefix(config.bot.default_prefix)
         help_command = HelpCommand()
