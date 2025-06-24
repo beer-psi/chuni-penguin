@@ -93,6 +93,7 @@ class GuessArguments:
     score: int | None
     time: int
     wrong: int | None
+    hardcore: bool
 
 
 class GamingCog(commands.Cog, name="Games"):
@@ -121,6 +122,7 @@ class GamingCog(commands.Cog, name="Games"):
         parser.add_argument("-s", "--score", type=int, required=False, default=None)
         parser.add_argument("-t", "--time", type=int, required=False, default=20)
         parser.add_argument("-w", "--wrong", type=int, required=False, default=None)
+        parser.add_argument("-h", "--hardcore", action="store_true")
 
         try:
             args, _ = await parser.parse_known_intermixed_args(shlex_split(arguments))
@@ -138,8 +140,9 @@ class GamingCog(commands.Cog, name="Games"):
         score: int | None = args.score
         time: int = args.time
         wrong: int | None = args.wrong
+        hardcore: bool = args.hardcore
 
-        return GuessArguments(difficulty, questions, score, time, wrong)
+        return GuessArguments(difficulty, questions, score, time, wrong, hardcore)
 
     @commands.group("guess", invoke_without_command=True)
     @logged_prefix_command
@@ -153,6 +156,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
+        `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         """
 
         await ctx.send_help(self.guess)
@@ -173,6 +177,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
+        `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         """
 
         await self._guess_without_voice_channel(ctx, GuessingGameType.IMAGE, arguments)
@@ -193,6 +198,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
+        `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         """
 
         await self._guess_without_voice_channel(
@@ -260,6 +266,7 @@ class GamingCog(commands.Cog, name="Games"):
                 score_limit=args.score,
                 time_per_question=args.time,
                 wrong_answers_limit=args.wrong,
+                hardcore_mode=args.hardcore,
             )
 
         game_task = asyncio.create_task(

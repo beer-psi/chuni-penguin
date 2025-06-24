@@ -40,6 +40,7 @@ class GuessingGameSession:
         score_limit: int | None = None,
         time_per_question: int = 20,
         wrong_answers_limit: int | None = None,
+        hardcore_mode: bool = False,
     ) -> None:
         self.ctx: Context = ctx
 
@@ -60,7 +61,10 @@ class GuessingGameSession:
         self.wrong_answers_limit: int | None = wrong_answers_limit
         self.wrong_answers: int = 0
 
-        self.time_per_question = time_per_question
+        self.time_per_question: int = time_per_question
+
+        self.hardcore_mode: bool = hardcore_mode
+        self._hardcore_mode_ignores: set[int] = set()
 
         # If stopped by the bot itself, it means that we're restarting.
         self.stopped_by: discord.User | discord.Member | discord.ClientUser | None = (
@@ -372,6 +376,7 @@ class GuessingGameSession:
 
     def create_wait_for_answer_task(self, aliases: list[str]):
         self.last_question_was_answered = False
+        self._hardcore_mode_ignores.clear()
 
         def on_typing_check(
             channel: discord.TextChannel | discord.GroupChannel | discord.DMChannel,
@@ -385,12 +390,17 @@ class GuessingGameSession:
             return False
 
         def on_message_check(m: discord.Message):
+            if m.author.id in self._hardcore_mode_ignores:
+                return False
+
             if not self.last_question_was_answered and m.channel == self.channel:
                 self.last_question_was_answered = True
 
-            return (
-                m.channel == self.channel
-                and max(
+            if m.channel != self.channel:
+                return False
+
+            is_correct_answer = (
+                max(
                     [
                         fuzz.QRatio(m.content, alias, processor=str.lower)
                         for alias in aliases
@@ -398,6 +408,15 @@ class GuessingGameSession:
                 )
                 >= 80
             )
+
+            if not is_correct_answer and self.hardcore_mode:
+                reaction_task = asyncio.create_task(m.add_reaction("❌"))
+
+                self._tasks.add(reaction_task)
+                reaction_task.add_done_callback(self._tasks.discard)
+                self._hardcore_mode_ignores.add(m.author.id)
+
+            return is_correct_answer
 
         typing_task = asyncio.create_task(
             self.bot.wait_for(

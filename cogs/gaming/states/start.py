@@ -51,5 +51,8 @@ class StartState(GuessingGameState):
                 name="LIFE", value=self.session.wrong_answers_limit, inline=True
             )
 
+        if self.session.hardcore_mode:
+            embed.add_field(name="Hardcore mode", value="Enabled", inline=True)
+
         await self.session.ctx.send(embed=embed)
         return WaitState(self.session, 5, self.session.question_state(self.session))
