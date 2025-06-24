@@ -100,8 +100,7 @@ class GamingCog(commands.Cog, name="Games"):
         self.bot = bot
         self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
 
-        self.game_tasks: dict[int, asyncio.Task] = {}
-        self.game_tasks_lock = asyncio.Lock()
+        self.game_tasks: set[asyncio.Task] = set()
 
         self.game_sessions: dict[int, GuessingGameSession] = {}
         self.game_sessions_lock = asyncio.Lock()
@@ -263,10 +262,12 @@ class GamingCog(commands.Cog, name="Games"):
                 wrong_answers_limit=args.wrong,
             )
 
-        async with self.game_tasks_lock:
-            self.game_tasks[ctx.channel.id] = asyncio.create_task(
-                run_state_machine(self, ctx.channel, session, StartState(session))
-            )
+        game_task = asyncio.create_task(
+            run_state_machine(self, ctx.channel, session, StartState(session))
+        )
+
+        self.game_tasks.add(game_task)
+        game_task.add_done_callback(self.game_tasks.discard)
 
     @commands.hybrid_command("skip")
     @logged_prefix_command

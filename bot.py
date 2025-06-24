@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 import functools
-import inspect
 import signal
 import sqlite3
 import sys
@@ -21,6 +20,7 @@ from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from cogs import COG_LIST
+from cogs.gaming.states.base import GuessingGameSkippableState
 from database.models import Prefix
 from utils import json_dumps, json_loads
 from utils.command_tree import VersionableCommandTree
@@ -232,30 +232,39 @@ class ChuniBot(commands.AutoShardedBot):
                 await self.tree.sync()
                 await session.execute(text(f"PRAGMA user_version={current_tree_hash}"))
 
-    async def close(self) -> None:
+    async def _close_games(self):
         gaming: "GamingCog | None" = self.get_cog("Games")  # pyright: ignore[reportAssignmentType]
 
         if gaming is not None:
-            async with gaming.game_sessions_lock, gaming.state_for_game_session_lock:
+            async with gaming.game_sessions_lock:
                 for session in gaming.game_sessions.values():
                     session.stopped_by = self.user
 
-                # Hack because we cannot import GuessingGateSkippableState
-                # because it'd be a cyclic import
+            async with gaming.state_for_game_session_lock:
                 for state in gaming.state_for_game_session.values():
-                    if hasattr(state, "skip") and inspect.iscoroutinefunction(
-                        state.skip  # pyright: ignore[reportAttributeAccessIssue]
-                    ):
-                        await state.skip()  # pyright: ignore[reportAttributeAccessIssue]
+                    if isinstance(state, GuessingGameSkippableState):
+                        await state.skip()
 
+            await asyncio.wait(gaming.game_tasks)
+
+    async def _close_web(self):
         if self.app is not None:
             await self.app.shutdown()
             await self.app.cleanup()
 
+    async def _close_database(self):
         async with self.begin_db_session() as session:
             await session.execute(text("PRAGMA optimize"))
 
         await self.engine.dispose()
+
+    async def close(self) -> None:
+        await asyncio.gather(
+            self._close_games(),
+            self._close_web(),
+            self._close_database(),
+            return_exceptions=True,
+        )
 
         return await super().close()
 
