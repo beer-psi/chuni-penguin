@@ -1,3 +1,4 @@
+import random
 from typing import override
 
 import discord
@@ -6,6 +7,30 @@ from discord.utils import MISSING
 from cogs.gaming._session import GuessingGameSession
 
 from .base import GuessingGameState
+
+# Tips that don't need any sort of session data.
+STATIC_TIPS = tips = [
+    "Your support is humbly requested. https://ko-fi.com/beerpsi_",
+    "Don't like how this game works? Help improve it at https://github.com/beer-psi/chuni-penguin",
+    "i'm chuning my shit",
+    "WTF sperm slider",
+    "TRUENITHM NUKE",
+    "The bread you ate for lunch is farmable",
+    "i can help you set this up for a symbolic $15 fee",
+    "in my onion",
+    "+0.5 overpower",
+    "-0.5 overpower",
+    "have you tried xl techno more dance remix its literally free rating hack. i got sss+ in 3 tries trust me bro its so free. easiest chart in the game just hit the notes its that simple",
+    "question 1-5: clearly recognized the wrong song",
+    "Announcement Regarding Chuni Penguin's Graduation",
+    "ALL I WANNA DO / jaQup / 7 days a week",
+    "people who are worse than me are garbage and people who are better than me need to get a life",
+    "mirror IS cheating",
+    "im an adult? ok bro, then like, date one....",
+    "IS THAT ODIN BY GRAM",
+    "do you want to buy a controller",
+    "repost if you have dementia",
+]
 
 
 async def end_game(
@@ -40,10 +65,28 @@ async def end_game(
         )
 
     embed.add_field(name="Final Scores", value=session.print_score_list(), inline=False)
-    embed.set_footer(
-        text=footer
-        or f"Use `{session.ctx.prefix}guess lb` to view the server leaderboard."
-    )
+
+    if footer is not None:
+        embed.set_footer(text=footer)
+    else:
+        tips = STATIC_TIPS.copy()
+        tips.extend(
+            [
+                f"Use `{session.ctx.prefix}guess leaderboard` to view the server leaderboard.",
+                f"{session.ctx.prefix}guess character-age",
+                f"Heartbreaking: The Worst Person You Know Is Good At {session.ctx.prefix}guess",
+            ]
+        )
+
+        if session.question_count is not None:
+            tips.extend(
+                [
+                    f"always go for {session.question_count}/{session.question_count}. nothing else has meaning",
+                    f"score goes up to {session.question_count} btw",
+                ]
+            )
+
+        embed.set_footer(text=random.choice(tips))
 
     retry_btn = RetryGameButton(
         mode=session.game_type,
