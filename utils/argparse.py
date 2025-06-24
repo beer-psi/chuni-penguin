@@ -25,17 +25,51 @@ from argparse import (
     ArgumentError,
     ArgumentParser,
     ArgumentTypeError,
+    HelpFormatter,
     Namespace,
     _get_action_name,
 )
+from collections.abc import Sequence
 from gettext import gettext as _
 from inspect import iscoroutinefunction
-from typing import override
+from typing import Any, override
 
 from discord.ext.commands import BadArgument
 
 
 class DiscordArguments(ArgumentParser):
+    def __init__(
+        self,
+        prog: str | None = None,
+        usage: str | None = None,
+        description: str | None = None,
+        epilog: str | None = None,
+        parents: Sequence[ArgumentParser] = [],
+        formatter_class: object = HelpFormatter,
+        prefix_chars: str = "-",
+        fromfile_prefix_chars: str | None = None,
+        argument_default: Any = None,
+        conflict_handler: str = "error",
+        *,
+        allow_abbrev: bool = True,
+        exit_on_error: bool = True,
+    ) -> None:
+        super().__init__(
+            prog,
+            usage,
+            description,
+            epilog,
+            parents,
+            formatter_class,
+            prefix_chars,
+            fromfile_prefix_chars,
+            argument_default,
+            conflict_handler,
+            add_help=False,
+            allow_abbrev=True,
+            exit_on_error=False,
+        )
+
     async def parse_args(self, args=None, namespace=None):
         args, argv = await self.parse_known_args(args, namespace)
         if argv:
