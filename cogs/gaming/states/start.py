@@ -54,5 +54,11 @@ class StartState(GuessingGameState):
         if self.session.hardcore_mode:
             embed.add_field(name="Hardcore mode", value="Enabled", inline=True)
 
+        if self.session.genres is not None:
+            embed.description = "**This game will not count towards the leaderboard!**"
+            embed.add_field(
+                name="Genres", value=", ".join([str(g) for g in self.session.genres])
+            )
+
         await self.session.ctx.send(embed=embed)
         return WaitState(self.session, 5, self.session.question_state(self.session))

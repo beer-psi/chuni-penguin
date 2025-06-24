@@ -43,7 +43,7 @@ class GenreConverter(commands.Converter[Genres]):
 
         if genre_lower.startswith(("pops", "anime")):
             return Genres.POPS_AND_ANIME
-        if genre_lower.startswith("nico"):
+        if genre_lower.startswith(("nico", "voca")):
             return Genres.NICONICO
         if genre_lower.startswith(("touhou", "toho", "東方")):
             return Genres.TOUHOU_PROJECT
@@ -57,7 +57,7 @@ class GenreConverter(commands.Converter[Genres]):
             return Genres.GEKIMAI
 
         msg = f'Could not infer genre name from "{argument}".'
-        raise commands.CommandError(msg)
+        raise commands.BadArgument(msg)
 
 
 class RankConverter(commands.Converter[Rank]):
@@ -67,7 +67,7 @@ class RankConverter(commands.Converter[Rank]):
             return Rank[argument.upper().replace("+", "p")]
         except ValueError as e:
             msg = f'Could not infer rank from "{argument}".'
-            raise commands.CommandError(msg) from e
+            raise commands.BadArgument(msg) from e
 
 
 # TODO: Consider inheriting from commands.clean_content instead so we

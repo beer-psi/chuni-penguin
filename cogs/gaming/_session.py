@@ -12,7 +12,7 @@ from rapidfuzz import fuzz
 from sqlalchemy import select, text
 from sqlalchemy.dialects.sqlite import insert
 
-from chunithm_net.models.enums import Difficulty
+from chunithm_net.models.enums import Difficulty, Genres
 from database.models import Alias, GuessScore, Song
 from utils import json_loads
 from utils.logging import logger
@@ -41,6 +41,7 @@ class GuessingGameSession:
         time_per_question: int = 20,
         wrong_answers_limit: int | None = None,
         hardcore_mode: bool = False,
+        genres: list[Genres] | None = None,
     ) -> None:
         self.ctx: Context = ctx
 
@@ -65,6 +66,8 @@ class GuessingGameSession:
 
         self.hardcore_mode: bool = hardcore_mode
         self._hardcore_mode_ignores: set[int] = set()
+
+        self.genres: list[Genres] | None = genres
 
         # If stopped by the bot itself, it means that we're restarting.
         self.stopped_by: discord.User | discord.Member | discord.ClientUser | None = (
@@ -107,44 +110,49 @@ class GuessingGameSession:
 
         return 1
 
-    async def get_image_question(self):
+    async def _get_random_song(self):
+        condition = (Song.genre != "WORLD'S END") & (Song.removed == False)  # noqa: E712
+
+        if self.genres is not None:
+            condition &= Song.chunithm_catcode.in_([g.value for g in self.genres])
+
         async with self.bot.begin_db_session() as session:
-            while True:
-                stmt = (
-                    select(Song)
-                    .where((Song.genre != "WORLD'S END") & (Song.removed == False))  # noqa: E712
-                    .order_by(text("RANDOM()"))
-                    .limit(1)
-                )
-                song = (await session.execute(stmt)).scalar_one()
+            stmt = select(Song).where(condition).order_by(text("RANDOM()")).limit(1)
+            song = (await session.execute(stmt)).scalar_one()
 
-                stmt = select(Alias).where(
-                    (Alias.song_id == song.id)
-                    & (
-                        (Alias.guild_id == -1)
-                        | (
-                            Alias.guild_id
-                            == (self.ctx.guild.id if self.ctx.guild is not None else -1)
-                        )
+            stmt = select(Alias).where(
+                (Alias.song_id == song.id)
+                & (
+                    (Alias.guild_id == -1)
+                    | (
+                        Alias.guild_id
+                        == (self.ctx.guild.id if self.ctx.guild is not None else -1)
                     )
                 )
-                aliases = [song.title] + [
-                    alias.alias for alias in (await session.execute(stmt)).scalars()
-                ]
+            )
+            aliases = [song.title] + [
+                alias.alias for alias in (await session.execute(stmt)).scalars()
+            ]
 
-                jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
+        return song, aliases
 
-                if not jacket_path.exists():
-                    await logger.awarning(
-                        "Missing jacket file",
-                        tag="missing_jacket_asset",
-                        song_id=song.id,
-                        song_title=song.title,
-                        song_artist=song.artist,
-                    )
-                    continue
+    async def get_image_question(self):
+        while True:
+            song, aliases = await self._get_random_song()
 
-                break
+            jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
+
+            if not jacket_path.exists():
+                await logger.awarning(
+                    "Missing jacket file",
+                    tag="missing_jacket_asset",
+                    song_id=song.id,
+                    song_title=song.title,
+                    song_artist=song.artist,
+                )
+                continue
+
+            break
 
         crop_width, crop_height = self.get_crop_dimensions()
 
@@ -188,83 +196,62 @@ class GuessingGameSession:
         return song, aliases, answer_image_buffer, cropped_image_buffer
 
     async def get_voice_message_question(self):
-        async with self.bot.begin_db_session() as session:
-            while True:
-                stmt = (
-                    select(Song)
-                    .where((Song.genre != "WORLD'S END") & (Song.removed == False))  # noqa: E712
-                    .order_by(text("RANDOM()"))
-                    .limit(1)
+        while True:
+            song, aliases = await self._get_random_song()
+
+            if song.bpm is None:
+                await logger.awarning(
+                    "Song missing BPM data",
+                    tag="song_missing_bpm_data",
+                    song_id=song.id,
+                    song_title=song.title,
+                    song_artist=song.artist,
                 )
-                song = (await session.execute(stmt)).scalar_one()
+                continue
 
-                if song.bpm is None:
-                    await logger.awarning(
-                        "Song missing BPM data",
-                        tag="song_missing_bpm_data",
-                        song_id=song.id,
-                        song_title=song.title,
-                        song_artist=song.artist,
-                    )
-                    continue
+            audio_path = ASSETS_DIR / "audio" / f"{song.id}.ogg"
+            jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
 
-                audio_path = ASSETS_DIR / "audio" / f"{song.id}.ogg"
-                jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
-
-                if not audio_path.exists() or not jacket_path.exists():
-                    await logger.awarning(
-                        "Missing audio file or jacket file",
-                        tag="missing_audio_or_jacket_asset",
-                        song_id=song.id,
-                        song_title=song.title,
-                        song_artist=song.artist,
-                    )
-                    continue
-
-                ffprobe_process = await asyncio.subprocess.create_subprocess_exec(
-                    "ffprobe",
-                    "-i",
-                    str(audio_path),
-                    "-print_format",
-                    "json",
-                    "-show_format",
-                    "-show_error",
-                    "-loglevel",
-                    "fatal",
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
+            if not audio_path.exists() or not jacket_path.exists():
+                await logger.awarning(
+                    "Missing audio file or jacket file",
+                    tag="missing_audio_or_jacket_asset",
+                    song_id=song.id,
+                    song_title=song.title,
+                    song_artist=song.artist,
                 )
-                stdout, _ = await ffprobe_process.communicate()
-                ffprobe_data = json_loads(stdout)
+                continue
 
-                if "error" in ffprobe_data:
-                    await logger.awarning(
-                        "Invalid audio data",
-                        tag="invalid_audio_data",
-                        song_id=song.id,
-                        song_title=song.title,
-                        song_artist=song.artist,
-                        error=ffprobe_data["error"],
-                    )
-                    continue
+            ffprobe_process = await asyncio.subprocess.create_subprocess_exec(
+                "ffprobe",
+                "-i",
+                str(audio_path),
+                "-print_format",
+                "json",
+                "-show_format",
+                "-show_error",
+                "-loglevel",
+                "fatal",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await ffprobe_process.communicate()
+            ffprobe_data = json_loads(stdout)
 
-                audio_duration = int(float((ffprobe_data["format"]["duration"])))
-
-                stmt = select(Alias).where(
-                    (Alias.song_id == song.id)
-                    & (
-                        (Alias.guild_id == -1)
-                        | (
-                            Alias.guild_id
-                            == (self.ctx.guild.id if self.ctx.guild is not None else -1)
-                        )
-                    )
+            if "error" in ffprobe_data:
+                await logger.awarning(
+                    "Invalid audio data",
+                    tag="invalid_audio_data",
+                    song_id=song.id,
+                    song_title=song.title,
+                    song_artist=song.artist,
+                    error=ffprobe_data["error"],
                 )
-                aliases = [song.title] + [
-                    alias.alias for alias in (await session.execute(stmt)).scalars()
-                ]
+                continue
 
-                break
+            audio_duration = int(float((ffprobe_data["format"]["duration"])))
+
+            break
 
         # TODO: Implement the rest of the logic
         # - The audio cut should not fall into silence
@@ -333,6 +320,9 @@ class GuessingGameSession:
         return f"{self.wrong_answers_limit - self.wrong_answers}/{self.wrong_answers_limit}"
 
     async def increment_score(self, user_id: int):
+        if self.genres is not None:
+            return
+
         guild_id = self.ctx.guild.id if self.ctx.guild else -1
 
         async with self.bot.begin_db_session() as session, session.begin():
@@ -418,24 +408,24 @@ class GuessingGameSession:
 
             return is_correct_answer
 
-        typing_task = asyncio.create_task(
-            self.bot.wait_for(
-                "typing", check=on_typing_check, timeout=self.time_per_question
-            )
-        )
-        message_task = asyncio.create_task(
+        async def wait_for_typing_wrapper():
+            try:
+                return await self.bot.wait_for(
+                    "typing", check=on_typing_check, timeout=self.time_per_question
+                )
+            except asyncio.TimeoutError:
+                pass
+
+        typing_task = asyncio.create_task(wait_for_typing_wrapper())
+
+        self._tasks.add(typing_task)
+        typing_task.add_done_callback(self._tasks.discard)
+
+        return asyncio.create_task(
             self.bot.wait_for(
                 "message", check=on_message_check, timeout=self.time_per_question
             )
         )
-
-        self._tasks.add(typing_task)
-        self._tasks.add(message_task)
-
-        typing_task.add_done_callback(self._tasks.discard)
-        message_task.add_done_callback(self._tasks.discard)
-
-        return message_task
 
     @property
     def question_state(self):

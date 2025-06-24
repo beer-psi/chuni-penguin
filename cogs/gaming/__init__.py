@@ -11,11 +11,11 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import delete
 
-from chunithm_net.models.enums import Difficulty
+from chunithm_net.models.enums import Difficulty, Genres
 from database.models import GuessScore
 from utils import shlex_split
 from utils.argparse import DiscordArguments
-from utils.converters import DifficultyConverter
+from utils.converters import DifficultyConverter, GenreConverter
 from utils.logging import logged_prefix_command, logger
 from utils.views.gaming import GuessLeaderboardView
 
@@ -94,6 +94,7 @@ class GuessArguments:
     time: int
     wrong: int | None
     hardcore: bool
+    genres: list[Genres] | None
 
 
 class GamingCog(commands.Cog, name="Games"):
@@ -123,6 +124,7 @@ class GamingCog(commands.Cog, name="Games"):
         parser.add_argument("-t", "--time", type=int, required=False, default=20)
         parser.add_argument("-w", "--wrong", type=int, required=False, default=None)
         parser.add_argument("-h", "--hardcore", action="store_true")
+        parser.add_argument("-g", "--genre", type=str, nargs="*")
 
         try:
             args, _ = await parser.parse_known_intermixed_args(shlex_split(arguments))
@@ -141,8 +143,23 @@ class GamingCog(commands.Cog, name="Games"):
         time: int = args.time
         wrong: int | None = args.wrong
         hardcore: bool = args.hardcore
+        genre: list[str] | None = args.genre
 
-        return GuessArguments(difficulty, questions, score, time, wrong, hardcore)
+        if genre is not None and len(genre) == 0:
+            msg = "No genres were specified."
+            raise commands.BadArgument(msg)
+
+        return GuessArguments(
+            difficulty,
+            questions,
+            score,
+            time,
+            wrong,
+            hardcore,
+            await asyncio.gather(*[GenreConverter().convert(ctx, x) for x in genre])
+            if genre is not None
+            else None,
+        )
 
     @commands.group("guess", invoke_without_command=True)
     @logged_prefix_command
@@ -157,6 +174,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
+        `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
         """
 
         await ctx.send_help(self.guess)
@@ -178,6 +196,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
+        `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
         """
 
         await self._guess_without_voice_channel(ctx, GuessingGameType.IMAGE, arguments)
@@ -199,6 +218,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
+        `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
         """
 
         await self._guess_without_voice_channel(
@@ -222,6 +242,8 @@ class GamingCog(commands.Cog, name="Games"):
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
+        `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
+        `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
         """
 
         assert isinstance(ctx.author, discord.Member)
@@ -267,6 +289,7 @@ class GamingCog(commands.Cog, name="Games"):
                 time_per_question=args.time,
                 wrong_answers_limit=args.wrong,
                 hardcore_mode=args.hardcore,
+                genres=args.genres,
             )
 
         game_task = asyncio.create_task(
