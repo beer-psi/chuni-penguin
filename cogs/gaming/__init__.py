@@ -17,7 +17,7 @@ from utils import shlex_split
 from utils.argparse import DiscordArguments
 from utils.converters import DifficultyConverter, GenreConverter
 from utils.logging import logged_prefix_command, logger
-from utils.views.gaming import GuessLeaderboardView
+from utils.views.gaming import GuessLeaderboardView, RetryGameButton
 
 from ._session import GuessingGameSession, GuessingGameType
 from .states.base import GuessingGameSkippableState, GuessingGameState
@@ -393,4 +393,4 @@ class GamingCog(commands.Cog, name="Games"):
 async def setup(bot: "ChuniBot") -> None:
     cog = GamingCog(bot)
     await bot.add_cog(cog)
-    # bot.add_view(NextGameButtonView(cog, cog.game_sessions))
+    bot.add_dynamic_items(RetryGameButton)

@@ -42,7 +42,23 @@ async def end_game(
         or f"Use `{session.ctx.prefix}guess lb` to view the server leaderboard."
     )
 
-    await session.channel.send(embed=embed)
+    from utils.views.gaming import RetryGameButton
+
+    view = discord.ui.View(timeout=None)
+    view.add_item(
+        RetryGameButton(
+            mode=session.game_type,
+            difficulty=session.difficulty,
+            questions=session.question_count or 20,
+            score=session.score_limit,
+            time=session.time_per_question,
+            wrong=session.wrong_answers_limit,
+            hardcore=session.hardcore_mode,
+            genres=session.genres,
+        )
+    )
+
+    await session.channel.send(embed=embed, view=view)
 
 
 class EndGameTimedOut(GuessingGameState):

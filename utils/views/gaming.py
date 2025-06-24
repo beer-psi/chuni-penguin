@@ -1,18 +1,23 @@
-from typing import TYPE_CHECKING, Any, Sequence, override
+import asyncio
+import re
+from typing import TYPE_CHECKING, Any, Sequence, cast, override
 
 import discord
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 from sqlalchemy import Row, desc, func, select
 
-from chunithm_net.models.enums import Difficulty
-from cogs.gaming._session import GuessingGameType
+from chunithm_net.models.enums import Difficulty, Genres
+from cogs.gaming._session import GuessingGameSession, GuessingGameType
+from cogs.gaming.states.start import StartState
 from database.models import GuessScore
+from utils.config import config
 
 from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
+    from cogs.gaming import GamingCog
 
 
 class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
@@ -155,3 +160,178 @@ class GuessLeaderboardView(PaginationView):
         button.style = discord.ButtonStyle.green
 
         await self.show_page(interaction, self.current_page)
+
+
+class RetryGameButton(
+    discord.ui.DynamicItem[discord.ui.Button],
+    template=r"retryguess(?P<mode>[012]):(?P<difficulty>\d+):(?P<questions>\d+):(?P<score>\d*):(?P<time>\d+):(?P<wrong>\d*):(?P<hardcore>[01]):(?P<genres>[\d,]*)",
+):
+    def __init__(
+        self,
+        *,
+        mode: GuessingGameType,
+        difficulty: Difficulty,
+        questions: int,
+        score: int | None,
+        time: int,
+        wrong: int | None,
+        hardcore: bool,
+        genres: list[Genres] | None,
+        row: int | None = None,
+    ) -> None:
+        if mode == GuessingGameType.IMAGE:
+            mode_id = "0"
+        elif mode == GuessingGameType.VOICE_MESSAGE:
+            mode_id = "1"
+        elif mode == GuessingGameType.VOICE_CHANNEL:
+            mode_id = "2"
+        else:
+            msg = f"Unknown guess game mode: {mode}"
+            raise ValueError(msg)
+
+        super().__init__(
+            discord.ui.Button(
+                style=discord.ButtonStyle.green,
+                label="Retry",
+                custom_id=f"retryguess{mode_id}:{difficulty.value}:{questions}:{score if score is not None else ''}:{time}:{wrong if wrong is not None else ''}:{1 if hardcore else 0}:{','.join([str(g.value) for g in genres]) if genres else ''}",
+            ),
+            row=row,
+        )
+
+        self.mode = mode
+        self.difficulty = difficulty
+        self.questions = questions
+        self.score = score
+        self.time = time
+        self.wrong = wrong
+        self.hardcore = hardcore
+        self.genres = genres
+
+    @classmethod
+    async def from_custom_id(  # pyright: ignore[reportIncompatibleMethodOverride]
+        cls,
+        interaction: discord.Interaction,
+        item: discord.ui.Button,
+        match: re.Match[str],
+        /,
+    ):
+        if match["mode"] == "0":
+            mode = GuessingGameType.IMAGE
+        elif match["mode"] == "1":
+            mode = GuessingGameType.VOICE_MESSAGE
+        elif match["mode"] == "2":
+            mode = GuessingGameType.VOICE_CHANNEL
+        else:
+            msg = f"Unknown guess mode ID: {match['mode']}"
+            raise ValueError(msg)
+
+        difficulty = Difficulty(int(match["difficulty"]))
+        questions = int(match["questions"])
+        score = int(match["score"]) if match["score"] else None
+        time = int(match["time"])
+        wrong = int(match["wrong"]) if match["wrong"] else None
+        hardcore = match["hardcore"] == "1"
+        genres = (
+            [Genres(int(x)) for x in match["genres"].split(",")]
+            if match["genres"]
+            else None
+        )
+
+        return cls(
+            mode=mode,
+            difficulty=difficulty,
+            questions=questions,
+            score=score,
+            time=time,
+            wrong=wrong,
+            hardcore=hardcore,
+            genres=genres,
+        )
+
+    @override
+    async def callback(self, interaction: discord.Interaction["ChuniBot"]) -> Any:
+        gaming = cast("GamingCog | None", interaction.client.get_cog("Games"))
+
+        if gaming is None:
+            await interaction.response.send_message(
+                "Games aren't currently available. Sorry about that!", ephemeral=True
+            )
+            return
+
+        if (
+            interaction.channel_id is None
+            or interaction.channel is None
+            or interaction.message is None
+        ):
+            await interaction.response.send_message(
+                "Could not retrieve required information to start the game.",
+                ephemeral=True,
+            )
+            return
+
+        if interaction.channel_id in gaming.game_sessions:
+            await interaction.response.send_message(
+                "There is already an ongoing session in this channel.", ephemeral=True
+            )
+            return
+
+        if self.mode == GuessingGameType.VOICE_CHANNEL:
+            if interaction.guild is None or not isinstance(
+                interaction.user, discord.Member
+            ):
+                await interaction.response.send_message(
+                    f"Cannot start a {self.mode.value} game outside of servers.",
+                    ephemeral=True,
+                )
+                return
+
+            if interaction.guild.voice_client is not None:
+                await interaction.response.send_message(
+                    "Another voice guessing game is already ongoing in this server. Only one voice guessing game can run at a time for each server.",
+                    ephemeral=True,
+                )
+                return
+
+            if interaction.user.voice is None or interaction.user.voice.channel is None:
+                await interaction.response.send_message(
+                    f"You must connect to a voice channel to start a {self.mode} guessing game.",
+                    ephemeral=True,
+                )
+                return
+
+            await interaction.user.voice.channel.connect(self_deaf=True)
+
+        ctx = await interaction.client.get_context(interaction.message)
+        ctx.prefix = (
+            interaction.client.prefixes.get(
+                interaction.guild_id, config.bot.default_prefix
+            )
+            if interaction.guild_id is not None
+            else config.bot.default_prefix
+        )
+
+        async with gaming.game_sessions_lock:
+            session = gaming.game_sessions[interaction.channel_id] = (
+                GuessingGameSession(
+                    ctx,
+                    difficulty=self.difficulty,
+                    game_type=self.mode,
+                    question_count=self.questions,
+                    score_limit=self.score,
+                    time_per_question=self.time,
+                    wrong_answers_limit=self.wrong,
+                    hardcore_mode=self.hardcore,
+                    genres=self.genres,
+                )
+            )
+
+        from cogs.gaming import run_state_machine
+
+        game_task = asyncio.create_task(
+            run_state_machine(gaming, session.ctx.channel, session, StartState(session))
+        )
+
+        gaming.game_tasks.add(game_task)
+        game_task.add_done_callback(gaming.game_tasks.discard)
+
+        await interaction.response.send_message("New game started.", ephemeral=True)
