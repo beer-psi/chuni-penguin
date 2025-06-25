@@ -1,7 +1,7 @@
 import contextlib
 from typing import override
 
-from discord import Interaction, app_commands
+from discord import Interaction, Member, User, app_commands
 from discord.ext import commands
 
 from chunithm_net.models.enums import Difficulty, Genres, Rank
@@ -93,3 +93,13 @@ class AliasNameTransformer(app_commands.Transformer):
     @override
     async def transform(self, interaction: Interaction, value: str) -> str:
         return value.strip().lower() if self.lower else value.strip()
+
+
+class MemberOrUserConverter(commands.Converter[Member | User]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> Member | User:
+        for converter in (commands.MemberConverter, commands.UserConverter):
+            with contextlib.suppress(commands.BadArgument):
+                return await converter().convert(ctx, argument)
+
+        raise commands.UserNotFound(argument)

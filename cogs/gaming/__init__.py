@@ -116,7 +116,7 @@ class GamingCog(commands.Cog, name="Games"):
             "-d",
             "--difficulty",
             required=False,
-            type=str,
+            type=lambda s: DifficultyConverter().convert(ctx, s),
             default="BASIC",
         )
         parser.add_argument("-q", "--questions", type=int, required=False, default=20)
@@ -131,13 +131,7 @@ class GamingCog(commands.Cog, name="Games"):
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        # HACK: I have no idea why this is a coroutine if the default value is used...
-        if inspect.isawaitable(args.difficulty):
-            args.difficulty = await args.difficulty
-
-        difficulty: Difficulty = await DifficultyConverter().convert(
-            ctx, args.difficulty
-        )
+        difficulty: Difficulty = args.difficulty
         questions: int = args.questions
         score: int | None = args.score
         time: int = args.time

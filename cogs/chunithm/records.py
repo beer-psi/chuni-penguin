@@ -49,6 +49,7 @@ from utils.converters import (
     AliasNameTransformer,
     DifficultyConverter,
     GenreConverter,
+    MemberOrUserConverter,
     RankConverter,
 )
 from utils.kamaitachi import (
@@ -721,21 +722,19 @@ class RecordsCog(commands.Cog, name="Records"):
 
         parser = DiscordArguments()
         parser.add_argument("-k", "--kamaitachi", action="store_true")
+        parser.add_argument(
+            "user",
+            nargs="?",
+            default=None,
+            type=lambda s: MemberOrUserConverter().convert(ctx, s),
+        )
 
         try:
-            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        user = None
-
-        if len(rest) > 0:
-            for converter in [commands.MemberConverter, commands.UserConverter]:
-                with contextlib.suppress(commands.BadArgument):
-                    user = await converter().convert(ctx, rest[0])
-                    break
-
-        await self._recent_inner(ctx, user, kamaitachi=args.kamaitachi)
+        await self._recent_inner(ctx, args.user, kamaitachi=args.kamaitachi)
 
     @app_commands.command(name="recent", description="View recent scores")
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -1018,27 +1017,25 @@ class RecordsCog(commands.Cog, name="Records"):
         If you don't reply, only recent scores *from this bot* will be checked.
 
         **Parameters**
-        user: The user to compare with (defaults to you).
+        `user`: The user to compare with (defaults to you).
         `-k, --kamaitachi`: Get scores from Kamaitachi, if the target user has a linked account.
         """
 
         parser = DiscordArguments()
         parser.add_argument("-k", "--kamaitachi", action="store_true")
+        parser.add_argument(
+            "user",
+            nargs="?",
+            default=None,
+            type=lambda s: MemberOrUserConverter().convert(ctx, s),
+        )
 
         try:
-            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        user = None
-
-        if len(rest) > 0:
-            for converter in [commands.MemberConverter, commands.UserConverter]:
-                with contextlib.suppress(commands.BadArgument):
-                    user = await converter().convert(ctx, rest[0])
-                    break
-
-        await self._compare_inner(ctx, user, kamaitachi=args.kamaitachi)
+        await self._compare_inner(ctx, args.user, kamaitachi=args.kamaitachi)
 
     @app_commands.command(
         name="compare", description="Compare your best score with another score."
@@ -1536,23 +1533,21 @@ class RecordsCog(commands.Cog, name="Records"):
         parser.add_argument("-c", "--classic", action="store_true")
         parser.add_argument("-k", "--kamaitachi", action="store_true")
         parser.add_argument("-n", "--new-rating", action="store_true")
+        parser.add_argument(
+            "user",
+            nargs="?",
+            default=None,
+            type=lambda s: MemberOrUserConverter().convert(ctx, s),
+        )
 
         try:
-            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        user = None
-
-        if len(rest) > 0:
-            for converter in [commands.MemberConverter, commands.UserConverter]:
-                with contextlib.suppress(commands.BadArgument):
-                    user = await converter().convert(ctx, rest[0])
-                    break
-
         await self._best50_inner(
             ctx,
-            user,
+            args.user,
             image=args.image,
             classic=args.classic,
             kamaitachi=args.kamaitachi,
@@ -1819,26 +1814,37 @@ class RecordsCog(commands.Cog, name="Records"):
             return None
 
         parser = DiscordArguments()
-        parser.add_argument("-d", "--difficulty", type=str, required=False)
+        parser.add_argument(
+            "-d",
+            "--difficulty",
+            required=False,
+            type=lambda s: DifficultyConverter().convert(ctx, s),
+        )
         parser.add_argument("-s", "--sort", type=sort_type, required=False)
         parser.add_argument("-k", "--kamaitachi", action="store_true")
 
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("-g", "--genre", type=str, required=False)
-        group.add_argument("-r", "--rank", type=str, required=False)
+        group.add_argument(
+            "-g",
+            "--genre",
+            required=False,
+            type=lambda s: GenreConverter().convert(ctx, s),
+        )
+        group.add_argument(
+            "-r",
+            "--rank",
+            required=False,
+            type=lambda s: RankConverter().convert(ctx, s),
+        )
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        difficulty = (
-            await DifficultyConverter().convert(ctx, args.difficulty)
-            if args.difficulty
-            else None
-        )
-        genre = await GenreConverter().convert(ctx, args.genre) if args.genre else None
-        rank = await RankConverter().convert(ctx, args.rank) if args.rank else None
+        difficulty: Difficulty | None = args.difficulty
+        genre: Genres | None = args.genre
+        rank: Rank | None = args.rank
 
         if (args.genre or args.rank) and not difficulty:
             msg = "Must specify a difficulty when searching by genre or rank."

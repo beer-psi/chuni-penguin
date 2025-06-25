@@ -31,10 +31,10 @@ from argparse import (
 )
 from collections.abc import Sequence
 from gettext import gettext as _
-from inspect import iscoroutinefunction
-from typing import Any, override
+from typing import IO, Any, override
 
 from discord.ext.commands import BadArgument
+from discord.utils import maybe_coroutine
 
 
 class DiscordArguments(ArgumentParser):
@@ -71,10 +71,13 @@ class DiscordArguments(ArgumentParser):
         )
 
     async def parse_args(self, args=None, namespace=None):
-        args, argv = await self.parse_known_args(args, namespace)
+        args, argv = self.parse_known_args(args, namespace)
         if argv:
-            msg = _("unrecognized arguments: %s")
-            self.error(msg % " ".join(argv))
+            msg = _("unrecognized arguments: %s") % " ".join(argv)
+            if self.exit_on_error:
+                self.error(msg)
+            else:
+                raise ArgumentError(None, msg)
         return args
 
     async def parse_known_args(self, args=None, namespace=None):
@@ -264,7 +267,7 @@ class DiscordArguments(ArgumentParser):
 
             # slice off the appropriate arg strings for each Positional
             # and add the Positional and its args to the list
-            for action, arg_count in zip(positionals, arg_counts):
+            for action, arg_count in zip(positionals, arg_counts, strict=False):
                 args = arg_strings[start_index : start_index + arg_count]
                 start_index += arg_count
                 await take_action(action, args)
@@ -509,16 +512,14 @@ class DiscordArguments(ArgumentParser):
 
     async def _get_value(self, action, arg_string):
         type_func = self._registry_get("type", action.type, action.type)
+
         if not callable(type_func):
             msg = _("%r is not callable")
             raise ArgumentError(action, msg % type_func)
 
         # convert the value to the appropriate type
         try:
-            if iscoroutinefunction(type_func):
-                result = await type_func(arg_string)
-            else:
-                result = type_func(arg_string)
+            result = await maybe_coroutine(type_func, arg_string)
 
         # ArgumentTypeErrors indicate errors
         except ArgumentTypeError as err:
@@ -542,5 +543,13 @@ class DiscordArguments(ArgumentParser):
         return result
 
     @override
+    def _print_message(self, message: str, file: IO[str] | None = None) -> None:
+        pass
+
+    @override
     def error(self, message: str):
         raise ArgumentError(None, message)
+
+    @override
+    def exit(self, status: int = 0, message: str | None = None):
+        pass

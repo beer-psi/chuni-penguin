@@ -18,6 +18,7 @@ from chunithm_net.models.enums import SkillClass
 from database.models import UserConfig
 from utils import json_loads, shlex_split
 from utils.argparse import DiscordArguments
+from utils.converters import MemberOrUserConverter
 from utils.logging import logged_app_command, logged_prefix_command
 from utils.views.profile import (
     PersistentHideFriendCodeButton,
@@ -366,21 +367,19 @@ class ProfileCog(commands.Cog, name="Profile"):
 
         parser = DiscordArguments()
         parser.add_argument("-k", "--kamaitachi", action="store_true")
+        parser.add_argument(
+            "user",
+            nargs="?",
+            default=None,
+            type=lambda s: MemberOrUserConverter().convert(ctx, s),
+        )
 
         try:
-            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
+            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
         except ArgumentError as e:
             raise commands.BadArgument(str(e)) from e
 
-        user = None
-
-        if len(rest) > 0:
-            for converter in [commands.MemberConverter, commands.UserConverter]:
-                with contextlib.suppress(commands.BadArgument):
-                    user = await converter().convert(ctx, rest[0])
-                    break
-
-        await self._chunithm_inner(ctx, user, kamaitachi=args.kamaitachi)
+        await self._chunithm_inner(ctx, args.user, kamaitachi=args.kamaitachi)
 
     @app_commands.command(name="chunithm", description="View your CHUNITHM profile.")
     @app_commands.allowed_installs(guilds=True, users=True)
