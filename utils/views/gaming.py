@@ -114,6 +114,21 @@ class GuessLeaderboardView(PaginationView):
         self.add_item(self.game_type_audio)
         self.add_item(self.game_type_voice)
 
+    @override
+    async def on_timeout(self) -> None:
+        self.game_type_all.disabled = True
+        self.game_type_image.disabled = True
+        self.game_type_audio.disabled = True
+        self.game_type_voice.disabled = True
+
+        self.remove_item(self.to_first_page)
+        self.remove_item(self.to_previous_page)
+        self.remove_item(self.to_next_page)
+        self.remove_item(self.to_last_page)
+
+        if self.message is not None:
+            await self.message.edit(view=self)
+
     @discord.ui.button(label="All", row=2, style=discord.ButtonStyle.green)
     async def game_type_all(
         self, interaction: discord.Interaction, button: discord.ui.Button
