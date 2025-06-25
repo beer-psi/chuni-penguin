@@ -117,7 +117,7 @@ class GamingCog(commands.Cog, name="Games"):
             "--difficulty",
             required=False,
             type=lambda s: DifficultyConverter().convert(ctx, s),
-            default="BASIC",
+            default=Difficulty.BASIC,
         )
         parser.add_argument("-q", "--questions", type=int, required=False, default=20)
         parser.add_argument("-s", "--score", type=int, required=False, default=None)
