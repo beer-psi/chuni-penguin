@@ -39,6 +39,7 @@ class WaitForAnswerState(GuessingGameSkippableState):
             end_time = time.perf_counter_ns()
 
             guess_time = (end_time - start_time) / 1_000_000_000
+            self.session.questions_timed_out = 0
 
             return ShowAnswerState(
                 self.session,
@@ -50,6 +51,7 @@ class WaitForAnswerState(GuessingGameSkippableState):
             )
         except asyncio.CancelledError:
             self.session.wrong_answers += 1
+            self.session.questions_timed_out = 0
 
             return ShowAnswerState(
                 self.session,
@@ -62,6 +64,7 @@ class WaitForAnswerState(GuessingGameSkippableState):
         except TimeoutError:
             if self.session.last_question_was_answered:
                 self.session.wrong_answers += 1
+                self.session.questions_timed_out = 0
             else:
                 self.session.questions_timed_out += 1
 
