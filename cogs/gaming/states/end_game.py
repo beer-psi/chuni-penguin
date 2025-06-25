@@ -37,6 +37,7 @@ STATIC_TIPS = tips = [
     "put the maid dress on",
     "you could be playing balatro right now",
     "Play UNREAL LIFE",
+    "c>guess is actually the shittiest fucking minigame. Ugly ass UI, bot keeps rebooting, crops that are honestly impossible, the only people enjoying the game are 30 somethings who have played the game for 15 years",
     "go ahead, look up the source for these tips, ruin the fun for yourself",
 ]
 
