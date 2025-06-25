@@ -110,18 +110,7 @@ class GamingCog(commands.Cog, name="Games"):
         self.state_for_game_session: dict[int, GuessingGameState] = {}
         self.state_for_game_session_lock = asyncio.Lock()
 
-    @override
-    async def cog_unload(self) -> None:
-        async with self.game_sessions_lock:
-            for session in self.game_sessions.values():
-                session.stopped_by = self.bot.user
-
-        async with self.state_for_game_session_lock:
-            for state in self.state_for_game_session.values():
-                if isinstance(state, GuessingGameSkippableState):
-                    await state.skip()
-
-        await asyncio.wait(self.game_tasks)
+        self.shutting_down = False
 
     async def _parse_guess_arguments(self, ctx: Context, arguments: str):
         parser = DiscordArguments()
@@ -255,6 +244,10 @@ class GamingCog(commands.Cog, name="Games"):
 
         assert isinstance(ctx.author, discord.Member)
 
+        if self.shutting_down:
+            msg = "I am currently pending a restart. No new games can be started."
+            raise commands.CommandError(msg)
+
         if ctx.channel.id in self.game_sessions:
             msg = "There is already an ongoing session in this channel!"
             raise commands.CommandError(msg)
@@ -276,6 +269,10 @@ class GamingCog(commands.Cog, name="Games"):
     async def _guess_without_voice_channel(
         self, ctx: Context, game_type: GuessingGameType, arguments: str
     ):
+        if self.shutting_down:
+            msg = "I am currently pending a restart. No new games can be started. Please wait a few minutes."
+            raise commands.CommandError(msg)
+
         if ctx.channel.id in self.game_sessions:
             msg = "There is already an ongoing session in this channel!"
             raise commands.CommandError(msg)

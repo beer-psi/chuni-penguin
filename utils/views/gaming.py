@@ -273,6 +273,13 @@ class RetryGameButton(
             )
             return
 
+        if gaming.shutting_down:
+            await interaction.response.send_message(
+                "I am currently pending a restart. No new games can be started. Please wait a few minutes.",
+                ephemeral=True,
+            )
+            return
+
         if (
             interaction.channel_id is None
             or interaction.channel is None

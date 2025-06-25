@@ -20,6 +20,7 @@ from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from cogs import COG_LIST
+from cogs.gaming.states.base import GuessingGameSkippableState
 from database.models import Prefix
 from utils import json_dumps, json_loads
 from utils.command_tree import VersionableCommandTree
@@ -32,6 +33,8 @@ from web import init_app
 if TYPE_CHECKING:
     from aiohttp.web import Application
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+
+    from cogs.gaming import GamingCog
 
 
 BOT_DIR = Path(__file__).parent
@@ -240,14 +243,53 @@ class ChuniBot(commands.AutoShardedBot):
 
         await self.engine.dispose()
 
+    async def _close_games(self):
+        gaming = cast("GamingCog | None", self.get_cog("Games"))
+
+        if gaming is not None:
+            gaming.shutting_down = True
+
+            warning_embed = discord.Embed(
+                color=discord.Color.yellow(),
+                title="Warning",
+                description="I'll be going down for an update soon. Please finish your game in five minutes.",
+            )
+
+            async with gaming.game_sessions_lock:
+                await asyncio.gather(
+                    *[
+                        s.channel.send(embed=warning_embed)
+                        for s in gaming.game_sessions.values()
+                    ]
+                )
+
+            if len(gaming.game_tasks) > 0:
+                _, pending = await asyncio.wait(gaming.game_tasks, timeout=300)
+            else:
+                pending = set()
+
+            async with gaming.game_sessions_lock:
+                for session in gaming.game_sessions.values():
+                    session.stopped_by = self.user
+
+            async with gaming.state_for_game_session_lock:
+                for state in gaming.state_for_game_session.values():
+                    if isinstance(state, GuessingGameSkippableState):
+                        await state.skip()
+
+            if len(pending) > 0:
+                await asyncio.wait(pending)
+
     async def close(self) -> None:
-        await super().close()
+        await self._close_games()
 
         await asyncio.gather(
             self._close_web(),
             self._close_database(),
             return_exceptions=True,
         )
+
+        await super().close()
 
 
 def guild_specific_prefix(default: str):
