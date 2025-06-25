@@ -4,7 +4,7 @@ import traceback
 from argparse import ArgumentError
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal, cast, override
 
 import discord
 from discord.ext import commands
@@ -109,6 +109,19 @@ class GamingCog(commands.Cog, name="Games"):
 
         self.state_for_game_session: dict[int, GuessingGameState] = {}
         self.state_for_game_session_lock = asyncio.Lock()
+
+    @override
+    async def cog_unload(self) -> None:
+        async with self.game_sessions_lock:
+            for session in self.game_sessions.values():
+                session.stopped_by = self.bot.user
+
+        async with self.state_for_game_session_lock:
+            for state in self.state_for_game_session.values():
+                if isinstance(state, GuessingGameSkippableState):
+                    await state.skip()
+
+        await asyncio.wait(self.game_tasks)
 
     async def _parse_guess_arguments(self, ctx: Context, arguments: str):
         parser = DiscordArguments()
