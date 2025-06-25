@@ -337,7 +337,7 @@ class DiscordArguments(ArgumentParser):
                         setattr(
                             namespace,
                             action.dest,
-                            self._get_value(action, action.default),
+                            await self._get_value(action, action.default),
                         )
 
         if required_actions:
