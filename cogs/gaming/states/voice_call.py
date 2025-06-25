@@ -55,6 +55,7 @@ class AskVoiceCallQuestionState(GuessingGameState):
                 bitrate=96,
                 codec="copy",
                 pipe=True,
+                options="-reconnect 1 -reconnect_streamed 1 -timeout 10",
             ),
             after=lambda _: audio_buffer.close(),
         )

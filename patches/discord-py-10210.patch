@@ -1,0 +1,280 @@
+From 2789862ef85112db9dfcb3b27e8af9a8aef423e1 Mon Sep 17 00:00:00 2001
+From: DA-344 <108473820+DA-344@users.noreply.github.com>
+Date: Mon, 16 Jun 2025 16:31:18 +0200
+Subject: [PATCH 1/6] fix voice connection issues and upgrade to v8
+
+---
+ discord/gateway.py     | 14 ++++++++++++--
+ discord/voice_state.py |  2 +-
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git gateway.py gateway.py
+index 44656df03633..c54d2d5a0f3d 100644
+--- gateway.py
++++ gateway.py
+@@ -212,6 +212,9 @@ def ack(self) -> None:
+ 
+ 
+ class VoiceKeepAliveHandler(KeepAliveHandler):
++    if TYPE_CHECKING:
++        ws: DiscordVoiceWebSocket
++
+     def __init__(self, *args: Any, **kwargs: Any) -> None:
+         name: str = kwargs.pop('name', f'voice-keep-alive-handler:{id(self):#x}')
+         super().__init__(*args, name=name, **kwargs)
+@@ -223,7 +226,10 @@ def __init__(self, *args: Any, **kwargs: Any) -> None:
+     def get_payload(self) -> Dict[str, Any]:
+         return {
+             'op': self.ws.HEARTBEAT,
+-            'd': int(time.time() * 1000),
++            'd': {
++                't': int(time.time() * 1000),
++                'seq_ack': self.ws.seq_ack,
++            },
+         }
+ 
+     def ack(self) -> None:
+@@ -830,6 +836,8 @@ def __init__(
+         self._keep_alive: Optional[VoiceKeepAliveHandler] = None
+         self._close_code: Optional[int] = None
+         self.secret_key: Optional[List[int]] = None
++        # defaulting to -1
++        self.seq_ack: int = -1
+         if hook:
+             self._hook = hook  # type: ignore
+ 
+@@ -876,7 +884,7 @@ async def from_connection_state(
+         hook: Optional[Callable[..., Coroutine[Any, Any, Any]]] = None,
+     ) -> Self:
+         """Creates a voice websocket for the :class:`VoiceClient`."""
+-        gateway = f'wss://{state.endpoint}/?v=4'
++        gateway = f'wss://{state.endpoint}/?v=8'
+         client = state.voice_client
+         http = client._state.http
+         socket = await http.ws_connect(gateway, compress=15)
+@@ -926,6 +934,7 @@ async def speak(self, state: SpeakingState = SpeakingState.voice) -> None:
+                 'delay': 0,
+                 'ssrc': self._connection.ssrc,
+             },
++            'seq': self.seq_ack,
+         }
+ 
+         await self.send_as_json(payload)
+@@ -934,6 +943,7 @@ async def received_message(self, msg: Dict[str, Any]) -> None:
+         _log.debug('Voice websocket frame received: %s', msg)
+         op = msg['op']
+         data = msg['d']  # According to Discord this key is always given
++        self.seq_ack = msg.get('seq', self.seq_ack)  # this key may not be given
+ 
+         if op == self.READY:
+             await self.initial_connection(data)
+diff --git voice_state.py voice_state.py
+index 956f639b8e0a..d3092d861e90 100644
+--- voice_state.py
++++ voice_state.py
+@@ -321,7 +321,7 @@ async def voice_server_update(self, data: VoiceServerUpdatePayload) -> None:
+             )
+             return
+ 
+-        self.endpoint, _, _ = endpoint.rpartition(':')
++        self.endpoint = endpoint
+         if self.endpoint.startswith('wss://'):
+             # Just in case, strip it off since we're going to add it later
+             self.endpoint = self.endpoint[6:]
+
+From 5e252286add411f1fd3ab4956c14326cdcb5a022 Mon Sep 17 00:00:00 2001
+From: DA-344 <108473820+DA-344@users.noreply.github.com>
+Date: Wed, 18 Jun 2025 12:32:43 +0200
+Subject: [PATCH 2/6] send seq_ack on resume payloads
+
+---
+ discord/gateway.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git gateway.py gateway.py
+index c54d2d5a0f3d..f88305f8d61f 100644
+--- gateway.py
++++ gateway.py
+@@ -858,6 +858,7 @@ async def resume(self) -> None:
+                 'token': state.token,
+                 'server_id': str(state.server_id),
+                 'session_id': state.session_id,
++                'seq_ack': self.seq_ack,
+             },
+         }
+         await self.send_as_json(payload)
+@@ -934,7 +935,6 @@ async def speak(self, state: SpeakingState = SpeakingState.voice) -> None:
+                 'delay': 0,
+                 'ssrc': self._connection.ssrc,
+             },
+-            'seq': self.seq_ack,
+         }
+ 
+         await self.send_as_json(payload)
+
+From b2613299160f102979376e44895f9e0d9dc5474c Mon Sep 17 00:00:00 2001
+From: DA-344 <108473820+DA-344@users.noreply.github.com>
+Date: Thu, 19 Jun 2025 09:36:36 +0200
+Subject: [PATCH 3/6] resume
+
+---
+ discord/gateway.py     |  2 +-
+ discord/voice_state.py | 19 +++++++++++++++++--
+ 2 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git gateway.py gateway.py
+index f88305f8d61f..2ed93f9b3c4c 100644
+--- gateway.py
++++ gateway.py
+@@ -943,7 +943,7 @@ async def received_message(self, msg: Dict[str, Any]) -> None:
+         _log.debug('Voice websocket frame received: %s', msg)
+         op = msg['op']
+         data = msg['d']  # According to Discord this key is always given
+-        self.seq_ack = msg.get('seq', self.seq_ack)  # this key may not be given
++        self.seq_ack = msg.get('seq', self.seq_ack)  # this key could not be given
+ 
+         if op == self.READY:
+             await self.initial_connection(data)
+diff --git voice_state.py voice_state.py
+index d3092d861e90..57cce010f8c0 100644
+--- voice_state.py
++++ voice_state.py
+@@ -603,8 +603,8 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
+                     # The following close codes are undocumented so I will document them here.
+                     # 1000 - normal closure (obviously)
+                     # 4014 - we were externally disconnected (voice channel deleted, we were moved, etc)
+-                    # 4015 - voice server has crashed
+-                    if exc.code in (1000, 4015):
++                    # 4015 - voice server has crashed, we should resume
++                    if exc.code == 1000:
+                         # Don't call disconnect a second time if the websocket closed from a disconnect call
+                         if not self._expecting_disconnect:
+                             _log.info('Disconnecting from voice normally, close code %d.', exc.code)
+@@ -631,6 +631,21 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
+                         else:
+                             continue
+ 
++                    if exc.code == 4015:
++                        try:
++                            await self._connect(
++                                reconnect=reconnect,
++                                timeout=self.timeout,
++                                self_deaf=(self.self_voice_state or self).self_deaf,
++                                self_mute=(self.self_voice_state or self).self_mute,
++                                resume=True,
++                            )
++                        except asyncio.TimeoutError:
++                            _log.warning('Could not resume the voice connection... Disconnecting...')
++                            if self.state is not ConnectionFlowState.disconnected:
++                                await self.disconnect()
++                            break
++
+                     _log.debug('Not handling close code %s (%s)', exc.code, exc.reason or 'no reason')
+ 
+                 if not reconnect:
+
+From 60b95327a4beb20ea8a5de9bd51b3b7e2666fa7e Mon Sep 17 00:00:00 2001
+From: DA-344 <108473820+DA-344@users.noreply.github.com>
+Date: Thu, 19 Jun 2025 09:37:05 +0200
+Subject: [PATCH 4/6] continue
+
+---
+ discord/voice_state.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git voice_state.py voice_state.py
+index 57cce010f8c0..a537890708e3 100644
+--- voice_state.py
++++ voice_state.py
+@@ -645,6 +645,8 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
+                             if self.state is not ConnectionFlowState.disconnected:
+                                 await self.disconnect()
+                             break
++                        else:
++                            continue
+ 
+                     _log.debug('Not handling close code %s (%s)', exc.code, exc.reason or 'no reason')
+ 
+
+From 482ae4b97891f5e70ea22d7cd84312db9985f72f Mon Sep 17 00:00:00 2001
+From: DA-344 <108473820+DA-344@users.noreply.github.com>
+Date: Thu, 19 Jun 2025 09:39:31 +0200
+Subject: [PATCH 5/6] logging
+
+---
+ discord/voice_state.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git voice_state.py voice_state.py
+index a537890708e3..d0996acdb2ab 100644
+--- voice_state.py
++++ voice_state.py
+@@ -632,6 +632,7 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
+                             continue
+ 
+                     if exc.code == 4015:
++                        _log.info('Disconnected from voice, attempting a resume...')
+                         try:
+                             await self._connect(
+                                 reconnect=reconnect,
+@@ -641,11 +642,12 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
+                                 resume=True,
+                             )
+                         except asyncio.TimeoutError:
+-                            _log.warning('Could not resume the voice connection... Disconnecting...')
++                            _log.info('Could not resume the voice connection... Disconnecting...')
+                             if self.state is not ConnectionFlowState.disconnected:
+                                 await self.disconnect()
+                             break
+                         else:
++                            _log.info('Successfully resumed voice connection')
+                             continue
+ 
+                     _log.debug('Not handling close code %s (%s)', exc.code, exc.reason or 'no reason')
+
+From 398bdbecd97eb2e05f91ddbf121ff0d200c039b5 Mon Sep 17 00:00:00 2001
+From: DA-344 <108473820+DA-344@users.noreply.github.com>
+Date: Thu, 19 Jun 2025 15:38:13 +0200
+Subject: [PATCH 6/6] carry over the seq_ack when resuming
+
+---
+ discord/gateway.py     | 2 ++
+ discord/voice_state.py | 5 ++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git gateway.py gateway.py
+index 2ed93f9b3c4c..a2c3da3d2d21 100644
+--- gateway.py
++++ gateway.py
+@@ -883,6 +883,7 @@ async def from_connection_state(
+         *,
+         resume: bool = False,
+         hook: Optional[Callable[..., Coroutine[Any, Any, Any]]] = None,
++        seq_ack: int = -1,
+     ) -> Self:
+         """Creates a voice websocket for the :class:`VoiceClient`."""
+         gateway = f'wss://{state.endpoint}/?v=8'
+@@ -891,6 +892,7 @@ async def from_connection_state(
+         socket = await http.ws_connect(gateway, compress=15)
+         ws = cls(socket, loop=client.loop, hook=hook)
+         ws.gateway = gateway
++        ws.seq_ack = seq_ack
+         ws._connection = state
+         ws._max_heartbeat_timeout = 60.0
+         ws.thread_id = threading.get_ident()
+diff --git voice_state.py voice_state.py
+index d0996acdb2ab..33247cd109d7 100644
+--- voice_state.py
++++ voice_state.py
+@@ -574,7 +574,10 @@ async def _voice_disconnect(self) -> None:
+         self._disconnected.clear()
+ 
+     async def _connect_websocket(self, resume: bool) -> DiscordVoiceWebSocket:
+-        ws = await DiscordVoiceWebSocket.from_connection_state(self, resume=resume, hook=self.hook)
++        seq_ack = -1
++        if self.ws is not MISSING:
++            seq_ack = self.ws.seq_ack
++        ws = await DiscordVoiceWebSocket.from_connection_state(self, resume=resume, hook=self.hook, seq_ack=seq_ack)
+         self.state = ConnectionFlowState.websocket_connected
+         return ws
+ 

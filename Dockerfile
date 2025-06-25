@@ -37,6 +37,7 @@ RUN groupadd -g "${GID}" -r bot \
 COPY --chown=bot:bot pyproject.toml uv.lock .python-version /code/
 
 RUN uv sync --frozen --all-extras
+RUN uv run pypatch apply patches/discord-py-10210.patch discord
 
 COPY --chown=bot:bot . /code
 
