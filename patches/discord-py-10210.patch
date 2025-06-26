@@ -278,3 +278,25 @@ index d0996acdb2ab..33247cd109d7 100644
          self.state = ConnectionFlowState.websocket_connected
          return ws
  
+From c0e8f87d755f35b0f14a7a05dadf33e8cb8d3b12 Mon Sep 17 00:00:00 2001
+From: beerpsi <beerpsi@duck.com>
+Date: Thu, 26 Jun 2025 17:17:35 +0700
+Subject: [PATCH 7/7] fix: don't try reconnecting on 4021/4022
+
+---
+ discord/voice_state.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git voice_state.py voice_state.py
+index 33247cd1..6d90d830 100644
+--- voice_state.py
++++ voice_state.py
+@@ -614,7 +614,7 @@ class VoiceConnectionState:
+                             await self.disconnect()
+                         break
+ 
+-                    if exc.code == 4014:
++                    if exc.code in (4014, 4021, 4022):
+                         # We were disconnected by discord
+                         # This condition is a race between the main ws event and the voice ws closing
+                         if self._disconnected.is_set():
