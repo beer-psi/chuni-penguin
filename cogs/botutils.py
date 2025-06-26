@@ -85,7 +85,9 @@ class KeiyoushiUserAgents(msgspec.Struct):
 class UtilsCog(commands.Cog, name="Utils"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.alias_cache: list[CachedAlias] = []
+
+        # guild_id: list of aliases
+        self.alias_cache: dict[int, list[CachedAlias]] = {}
 
         self.user_agents: KeiyoushiUserAgents = MISSING
 
@@ -146,6 +148,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         self.alias_cache.clear()
 
         titles = set()
+        global_aliases = self.alias_cache.setdefault(-1, [])
 
         for song in songs:
             if song.title in titles:
@@ -153,12 +156,14 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             titles.add(song.title)
 
-            self.alias_cache.append(
+            global_aliases.append(
                 CachedAlias(None, song.title, song.title, song.id, -1)
             )
 
             for alias in song.aliases:
-                self.alias_cache.append(
+                guild_aliases = self.alias_cache.setdefault(alias.guild_id, [])
+
+                guild_aliases.append(
                     CachedAlias(
                         alias.rowid,
                         alias.alias,
@@ -465,9 +470,14 @@ class UtilsCog(commands.Cog, name="Utils"):
         tuple[Song, Alias | None, float]
             The third item is the similarity of the matched song.
         """
-        aliases = [
-            x for x in self.alias_cache if x.guild_id == -1 or x.guild_id == guild_id
-        ]
+        aliases = self.alias_cache[-1].copy()
+
+        if (
+            guild_id is not None
+            and (guild_aliases := self.alias_cache.get(guild_id)) is not None
+        ):
+            aliases.extend(guild_aliases)
+
         (_, similarity, index) = process.extractOne(
             query,
             [x.alias for x in aliases],
@@ -504,7 +514,14 @@ class UtilsCog(commands.Cog, name="Utils"):
         load_charts: bool = False,
         load_global_aliases: bool = False,
     ) -> SongSearchResult:
-        aliases = [x for x in self.alias_cache if x.guild_id in {-1, guild_id}]
+        aliases = self.alias_cache[-1].copy()
+
+        if (
+            guild_id is not None
+            and (guild_aliases := self.alias_cache.get(guild_id)) is not None
+        ):
+            aliases.extend(guild_aliases)
+
         (_, similarity, index) = process.extractOne(
             query,
             [x.alias for x in aliases],

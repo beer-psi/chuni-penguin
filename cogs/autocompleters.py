@@ -25,12 +25,13 @@ class AutocompletersCog(commands.Cog, name="Autocompleters"):
         if len(current) < 3:
             return []
 
-        aliases = [
-            x
-            for x in self.utils.alias_cache
-            if x.guild_id == -1
-            or (interaction.guild is None or x.guild_id == interaction.guild.id)
-        ]
+        aliases = self.utils.alias_cache[-1].copy()
+
+        if (guild_id := interaction.guild_id) is not None and (
+            guild_aliases := self.utils.alias_cache.get(guild_id)
+        ) is not None:
+            aliases.extend(guild_aliases)
+
         results = process.extract(
             current,
             [x.alias for x in aliases],

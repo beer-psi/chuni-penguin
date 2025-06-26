@@ -372,8 +372,10 @@ class SearchCog(commands.Cog, name="Search"):
         async with ctx.typing():
             await self.utils._reload_alias_cache()
 
+            alias_count = sum([len(x) for x in self.utils.alias_cache.values()])
+
             await ctx.reply(
-                content=f"Loaded {len(self.utils.alias_cache)} aliases into memory.",
+                content=f"Loaded {alias_count} aliases into memory.",
                 mention_author=False,
             )
 
