@@ -38,7 +38,7 @@ COPY --chown=bot:bot pyproject.toml uv.lock .python-version /code/
 RUN uv sync --frozen --all-extras --no-group dev --no-group test
 
 COPY --chown=bot:bot patches /code/patches
-RUN uv run pypatch apply patches/discord-py-10210.patch discord
+RUN /code/.venv/bin/pypatch apply patches/discord-py-10210.patch discord
 
 COPY --chown=bot:bot . /code
 
