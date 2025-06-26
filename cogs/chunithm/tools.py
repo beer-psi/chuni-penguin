@@ -808,36 +808,72 @@ class ToolsCog(commands.Cog, name="Tools"):
                 )
 
                 guild_id = ctx.guild.id if ctx.guild else None
-                song, alias, similarity = await self.utils.find_song(
-                    query, guild_id=guild_id, worlds_end=False
-                )
-                if song is None or similarity < SIMILARITY_THRESHOLD:
-                    await ctx.reply(
-                        did_you_mean_text(ctx.prefix, song, alias), mention_author=False
-                    )
-                    return
-
-                stmt = (
-                    select(Chart)
-                    .where(
-                        (Chart.song == song)
-                        & (Chart.difficulty == difficulty.short_form())
-                    )
-                    .limit(1)
-                    .options(
-                        joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
-                    )
+                result = await self.utils.find_songs(
+                    query, guild_id=guild_id, load_charts=True
                 )
 
-                async with self.bot.begin_db_session() as session:
-                    chart = (await session.execute(stmt)).scalar_one_or_none()
-
-                if chart is None:
+                if result.similarity < SIMILARITY_THRESHOLD:
                     await ctx.reply(
-                        "No charts found. Make sure you specified a valid chart difficulty (BAS/ADV/EXP/MAS/ULT).",
+                        did_you_mean_text(
+                            ctx.prefix, result.songs[0], result.matched_alias
+                        ),
                         mention_author=False,
                     )
                     return
+
+                song_ids = {s.id for s in result.songs}
+
+                async with self.bot.begin_db_session() as session:
+                    stmt = (
+                        select(Chart)
+                        .where(
+                            (Chart.song_id.in_(song_ids))
+                            & (Chart.difficulty == difficulty.short_form())
+                        )
+                        .options(
+                            joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
+                        )
+                    )
+                    charts = (await session.execute(stmt)).scalars().all()
+
+                if len(charts) == 0:
+                    msg = f"No charts found for {escape_markdown(result.songs[0].title)} [{difficulty}]."
+                    raise commands.CommandError(msg)
+
+                if len(charts) == 1:
+                    chart = charts[0]
+                    song = chart.song
+                    select_msg = None
+                else:
+                    view = SelectToCompareView(
+                        ctx,
+                        [
+                            (
+                                f"{x.song.title} [{Difficulty.from_short_form(x.difficulty)} {x.const or x.level}]",
+                                i,
+                            )
+                            for i, x in enumerate(charts)
+                        ],
+                        placeholder="Select a chart...",
+                    )
+                    select_msg = await ctx.reply(
+                        "Select a chart to view rank borders for:",
+                        view=view,
+                        mention_author=False,
+                    )
+
+                    await view.wait()
+
+                    if view.value is None:
+                        await select_msg.edit(
+                            content="Timed out before selecting a chart.",
+                            view=None,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
+                        return
+
+                    chart = charts[int(view.value)]
+                    song = chart.song
 
                 if chart.maxcombo is None:
                     await ctx.reply(
@@ -875,7 +911,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         Parameters
         ----------
         difficulty: str
-            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT).
+            Chart difficulty to search for.
         query: str
             Song title to search for. You don't have to be exact; try things out!
         """

@@ -2036,34 +2036,80 @@ class RecordsCog(commands.Cog, name="Records"):
         """
         async with ctx.typing(), self.utils.chuninet(ctx) as client:
             guild_id = ctx.guild.id if ctx.guild else None
-            song, alias, similarity = await self.utils.find_song(
-                query, guild_id=guild_id, worlds_end=False
+            result = await self.utils.find_songs(
+                query, guild_id=guild_id, load_charts=True
             )
 
-            if song is None or similarity < SIMILARITY_THRESHOLD:
+            if result.similarity < SIMILARITY_THRESHOLD:
                 await ctx.reply(
-                    did_you_mean_text(ctx.prefix, song, alias), mention_author=False
+                    did_you_mean_text(
+                        ctx.prefix, result.songs[0], result.matched_alias
+                    ),
+                    mention_author=False,
                 )
                 return
 
-            song.raise_if_not_available()
+            song_ids = {s.id for s in result.songs}
 
             async with self.bot.begin_db_session() as session:
                 stmt = (
                     select(Chart)
                     .where(
-                        (Chart.song_id == song.id)
+                        (Chart.song_id.in_(song_ids))
                         & (Chart.difficulty == difficulty.short_form())
                     )
                     .options(
                         joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
                     )
                 )
-                chart = (await session.execute(stmt)).scalar_one_or_none()
+                charts = (await session.execute(stmt)).scalars().all()
+
+            if len(charts) == 0:
+                msg = f"No charts found for {escape_markdown(result.songs[0].title)} [{difficulty}]."
+                raise commands.CommandError(msg)
+
+            if len(charts) == 1:
+                chart = charts[0]
+                song = chart.song
+                select_msg = None
+            else:
+                view = SelectToCompareView(
+                    ctx,
+                    [
+                        (
+                            f"{x.song.title} [{Difficulty.from_short_form(x.difficulty)} {x.const or x.level}]",
+                            i,
+                        )
+                        for i, x in enumerate(charts)
+                    ],
+                    placeholder="Select a chart...",
+                )
+                select_msg = await ctx.reply(
+                    "Select a chart to see leaderboard for:",
+                    view=view,
+                    mention_author=False,
+                )
+
+                await view.wait()
+
+                if view.value is None:
+                    await select_msg.edit(
+                        content="Timed out before selecting a chart.",
+                        view=None,
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
+                    return
+
+                chart = charts[int(view.value)]
+                song = chart.song
 
             leaderboard = await client.music_leaderboard(song.id, difficulty)
             view = LeaderboardView(ctx, leaderboard, song, difficulty, chart)
-            await view.start()
+
+            if select_msg is not None:
+                await view.start_from(select_msg, content="")
+            else:
+                await view.start()
 
 
 async def setup(bot: "ChuniBot"):

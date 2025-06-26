@@ -313,17 +313,27 @@ class ChuniNet:
         )
 
     async def music_leaderboard(self, idx: int, difficulty: Difficulty):
-        soup = await self._request_soup(
-            "POST",
-            "mobile/ranking/sendRankingDetail/",
-            data={
-                "diff": difficulty.value,
-                "idx": idx,
-                # "category" seems to not be required
-                "genre": "99",
-                "token": self._token,
-            },
-        )
+        if idx >= 8000:
+            soup = await self._request_soup(
+                "POST",
+                "mobile/ranking/worldsEnd/sendWorldsEndRankingDetail/",
+                data={
+                    "idx": idx,
+                    "token": self._token,
+                },
+            )
+        else:
+            soup = await self._request_soup(
+                "POST",
+                "mobile/ranking/sendRankingDetail/",
+                data={
+                    "diff": difficulty.value,
+                    "idx": idx,
+                    # "category" seems to not be required
+                    "genre": "99",
+                    "token": self._token,
+                },
+            )
 
         updated_at_elem = soup.select_one(".ranking_update")
 
