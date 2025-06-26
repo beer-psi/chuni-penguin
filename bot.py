@@ -161,7 +161,7 @@ class ChuniBot(commands.AutoShardedBot):
         )
 
         # Setup login web server (if enabled)
-        if config.web.enable:
+        if config.web.enable and (self.shard_id is None or self.shard_id == 0):
             self.app = init_app(
                 self,
                 goatcounter=config.web.goatcounter,
