@@ -927,6 +927,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                         )
                         for i, x in enumerate(charts)
                     ],
+                    placeholder="Select a chart...",
                 )
                 select_msg = await ctx.reply(
                     "Select a chart to see chart view for:",
