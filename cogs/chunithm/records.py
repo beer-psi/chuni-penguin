@@ -2103,6 +2103,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 chart = charts[int(view.value)]
                 song = chart.song
 
+            song.raise_if_not_available()
+
             leaderboard = await client.music_leaderboard(song.id, difficulty)
             view = LeaderboardView(ctx, leaderboard, song, difficulty, chart)
 
