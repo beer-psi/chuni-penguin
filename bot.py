@@ -293,7 +293,9 @@ class ChuniBot(commands.AutoShardedBot):
                     )
                 )
 
-        await asyncio.wait(timeout_tasks)
+        if len(timeout_tasks) > 0:
+            await asyncio.wait(timeout_tasks)
+
         await asyncio.gather(
             self._close_web(),
             self._close_database(),
