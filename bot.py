@@ -280,6 +280,20 @@ class ChuniBot(commands.AutoShardedBot):
     async def close(self) -> None:
         await self._close_games()
 
+        timeout_tasks: set[asyncio.Task] = set()
+
+        for view in self._connection._view_store._synced_message_views.values():
+            if view.is_finished():
+                continue
+
+            if view.timeout is not None:
+                timeout_tasks.add(
+                    asyncio.create_task(
+                        view.on_timeout(), name=f"discord-ui-view-timeout-{view.id}"
+                    )
+                )
+
+        await asyncio.wait(timeout_tasks)
         await asyncio.gather(
             self._close_web(),
             self._close_database(),
