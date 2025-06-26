@@ -307,12 +307,17 @@ class ChuniBot(commands.AutoShardedBot):
 
 def guild_specific_prefix(default: str):
     async def inner(bot: ChuniBot, msg: discord.Message) -> list[str]:
-        when_mentioned = commands.when_mentioned(bot, msg)
+        prefixes = commands.when_mentioned(bot, msg)
 
         if msg.guild is None:
-            return [*when_mentioned, default]
+            prefixes.append(default)
+        else:
+            prefixes.append(bot.prefixes.get(msg.guild.id, default))
 
-        return [*when_mentioned, bot.prefixes.get(msg.guild.id, default)]
+            if (role := msg.guild.self_role) is not None:
+                prefixes.append(role.mention)
+
+        return prefixes
 
     return inner
 
