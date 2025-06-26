@@ -210,9 +210,6 @@ class ChuniBot(commands.AutoShardedBot):
                     exc_info=e,
                 )
 
-        if config.dangerous.dev:
-            await self.load_extension("cogs.hotreload")
-
         tree = cast(VersionableCommandTree, self.tree)
         current_tree_hash = await tree.get_hash()
 

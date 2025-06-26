@@ -41,6 +41,7 @@ from utils.converters import DifficultyConverter
 from utils.kamaitachi import convert_kt_pbs_to_records
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
+from utils.views.select_to_compare import SelectToCompareView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -857,6 +858,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             app_commands.Choice(name="EXPERT", value="EXPERT"),
             app_commands.Choice(name="MASTER", value="MASTER"),
             app_commands.Choice(name="ULTIMA", value="ULTIMA"),
+            app_commands.Choice(name="WORLD'S END", value="WORLD'S END"),
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
@@ -880,34 +882,70 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         async with ctx.typing():
             guild_id = ctx.guild.id if ctx.guild else None
-            song, alias, similarity = await self.utils.find_song(
-                query, guild_id=guild_id, worlds_end=False
+            result = await self.utils.find_songs(
+                query, guild_id=guild_id, load_charts=True
             )
 
-            if song is None or similarity < SIMILARITY_THRESHOLD:
+            if result.similarity < SIMILARITY_THRESHOLD:
                 return await ctx.reply(
-                    did_you_mean_text(ctx.prefix, song, alias), mention_author=False
+                    did_you_mean_text(
+                        ctx.prefix, result.songs[0], result.matched_alias
+                    ),
+                    mention_author=False,
                 )
+
+            song_ids = {s.id for s in result.songs}
 
             async with self.bot.begin_db_session() as session:
                 stmt = (
                     select(Chart)
                     .where(
-                        (Chart.song == song)
+                        (Chart.song_id.in_(song_ids))
                         & (Chart.difficulty == difficulty.short_form())
                     )
-                    .limit(1)
                     .options(
                         joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
                     )
                 )
-                chart = (await session.execute(stmt)).scalar_one_or_none()
+                charts = (await session.execute(stmt)).scalars().all()
 
-            if chart is None:
-                msg = (
-                    f"No charts found for {escape_markdown(song.title)} [{difficulty}]."
-                )
+            if len(charts) == 0:
+                msg = f"No charts found for {escape_markdown(result.songs[0].title)} [{difficulty}]."
                 raise commands.CommandError(msg)
+
+            if len(charts) == 1:
+                chart = charts[0]
+                song = chart.song
+                select_msg = None
+            else:
+                view = SelectToCompareView(
+                    ctx,
+                    [
+                        (
+                            f"{x.song.title} [{Difficulty.from_short_form(x.difficulty)} {x.const or x.level}]",
+                            i,
+                        )
+                        for i, x in enumerate(charts)
+                    ],
+                )
+                select_msg = await ctx.reply(
+                    "Select a chart to see chart view for:",
+                    view=view,
+                    mention_author=False,
+                )
+
+                await view.wait()
+
+                if view.value is None:
+                    await select_msg.edit(
+                        content="Timed out before selecting a chart.",
+                        view=None,
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
+                    return None
+
+                chart = charts[int(view.value)]
+                song = chart.song
 
             chart_display_name = f"{escape_markdown(song.title)} [{difficulty} {chart.const or chart.level}]"
 
@@ -917,7 +955,13 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             sdvxin_id = chart.sdvxin_chart_view.id
 
-            if chart.difficulty == "ULT":
+            if chart.difficulty == "WE":
+                end_index = chart.sdvxin_chart_view.end_index
+
+                bg_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bg.png"
+                data_url = f"https://sdvx.in/chunithm/end/obj/data{sdvxin_id}end{end_index}.png"
+                bar_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bar.png"
+            elif chart.difficulty == "ULT":
                 bg_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
                 data_url = f"https://sdvx.in/chunithm/ult/obj/data{sdvxin_id}ult.png"
                 bar_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
@@ -953,7 +997,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             )
             content = (
                 f"**{chart_display_name}**\n"
-                f"CHAIN: {chart.maxcombo} / TAP: {chart.tap} / HOLD: {chart.hold} / SLIDE: {chart.slide} / AIR: {chart.air} / FLICK: {chart.flick}\n"
+                f"CHAIN: {chart.maxcombo or '-'} / TAP: {chart.tap or '-'} / HOLD: {chart.hold or '-'} / SLIDE: {chart.slide or '-'} / AIR: {chart.air or '-'} / FLICK: {chart.flick or '-'}\n"
             )
 
             if chart.charter is not None:
@@ -967,7 +1011,14 @@ class ToolsCog(commands.Cog, name="Tools"):
                 description=f"Chart view for {chart_display_name}",
             )
 
-            await ctx.reply(content=content, file=file, mention_author=False)
+            if select_msg is None:
+                await ctx.reply(content=content, file=file, mention_author=False)
+            else:
+                await select_msg.edit(
+                    content=content,
+                    attachments=[file],
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
 
             return None
 

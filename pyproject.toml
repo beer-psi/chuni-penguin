@@ -39,6 +39,7 @@ dev = [
     "jishaku>=2.5.2",
     "ruff>=0.6.9",
     "basedpyright>=1.19.0",
+    "jurigged>=0.6.1",
 ]
 test = [
     "pytest>=8.3.3",
