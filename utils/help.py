@@ -1,4 +1,5 @@
-from typing import Any, List, Mapping, Optional, override
+import re
+from typing import TYPE_CHECKING, Any, List, Mapping, Optional, cast, override
 
 import discord
 from discord.ext import commands
@@ -6,9 +7,27 @@ from discord.ext.commands import Cog, Command, Group
 
 from utils.config import config
 
+if TYPE_CHECKING:
+    from bot import ChuniBot
+
+MENTION_PREFIX_RE = re.compile(r"<@[!&]?\d+>")
+
 
 class HelpCommand(commands.HelpCommand):
     COLOUR = discord.Colour.yellow()
+
+    @property
+    def prefix(self):
+        prefix = self.context.prefix
+
+        if prefix is None or MENTION_PREFIX_RE.match(prefix):
+            if (guild := self.context.guild) is not None:
+                return cast("ChuniBot", self.context.bot).prefixes.get(
+                    guild.id, config.bot.default_prefix
+                )
+            return config.bot.default_prefix
+
+        return prefix
 
     async def send_bot_help(
         self, mapping: Mapping[Optional[Cog], List[Command[Any, ..., Any]]], /
@@ -18,10 +37,8 @@ class HelpCommand(commands.HelpCommand):
 
         assert bot.user is not None
 
-        prefix = ctx.prefix or config.bot.default_prefix
-
         footer_items = [
-            f"Use {prefix}help <command> for more info on a command.",
+            f"Use {self.prefix}help <command> for more info on a command.",
             "Source code: https://github.com/beer-psi/chuni-penguin",
         ]
 
@@ -55,11 +72,10 @@ class HelpCommand(commands.HelpCommand):
         return await super().send_bot_help(mapping)
 
     async def send_command_help(self, command: Command[Any, ..., Any], /) -> None:
-        ctx = self.context
-        prefix = ctx.prefix or config.bot.default_prefix
-
         embed = discord.Embed(color=self.COLOUR)
-        embed.description = f"```{prefix}{command.qualified_name}```\n{command.help}"
+        embed.description = (
+            f"```{self.prefix}{command.qualified_name}```\n{command.help}"
+        )
 
         params = command.clean_params.values()
         if params:
@@ -81,11 +97,8 @@ class HelpCommand(commands.HelpCommand):
 
     @override
     async def send_group_help(self, group: Group[Any, ..., Any], /) -> None:
-        ctx = self.context
-        prefix = ctx.prefix or config.bot.default_prefix
-
         embed = discord.Embed(color=self.COLOUR)
-        embed.description = f"```{prefix}{group.qualified_name}```\n{group.help}"
+        embed.description = f"```{self.prefix}{group.qualified_name}```\n{group.help}"
 
         params = group.clean_params.values()
         if params:
