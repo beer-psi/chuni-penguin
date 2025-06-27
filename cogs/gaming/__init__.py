@@ -357,8 +357,6 @@ class GamingCog(commands.Cog, name="Games"):
     @guess.command("leaderboard", aliases=["lb"])
     @logged_prefix_command
     async def guess_leaderboard(self, ctx: PenguinGuildContext):
-        assert ctx.guild is not None
-
         async with ctx.typing():
             view = GuessLeaderboardView(ctx)
             await view.start()
