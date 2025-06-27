@@ -3,7 +3,7 @@ import io
 import sys
 from dataclasses import dataclass
 from http.cookiejar import LWPCookieJar
-from typing import TYPE_CHECKING, Optional, Sequence, TypeVar
+from typing import TYPE_CHECKING, Literal, Optional, Sequence, TypeVar
 
 import httpx
 import msgspec
@@ -181,6 +181,32 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         return self.bot.prefixes.get(ctx.guild.id, default_prefix)
 
+    def _get_not_logged_in_message(
+        self,
+        network: Literal["kamaitachi", "chuninet"] | None,
+        author_id: int,
+        target_id: int,
+        *,
+        is_interaction: bool,
+    ):
+        if network == "kamaitachi":
+            network_name = " to Kamaitachi"
+            command_name = "kamaitachi link"
+        elif network == "chuninet":
+            network_name = " to CHUNITHM-NET"
+            command_name = "login"
+        elif network is None:
+            network_name = ""
+            command_name = "login"
+        else:
+            msg = f"Unknown network: {network}"
+            raise ValueError(msg)
+
+        if author_id == target_id:
+            return f"You are not logged in{network_name}. Please send `{'/' if is_interaction else config.bot.default_prefix}{command_name}` in my DMs to log in."
+
+        return f"<@{target_id}> is not logged in{network_name}."
+
     async def login_check(
         self,
         author_id: int,
@@ -193,8 +219,10 @@ class UtilsCog(commands.Cog, name="Utils"):
         user_config = await self.fetch_user_config(target_id)
 
         if clal is None or (user_config.privacy_mode and author_id != target_id):
-            logged_out_msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
-            raise commands.CommandError(logged_out_msg)
+            msg = self._get_not_logged_in_message(
+                "chuninet", author_id, target_id, is_interaction=is_interaction
+            )
+            raise commands.CommandError(msg)
 
         return clal
 
@@ -228,8 +256,10 @@ class UtilsCog(commands.Cog, name="Utils"):
         user_config = await self.fetch_user_config(target_id)
 
         if user_config.privacy_mode and author_id != target_id:
-            logged_out_msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
-            raise commands.CommandError(logged_out_msg)
+            msg = self._get_not_logged_in_message(
+                "chuninet", author_id, target_id, is_interaction=is_interaction
+            )
+            raise commands.CommandError(msg)
 
         if (
             target_id in self._chuni_net_sessions
@@ -245,8 +275,10 @@ class UtilsCog(commands.Cog, name="Utils"):
             jar = await self.fetch_cookie(target_id)
 
             if jar is None:
-                logged_out_msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
-                raise commands.CommandError(logged_out_msg)
+                msg = self._get_not_logged_in_message(
+                    "chuninet", author_id, target_id, is_interaction=is_interaction
+                )
+                raise commands.CommandError(msg)
 
             session = ChuniNet(jar)
             refcount = 0
@@ -298,7 +330,9 @@ class UtilsCog(commands.Cog, name="Utils"):
                 or cookie.kamaitachi_token is None
                 or (user_config.privacy_mode and author_id != target_id)
             ):
-                msg = f"You have not linked your Kamaitachi account. Please send `{'/' if is_interaction else config.bot.default_prefix}kamaitachi link` in my DMs to get started."
+                msg = msg = self._get_not_logged_in_message(
+                    "kamaitachi", author_id, target_id, is_interaction=is_interaction
+                )
                 raise commands.CommandError(msg)
 
         client = httpx.AsyncClient(
@@ -331,12 +365,19 @@ class UtilsCog(commands.Cog, name="Utils"):
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
             if cookie is None or (user_config.privacy_mode and author_id != target_id):
-                msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
+                msg = self._get_not_logged_in_message(
+                    None, author_id, target_id, is_interaction=is_interaction
+                )
                 raise commands.CommandError(msg)
 
             if kamaitachi:
                 if cookie.kamaitachi_token is None:
-                    msg = f"You have not linked your Kamaitachi account. Please send `{'/' if is_interaction else config.bot.default_prefix}kamaitachi link` in my DMs to get started."
+                    msg = self._get_not_logged_in_message(
+                        "kamaitachi",
+                        author_id,
+                        target_id,
+                        is_interaction=is_interaction,
+                    )
                     raise commands.CommandError(msg)
 
                 return "kamaitachi"
@@ -347,7 +388,9 @@ class UtilsCog(commands.Cog, name="Utils"):
             if cookie.kamaitachi_token is not None:
                 return "kamaitachi"
 
-            msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
+            msg = self._get_not_logged_in_message(
+                None, author_id, target_id, is_interaction=is_interaction
+            )
             raise commands.CommandError(msg)
 
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
