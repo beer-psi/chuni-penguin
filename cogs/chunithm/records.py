@@ -1541,7 +1541,6 @@ class RecordsCog(commands.Cog, name="Records"):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
         user="The user to get best50 for",
-        image="Render an image of your best 50 scores",
         classic="View your best 50 scores using Discord embeds instead of an image",
         kamaitachi="Get your best 50 from Kamaitachi if linked",
         new_rating="(Kamaitachi) Calculates best30+new20 instead of best50",
@@ -1553,7 +1552,6 @@ class RecordsCog(commands.Cog, name="Records"):
         interaction: Interaction,
         user: discord.User | discord.Member | None = None,
         *,
-        image: bool | None = None,
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
@@ -1563,7 +1561,6 @@ class RecordsCog(commands.Cog, name="Records"):
         await self._best50_inner(
             ctx,
             user,
-            image=image,
             classic=classic,
             kamaitachi=kamaitachi,
             new_rating=new_rating,
