@@ -1156,6 +1156,7 @@ class RecordsCog(commands.Cog, name="Records"):
                             msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
 
                         await ctx.respond_or_edit(msg)
+                        return None
 
                     network = " on Kamaitachi"
                     records = await self.utils.hydrate_records(records)
