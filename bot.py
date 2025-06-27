@@ -330,7 +330,7 @@ def guild_specific_prefix(default: str):
             prefixes.append(bot.prefixes.get(msg.guild.id, default))
 
             if (role := msg.guild.self_role) is not None:
-                prefixes.append(role.mention)
+                prefixes.append(f"{role.mention} ")
 
         return prefixes
 
