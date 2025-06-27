@@ -114,6 +114,8 @@ class EventsCog(commands.Cog, name="Events"):
                     embed.description, delete_after=delete_after, view=None
                 )
 
+            return
+
         await logger.aexception(
             "Unhandled exception in command",
             tag="command_error",
