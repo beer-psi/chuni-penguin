@@ -18,12 +18,7 @@ class HelpCommand(commands.HelpCommand):
 
         assert bot.user is not None
 
-        prefix = next(
-            iter(
-                set(await bot.get_prefix(ctx.message))
-                - set(when_mentioned(bot, ctx.message))
-            )
-        )
+        prefix = ctx.prefix or config.bot.default_prefix
 
         footer_items = [
             f"Use {prefix}help <command> for more info on a command.",
