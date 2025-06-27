@@ -15,6 +15,7 @@ from chunithm_net.models.enums import Difficulty, Genres
 from database.models import GuessScore
 from utils import shlex_split
 from utils.argparse import DiscordArguments
+from utils.context import PenguinGuildContext
 from utils.converters import DifficultyConverter, GenreConverter
 from utils.logging import logged_prefix_command, logger
 from utils.views.gaming import GuessLeaderboardView, RetryGameButton
@@ -224,7 +225,7 @@ class GamingCog(commands.Cog, name="Games"):
     @commands.guild_only()
     @guess.command("voice")
     @logged_prefix_command
-    async def guess_voice(self, ctx: Context, *, arguments: str = ""):
+    async def guess_voice(self, ctx: PenguinGuildContext, *, arguments: str = ""):
         """Starts an audio guessing game in a voice call.
 
         **Parameters**
@@ -241,8 +242,6 @@ class GamingCog(commands.Cog, name="Games"):
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
         """
-
-        assert isinstance(ctx.author, discord.Member)
 
         if self.shutting_down:
             msg = "I am currently pending a restart. No new games can be started."
@@ -357,7 +356,7 @@ class GamingCog(commands.Cog, name="Games"):
     @commands.guild_only()
     @guess.command("leaderboard", aliases=["lb"])
     @logged_prefix_command
-    async def guess_leaderboard(self, ctx: Context):
+    async def guess_leaderboard(self, ctx: PenguinGuildContext):
         assert ctx.guild is not None
 
         async with ctx.typing():
@@ -368,13 +367,11 @@ class GamingCog(commands.Cog, name="Games"):
     @commands.has_permissions(manage_guild=True)
     @guess.command("reset")
     @logged_prefix_command
-    async def guess_reset(self, ctx: Context):
+    async def guess_reset(self, ctx: PenguinGuildContext):
         """Resets the guess leaderboard for this server.
 
         The user calling this command must have the Manage Server permission.
         """
-
-        assert ctx.guild is not None
 
         async with self.bot.begin_db_session() as session:
             await session.execute(

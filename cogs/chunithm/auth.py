@@ -13,8 +13,9 @@ from sqlalchemy import update
 from chunithm_net import ChuniNet
 from chunithm_net.exceptions import ChuniNetException, InvalidTokenException
 from database.models import Cookie
-from utils import asuppress
 from utils.config import config
+from utils.context import PenguinContext
+from utils.context_manager import asuppress
 from utils.logging import logged_app_command, logged_prefix_command, logger
 from utils.views.login import LoginFlowView
 
@@ -108,7 +109,7 @@ class AuthCog(commands.Cog, name="Auth"):
 
     @commands.hybrid_command("login")
     @logged_prefix_command
-    async def login(self, ctx: Context, clal: Optional[str] = None):
+    async def login(self, ctx: PenguinContext, clal: Optional[str] = None):
         """Link with your CHUNITHM-NET account.
 
         Parameters
@@ -165,7 +166,7 @@ class AuthCog(commands.Cog, name="Auth"):
                 else await ctx.author.create_dm()
             )
 
-            await ctx.send(
+            await ctx.respond_or_edit(
                 f"Login instructions have been sent to your DMs. {please_delete_message}"
                 "(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)"
             )

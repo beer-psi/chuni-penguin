@@ -13,6 +13,7 @@ from chunithm_net.models.enums import Difficulty
 from chunithm_net.models.record import DetailedRecentRecord, Record
 from database.models import Cookie
 from utils.config import config
+from utils.context import PenguinContext
 from utils.kamaitachi import (
     KTBatchManualResponse,
     KTImportPollStatusCompleted,
@@ -90,7 +91,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
 
     @kamaitachi.command("link", aliases=["login"])
     @logged_prefix_command
-    async def kamaitachi_link(self, ctx: Context, token: Optional[str] = None):
+    async def kamaitachi_link(self, ctx: PenguinContext, token: Optional[str] = None):
         async with self.bot.begin_db_session() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
@@ -117,7 +118,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
 
                     please_delete_message = "Please delete the original command. Why are you exposing your API keys?"
 
-            await ctx.send(
+            await ctx.respond_or_edit(
                 f"Login instructions have been sent to your DMs. {please_delete_message}"
                 "(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)"
             )
@@ -146,10 +147,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                             f"before syncing your personal bests with `{ctx.prefix}kamaitachi sync pb`.**"
                         )
 
-            return await ctx.reply(
-                content=content,
-                mention_author=False,
-            )
+            return await ctx.reply(content=content, mention_author=False)
 
         embed = discord.Embed(
             title="Link with Kamaitachi",
@@ -193,7 +191,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
     @kamaitachi.command("sync", aliases=["s"])
     @logged_prefix_command
     async def kamaitachi_sync(
-        self, ctx: Context, sync: Literal["recent", "pb"] = "recent"
+        self, ctx: PenguinContext, sync: Literal["recent", "pb"] = "recent"
     ):
         """Sync scores from CHUNITHM-NET International with Kamaitachi.
 
@@ -217,9 +215,9 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             raise commands.CommandError(msg)
 
         scores = []
-        message = await ctx.reply(
-            "Fetching scores from CHUNITHM-NET...", mention_author=False
-        )
+
+        await ctx.respond_or_edit("Fetching scores from CHUNITHM-NET...")
+
         async with (
             self.utils.chuninet(ctx) as chuni_client,
             httpx.AsyncClient() as tachi_client,
@@ -241,9 +239,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     scores.append(detailed_recent)
 
                     if len(scores) % 10 == 0:
-                        await message.edit(
-                            content=f"Fetching recent scores from CHUNITHM-NET... {len(scores)}/{len(recents)}",
-                            allowed_mentions=discord.AllowedMentions.none(),
+                        await ctx.respond_or_edit(
+                            f"Fetching recent scores from CHUNITHM-NET... {len(scores)}/{len(recents)}"
                         )
             elif sync == "pb":
                 for difficulty in Difficulty:
@@ -251,10 +248,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                         # Kamaitachi does not accept WORLD'S END scores
                         continue
 
-                    await message.edit(
-                        content=f"Fetching {difficulty} scores...",
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
+                    await ctx.respond_or_edit(f"Fetching {difficulty} scores...")
 
                     records = await chuni_client.music_record_by_folder(
                         difficulty=difficulty
@@ -262,7 +256,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
 
                     scores.extend(records)
 
-            await message.edit(content="Uploading scores to Kamaitachi...")
+            await ctx.respond_or_edit("Uploading scores to Kamaitachi...")
 
             batch_manual = convert_to_kt_batch_manual(profile, scores)
 
@@ -277,8 +271,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             data = msgspec.json.decode(resp.content, type=KTBatchManualResponse)
 
             if not data.success:
-                return await message.edit(
-                    content=f"Failed to upload scores to Kamaitachi: {data.description}"
+                return await ctx.respond_or_edit(
+                    f"Failed to upload scores to Kamaitachi: {data.description}"
                 )
 
             assert data.body is not None
@@ -292,18 +286,18 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                 )
 
                 if not data.success:
-                    return await message.edit(
-                        content=f"Failed to upload scores to Kamaitachi: {data.description}"
+                    return await ctx.respond_or_edit(
+                        f"Failed to upload scores to Kamaitachi: {data.description}"
                     )
 
                 if isinstance(data.body, KTImportPollStatusOngoing):
                     if isinstance(data.body.progress, int):
-                        await message.edit(
-                            content=f"Importing scores: {data.description}"
+                        await ctx.respond_or_edit(
+                            f"Importing scores: {data.description}"
                         )
                     else:
-                        await message.edit(
-                            content=(
+                        await ctx.respond_or_edit(
+                            (
                                 f"Importing scores: {data.description}\n"
                                 f"Progress: {data.body.progress.description}"
                             )
@@ -329,7 +323,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                             "of playcount and judgements."
                         )
 
-                    return await message.edit(content=msg)
+                    return await ctx.respond_or_edit(msg)
 
 
 async def setup(bot: "ChuniBot"):

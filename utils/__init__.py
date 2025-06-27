@@ -33,23 +33,6 @@ def json_dumps(obj: Any) -> str:
     return msgspec.json.encode(obj).decode("utf-8")
 
 
-class asuppress(contextlib.AbstractAsyncContextManager):
-    def __init__(self, *exceptions) -> None:
-        self._exceptions = exceptions
-
-    async def __aenter__(self):
-        pass
-
-    # Pyright is stupid on this one.
-    async def __aexit__(
-        self,
-        exctype: type[BaseException] | None,
-        __exc_value,  # type: ignore[reportGeneralTypeIssues]
-        __traceback,  # type: ignore[reportGeneralTypeIssues]
-    ) -> Optional[bool]:
-        return exctype is not None and issubclass(exctype, self._exceptions)
-
-
 def shlex_split(s: str) -> list[str]:
     view = StringView(s)
     result = []

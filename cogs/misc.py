@@ -15,6 +15,7 @@ from sqlalchemy import delete, func, select, text
 from database.models import Cookie, Prefix, Song
 from utils.config import config
 from utils.constants import VERSION_NAMES
+from utils.context import PenguinContext, PenguinGuildContext
 from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
     @logged_prefix_command
     async def sync(
         self,
-        ctx: Context["ChuniBot"],
+        ctx: PenguinContext,
         guilds: Greedy[discord.Object],
         spec: Optional[Literal["~", "*", "^"]] = None,
     ) -> None:
@@ -60,7 +61,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
             else:
                 synced = await ctx.bot.tree.sync()
 
-            await ctx.send(
+            await ctx.respond_or_edit(
                 f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
             )
             return
@@ -74,7 +75,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
             else:
                 ret += 1
 
-        await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
+        await ctx.respond_or_edit(f"Synced the tree to {ret}/{len(guilds)}.")
 
     @commands.hybrid_command("source", aliases=["src"])
     @logged_prefix_command
@@ -184,13 +185,13 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     @commands.hybrid_command("ping")
     @logged_prefix_command
-    async def ping(self, ctx: Context):
+    async def ping(self, ctx: PenguinGuildContext):
         start = time.perf_counter_ns()
-        message = await ctx.send("Ping...")
+        await ctx.respond_or_edit("Ping...")
         end = time.perf_counter_ns()
         duration = (end - start) / 1_000_000
-        await message.edit(
-            content=(
+        await ctx.respond_or_edit(
+            (
                 f"Pong! Took {duration:.2f}ms\n"
                 f"Websocket latency: {round(self.bot.latency * 1000, 2)}ms"
             )
@@ -199,7 +200,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
     @commands.hybrid_command("prefix")
     @commands.guild_only()
     @logged_prefix_command
-    async def prefix(self, ctx: Context, new_prefix: Optional[str] = None):
+    async def prefix(self, ctx: PenguinGuildContext, new_prefix: Optional[str] = None):
         """Get or set the prefix for this server.
 
         Permissions
@@ -211,9 +212,6 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         new_prefix: Optional[str]
             New prefix to set. If not provided, the current prefix will be shown.
         """
-
-        # discord.TextChannel should have an associated guild
-        assert ctx.guild is not None
 
         async with ctx.typing():
             if new_prefix is None:

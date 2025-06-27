@@ -1,3 +1,4 @@
+import contextlib
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, overload, override
 
@@ -27,7 +28,14 @@ class PenguinContext(commands.Context["ChuniBot"]):
 
     @override
     async def reply(self, content: str | None = None, **kwargs: Any) -> discord.Message:
-        msg = await super().reply(content, **kwargs)
+        # Ensure that if the original message was deleted somewhere in-between, we can still
+        # safely put out the response
+
+        try:
+            msg = await super().reply(content, **kwargs)
+        except discord.errors.HTTPException:
+            msg = await self.send(content, **kwargs)
+
         self.response = msg
 
         return msg
@@ -42,6 +50,7 @@ class PenguinContext(commands.Context["ChuniBot"]):
         suppress_embeds: bool = ...,
         delete_after: float | None = ...,
         view: discord.ui.View | None = ...,
+        ephemeral: bool = ...,
     ) -> discord.Message: ...
 
     @overload
@@ -54,6 +63,7 @@ class PenguinContext(commands.Context["ChuniBot"]):
         suppress_embeds: bool = ...,
         delete_after: float | None = ...,
         view: discord.ui.View | None = ...,
+        ephemeral: bool = ...,
     ) -> discord.Message: ...
 
     async def respond_or_edit(
@@ -79,7 +89,8 @@ class PenguinContext(commands.Context["ChuniBot"]):
                 kwargs["suppress"] = kwargs.get("suppress_embeds", False)
                 kwargs["delete_after"] = kwargs.get("delete_after")
 
-            return await self.response.edit(**kwargs)
+            with contextlib.suppress(discord.errors.NotFound):
+                return await self.response.edit(**kwargs)
 
         return await self.reply(content=content, mention_author=False, **kwargs)
 

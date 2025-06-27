@@ -3,7 +3,6 @@ import re
 from typing import TYPE_CHECKING, Any, Sequence, cast, override
 
 import discord
-from discord.ext.commands import Context
 from discord.utils import escape_markdown
 from sqlalchemy import Row, desc, func, select
 
@@ -12,6 +11,7 @@ from cogs.gaming._session import GuessingGameSession, GuessingGameType
 from cogs.gaming.states.start import StartState
 from database.models import GuessScore
 from utils.config import config
+from utils.context import PenguinGuildContext
 
 from ._pagination import ListPageSource, PaginationView
 
@@ -101,9 +101,7 @@ class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
 
 
 class GuessLeaderboardView(PaginationView):
-    def __init__(self, ctx: Context):
-        assert ctx.guild is not None
-
+    def __init__(self, ctx: PenguinGuildContext):
         # since the super `self.source` is just a PageSourceProtocol, and we want
         # typed access to the actual source without ugly casting
         self._source = GuessLeaderboardPageSource(ctx.bot, ctx.guild.id, ctx.guild.name)

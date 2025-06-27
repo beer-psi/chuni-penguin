@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 import discord
 import httpx
 import msgspec
-from discord import AllowedMentions, Interaction, app_commands
+from discord import Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
@@ -38,7 +38,7 @@ from chunithm_net.models.record import (
     RecentRecord,
     Record,
 )
-from database.models import SongJacket, UserConfig
+from database.models import Song, SongJacket, UserConfig
 from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
@@ -757,7 +757,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
     async def _compare_inner(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
@@ -855,37 +855,39 @@ class RecordsCog(commands.Cog, name="Records"):
                 select(SongJacket)
                 .where(condition)
                 .group_by(SongJacket.song_id)
-                .options(joinedload(SongJacket.song))
+                .options(joinedload(SongJacket.song).joinedload(Song.charts))
             )
-            jackets = (await session.execute(sql)).scalars().all()
+            jackets = (await session.execute(sql)).scalars().unique().all()
 
             if len(jackets) == 0:
                 msg = "No songs found."
                 raise commands.CommandError(msg)
 
             if len(jackets) > 1:
-                view = SelectToCompareView(
-                    ctx,
-                    [(x.song.title, i) for i, x in enumerate(jackets)],
-                )
-                compare_message = await ctx.reply(
-                    "Select a score to compare with:", view=view, mention_author=False
-                )
+                options = []
+
+                for i, jacket in enumerate(jackets):
+                    displayed_option = jacket.song.title
+
+                    if jacket.song.id >= 8000:
+                        displayed_option += f" [{jacket.song.charts[0].level}]"
+
+                    options.append((displayed_option, i))
+
+                view = SelectToCompareView(ctx, options)
+                await ctx.respond_or_edit("Select a score to compare with:", view=view)
 
                 await view.wait()
 
                 if view.value is None:
-                    await compare_message.edit(
-                        content="Timed out before selecting a score.",
-                        view=None,
-                        allowed_mentions=AllowedMentions.none(),
+                    await ctx.respond_or_edit(
+                        content="Timed out before selecting a score.", view=None
                     )
                     return
 
                 jacket = jackets[int(view.value)]
                 song = jacket.song
             else:
-                compare_message = None
                 jacket = jackets[0]
                 song = jacket.song
 
@@ -905,22 +907,8 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if kamaitachi:
                 if song.genre == "WORLD'S END":
-                    embed = discord.Embed(
-                        title="Error",
-                        description="Kamaitachi does not support WORLD'S END charts.",
-                        color=discord.Color.red(),
-                    )
-
-                    if compare_message is not None:
-                        await compare_message.edit(
-                            content=None,
-                            embed=embed,
-                            allowed_mentions=AllowedMentions.none(),
-                        )
-                        return
-
-                    await ctx.reply(embed=embed, mention_author=False)
-                    return
+                    msg = "Kamaitachi does not support WORLD'S END charts."
+                    raise commands.CommandError(msg)
 
                 async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
@@ -952,7 +940,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         if len(song.title) <= 5:
                             msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
 
-                        await ctx.reply(msg, mention_author=False)
+                        await ctx.respond_or_edit(msg)
                         return
 
                     network = " on Kamaitachi"
@@ -966,9 +954,15 @@ class RecordsCog(commands.Cog, name="Records"):
                     records = await client.music_record(song.id)
 
                     if len(records) == 0:
-                        await ctx.reply(
-                            f"No records found for {userinfo.name}.",
-                            mention_author=False,
+                        displayed_song = escape_markdown(song.title)
+
+                        if song.id >= 8000 and len(song.charts) > 0:
+                            displayed_song += (
+                                f" [{escape_markdown(song.charts[0].level)}]"
+                            )
+
+                        await ctx.respond_or_edit(
+                            f"No records found for {userinfo.name} on **{displayed_song}**."
                         )
                         return
 
@@ -994,19 +988,16 @@ class RecordsCog(commands.Cog, name="Records"):
             view = EmbedPaginationView(ctx, [ScoreCardEmbed(r) for r in records])
             view.current_page = page
 
-            if compare_message is not None:
-                await view.start_from(
-                    compare_message,
-                    content=f"Top play for {username}{network}:",
-                )
-                return
+            content = f"Top play for {username}{network}:"
 
-            await view.start(content=f"Top play for {username}{network}:")
-            return
+            if ctx.response is not None:
+                await view.start_from(ctx.response, content=content)
+            else:
+                await view.start(content=content)
 
     @commands.command("compare", aliases=["c"])
     @logged_prefix_command
-    async def compare(self, ctx: Context, *, query: str = ""):
+    async def compare(self, ctx: PenguinContext, *, query: str = ""):
         """Compare your best score with another score.
 
         By default, it's the most recently posted score. You can reply to another
@@ -1048,12 +1039,12 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_app_command
     async def compare_slash(
         self,
-        interaction: discord.Interaction,
+        interaction: discord.Interaction["ChuniBot"],
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
     ):
-        ctx = await Context.from_interaction(interaction)
+        ctx = await PenguinContext.from_interaction(interaction)
 
         await self._compare_inner(ctx, user, kamaitachi=kamaitachi)
 
@@ -1064,7 +1055,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
     async def _scores_inner(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         query: str,
         user: discord.User | discord.Member | None = None,
         *,
@@ -1086,11 +1077,8 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
             if result.similarity < SIMILARITY_THRESHOLD:
-                return await ctx.reply(
-                    did_you_mean_text(
-                        ctx.prefix, result.songs[0], result.matched_alias
-                    ),
-                    mention_author=False,
+                return await ctx.respond_or_edit(
+                    did_you_mean_text(ctx.prefix, result.songs[0], result.matched_alias)
                 )
 
             # if we're fetching scores from Kamaitachi, we don't need to care about whether
@@ -1115,33 +1103,25 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     options.append((title, i))
                 view = SelectToCompareView(
-                    ctx,
-                    options=options,
-                    placeholder="Select a song...",
+                    ctx, options=options, placeholder="Select a song..."
                 )
-                select_message = await ctx.reply(
-                    "Multiple songs were found. Select one:",
-                    view=view,
-                    mention_author=False,
+                await ctx.respond_or_edit(
+                    "Multiple songs were found. Select one:", view=view
                 )
 
                 await view.wait()
 
                 if view.value is None:
-                    with contextlib.suppress(discord.errors.NotFound):
-                        await select_message.edit(
-                            content="Timed out before selecting a song.",
-                            view=None,
-                            allowed_mentions=AllowedMentions.none(),
-                        )
+                    await ctx.respond_or_edit(
+                        content="Timed out before selecting a song.", view=None
+                    )
                     return None
 
                 song = songs[int(view.value)]
             elif len(songs) > 0:
                 song = songs[0]
-                select_message = None
             else:
-                msg = f"No songs currently available in CHUNITHM International matches the search criteria. Closest match was **{escape_markdown(result.songs[0].title)}**."
+                msg = f"No songs currently available in CHUNITHM International matches the query. Closest match was **{escape_markdown(result.songs[0].title)}**."
                 raise commands.BadArgument(msg)
 
             if kamaitachi:
@@ -1175,9 +1155,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         if len(song.title) <= 5:
                             msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
 
-                        await ctx.reply(msg, mention_author=False)
-
-                        return None
+                        await ctx.respond_or_edit(msg)
 
                     network = " on Kamaitachi"
                     records = await self.utils.hydrate_records(records)
@@ -1190,25 +1168,27 @@ class RecordsCog(commands.Cog, name="Records"):
                     records = await client.music_record(song.id)
 
                     if len(records) == 0:
-                        await ctx.reply(
-                            f"No records found for {user_info.name} on **{escape_markdown(song.title)}**.",
-                            mention_author=False,
+                        displayed_song = escape_markdown(song.title)
+
+                        if song.id >= 8000 and len(song.charts) > 0:
+                            displayed_song += (
+                                f" [{escape_markdown(song.charts[0].level)}]"
+                            )
+
+                        await ctx.respond_or_edit(
+                            f"No records found for {user_info.name} on **{displayed_song}**."
                         )
                         return None
 
                     records = await self.utils.hydrate_records(records)
 
             view = EmbedPaginationView(ctx, [ScoreCardEmbed(r) for r in records])
+            content = f"Top play for {username}{network}:"
 
-            if select_message is not None:
-                await view.start_from(
-                    select_message,
-                    content=f"Top play for {username}{network}:",
-                )
+            if ctx.response is not None:
+                await view.start_from(ctx.response, content=content)
             else:
-                await view.start(
-                    content=f"Top play for {username}{network}:",
-                )
+                await view.start(content=content)
 
             return None
 
@@ -1216,7 +1196,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_prefix_command
     async def scores(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         *,
         query: str = "",
     ):
@@ -1270,13 +1250,13 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_app_command
     async def scores_slash(
         self,
-        interaction: discord.Interaction,
+        interaction: discord.Interaction["ChuniBot"],
         query: app_commands.Transform[str, AliasNameTransformer(lower=True)],
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
     ):
-        ctx = await Context.from_interaction(interaction)
+        ctx = await PenguinContext.from_interaction(interaction)
 
         await self._scores_inner(ctx, query, user, kamaitachi=kamaitachi)
 
