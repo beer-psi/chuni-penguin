@@ -178,9 +178,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             cookie = (await session.execute(query)).scalar_one_or_none()
 
         if cookie is None or cookie.kamaitachi_token is None:
-            return await ctx.reply(
-                content="You are not linked with Kamaitachi.", mention_author=False
-            )
+            msg = "You are not linked with Kamaitachi."
+            raise commands.CommandError(msg)
 
         cookie.kamaitachi_token = None
         async with self.bot.begin_db_session() as session:
@@ -196,7 +195,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
     async def kamaitachi_sync(
         self, ctx: Context, sync: Literal["recent", "pb"] = "recent"
     ):
-        """Sync CHUNITHM scores with Kamaitachi.
+        """Sync scores from CHUNITHM-NET International with Kamaitachi.
 
         Parameters
         ----------
@@ -210,16 +209,12 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             cookie = (await session.execute(query)).scalar_one_or_none()
 
         if cookie is None:
-            return await ctx.reply(
-                content=f"Please login with `{ctx.prefix}login` first before syncing with Kamaitachi.",
-                mention_author=False,
-            )
+            msg = f"Please login with `{ctx.prefix}login` first before syncing with Kamaitachi."
+            raise commands.CommandError(msg)
 
         if cookie.kamaitachi_token is None:
-            return await ctx.reply(
-                content=f"You are not linked with Kamaitachi. DM me with `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link` for instructions.",
-                mention_author=False,
-            )
+            msg = f"You are not linked with Kamaitachi. DM me with `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link` for instructions."
+            raise commands.CommandError(msg)
 
         scores = []
         message = await ctx.reply(

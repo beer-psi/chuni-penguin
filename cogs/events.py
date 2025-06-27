@@ -20,6 +20,7 @@ from chunithm_net.exceptions import (
     MaintenanceException,
 )
 from utils.config import config
+from utils.context import PenguinContext
 from utils.logging import logger
 
 if TYPE_CHECKING:
@@ -75,7 +76,7 @@ class EventsCog(commands.Cog, name="Events"):
         # fmt: on
 
         if interaction.response.is_done():
-            await interaction.edit_original_response(embed=embed)
+            await interaction.edit_original_response(embed=embed, view=None)
         else:
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -86,7 +87,7 @@ class EventsCog(commands.Cog, name="Events"):
     @commands.Cog.listener()
     async def on_command_error(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         error: commands.errors.CommandInvokeError,
     ):
         if isinstance(error, commands.CommandNotFound):
@@ -104,10 +105,8 @@ class EventsCog(commands.Cog, name="Events"):
         )
 
         if embed.description is not None:
-            return await ctx.reply(
-                embed=embed,
-                mention_author=False,
-                delete_after=delete_after,  # type: ignore[reportCallIssue, reportArgumentType]
+            return await ctx.respond_or_edit(
+                embed=embed, delete_after=delete_after, view=None
             )
 
         await logger.aexception(
@@ -134,7 +133,7 @@ class EventsCog(commands.Cog, name="Events"):
                 "and report the bug in the #help-bugs channel!"
             )
 
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.respond_or_edit(embed=embed, view=None)
         await self._submit_error_to_webhook(ctx, exc)
 
         return None

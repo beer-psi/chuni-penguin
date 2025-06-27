@@ -19,7 +19,6 @@ from chunithm_net.consts import KEY_PLAY_RATING
 from chunithm_net.models.enums import Difficulty, Rank
 from database.models import Chart, Song
 from utils import (
-    did_you_mean_text,
     floor_to_ndp,
     json_loads,
     round_to_nearest,
@@ -33,15 +32,12 @@ from utils.calculation.overpower import (
 )
 from utils.calculation.rating import calculate_rating, calculate_score_for_rating
 from utils.components import ChartCardEmbed
-from utils.constants import (
-    MAX_DIFFICULTY,
-    SIMILARITY_THRESHOLD,
-)
+from utils.constants import MAX_DIFFICULTY
+from utils.context import PenguinContext
 from utils.converters import DifficultyConverter
 from utils.kamaitachi import convert_kt_pbs_to_records
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
-from utils.views.select_to_compare import SelectToCompareView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -743,7 +739,7 @@ class ToolsCog(commands.Cog, name="Tools"):
     @logged_prefix_command
     async def border(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         difficulty_or_notecount: str,
         *,
         query: str | None = None,
@@ -756,7 +752,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         Parameters
         ----------
         difficulty_or_notecount: str | int
-            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT). Alternatively, enter a notecount here to get the border for that specific notecount.
+            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT/WE). Alternatively, enter a notecount here to get the border for that specific notecount.
         query: str
             Song title to search for. You don't have to be exact; try things out!
         """
@@ -798,7 +794,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     ),
                 )
 
-                await ctx.reply(embed=embed, mention_author=False)
+                await ctx.respond_or_edit(embed=embed)
             else:
                 if query is None:
                     raise commands.MissingRequiredArgument(ctx.command.params["query"])  # pyright: ignore[reportOptionalMemberAccess]
@@ -806,85 +802,19 @@ class ToolsCog(commands.Cog, name="Tools"):
                 difficulty = await DifficultyConverter().convert(
                     ctx, difficulty_or_notecount
                 )
-
-                guild_id = ctx.guild.id if ctx.guild else None
-                result = await self.utils.find_songs(
-                    query, guild_id=guild_id, load_charts=True
+                chart = await ctx.find_chart(
+                    difficulty,
+                    query,
+                    "Select a chart to view rank borders for:",
                 )
-
-                if result.similarity < SIMILARITY_THRESHOLD:
-                    await ctx.reply(
-                        did_you_mean_text(
-                            ctx.prefix, result.songs[0], result.matched_alias
-                        ),
-                        mention_author=False,
-                    )
-                    return
-
-                song_ids = {s.id for s in result.songs}
-
-                async with self.bot.begin_db_session() as session:
-                    stmt = (
-                        select(Chart)
-                        .where(
-                            (Chart.song_id.in_(song_ids))
-                            & (Chart.difficulty == difficulty.short_form())
-                        )
-                        .options(
-                            joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
-                        )
-                    )
-                    charts = (await session.execute(stmt)).scalars().all()
-
-                if len(charts) == 0:
-                    msg = f"No charts found for {escape_markdown(result.songs[0].title)} [{difficulty}]."
-                    raise commands.CommandError(msg)
-
-                if len(charts) == 1:
-                    chart = charts[0]
-                    song = chart.song
-                    select_msg = None
-                else:
-                    view = SelectToCompareView(
-                        ctx,
-                        [
-                            (
-                                f"{x.song.title} [{Difficulty.from_short_form(x.difficulty)} {x.const or x.level}]",
-                                i,
-                            )
-                            for i, x in enumerate(charts)
-                        ],
-                        placeholder="Select a chart...",
-                    )
-                    select_msg = await ctx.reply(
-                        "Select a chart to view rank borders for:",
-                        view=view,
-                        mention_author=False,
-                    )
-
-                    await view.wait()
-
-                    if view.value is None:
-                        await select_msg.edit(
-                            content="Timed out before selecting a chart.",
-                            view=None,
-                            allowed_mentions=discord.AllowedMentions.none(),
-                        )
-                        return
-
-                    chart = charts[int(view.value)]
-                    song = chart.song
 
                 if chart.maxcombo is None:
-                    await ctx.reply(
-                        content=f"We currently don't have note counts for {escape_markdown(song.title)} [{chart.difficulty}]. Try using `{ctx.prefix}border <notecount>` instead.",
-                        mention_author=False,
-                    )
-                    return
+                    song = chart.song
+                    msg = f"We currently don't have note counts for {escape_markdown(song.title)} [{chart.difficulty}]. Try using `{ctx.prefix}border <notecount>` instead."
 
-                await ctx.reply(
-                    embed=ChartCardEmbed(chart, border=True), mention_author=False
-                )
+                    raise commands.CommandError(msg)
+
+                await ctx.respond_or_edit(embed=ChartCardEmbed(chart, border=True))
 
     @commands.hybrid_command("chart")
     @app_commands.choices(
@@ -901,7 +831,7 @@ class ToolsCog(commands.Cog, name="Tools"):
     @logged_prefix_command
     async def chart(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         difficulty: Annotated[Difficulty, DifficultyConverter],
         *,
         query: str,
@@ -917,72 +847,10 @@ class ToolsCog(commands.Cog, name="Tools"):
         """
 
         async with ctx.typing():
-            guild_id = ctx.guild.id if ctx.guild else None
-            result = await self.utils.find_songs(
-                query, guild_id=guild_id, load_charts=True
+            chart = await ctx.find_chart(
+                difficulty, query, "Select a chart to see chart view for:"
             )
-
-            if result.similarity < SIMILARITY_THRESHOLD:
-                return await ctx.reply(
-                    did_you_mean_text(
-                        ctx.prefix, result.songs[0], result.matched_alias
-                    ),
-                    mention_author=False,
-                )
-
-            song_ids = {s.id for s in result.songs}
-
-            async with self.bot.begin_db_session() as session:
-                stmt = (
-                    select(Chart)
-                    .where(
-                        (Chart.song_id.in_(song_ids))
-                        & (Chart.difficulty == difficulty.short_form())
-                    )
-                    .options(
-                        joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
-                    )
-                )
-                charts = (await session.execute(stmt)).scalars().all()
-
-            if len(charts) == 0:
-                msg = f"No charts found for {escape_markdown(result.songs[0].title)} [{difficulty}]."
-                raise commands.CommandError(msg)
-
-            if len(charts) == 1:
-                chart = charts[0]
-                song = chart.song
-                select_msg = None
-            else:
-                view = SelectToCompareView(
-                    ctx,
-                    [
-                        (
-                            f"{x.song.title} [{Difficulty.from_short_form(x.difficulty)} {x.const or x.level}]",
-                            i,
-                        )
-                        for i, x in enumerate(charts)
-                    ],
-                    placeholder="Select a chart...",
-                )
-                select_msg = await ctx.reply(
-                    "Select a chart to see chart view for:",
-                    view=view,
-                    mention_author=False,
-                )
-
-                await view.wait()
-
-                if view.value is None:
-                    await select_msg.edit(
-                        content="Timed out before selecting a chart.",
-                        view=None,
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
-                    return None
-
-                chart = charts[int(view.value)]
-                song = chart.song
+            song = chart.song
 
             chart_display_name = f"{escape_markdown(song.title)} [{difficulty} {chart.const or chart.level}]"
 
@@ -1048,16 +916,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 description=f"Chart view for {chart_display_name}",
             )
 
-            if select_msg is None:
-                await ctx.reply(content=content, file=file, mention_author=False)
-            else:
-                await select_msg.edit(
-                    content=content,
-                    attachments=[file],
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
-
-            return None
+            await ctx.respond_or_edit(content, files=[file])
 
     @commands.hybrid_command("odex")
     @logged_prefix_command

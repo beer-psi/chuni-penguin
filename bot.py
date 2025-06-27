@@ -7,7 +7,7 @@ import sys
 import time
 from pathlib import Path
 from types import FrameType
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, Optional, cast, override
 
 import discord
 import discord.utils
@@ -25,6 +25,7 @@ from database.models import Prefix
 from utils import json_dumps, json_loads
 from utils.command_tree import VersionableCommandTree
 from utils.config import config
+from utils.context import PenguinContext
 from utils.evtloop import get_event_loop
 from utils.help import HelpCommand
 from utils.logging import logger
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
     from aiohttp.web import Application
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
+    from cogs.botutils import UtilsCog
     from cogs.gaming import GamingCog
 
 
@@ -228,6 +230,19 @@ class ChuniBot(commands.AutoShardedBot):
                 )
                 await self.tree.sync()
                 await session.execute(text(f"PRAGMA user_version={current_tree_hash}"))
+
+    @override
+    async def get_context(
+        self,
+        origin: discord.Message | discord.Interaction,
+        *,
+        cls: type[PenguinContext] = PenguinContext,
+    ):
+        return await super().get_context(origin, cls=cls)
+
+    @property
+    def utils(self) -> "UtilsCog":
+        return self.get_cog("Utils")  # pyright: ignore[reportReturnType]
 
     async def _close_web(self):
         if self.app is not None:

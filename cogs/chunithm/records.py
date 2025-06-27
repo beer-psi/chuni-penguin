@@ -38,12 +38,13 @@ from chunithm_net.models.record import (
     RecentRecord,
     Record,
 )
-from database.models import Chart, SongJacket, UserConfig
+from database.models import SongJacket, UserConfig
 from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.config import config
 from utils.constants import CURRENT_CHUNITHM_VERSION_KT, SIMILARITY_THRESHOLD
+from utils.context import PenguinContext
 from utils.converters import (
     AliasNameConverter,
     AliasNameTransformer,
@@ -2012,13 +2013,14 @@ class RecordsCog(commands.Cog, name="Records"):
             app_commands.Choice(name="EXPERT", value="EXPERT"),
             app_commands.Choice(name="MASTER", value="MASTER"),
             app_commands.Choice(name="ULTIMA", value="ULTIMA"),
+            app_commands.Choice(name="WORLD'S END", value="WORLD'S END"),
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
     @logged_prefix_command
     async def leaderboard(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         difficulty: Annotated[Difficulty, DifficultyConverter],
         *,
         query: Annotated[str, AliasNameConverter(lower=True)],
@@ -2035,81 +2037,17 @@ class RecordsCog(commands.Cog, name="Records"):
             Song title to search for. You don't have to be exact; try things out!
         """
         async with ctx.typing(), self.utils.chuninet(ctx) as client:
-            guild_id = ctx.guild.id if ctx.guild else None
-            result = await self.utils.find_songs(
-                query, guild_id=guild_id, load_charts=True
+            chart = await ctx.find_chart(
+                difficulty, query, "Select a chart to see leaderboard for:"
             )
 
-            if result.similarity < SIMILARITY_THRESHOLD:
-                await ctx.reply(
-                    did_you_mean_text(
-                        ctx.prefix, result.songs[0], result.matched_alias
-                    ),
-                    mention_author=False,
-                )
-                return
+            chart.song.raise_if_not_available()
 
-            song_ids = {s.id for s in result.songs}
+            leaderboard = await client.music_leaderboard(chart.song.id, difficulty)
+            view = LeaderboardView(ctx, leaderboard, chart.song, difficulty, chart)
 
-            async with self.bot.begin_db_session() as session:
-                stmt = (
-                    select(Chart)
-                    .where(
-                        (Chart.song_id.in_(song_ids))
-                        & (Chart.difficulty == difficulty.short_form())
-                    )
-                    .options(
-                        joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
-                    )
-                )
-                charts = (await session.execute(stmt)).scalars().all()
-
-            if len(charts) == 0:
-                msg = f"No charts found for {escape_markdown(result.songs[0].title)} [{difficulty}]."
-                raise commands.CommandError(msg)
-
-            if len(charts) == 1:
-                chart = charts[0]
-                song = chart.song
-                select_msg = None
-            else:
-                view = SelectToCompareView(
-                    ctx,
-                    [
-                        (
-                            f"{x.song.title} [{Difficulty.from_short_form(x.difficulty)} {x.const or x.level}]",
-                            i,
-                        )
-                        for i, x in enumerate(charts)
-                    ],
-                    placeholder="Select a chart...",
-                )
-                select_msg = await ctx.reply(
-                    "Select a chart to see leaderboard for:",
-                    view=view,
-                    mention_author=False,
-                )
-
-                await view.wait()
-
-                if view.value is None:
-                    await select_msg.edit(
-                        content="Timed out before selecting a chart.",
-                        view=None,
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
-                    return
-
-                chart = charts[int(view.value)]
-                song = chart.song
-
-            song.raise_if_not_available()
-
-            leaderboard = await client.music_leaderboard(song.id, difficulty)
-            view = LeaderboardView(ctx, leaderboard, song, difficulty, chart)
-
-            if select_msg is not None:
-                await view.start_from(select_msg, content="")
+            if ctx.response is not None:
+                await view.start_from(ctx.response, content="")
             else:
                 await view.start()
 

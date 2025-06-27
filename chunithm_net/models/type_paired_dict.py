@@ -33,9 +33,11 @@ class TypePairedDict(dict):
     ```
     """
 
+    @override
     def __getitem__(self, key: TypePairedDictKey[KT]) -> KT:
         return super().__getitem__(key)
 
+    @override
     def __setitem__(self, key: TypePairedDictKey[KT], value: KT) -> None:
         return super().__setitem__(key, value)
 
@@ -48,6 +50,7 @@ class TypePairedDict(dict):
     @overload
     def get(self, key: TypePairedDictKey[KT], default: T) -> T | KT: ...
 
+    @override
     def get(
         self, key: TypePairedDictKey[KT], default: T | KT | None = None
     ) -> T | KT | None:
