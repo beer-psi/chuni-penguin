@@ -198,13 +198,13 @@ class AuthCog(commands.Cog, name="Auth"):
 
         if ctx.channel == channel:
             msg = await view.start(
-                content=f"If you're trying to link your Kamaitachi account, use `{ctx.prefix}kamaitachi link` instead!",
+                content=f"If you're trying to link your Kamaitachi account, use `{ctx.clean_prefix}kamaitachi link` instead!",
             )
         else:
             try:
                 msg = await view.start_in(
                     channel,
-                    content=f"If you're trying to link your Kamaitachi account, use `{ctx.prefix}kamaitachi link` instead!",
+                    content=f"If you're trying to link your Kamaitachi account, use `{ctx.clean_prefix}kamaitachi link` instead!",
                 )
             except discord.errors.Forbidden:
                 return None

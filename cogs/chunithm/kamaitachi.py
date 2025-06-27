@@ -134,10 +134,10 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
 
                     if cookie.cookie:
                         content += (
-                            f"\nYou can now use `{ctx.prefix}kamaitachi sync` to sync your recent scores.\n"
+                            f"\nYou can now use `{ctx.clean_prefix}kamaitachi sync` to sync your recent scores.\n"
                             "\n"
-                            f"**It is recommended that you run `{ctx.prefix}kamaitachi sync` to sync your recent scores first, "
-                            f"before syncing your personal bests with `{ctx.prefix}kamaitachi sync pb`.**"
+                            f"**It is recommended that you run `{ctx.clean_prefix}kamaitachi sync` to sync your recent scores first, "
+                            f"before syncing your personal bests with `{ctx.clean_prefix}kamaitachi sync pb`.**"
                         )
 
             return await ctx.reply(content=content, mention_author=False)
@@ -200,7 +200,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             cookie = (await session.execute(query)).scalar_one_or_none()
 
         if cookie is None:
-            msg = f"Please login with `{ctx.prefix}login` first before syncing with Kamaitachi."
+            msg = f"Please login with `{ctx.clean_prefix}login` first before syncing with Kamaitachi."
             raise commands.CommandError(msg)
 
         if cookie.kamaitachi_token is None:
@@ -311,7 +311,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     if len(data.body.import_.score_ids) == 50 and sync == "recent":
                         msg += (
                             "\n\nIt seems like some earlier unsynced scores were pushed out of your recents. "
-                            f"If any scores are missing, please run `{ctx.prefix}kamaitachi sync pb` to sync your personal bests. "
+                            f"If any scores are missing, please run `{ctx.clean_prefix}kamaitachi sync pb` to sync your personal bests. "
                             "Please sync more often when you're having large sessions, since syncing recents lets you keep track "
                             "of playcount and judgements."
                         )

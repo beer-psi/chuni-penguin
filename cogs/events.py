@@ -99,7 +99,7 @@ class EventsCog(commands.Cog, name="Events"):
             exc = cast(Exception, exc.original)
 
         embed, delete_after = await self._construct_error_embed(
-            ctx.prefix or "c>",
+            ctx.clean_prefix or "c>",
             ctx.command.qualified_name if ctx.command else None,
             exc,
         )

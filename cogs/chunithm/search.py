@@ -329,7 +329,7 @@ class SearchCog(commands.Cog, name="Search"):
 
         if song is None or similarity < SIMILARITY_THRESHOLD:
             return await ctx.reply(
-                did_you_mean_text(ctx.prefix, song, alias), mention_author=False
+                did_you_mean_text(ctx.clean_prefix, song, alias), mention_author=False
             )
 
         async with self.bot.begin_db_session() as session:
@@ -437,7 +437,7 @@ class SearchCog(commands.Cog, name="Search"):
             if result.similarity < SIMILARITY_THRESHOLD:
                 return await ctx.reply(
                     did_you_mean_text(
-                        ctx.prefix, result.songs[0], result.matched_alias
+                        ctx.clean_prefix, result.songs[0], result.matched_alias
                     ),
                     mention_author=False,
                 )

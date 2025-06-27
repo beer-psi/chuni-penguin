@@ -1,14 +1,11 @@
 import re
-from typing import TYPE_CHECKING, Any, List, Mapping, Optional, cast, override
+from typing import Any, List, Mapping, Optional, override
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, Command, Group
 
 from utils.config import config
-
-if TYPE_CHECKING:
-    from bot import ChuniBot
 
 MENTION_PREFIX_RE = re.compile(r"<@[!&]?\d+>")
 
@@ -18,16 +15,7 @@ class HelpCommand(commands.HelpCommand):
 
     @property
     def prefix(self):
-        prefix = self.context.prefix
-
-        if prefix is None or MENTION_PREFIX_RE.match(prefix):
-            if (guild := self.context.guild) is not None:
-                return cast("ChuniBot", self.context.bot).prefixes.get(
-                    guild.id, config.bot.default_prefix
-                )
-            return config.bot.default_prefix
-
-        return prefix
+        return self.context.clean_prefix
 
     async def send_bot_help(
         self, mapping: Mapping[Optional[Cog], List[Command[Any, ..., Any]]], /

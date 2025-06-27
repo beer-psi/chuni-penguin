@@ -810,7 +810,7 @@ class ToolsCog(commands.Cog, name="Tools"):
 
                 if chart.maxcombo is None:
                     song = chart.song
-                    msg = f"We currently don't have note counts for {escape_markdown(song.title)} [{chart.difficulty}]. Try using `{ctx.prefix}border <notecount>` instead."
+                    msg = f"We currently don't have note counts for {escape_markdown(song.title)} [{chart.difficulty}]. Try using `{ctx.clean_prefix}border <notecount>` instead."
 
                     raise commands.CommandError(msg)
 

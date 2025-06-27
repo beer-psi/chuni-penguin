@@ -31,7 +31,7 @@ class AskVoiceCallQuestionState(GuessingGameState):
             title="Guess the song!",
             description=(
                 f"You have {self.session.time_per_question} seconds to guess the song.\n"
-                f"Use `{self.session.ctx.prefix}skip` to skip.\n"
+                f"Use `{self.session.ctx.clean_prefix}skip` to skip.\n"
                 f"The audio is being played in {self.session.voice_client.channel.mention}."
             ),
             color=self.session.difficulty.color(),

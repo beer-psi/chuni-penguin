@@ -33,7 +33,7 @@ class StartState(GuessingGameState):
             inline=True,
         )
         embed.set_footer(
-            text=f"Tip: You can use {self.session.ctx.prefix}skip to skip the waiting time!"
+            text=f"Tip: You can use {self.session.ctx.clean_prefix}skip to skip the waiting time!"
         )
 
         if self.session.question_count is not None:

@@ -815,7 +815,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     msg = "Bot requires the Read Message History permission to fetch recent scores."
 
                     if ctx.interaction is None:
-                        msg += f" Alternatively, run `{ctx.prefix}compare` while replying to the score you want to compare."
+                        msg += f" Alternatively, run `{ctx.clean_prefix}compare` while replying to the score you want to compare."
 
                     raise commands.CheckFailure(msg) from e
 
@@ -1078,7 +1078,9 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if result.similarity < SIMILARITY_THRESHOLD:
                 return await ctx.respond_or_edit(
-                    did_you_mean_text(ctx.prefix, result.songs[0], result.matched_alias)
+                    did_you_mean_text(
+                        ctx.clean_prefix, result.songs[0], result.matched_alias
+                    )
                 )
 
             # if we're fetching scores from Kamaitachi, we don't need to care about whether
@@ -1585,7 +1587,7 @@ class RecordsCog(commands.Cog, name="Records"):
         msg = (
             "This command has been disabled because the new rating system is now official. "
             "It will be fully removed in a future update.\n\n"
-            f"Please use the `{ctx.prefix}best50` command to see your new rating."
+            f"Please use the `{ctx.clean_prefix}best50` command to see your new rating."
         )
         raise commands.CommandError(msg)
 

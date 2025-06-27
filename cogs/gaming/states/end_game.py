@@ -81,9 +81,9 @@ async def end_game(
         tips = STATIC_TIPS.copy()
         tips.extend(
             [
-                f"Use `{session.ctx.prefix}guess leaderboard` to view the server leaderboard.",
-                f"{session.ctx.prefix}guess character-age",
-                f"Heartbreaking: The Worst Person You Know Is Good At {session.ctx.prefix}guess",
+                f"Use `{session.ctx.clean_prefix}guess leaderboard` to view the server leaderboard.",
+                f"{session.ctx.clean_prefix}guess character-age",
+                f"Heartbreaking: The Worst Person You Know Is Good At {session.ctx.clean_prefix}guess",
             ]
         )
 
