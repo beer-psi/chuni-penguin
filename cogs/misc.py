@@ -256,10 +256,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
             inline=False,
         )
 
-        await ctx.reply(
-            embed=embed,
-            mention_author=False,
-        )
+        await ctx.reply(embed=embed, mention_author=False)
 
     @tasks.loop(minutes=3)
     async def listening(self):

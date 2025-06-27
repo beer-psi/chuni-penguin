@@ -142,6 +142,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         self.bot.add_dynamic_items(PersistentSendFriendRequestButton)
 
     @commands.hybrid_command(name="avatar")
+    @commands.bot_has_permissions(attach_files=True)
     @logged_prefix_command
     async def avatar(
         self,

@@ -102,6 +102,14 @@ class ChuniBot(commands.AutoShardedBot):
             tree_cls=VersionableCommandTree,
         )
 
+        self.add_check(
+            commands.bot_has_permissions(
+                send_messages=True,
+                send_messages_in_threads=True,
+                embed_links=True,
+            ).predicate
+        )
+
         self.dev = config.dangerous.dev
         self.prefixes = {}
         self.command_start_time = {}

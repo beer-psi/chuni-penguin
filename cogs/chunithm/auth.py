@@ -152,7 +152,7 @@ class AuthCog(commands.Cog, name="Auth"):
                         message_id=ctx.message.id,
                     )
 
-                    please_delete_message = "Please delete the original command, as people can use the cookie to access your CHUNITHM-NET profile."
+                    please_delete_message = "Please delete the original command, as people can use the cookie to access your CHUNITHM-NET profile. "
 
             await logger.adebug(
                 "Sending login instructions",

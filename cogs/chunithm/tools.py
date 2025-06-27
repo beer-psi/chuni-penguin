@@ -817,6 +817,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 await ctx.respond_or_edit(embed=ChartCardEmbed(chart, border=True))
 
     @commands.hybrid_command("chart")
+    @commands.bot_has_permissions(attach_files=True)
     @app_commands.choices(
         difficulty=[
             app_commands.Choice(name="BASIC", value="BASIC"),

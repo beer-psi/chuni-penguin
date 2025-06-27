@@ -54,14 +54,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
     @commands.hybrid_group("kamaitachi", aliases=["kt"], invoke_without_command=True)
     @logged_prefix_command
     async def kamaitachi(self, ctx: Context):
-        await ctx.reply(
-            (
-                "[Kamaitachi](https://kamai.tachi.ac) is a modern, invite-only, arcade rhythm game score tracker.\n"
-                "You can link your Kamaitachi account to the bot to sync scores from CHUNITHM-NET International, or view your scores with the bot.\n"
-                f"To get started, DM me with `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link` for instructions."
-            ),
-            mention_author=False,
-        )
+        pass
 
     async def _verify_and_login(self, token: str) -> Optional[str]:
         async with httpx.AsyncClient() as client:
@@ -116,7 +109,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                         message_id=ctx.message.id,
                     )
 
-                    please_delete_message = "Please delete the original command. Why are you exposing your API keys?"
+                    please_delete_message = "Please delete the original command. Why are you exposing your API keys? "
 
             await ctx.respond_or_edit(
                 f"Login instructions have been sent to your DMs. {please_delete_message}"

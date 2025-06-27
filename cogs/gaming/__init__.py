@@ -177,6 +177,7 @@ class GamingCog(commands.Cog, name="Games"):
         await ctx.send_help(self.guess)
 
     @guess.command("jacket")
+    @commands.bot_has_permissions(add_reactions=True, read_messages=True)
     @logged_prefix_command
     async def guess_jacket(self, ctx: Context, *, arguments: str = ""):
         """Starts a jacket art guessing game.
@@ -199,6 +200,7 @@ class GamingCog(commands.Cog, name="Games"):
         await self._guess_without_voice_channel(ctx, GuessingGameType.IMAGE, arguments)
 
     @guess.command("audio")
+    @commands.bot_has_permissions(add_reactions=True, read_messages=True)
     @logged_prefix_command
     async def guess_audio(self, ctx: Context, *, arguments: str = ""):
         """Starts an audio guessing game using voice messages.
@@ -224,6 +226,9 @@ class GamingCog(commands.Cog, name="Games"):
 
     @commands.guild_only()
     @guess.command("voice")
+    @commands.bot_has_permissions(
+        add_reactions=True, read_messages=True, connect=True, speak=True
+    )
     @logged_prefix_command
     async def guess_voice(self, ctx: PenguinGuildContext, *, arguments: str = ""):
         """Starts an audio guessing game in a voice call.
@@ -303,6 +308,7 @@ class GamingCog(commands.Cog, name="Games"):
         game_task.add_done_callback(self.game_tasks.discard)
 
     @commands.hybrid_command("skip")
+    @commands.bot_has_permissions(add_reactions=True)
     @logged_prefix_command
     async def skip(self, ctx: Context):
         """Skips a state of an ongoing guessing game.
@@ -321,9 +327,13 @@ class GamingCog(commands.Cog, name="Games"):
         if isinstance(state, GuessingGameSkippableState):
             await state.skip()
 
-        return
+        if ctx.interaction is not None:
+            await ctx.reply("Skipped!", mention_author=False)
+        else:
+            await ctx.message.add_reaction("⏩")
 
     @commands.hybrid_command("stop")
+    @commands.bot_has_permissions(add_reactions=True)
     @logged_prefix_command
     async def stop(self, ctx: Context):
         """Stops the currently running guessing game."""
@@ -351,7 +361,10 @@ class GamingCog(commands.Cog, name="Games"):
         if isinstance(state, GuessingGameSkippableState):
             await state.skip()
 
-        return
+        if ctx.interaction is not None:
+            await ctx.reply("Stopped!", mention_author=False)
+        else:
+            await ctx.message.add_reaction("⏹")
 
     @commands.guild_only()
     @guess.command("leaderboard", aliases=["lb"])
@@ -363,6 +376,7 @@ class GamingCog(commands.Cog, name="Games"):
 
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
+    @commands.bot_has_permissions(add_reactions=True)
     @guess.command("reset")
     @logged_prefix_command
     async def guess_reset(self, ctx: PenguinGuildContext):
