@@ -1,10 +1,8 @@
 import asyncio
-import inspect
 import traceback
 from argparse import ArgumentError
 from dataclasses import dataclass
-from pathlib import Path
-from typing import TYPE_CHECKING, Literal, cast, override
+from typing import TYPE_CHECKING, cast
 
 import discord
 from discord.ext import commands
@@ -30,8 +28,6 @@ if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.botutils import UtilsCog
     from cogs.events import EventsCog
-
-ASSETS_DIR = Path(__file__).parent.parent / "assets"
 
 
 async def run_state_machine(

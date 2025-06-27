@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
 from math import ceil
-from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 
 import discord
@@ -43,7 +42,11 @@ from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
 from utils.argparse import DiscordArguments
 from utils.components import ScoreCardEmbed
 from utils.config import config
-from utils.constants import CURRENT_CHUNITHM_VERSION_KT, SIMILARITY_THRESHOLD
+from utils.constants import (
+    ASSETS_DIR,
+    CURRENT_CHUNITHM_VERSION_KT,
+    SIMILARITY_THRESHOLD,
+)
 from utils.context import PenguinContext
 from utils.converters import (
     AliasNameConverter,
@@ -75,7 +78,6 @@ if TYPE_CHECKING:
     from cogs.botutils import UtilsCog
 
 
-ASSETS_DIR = Path(__file__).parent.parent.parent / "assets"
 NOTO_SANS_JP_24 = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 24
 )

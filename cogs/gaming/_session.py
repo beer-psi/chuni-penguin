@@ -15,9 +15,8 @@ from sqlalchemy.dialects.sqlite import insert
 from chunithm_net.models.enums import Difficulty, Genres
 from database.models import Alias, GuessScore, Song
 from utils import json_loads
+from utils.constants import ASSETS_DIR
 from utils.logging import logger
-
-from ._constants import ASSETS_DIR
 
 if TYPE_CHECKING:
     from bot import ChuniBot

@@ -15,6 +15,7 @@ from structlog.stdlib import BoundLogger
 
 from chunithm_net.models.enums import Difficulty
 from database.models import Chart, Song
+from utils.constants import ASSETS_DIR
 
 VERSIONS = [
     "CHUNITHM",
@@ -37,7 +38,6 @@ VERSIONS = [
     "LUMINOUS PLUS",
     "VERSE",
 ]
-ASSETS_DIR = Path(__file__).parent.parent / "assets"
 WE_LEVEL_OVERRIDES = {
     8244: "分☆☆☆ (LASTMORN)",
     8245: "分☆☆☆ (Implexrough)",

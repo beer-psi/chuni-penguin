@@ -1,3 +1,5 @@
+from pathlib import Path
+
 # Threshold for matching song titles.
 SIMILARITY_THRESHOLD = 65
 
@@ -25,3 +27,5 @@ VERSION_NAMES = {
     "v2025.5": "黎命に殉ず",
     "v2025.6": "deadeye",
 }
+
+ASSETS_DIR = Path(__file__).parent.parent / "assets"

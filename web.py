@@ -2,7 +2,6 @@ import string
 import sys
 from datetime import UTC, datetime
 from html import escape
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 import aiohttp
@@ -16,6 +15,7 @@ from sqlalchemy.orm import joinedload
 from database.models import Chart, Cookie, Song
 from utils import get_jacket_url, json_dumps, json_loads, sdvxin_link
 from utils.config import config
+from utils.constants import ASSETS_DIR
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -25,7 +25,6 @@ __all__ = ("init_app",)
 
 
 COOKIE_CHARACTERS = string.ascii_lowercase + string.digits
-ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 router = web.RouteTableDef()
