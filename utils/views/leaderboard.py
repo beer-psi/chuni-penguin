@@ -46,10 +46,10 @@ class LeaderboardPageSource(ListPageSource):
         description = ""
 
         for record in page:
-            description += f"`{record.position}` {record.player_name.ljust(8, '　')} ▸ {rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+            description += f"`{record.position: >3}` {record.player_name:　<8} ▸ {rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
 
             if record.ajc_count is not None:
-                description += f" ▸ AJC count: {record.ajc_count}"
+                description += f" (AJC: {record.ajc_count})"
 
             description += f" ▸ <t:{int(record.last_raised.timestamp())}:f>\n"
 
