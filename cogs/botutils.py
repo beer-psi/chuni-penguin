@@ -1,6 +1,5 @@
 import contextlib
 import io
-import random
 import sys
 from dataclasses import dataclass
 from http.cookiejar import LWPCookieJar
@@ -88,8 +87,10 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         # guild_id: list of aliases
         self.alias_cache: dict[int, list[CachedAlias]] = {}
-
         self.user_agents: KeiyoushiUserAgents = MISSING
+
+        # user_id: (refcount, ChuniNet)
+        self._chuni_net_sessions: dict[int, tuple[int, ChuniNet]] = {}
 
     async def cog_load(self) -> None:
         self._update_user_agents.start()
@@ -223,30 +224,60 @@ class UtilsCog(commands.Cog, name="Utils"):
     async def chuninet(self, ctx: Context | Interaction, id: int | None = None):
         author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
         target_id = id or author_id
-        jar = await self.login_check(
-            author_id,
-            target_id,
-            is_interaction=isinstance(ctx, Interaction) or ctx.interaction is not None,
-        )
+        is_interaction = isinstance(ctx, Interaction) or ctx.interaction is not None
+        user_config = await self.fetch_user_config(target_id)
 
-        session = ChuniNet(jar)
+        if user_config.privacy_mode and author_id != target_id:
+            logged_out_msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
+            raise commands.CommandError(logged_out_msg)
 
-        rand = random.Random()
-        rand.seed(target_id)
-        session.session.headers["user-agent"] = rand.choice(self.user_agents.desktop)
+        if (
+            target_id in self._chuni_net_sessions
+            and self._chuni_net_sessions[target_id][0] != 0
+        ):
+            refcount, session = self._chuni_net_sessions[target_id]
+            logger.debug(
+                "Using cached CHUNITHM-NET session",
+                tag="cached_chunithm_net_session",
+                refcount=refcount,
+            )
+        else:
+            jar = await self.fetch_cookie(target_id)
+
+            if jar is None:
+                logged_out_msg = f"You are not logged in. Please send `{'/' if is_interaction else config.bot.default_prefix}login` in my DMs to log in."
+                raise commands.CommandError(logged_out_msg)
+
+            session = ChuniNet(jar)
+            refcount = 0
+
+            session.session.headers["user-agent"] = self.user_agents.desktop[
+                (target_id >> 22) % len(self.user_agents.desktop)
+            ]
 
         try:
+            self._chuni_net_sessions[target_id] = (refcount + 1, session)
             yield session
         finally:
-            async with self.bot.begin_db_session() as db_session:
-                await db_session.execute(
-                    update(Cookie)
-                    .where(Cookie.discord_id == target_id)
-                    .values(cookie=f"#LWP-Cookies-2.0\n{jar.as_lwp_str()}")
-                )
-                await db_session.commit()
+            refcount, session = self._chuni_net_sessions[target_id]
+            refcount -= 1
 
-            await session.close()
+            if refcount == 0:
+                async with self.bot.begin_db_session() as db_session:
+                    await db_session.execute(
+                        update(Cookie)
+                        .where(Cookie.discord_id == target_id)
+                        .values(
+                            cookie=f"#LWP-Cookies-2.0\n{session.session._cookies.jar.as_lwp_str()}"  # pyright: ignore[reportAttributeAccessIssue]
+                        )
+                    )
+                    await db_session.commit()
+
+                await session.close()
+
+                del self._chuni_net_sessions[target_id]
+            else:
+                self._chuni_net_sessions[target_id] = refcount, session
 
     @contextlib.asynccontextmanager
     async def kamaitachi_client(
