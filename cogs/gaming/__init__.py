@@ -222,9 +222,7 @@ class GamingCog(commands.Cog, name="Games"):
 
     @commands.guild_only()
     @guess.command("voice")
-    @commands.bot_has_permissions(
-        add_reactions=True, read_messages=True, connect=True, speak=True
-    )
+    @commands.bot_has_permissions(add_reactions=True, read_messages=True)
     @logged_prefix_command
     async def guess_voice(self, ctx: PenguinGuildContext, *, arguments: str = ""):
         """Starts an audio guessing game in a voice call.
@@ -256,11 +254,22 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "Another voice guessing game is already ongoing in this server. Only one voice guessing game can run at a time for each server."
             raise commands.CommandError(msg)
 
-        if ctx.author.voice is None or ctx.author.voice.channel is None:
+        if (
+            ctx.author.voice is None
+            or (voice_channel := ctx.author.voice.channel) is None
+        ):
             msg = "You must connect to a voice channel to start this guessing game."
             raise commands.CommandError(msg)
 
-        await ctx.author.voice.channel.connect(self_deaf=True)
+        voice_channel_permissions = voice_channel.permissions_for(ctx.me)
+        missing = [
+            p for p in ("connect", "speak") if not getattr(voice_channel_permissions, p)
+        ]
+
+        if missing:
+            raise commands.BotMissingPermissions(missing)
+
+        await voice_channel.connect(self_deaf=True)
 
         await self._guess_without_voice_channel(
             ctx, GuessingGameType.VOICE_CHANNEL, arguments
