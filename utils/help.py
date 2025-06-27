@@ -2,7 +2,7 @@ from typing import Any, List, Mapping, Optional, override
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import Cog, Command, Group, when_mentioned
+from discord.ext.commands import Cog, Command, Group
 
 from utils.config import config
 
@@ -56,14 +56,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_command_help(self, command: Command[Any, ..., Any], /) -> None:
         ctx = self.context
-        bot = ctx.bot
-
-        prefix = next(
-            iter(
-                set(await bot.get_prefix(ctx.message))
-                - set(when_mentioned(bot, ctx.message))
-            )
-        )
+        prefix = ctx.prefix or config.bot.default_prefix
 
         embed = discord.Embed(color=self.COLOUR)
         embed.description = f"```{prefix}{command.qualified_name}```\n{command.help}"
@@ -89,14 +82,7 @@ class HelpCommand(commands.HelpCommand):
     @override
     async def send_group_help(self, group: Group[Any, ..., Any], /) -> None:
         ctx = self.context
-        bot = ctx.bot
-
-        prefix = next(
-            iter(
-                set(await bot.get_prefix(ctx.message))
-                - set(when_mentioned(bot, ctx.message))
-            )
-        )
+        prefix = ctx.prefix or config.bot.default_prefix
 
         embed = discord.Embed(color=self.COLOUR)
         embed.description = f"```{prefix}{group.qualified_name}```\n{group.help}"
