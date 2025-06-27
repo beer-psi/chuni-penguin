@@ -91,7 +91,7 @@ class EventsCog(commands.Cog, name="Events"):
         error: commands.errors.CommandInvokeError,
     ):
         if isinstance(error, commands.CommandNotFound):
-            return None
+            return
 
         exc = error
 
@@ -104,10 +104,15 @@ class EventsCog(commands.Cog, name="Events"):
             exc,
         )
 
-        if embed.description is not None:
-            return await ctx.respond_or_edit(
-                embed=embed, delete_after=delete_after, view=None
-            )
+        if embed.description is not None and ctx.bot_permissions.send_messages:
+            if ctx.bot_permissions.embed_links:
+                await ctx.respond_or_edit(
+                    embed=embed, delete_after=delete_after, view=None
+                )
+            else:
+                await ctx.respond_or_edit(
+                    embed.description, delete_after=delete_after, view=None
+                )
 
         await logger.aexception(
             "Unhandled exception in command",
@@ -133,12 +138,13 @@ class EventsCog(commands.Cog, name="Events"):
                 "and report the bug in the #help-bugs channel!"
             )
 
-        if ctx.guild is None or ctx.channel.permissions_for(ctx.guild.me).send_messages:
-            await ctx.respond_or_edit(embed=embed, view=None)
+        if ctx.bot_permissions.send_messages:
+            if ctx.bot_permissions.embed_links:
+                await ctx.respond_or_edit(embed=embed, view=None)
+            else:
+                await ctx.respond_or_edit(embed.description, view=None)
 
         await self._submit_error_to_webhook(ctx, exc)
-
-        return None
 
     async def _construct_error_embed(
         self, prefix: str, command_name: str | None, exc: Exception
