@@ -133,7 +133,9 @@ class EventsCog(commands.Cog, name="Events"):
                 "and report the bug in the #help-bugs channel!"
             )
 
-        await ctx.respond_or_edit(embed=embed, view=None)
+        if ctx.guild is None or ctx.channel.permissions_for(ctx.guild.me).send_messages:
+            await ctx.respond_or_edit(embed=embed, view=None)
+
         await self._submit_error_to_webhook(ctx, exc)
 
         return None
@@ -206,6 +208,16 @@ class EventsCog(commands.Cog, name="Events"):
             embed.description = (
                 f"Missing required argument: `{exc.param.displayed_name or exc.param.name}`\n"
                 f"View help for this command with `{prefix}help {command_name}`."
+            )
+        elif isinstance(exc, commands.BotMissingPermissions):
+            missing = [
+                f"- {p.replace('_', ' ').replace('guild', 'server').title()}"
+                for p in exc.missing_permissions
+            ]
+            embed.description = (
+                f"I need the following permissions to run this command:\n"
+                f"{'\n'.join(missing)}\n"
+                "Please fix this and try again."
             )
         elif isinstance(exc, commands.CommandError) and not isinstance(
             exc,
