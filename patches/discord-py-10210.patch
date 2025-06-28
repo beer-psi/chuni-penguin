@@ -8,10 +8,10 @@ Subject: [PATCH 1/7] fix voice connection issues and upgrade to v8
  discord/voice_state.py |  2 +-
  2 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/discord/gateway.py b/discord/gateway.py
+diff --git gateway.py gateway.py
 index 44656df03633..c54d2d5a0f3d 100644
---- a/discord/gateway.py
-+++ b/discord/gateway.py
+--- gateway.py
++++ gateway.py
 @@ -212,6 +212,9 @@ def ack(self) -> None:
  
  
@@ -68,10 +68,10 @@ index 44656df03633..c54d2d5a0f3d 100644
  
          if op == self.READY:
              await self.initial_connection(data)
-diff --git a/discord/voice_state.py b/discord/voice_state.py
+diff --git voice_state.py voice_state.py
 index 956f639b8e0a..d3092d861e90 100644
---- a/discord/voice_state.py
-+++ b/discord/voice_state.py
+--- voice_state.py
++++ voice_state.py
 @@ -321,7 +321,7 @@ async def voice_server_update(self, data: VoiceServerUpdatePayload) -> None:
              )
              return
@@ -91,10 +91,10 @@ Subject: [PATCH 2/7] send seq_ack on resume payloads
  discord/gateway.py | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/discord/gateway.py b/discord/gateway.py
+diff --git gateway.py gateway.py
 index c54d2d5a0f3d..f88305f8d61f 100644
---- a/discord/gateway.py
-+++ b/discord/gateway.py
+--- gateway.py
++++ gateway.py
 @@ -858,6 +858,7 @@ async def resume(self) -> None:
                  'token': state.token,
                  'server_id': str(state.server_id),
@@ -122,10 +122,10 @@ Subject: [PATCH 3/7] resume
  discord/voice_state.py | 19 +++++++++++++++++--
  2 files changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/discord/gateway.py b/discord/gateway.py
+diff --git gateway.py gateway.py
 index f88305f8d61f..2ed93f9b3c4c 100644
---- a/discord/gateway.py
-+++ b/discord/gateway.py
+--- gateway.py
++++ gateway.py
 @@ -943,7 +943,7 @@ async def received_message(self, msg: Dict[str, Any]) -> None:
          _log.debug('Voice websocket frame received: %s', msg)
          op = msg['op']
@@ -135,10 +135,10 @@ index f88305f8d61f..2ed93f9b3c4c 100644
  
          if op == self.READY:
              await self.initial_connection(data)
-diff --git a/discord/voice_state.py b/discord/voice_state.py
+diff --git voice_state.py voice_state.py
 index d3092d861e90..57cce010f8c0 100644
---- a/discord/voice_state.py
-+++ b/discord/voice_state.py
+--- voice_state.py
++++ voice_state.py
 @@ -603,8 +603,8 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
                      # The following close codes are undocumented so I will document them here.
                      # 1000 - normal closure (obviously)
@@ -182,10 +182,10 @@ Subject: [PATCH 4/7] continue
  discord/voice_state.py | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/discord/voice_state.py b/discord/voice_state.py
+diff --git voice_state.py voice_state.py
 index 57cce010f8c0..a537890708e3 100644
---- a/discord/voice_state.py
-+++ b/discord/voice_state.py
+--- voice_state.py
++++ voice_state.py
 @@ -645,6 +645,8 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
                              if self.state is not ConnectionFlowState.disconnected:
                                  await self.disconnect()
@@ -205,10 +205,10 @@ Subject: [PATCH 5/7] logging
  discord/voice_state.py | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/discord/voice_state.py b/discord/voice_state.py
+diff --git voice_state.py voice_state.py
 index a537890708e3..d0996acdb2ab 100644
---- a/discord/voice_state.py
-+++ b/discord/voice_state.py
+--- voice_state.py
++++ voice_state.py
 @@ -632,6 +632,7 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
                              continue
  
@@ -242,10 +242,10 @@ Subject: [PATCH 6/7] carry over the seq_ack when resuming
  discord/voice_state.py | 5 ++++-
  2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/discord/gateway.py b/discord/gateway.py
+diff --git gateway.py gateway.py
 index 2ed93f9b3c4c..a2c3da3d2d21 100644
---- a/discord/gateway.py
-+++ b/discord/gateway.py
+--- gateway.py
++++ gateway.py
 @@ -883,6 +883,7 @@ async def from_connection_state(
          *,
          resume: bool = False,
@@ -262,10 +262,10 @@ index 2ed93f9b3c4c..a2c3da3d2d21 100644
          ws._connection = state
          ws._max_heartbeat_timeout = 60.0
          ws.thread_id = threading.get_ident()
-diff --git a/discord/voice_state.py b/discord/voice_state.py
+diff --git voice_state.py voice_state.py
 index d0996acdb2ab..33247cd109d7 100644
---- a/discord/voice_state.py
-+++ b/discord/voice_state.py
+--- voice_state.py
++++ voice_state.py
 @@ -574,7 +574,10 @@ async def _voice_disconnect(self) -> None:
          self._disconnected.clear()
  
@@ -288,10 +288,10 @@ Subject: [PATCH 7/7] Handle 4021 & 4022
  discord/voice_state.py | 10 +++++++++-
  1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/discord/voice_state.py b/discord/voice_state.py
+diff --git voice_state.py voice_state.py
 index 33247cd109d7..d2cc0ebc183b 100644
---- a/discord/voice_state.py
-+++ b/discord/voice_state.py
+--- voice_state.py
++++ voice_state.py
 @@ -607,6 +607,8 @@ async def _poll_voice_ws(self, reconnect: bool) -> None:
                      # 1000 - normal closure (obviously)
                      # 4014 - we were externally disconnected (voice channel deleted, we were moved, etc)
