@@ -63,6 +63,9 @@ class KeyboardInterruptHandler:
 def ensure_text_command_permissions():
     check = commands.bot_has_permissions(
         send_messages=True,
+        embed_links=True,
+    )
+    thread_check = commands.bot_has_permissions(
         send_messages_in_threads=True,
         embed_links=True,
     )
@@ -70,6 +73,9 @@ def ensure_text_command_permissions():
     async def predicate(ctx: commands.Context):
         if ctx.interaction is not None:
             return True
+
+        if isinstance(ctx.channel, discord.Thread):
+            return await thread_check.predicate(ctx)
 
         return await check.predicate(ctx)
 
