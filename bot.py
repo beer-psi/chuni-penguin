@@ -134,7 +134,7 @@ class ChuniBot(commands.AutoShardedBot):
                     extension=cog,
                 )
             except commands.errors.ExtensionFailed as e:
-                await logger.exception(
+                await logger.aexception(
                     "Extension raised error",
                     tag="extension_error",
                     extension=cog,

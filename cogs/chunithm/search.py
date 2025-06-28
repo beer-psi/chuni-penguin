@@ -1,6 +1,6 @@
 import hashlib
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, override
 
 import discord
 from discord import app_commands
@@ -33,6 +33,31 @@ class SearchCog(commands.Cog, name="Search"):
         self.bot = bot
         self.utils: "UtilsCog" = bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
         self.autocompleters: "AutocompletersCog" = bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
+
+    @override
+    async def cog_load(self) -> None:
+        hoist_commands = [
+            (self.addalias, ("addalias",)),
+            (self.removealias, ("removealias",)),
+            (self.listalias, ("listalias", "listaliases", "aliases")),
+            (self.reloadalias, ("reloadalias",)),
+        ]
+
+        for command, name_and_aliases in hoist_commands:
+            name, *aliases = name_and_aliases
+
+            new_command = command.copy()
+            new_command.name = name
+            new_command.parent = None
+            new_command.cog = self
+            new_command.hidden = True
+
+            if len(aliases) > 0:
+                new_command.aliases = aliases
+
+            new_command.app_command = None
+
+            self.bot.add_command(new_command)
 
     @commands.hybrid_command("find")
     @logged_prefix_command
@@ -72,7 +97,12 @@ class SearchCog(commands.Cog, name="Search"):
             view = SonglistView(ctx, list(charts))
             await view.start()
 
-    @commands.hybrid_command("addalias")
+    @commands.hybrid_group("alias", invoke_without_command=True)
+    @logged_prefix_command
+    async def alias(self, ctx: Context):
+        await ctx.send_help(ctx.command)
+
+    @alias.command("add")
     @logged_prefix_command
     async def addalias(
         self,
@@ -229,7 +259,7 @@ class SearchCog(commands.Cog, name="Search"):
         )
         return None
 
-    @commands.hybrid_command("removealias")
+    @alias.command("remove", aliases=["delete"])
     @logged_prefix_command
     async def removealias(
         self,
@@ -311,7 +341,7 @@ class SearchCog(commands.Cog, name="Search"):
             mention_author=False,
         )
 
-    @commands.hybrid_command("listalias", aliases=["listaliases", "aliases"])
+    @alias.command("list")
     @logged_prefix_command
     async def listalias(
         self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
@@ -365,8 +395,8 @@ class SearchCog(commands.Cog, name="Search"):
 
         return None
 
+    @alias.command("reload", with_app_command=False, hidden=True)
     @commands.is_owner()
-    @commands.command("reloadalias", aliases=["reloadaliases"], hidden=True)
     @logged_prefix_command
     async def reloadalias(self, ctx: Context):
         async with ctx.typing():
