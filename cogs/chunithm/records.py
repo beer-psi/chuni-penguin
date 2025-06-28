@@ -1557,7 +1557,6 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
     @app_commands.command(name="best50", description="View top plays")
-    @app_commands.checks.bot_has_permissions(attach_files=True)
     @app_commands.checks.cooldown(15, 600, key=lambda i: i.user.id)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
