@@ -13,5 +13,4 @@ COG_LIST: list[str] = [
     "cogs.chunithm.records",
     "cogs.chunithm.search",
     "cogs.chunithm.tools",
-    "cogs.chunithm.chunirec",
 ]
