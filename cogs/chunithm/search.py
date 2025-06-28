@@ -404,7 +404,7 @@ class SearchCog(commands.Cog, name="Search"):
         ctx = await Context.from_interaction(interaction)
         return await self._info_inner(ctx, query=query, detailed=detailed)
 
-    @commands.command("info")
+    @commands.command("info", signature="[-d] <query>")
     @logged_prefix_command
     async def info(
         self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
