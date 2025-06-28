@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, cast
 import aiohttp
 import discord
 import httpx
-from discord import Webhook
+from discord import Webhook, app_commands
 from discord.app_commands import AppCommandError
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -188,7 +188,9 @@ class EventsCog(commands.Cog, name="Events"):
                 "```"
             )
 
-        if isinstance(exc, commands.errors.CommandOnCooldown):
+        if isinstance(
+            exc, (commands.CommandOnCooldown, app_commands.CommandOnCooldown)
+        ):
             embed.description = (
                 f"You're too fast. Take a break for {exc.retry_after:.2f} seconds."
             )
@@ -203,7 +205,12 @@ class EventsCog(commands.Cog, name="Events"):
         elif isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
             embed.description = str(exc)
         elif isinstance(
-            exc, (commands.errors.NotOwner, commands.errors.MissingPermissions)
+            exc,
+            (
+                commands.NotOwner,
+                commands.MissingPermissions,
+                app_commands.MissingPermissions,
+            ),
         ):
             embed.description = "Insufficient permissions."
         elif isinstance(exc, commands.BadLiteralArgument):
@@ -223,7 +230,9 @@ class EventsCog(commands.Cog, name="Events"):
                 f"Missing required argument: `{exc.param.displayed_name or exc.param.name}`\n"
                 f"View help for this command with `{prefix}help {command_name}`."
             )
-        elif isinstance(exc, commands.BotMissingPermissions):
+        elif isinstance(
+            exc, (commands.BotMissingPermissions, app_commands.BotMissingPermissions)
+        ):
             missing = [
                 f"- {p.replace('_', ' ').replace('guild', 'server').title()}"
                 for p in exc.missing_permissions
@@ -233,11 +242,15 @@ class EventsCog(commands.Cog, name="Events"):
                 f"{'\n'.join(missing)}\n"
                 "Please fix this and try again."
             )
-        elif isinstance(exc, commands.CommandError) and not isinstance(
+        elif isinstance(
+            exc, (commands.CommandError, app_commands.AppCommandError)
+        ) and not isinstance(
             exc,
             (
                 commands.CommandNotFound,
                 commands.ConversionError,
+                app_commands.CommandNotFound,
+                app_commands.TransformerError,
             ),
         ):
             embed.description = str(exc)
