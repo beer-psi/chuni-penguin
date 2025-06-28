@@ -108,7 +108,9 @@ class EventsCog(commands.Cog, name="Events"):
             exc,
         )
 
-        if embed.description is not None and ctx.bot_permissions.send_messages:
+        if embed.description is not None and (
+            ctx.interaction is not None or ctx.bot_permissions.send_messages
+        ):
             if ctx.bot_permissions.embed_links:
                 await ctx.respond_or_edit(
                     embed=embed, delete_after=delete_after, view=None
@@ -144,7 +146,7 @@ class EventsCog(commands.Cog, name="Events"):
                 "and report the bug in the #help-bugs channel!"
             )
 
-        if ctx.bot_permissions.send_messages:
+        if ctx.interaction is not None or ctx.bot_permissions.send_messages:
             if ctx.bot_permissions.embed_links:
                 await ctx.respond_or_edit(embed=embed, view=None)
             else:
