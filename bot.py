@@ -60,6 +60,22 @@ class KeyboardInterruptHandler:
         self._pending = True
 
 
+def ensure_text_command_permissions():
+    check = commands.bot_has_permissions(
+        send_messages=True,
+        send_messages_in_threads=True,
+        embed_links=True,
+    )
+
+    async def predicate(ctx: commands.Context):
+        if ctx.interaction is not None:
+            return True
+
+        return await check.predicate(ctx)
+
+    return commands.check(predicate)
+
+
 class ChuniBot(commands.AutoShardedBot):
     def __init__(self):
         intents = discord.Intents(
@@ -80,13 +96,7 @@ class ChuniBot(commands.AutoShardedBot):
             tree_cls=VersionableCommandTree,
         )
 
-        self.add_check(
-            commands.bot_has_permissions(
-                send_messages=True,
-                send_messages_in_threads=True,
-                embed_links=True,
-            ).predicate
-        )
+        self.add_check(ensure_text_command_permissions().predicate)
 
         self.launch_time: float = -1
         self.prefixes: dict[int, str] = {}
