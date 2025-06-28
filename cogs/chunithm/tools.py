@@ -42,7 +42,6 @@ from utils.ranks import rank_icon
 if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.autocompleters import AutocompletersCog
-    from cogs.botutils import UtilsCog
 
 
 def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
@@ -88,7 +87,7 @@ def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
 class ToolsCog(commands.Cog, name="Tools"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils = self.bot.utils
         self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
 
     @commands.hybrid_command("anmitsu", aliases=["rub"])

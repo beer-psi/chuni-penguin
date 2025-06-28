@@ -1,13 +1,16 @@
+import asyncio
 import string
 import sys
 from datetime import UTC, datetime
 from html import escape
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, override
 
 import aiohttp
 import discord
 from aiohttp import ClientSession, web
+from aiohttp.web import Application
 from async_lru import alru_cache
+from discord.ext import commands
 from discord.utils import oauth_url
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
@@ -16,16 +19,12 @@ from database.models import Chart, Cookie, Song
 from utils import get_jacket_url, json_dumps, json_loads, sdvxin_link
 from utils.config import config
 from utils.constants import ASSETS_DIR
+from utils.logging import logger
 
 if TYPE_CHECKING:
     from bot import ChuniBot
 
-
-__all__ = ("init_app",)
-
-
-COOKIE_CHARACTERS = string.ascii_lowercase + string.digits
-
+COOKIE_CHARACTERS = f"{string.ascii_lowercase}{string.digits}"
 
 router = web.RouteTableDef()
 
@@ -284,7 +283,7 @@ async def list_songs(request: web.Request) -> web.Response:
     )
 
 
-if (ASSETS_DIR / "jackets").exists() and config.web.serve_assets:
+if config.web.serve_assets and (ASSETS_DIR / "jackets").exists():
     router.static("/assets/jackets", ASSETS_DIR / "jackets")
 
 
@@ -299,32 +298,65 @@ async def on_shutdown(app: web.Application):
     await app["session"].close()
 
 
-def init_app(
-    bot: "ChuniBot",
-    *,
-    base_url: Optional[str] = None,
-    goatcounter: Optional[str] = None,
-    kamaitachi_client_id: Optional[str] = None,
-    kamaitachi_client_secret: Optional[str] = None,
-) -> web.Application:
-    app = web.Application()
-    app.on_response_prepare.append(on_response_prepare)
-    app.on_shutdown.append(on_shutdown)
+class WebCog(commands.Cog, name="Web"):
+    def __init__(self, bot: "ChuniBot") -> None:
+        self.bot = bot
 
-    app.add_routes(router)
+        self._web_task: asyncio.Task | None = None
+        self._web_app: Application | None = None
 
-    session = ClientSession(json_serialize=json_dumps)
-    session.headers.add(
-        "User-Agent",
-        f"chuni-penguin (+https://github.com/beer-psi/chuni-penguin) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",
-    )
+    @override
+    async def cog_load(self) -> None:
+        if not config.web.enable or (
+            self.bot.shard_id is not None and self.bot.shard_id != 0
+        ):
+            return
 
-    app["bot"] = bot
-    app["session"] = session
+        app = web.Application()
 
-    app["base_url"] = base_url
-    app["goatcounter"] = goatcounter
-    app["kamaitachi_client_id"] = kamaitachi_client_id
-    app["kamaitachi_client_secret"] = kamaitachi_client_secret
+        app.on_response_prepare.append(on_response_prepare)
+        app.on_shutdown.append(on_shutdown)
 
-    return app
+        app.add_routes(router)
+
+        session = ClientSession(json_serialize=json_dumps)
+        session.headers.add(
+            "User-Agent",
+            f"chuni-penguin (+https://github.com/beer-psi/chuni-penguin) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",
+        )
+
+        app["bot"] = self.bot
+        app["session"] = session
+
+        app["base_url"] = config.web.base_url
+        app["goatcounter"] = config.web.goatcounter
+        app["kamaitachi_client_id"] = config.credentials.kamaitachi_client_id
+        app["kamaitachi_client_secret"] = config.credentials.kamaitachi_client_secret
+
+        self._web_app = app
+        self._web_task = asyncio.create_task(
+            web._run_app(
+                app,
+                host=config.web.listen_address,
+                port=config.web.port,
+                print=logger.debug if config.dangerous.dev else None,
+                handle_signals=False,
+            )
+        )
+
+    @override
+    async def cog_unload(self) -> None:
+        if self._web_app is not None:
+            await self._web_app.shutdown()
+            await self._web_app.cleanup()
+
+        self._web_app = None
+        self._web_task = None
+
+    @property
+    def web_app(self):
+        return self._web_app
+
+
+async def setup(bot: "ChuniBot"):
+    await bot.add_cog(WebCog(bot))

@@ -1,4 +1,6 @@
 COG_LIST: list[str] = [
+    "cogs.database",
+    "cogs.web",
     "cogs.botutils",
     "cogs.autocompleters",
     "cogs.events",

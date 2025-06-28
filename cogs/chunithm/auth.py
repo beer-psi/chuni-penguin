@@ -21,13 +21,12 @@ from utils.views.login import LoginFlowView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-    from cogs.botutils import UtilsCog
 
 
 class AuthCog(commands.Cog, name="Auth"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils = self.bot.utils
         self.random = SystemRandom()
 
     @commands.hybrid_command(name="logout")

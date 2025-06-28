@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from discord.abc import MessageableChannel
 
     from bot import ChuniBot
-    from cogs.botutils import UtilsCog
     from cogs.events import EventsCog
 
 
@@ -97,7 +96,7 @@ class GuessArguments:
 class GamingCog(commands.Cog, name="Games"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils = self.bot.utils
 
         self.game_tasks: set[asyncio.Task] = set()
 

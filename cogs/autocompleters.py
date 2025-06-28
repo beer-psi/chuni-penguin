@@ -9,13 +9,12 @@ from utils.constants import SIMILARITY_THRESHOLD
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-    from cogs.botutils import UtilsCog
 
 
 class AutocompletersCog(commands.Cog, name="Autocompleters"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils = self.bot.utils
 
     async def song_title_autocomplete(
         self,

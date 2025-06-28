@@ -1,23 +1,16 @@
 import asyncio
 import contextlib
-import functools
 import signal
-import sqlite3
 import sys
 import time
 from pathlib import Path
 from types import FrameType
-from typing import TYPE_CHECKING, Optional, cast, override
+from typing import TYPE_CHECKING, cast, override
 
 import discord
 import discord.utils
-import sqlalchemy.event
-from aiohttp import web
 from discord.ext import commands
-from rapidfuzz import fuzz
-from sqlalchemy import Engine, select, text
-from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy import select, text
 
 from cogs import COG_LIST
 from cogs.gaming.states.base import GuessingGameSkippableState
@@ -29,14 +22,12 @@ from utils.context import PenguinContext
 from utils.evtloop import get_event_loop
 from utils.help import HelpCommand
 from utils.logging import logger
-from web import init_app
 
 if TYPE_CHECKING:
-    from aiohttp.web import Application
-    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
-
     from cogs.botutils import UtilsCog
+    from cogs.database import DatabaseCog
     from cogs.gaming import GamingCog
+    from cogs.web import WebCog
 
 
 BOT_DIR = Path(__file__).parent
@@ -70,19 +61,6 @@ class KeyboardInterruptHandler:
 
 
 class ChuniBot(commands.AutoShardedBot):
-    dev: bool = False
-
-    engine: "AsyncEngine"
-    begin_db_session: async_sessionmaker["AsyncSession"]
-
-    launch_time: float
-    app: Optional["Application"] = None
-
-    # Prefix cache
-    prefixes: dict[int, str]
-
-    command_start_time: dict[commands.Context, int]
-
     def __init__(self):
         intents = discord.Intents(
             guilds=True,
@@ -110,9 +88,9 @@ class ChuniBot(commands.AutoShardedBot):
             ).predicate
         )
 
-        self.dev = config.dangerous.dev
-        self.prefixes = {}
-        self.command_start_time = {}
+        self.launch_time: float = -1
+        self.prefixes: dict[int, str] = {}
+        self.command_start_time: dict[commands.Context, int] = {}
 
     async def start(self, *args, **kwargs):
         self.launch_time = time.time()
@@ -120,75 +98,7 @@ class ChuniBot(commands.AutoShardedBot):
 
     async def setup_hook(self) -> None:
         # Database setup
-        connection_string = config.bot.db_connection_string
-        self.engine = create_async_engine(connection_string)
-        self.begin_db_session = async_sessionmaker(self.engine, expire_on_commit=False)
-
-        @sqlalchemy.event.listens_for(Engine, "connect")
-        def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
-            conn.create_function(
-                "fuzz_qratio",
-                2,
-                functools.partial(fuzz.QRatio, processor=str.lower),  # type: ignore[reportCallIssue]
-            )
-
-            # Disable allowing double quotes on strings
-            conn._connection._connection.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DDL, 0)
-            conn._connection._connection.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DML, 0)
-
-            cursor = conn.cursor()
-
-            # Turns on write-ahead logging: https://www.sqlite.org/wal.html
-            cursor.execute("PRAGMA journal_mode=WAL")
-
-            # Sychronize to disk less offten for performance boosts. WAL mode is safe
-            # from corruption even in this mode.
-            cursor.execute("PRAGMA synchronous=NORMAL")
-
-            # Foreign keys need to be enabled to have an effect. https://www.sqlite.org/foreignkeys.html#fk_enable
-            cursor.execute("PRAGMA foreign_keys=ON")
-
-            # Wait until database isn't locked any more for 100ms before throwing "Database is busy" errors.
-            cursor.execute("PRAGMA busy_timeout=100")
-
-            # Enables query planner optimization.
-            cursor.execute("PRAGMA optimize=0x10002")
-
-            # Enables recursive triggers.
-            cursor.execute("PRAGMA recursive_triggers=ON")
-
-            cursor.close()
-
-        # Load guild prefixes
-        async with self.begin_db_session() as session:
-            prefixes = (await session.execute(select(Prefix))).scalars()
-
-        self.prefixes = {prefix.guild_id: prefix.prefix for prefix in prefixes}
-        await logger.ainfo(
-            "Loaded guild prefixes",
-            tag="load_guild_prefix",
-            prefix_count=len(self.prefixes),
-        )
-
-        # Setup login web server (if enabled)
-        if config.web.enable and (self.shard_id is None or self.shard_id == 0):
-            self.app = init_app(
-                self,
-                goatcounter=config.web.goatcounter,
-                base_url=config.web.base_url,
-                kamaitachi_client_id=config.credentials.kamaitachi_client_id,
-                kamaitachi_client_secret=config.credentials.kamaitachi_client_secret,
-            )
-            _ = asyncio.ensure_future(  # noqa: RUF006
-                web._run_app(
-                    self.app,
-                    port=config.web.port,
-                    host=config.web.listen_address,
-                    handle_signals=False,
-                )
-            )
-
-        if self.dev:
+        if config.dangerous.dev:
             await self.load_extension("jishaku")
 
         for cog in COG_LIST:
@@ -219,6 +129,18 @@ class ChuniBot(commands.AutoShardedBot):
                     extension=cog,
                     exc_info=e,
                 )
+
+        # Load guild prefixes
+        async with self.begin_db_session() as session:
+            prefixes = (await session.execute(select(Prefix))).scalars()
+
+        self.prefixes = {prefix.guild_id: prefix.prefix for prefix in prefixes}
+
+        await logger.ainfo(
+            "Loaded guild prefixes",
+            tag="load_guild_prefix",
+            prefix_count=len(self.prefixes),
+        )
 
         tree = cast(VersionableCommandTree, self.tree)
         current_tree_hash = await tree.get_hash()
@@ -252,16 +174,17 @@ class ChuniBot(commands.AutoShardedBot):
     def utils(self) -> "UtilsCog":
         return self.get_cog("Utils")  # pyright: ignore[reportReturnType]
 
-    async def _close_web(self):
-        if self.app is not None:
-            await self.app.shutdown()
-            await self.app.cleanup()
+    @property
+    def engine(self):
+        return cast("DatabaseCog", self.get_cog("Database")).engine
 
-    async def _close_database(self):
-        async with self.begin_db_session() as session:
-            await session.execute(text("PRAGMA optimize"))
+    @property
+    def begin_db_session(self):
+        return cast("DatabaseCog", self.get_cog("Database")).sessionmaker
 
-        await self.engine.dispose()
+    @property
+    def app(self):
+        return cast("WebCog", self.get_cog("Web")).web_app
 
     async def _close_games(self):
         gaming = cast("GamingCog | None", self.get_cog("Games"))
@@ -318,12 +241,6 @@ class ChuniBot(commands.AutoShardedBot):
 
         if len(timeout_tasks) > 0:
             await asyncio.wait(timeout_tasks)
-
-        await asyncio.gather(
-            self._close_web(),
-            self._close_database(),
-            return_exceptions=True,
-        )
 
         await super().close()
 

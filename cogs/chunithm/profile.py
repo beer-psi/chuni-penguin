@@ -28,7 +28,6 @@ from utils.views.profile import (
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-    from cogs.botutils import UtilsCog
 
 
 @dataclass
@@ -134,7 +133,7 @@ def render_avatar(items: dict[str, bytes]) -> BytesIO:
 class ProfileCog(commands.Cog, name="Profile"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils = self.bot.utils
 
     @override
     async def cog_load(self) -> None:

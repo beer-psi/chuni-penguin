@@ -75,7 +75,6 @@ from utils.views.leaderboard import LeaderboardView
 if TYPE_CHECKING:
     from bot import ChuniBot
     from cogs.autocompleters import AutocompletersCog
-    from cogs.botutils import UtilsCog
 
 
 NOTO_SANS_JP_24 = ImageFont.truetype(
@@ -638,7 +637,7 @@ def render_b30(
 class RecordsCog(commands.Cog, name="Records"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils = self.bot.utils
         self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
 
     async def _recent_inner(

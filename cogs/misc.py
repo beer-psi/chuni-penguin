@@ -20,13 +20,12 @@ from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-    from cogs.botutils import UtilsCog
 
 
 class MiscCog(commands.Cog, name="Miscellaneous"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-        self.utils: "UtilsCog" = self.bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils = self.bot.utils
 
     async def cog_load(self) -> None:
         self.listening.start()
