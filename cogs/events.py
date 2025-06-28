@@ -55,7 +55,11 @@ class EventsCog(commands.Cog, name="Events"):
         )
 
         if embed.description is not None:
-            await interaction.edit_original_response(embed=embed)
+            if interaction.response.is_done():
+                await interaction.edit_original_response(embed=embed, view=None)
+            else:
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
             return
 
         await logger.aexception(
@@ -302,7 +306,7 @@ class EventsCog(commands.Cog, name="Events"):
                 args = args[ctx_arg_idx + 1 :]
 
             content = (
-                f"Unhandled exception in `c>{command_name}`\n"
+                f"Unhandled exception in `{context_or_interaction.clean_prefix}{command_name}`\n"
                 "\n"
                 f"User ID: `{context_or_interaction.author.id}` ({context_or_interaction.author.mention})\n"
                 f"Channel ID: `{context_or_interaction.channel.id}` (<#{context_or_interaction.channel.id}>)\n"
