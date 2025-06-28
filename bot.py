@@ -84,21 +84,16 @@ def ensure_text_command_permissions():
 
 class ChuniBot(commands.AutoShardedBot):
     def __init__(self):
-        intents = discord.Intents(
-            guilds=True,
-            voice_states=True,
-            messages=True,
-            typing=True,
-            message_content=True,
-        )
-
-        command_prefix = guild_specific_prefix(config.bot.default_prefix)
-        help_command = HelpCommand()
-
         super().__init__(
-            command_prefix=command_prefix,
-            help_command=help_command,
-            intents=intents,
+            command_prefix=guild_specific_prefix(config.bot.default_prefix),
+            help_command=HelpCommand(),
+            intents=discord.Intents(
+                guilds=True,
+                voice_states=True,
+                messages=True,
+                typing=True,
+                message_content=True,
+            ),
             tree_cls=VersionableCommandTree,
         )
 

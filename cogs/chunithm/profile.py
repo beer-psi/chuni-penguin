@@ -350,7 +350,11 @@ class ProfileCog(commands.Cog, name="Profile"):
                     mention_author=False,
                 )
 
-    @commands.command(name="chunithm", aliases=["chuni", "profile"])
+    @commands.command(
+        name="chunithm",
+        aliases=["chuni", "profile"],
+        usage="[-k] [user]",
+    )
     @logged_prefix_command
     async def chunithm(
         self,

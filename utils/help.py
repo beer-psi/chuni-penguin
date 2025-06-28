@@ -17,6 +17,17 @@ class HelpCommand(commands.HelpCommand):
     def prefix(self):
         return self.context.clean_prefix
 
+    @override
+    async def send_error_message(self, error: str, /) -> None:
+        await self.context.reply(
+            embed=discord.Embed(
+                color=discord.Color.red(),
+                title="Error",
+                description=error,
+            ),
+            mention_author=False,
+        )
+
     async def send_bot_help(
         self, mapping: Mapping[Optional[Cog], List[Command[Any, ..., Any]]], /
     ) -> None:
@@ -46,62 +57,97 @@ class HelpCommand(commands.HelpCommand):
                 text="\n".join(footer_items),
             )
         )
-        description = ""
+        description_parts: list[str] = []
+
         for cogs, cmd in mapping.items():
             name = "No category" if cogs is None else cogs.qualified_name
             filtered = await self.filter_commands(cmd, sort=True)
             if filtered:
-                description += f"**{name}** - "
-                description += " ".join([f"`{c.name}`" for c in filtered])
-                description += "\n"
-        embed.description = description
-        await self.get_destination().send(embed=embed)
+                description_parts.append(f"**{name}** - ")
 
-        return await super().send_bot_help(mapping)
+                for c in filtered:
+                    description_parts.append(f"`{c.name}`")
+                    description_parts.append(" ")
+
+                description_parts.append("\n")
+
+        embed.description = "".join(description_parts)
+
+        await self.get_destination().send(embed=embed)
 
     async def send_command_help(self, command: Command[Any, ..., Any], /) -> None:
         embed = discord.Embed(color=self.COLOUR)
-        embed.description = (
-            f"```{self.prefix}{command.qualified_name}```\n{command.help}"
-        )
+        description_parts: list[str] = [
+            f"```{self.prefix}{command.qualified_name} {command.signature}```\n{command.help}"
+        ]
 
         params = command.clean_params.values()
+
         if params:
-            params_desc = ""
+            params_desc_parts: list[str] = []
             for param in params:
                 if not param.description:
                     continue
 
-                params_desc += f"`{param.name}`"
-                params_desc += f": {param.description}"
+                params_desc_parts.append(f"`{param.name}`: {param.description}")
+
                 if param.default is not param.empty:
-                    params_desc += f" (default: {param.default})"
+                    params_desc_parts.append(f" (default: {param.default})")
 
-                params_desc += "\n"
+                params_desc_parts.append("\n")
 
-            if params_desc:
-                embed.description += f"\n\n**Parameters:**\n{params_desc}"
+            if params_desc_parts:
+                description_parts.append(
+                    f"\n\n**Parameters:**\n{''.join(params_desc_parts)}"
+                )
+
+        embed.description = "".join(description_parts)
+
         await self.get_destination().send(embed=embed)
 
     @override
     async def send_group_help(self, group: Group[Any, ..., Any], /) -> None:
         embed = discord.Embed(color=self.COLOUR)
-        embed.description = f"```{self.prefix}{group.qualified_name}```\n{group.help}"
+        embed = discord.Embed(color=self.COLOUR)
+        description_parts: list[str] = [
+            f"```{self.prefix}{group.qualified_name} {group.signature}```\n{group.help}"
+        ]
 
         params = group.clean_params.values()
+
         if params:
-            params_desc = ""
+            params_desc_parts: list[str] = []
             for param in params:
                 if not param.description:
                     continue
 
-                params_desc += f"`{param.name}`"
-                params_desc += f": {param.description}"
+                params_desc_parts.append(f"`{param.name}`: {param.description}")
+
                 if param.default is not param.empty:
-                    params_desc += f" (default: {param.default})"
+                    params_desc_parts.append(f" (default: {param.default})")
 
-                params_desc += "\n"
+                params_desc_parts.append("\n")
 
-            if params_desc:
-                embed.description += f"\n\n**Parameters:**\n{params_desc}"
+            if params_desc_parts:
+                description_parts.append(
+                    f"\n\n**Parameters:**\n{''.join(params_desc_parts)}"
+                )
+
+        if len(group.commands) > 0:
+            commands = await self.filter_commands(group.commands, sort=True)
+
+            description_parts.append("\n\n**Commands:**\n")
+
+            for command in commands:
+                description_parts.append(
+                    f"`{self.context.clean_prefix}{command.qualified_name}`"
+                )
+
+                if command.short_doc:
+                    description_parts.append(f": {command.short_doc}")
+
+                description_parts.append("\n")
+
+        embed.description = "".join(description_parts)
+
         await self.get_destination().send(embed=embed)

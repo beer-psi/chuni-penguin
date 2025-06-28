@@ -712,7 +712,11 @@ class RecordsCog(commands.Cog, name="Records"):
                 content=f"Most recent credits for {userinfo.name}:",
             )
 
-    @commands.command(name="recent", aliases=["rs"])
+    @commands.command(
+        name="recent",
+        aliases=["rs"],
+        usage="[-k] [user]",
+    )
     @logged_prefix_command
     async def recent(self, ctx: Context, *, query: str = ""):
         """View your recent scores.
@@ -996,7 +1000,11 @@ class RecordsCog(commands.Cog, name="Records"):
             else:
                 await view.start(content=content)
 
-    @commands.command("compare", aliases=["c"])
+    @commands.command(
+        "compare",
+        aliases=["c"],
+        usage="[-k] [user]",
+    )
     @logged_prefix_command
     async def compare(self, ctx: PenguinContext, *, query: str = ""):
         """Compare your best score with another score.
@@ -1196,7 +1204,11 @@ class RecordsCog(commands.Cog, name="Records"):
 
             return None
 
-    @commands.command("scores", aliases=["score"])
+    @commands.command(
+        "scores",
+        aliases=["score"],
+        usage="[-k] [user] <query...>",
+    )
     @logged_prefix_command
     async def scores(
         self,
@@ -1499,7 +1511,11 @@ class RecordsCog(commands.Cog, name="Records"):
 
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(15, 600, commands.BucketType.member)
-    @commands.command("best50", aliases=["b30", "best30", "b50"])
+    @commands.command(
+        "best50",
+        aliases=["b30", "best30", "b50"],
+        usage="[-c] [-k] [-n] [user]",
+    )
     @logged_prefix_command
     async def best50(self, ctx: Context, *, query: str = ""):
         """View top 50 scores of you or another player.
@@ -1744,7 +1760,10 @@ class RecordsCog(commands.Cog, name="Records"):
         await view.start()
         return None
 
-    @commands.command("top")
+    @commands.command(
+        "top",
+        usage="[-d <difficulty>] [-g <genre>] [-r <rank>] [-s <sort_by>] [-k] [user] [level]",
+    )
     @logged_prefix_command
     async def top(
         self,
@@ -1758,7 +1777,7 @@ class RecordsCog(commands.Cog, name="Records"):
         **Parameters:**
         `user`: Discord username of the player. Yourself, if not provided.
         `level`: Level (from 1 to 15+) to search for.
-        `-d`: Difficulty to search for. Must be one of `EASY`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
+        `-d`: Difficulty to search for. Must be one of `BASIC`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
         `-g`: Genre to search for. Must be one of `POPS&ANIME`, `niconico`, `Touhou Project`, `ORIGINAL`, `VARIETY`, `Irodorimidori`, or `Gekimai`, if specified.
         `-r`: Rank to search for. Anywhere between "S" and "SSS+" (inclusive), if specified.
         `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`.

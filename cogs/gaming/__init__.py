@@ -153,25 +153,21 @@ class GamingCog(commands.Cog, name="Games"):
             else None,
         )
 
-    @commands.group("guess", invoke_without_command=True)
+    @commands.group(
+        "guess",
+        usage="<game_type> [-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+        invoke_without_command=True,
+    )
     @logged_prefix_command
     async def guess(self, ctx: Context):
-        """Start a guessing game.
-
-        **Parameters**
-        `game_type`: The guessing game to play. Either `jacket`, `audio` or `voice`.
-        `-d`, `--difficulty`: The difficulty of the game. One of `BASIC`/`ADVANCED`/`EXPERT`/`MASTER`/`ULTIMA`. See help on specific guessing games for details.
-        `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
-        `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
-        `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
-        `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
-        `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
-        `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
-        """
+        """Start a guessing game. View help for each game mode for details."""
 
         await ctx.send_help(self.guess)
 
-    @guess.command("jacket")
+    @guess.command(
+        "jacket",
+        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+    )
     @commands.bot_has_permissions(add_reactions=True, read_messages=True)
     @logged_prefix_command
     async def guess_jacket(self, ctx: Context, *, arguments: str = ""):
@@ -194,7 +190,10 @@ class GamingCog(commands.Cog, name="Games"):
 
         await self._guess_without_voice_channel(ctx, GuessingGameType.IMAGE, arguments)
 
-    @guess.command("audio")
+    @guess.command(
+        "audio",
+        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+    )
     @commands.bot_has_permissions(add_reactions=True, read_messages=True)
     @logged_prefix_command
     async def guess_audio(self, ctx: Context, *, arguments: str = ""):
@@ -206,7 +205,7 @@ class GamingCog(commands.Cog, name="Games"):
         - `ADVANCED` with 10 seconds of the song played.
         - `EXPERT` with 7 seconds of the song played.
         - `MASTER` with 4 seconds of the song played.
-        - `ULTIMA` with 1 seconds of the song played.
+        - `ULTIMA` with 1 second of the song played.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
         `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
@@ -219,8 +218,11 @@ class GamingCog(commands.Cog, name="Games"):
             ctx, GuessingGameType.VOICE_MESSAGE, arguments
         )
 
+    @guess.command(
+        "voice",
+        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+    )
     @commands.guild_only()
-    @guess.command("voice")
     @commands.bot_has_permissions(add_reactions=True, read_messages=True)
     @logged_prefix_command
     async def guess_voice(self, ctx: PenguinGuildContext, *, arguments: str = ""):
@@ -374,6 +376,8 @@ class GamingCog(commands.Cog, name="Games"):
     @guess.command("leaderboard", aliases=["lb"])
     @logged_prefix_command
     async def guess_leaderboard(self, ctx: PenguinGuildContext):
+        """View the score leaderboard for the current server."""
+
         async with ctx.typing():
             view = GuessLeaderboardView(ctx)
             await view.start()
