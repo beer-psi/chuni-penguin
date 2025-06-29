@@ -1475,7 +1475,6 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("-n", "--new-rating", action="store_true")
     @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
-    @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(15, 600, commands.BucketType.member)
     @logged_prefix_command
     async def best50(
@@ -1503,6 +1502,9 @@ class RecordsCog(commands.Cog, name="Records"):
         if image and classic:
             msg = "Cannot specify both `--image` and `--classic`."
             raise commands.BadArgument(msg)
+
+        if not classic and not ctx.bot_permissions.attach_files:
+            raise commands.BotMissingPermissions(["attach_files"])
 
         await self._best50_inner(
             ctx,
