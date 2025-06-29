@@ -4,7 +4,7 @@ import sqlite3
 from typing import TYPE_CHECKING, override
 
 import sqlalchemy.event
-from discord.ext import commands
+from discord.ext import commands, tasks
 from rapidfuzz import fuzz
 from sqlalchemy import text
 from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
@@ -65,7 +65,13 @@ class DatabaseCog(commands.Cog, name="Database"):
         )
 
     @override
+    async def cog_load(self) -> None:
+        self.optimize_database.start()
+
+    @override
     async def cog_unload(self) -> None:
+        self.optimize_database.stop()
+
         async with self._sessionmaker() as session:
             await session.execute(text("PRAGMA optimize"))
 
@@ -78,6 +84,11 @@ class DatabaseCog(commands.Cog, name="Database"):
     @property
     def sessionmaker(self):
         return self._sessionmaker
+
+    @tasks.loop(hours=1)
+    async def optimize_database(self):
+        async with self.bot.begin_db_session() as session:
+            await session.execute(text("PRAGMA optimize"))
 
 
 async def setup(bot: "ChuniBot"):

@@ -10,7 +10,7 @@ import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Context, Greedy
 from discord.utils import oauth_url
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import delete, func, select
 
 from database.models import Cookie, Prefix, Song
 from utils.config import config
@@ -29,11 +29,9 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     async def cog_load(self) -> None:
         self.listening.start()
-        self.optimize_database.start()
 
     async def cog_unload(self) -> None:
         self.listening.stop()
-        self.optimize_database.stop()
 
     @commands.command("treesync", hidden=True, invoke_without_command=True)
     @commands.is_owner()
@@ -281,11 +279,6 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
     @listening.before_loop
     async def before_listening(self):
         await self.bot.wait_until_ready()
-
-    @tasks.loop(hours=1)
-    async def optimize_database(self):
-        async with self.bot.begin_db_session() as session:
-            await session.execute(text("PRAGMA optimize"))
 
 
 async def setup(bot: "ChuniBot") -> None:
