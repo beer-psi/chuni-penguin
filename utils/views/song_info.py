@@ -47,13 +47,13 @@ class SongInfoPageSource(ListPageSource[Song]):
                             if x.guild_id == -1
                         ]
                     )
-                    song_description += "\n\n"
+                    song_description += "\n"
 
                 if not song.available:
                     if song.removed:
-                        song_description += "**This song is removed.**\n\n"
+                        song_description += "\n**This song is removed.**\n\n"
                     else:
-                        song_description += "**This song is not available in CHUNITHM International.**\n\n"
+                        song_description += "\n**This song is not available in CHUNITHM International.**\n\n"
                 else:
                     song_description += "\n"
 
