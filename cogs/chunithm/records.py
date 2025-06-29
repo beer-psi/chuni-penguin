@@ -1675,22 +1675,28 @@ class RecordsCog(commands.Cog, name="Records"):
 
         await interaction.response.defer()
 
-        if network == "chuninet" and (genre or rank) and not difficulty:
-            return await interaction.followup.send(
-                "Difficulty must be set if genre or rank is set."
-            )
-
         if network == "chuninet":
             async with self.utils.chuninet(ctx, target_user_id) as client:
-                records = await client.music_record_by_folder(
-                    level=level, genre=genre, difficulty=difficulty, rank=rank
-                )
-                assert records is not None
+                if level is not None:
+                    records = await client.music_record_by_folder(level=level)
+                elif difficulty is not None:
+                    records = await client.music_record_by_folder(difficulty=difficulty)
+                else:
+                    msg = "Must specify either level or difficulty."
+                    raise app_commands.AppCommandError(msg)
+
+                if difficulty is not None:
+                    records = [r for r in records if r.difficulty == difficulty]
+                if rank is not None:
+                    records = [r for r in records if r.rank == rank]
+
+                records = await self.utils.hydrate_records(records)
+
+                if genre is not None:
+                    records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
 
                 if len(records) == 0:
                     return await interaction.followup.send("No scores found.")
-
-                records = await self.utils.hydrate_records(records)
         elif network == "kamaitachi":
             async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
                 resp = await client.get(
@@ -1712,7 +1718,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
         else:
             msg = "Invalid network. Expected chuninet or kamaitachi."
-            raise ValueError(msg)
+            raise app_commands.AppCommandError(msg)
 
         if sort == "rating":
             records.sort(
@@ -1781,13 +1787,9 @@ class RecordsCog(commands.Cog, name="Records"):
         `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`. You can optionally add `+` or `-` after a metric to sort in ascending or descending order, e.g. `score+`. The default is to sort by rating in descending order.
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
 
-        Genre and rank cannot be set at the same time. If genre or rank is set, difficulty must also be set.
+        On CHUNITHM-NET, at least level or difficulty must be set.
 
-        If multiple parameters are set, they will be applied in order of:
-        - level
-        - genre + difficulty
-        - rank + difficulty
-        - difficulty
+        If multiple parameters are set, they will be applied in order of level, difficulty, genre, rank.
 
         **Examples:**
         `c>top 14+`: View your best scores for level 14+
@@ -1824,22 +1826,20 @@ class RecordsCog(commands.Cog, name="Records"):
             ],
             required=False,
         )
-        parser.add_argument("-k", "--kamaitachi", action="store_true")
-
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument(
+        parser.add_argument(
             "-g",
             "--genre",
             required=False,
             type=lambda s: GenreConverter().convert(ctx, s),
         )
-        group.add_argument(
+        parser.add_argument(
             "-r",
             "--rank",
             required=False,
             type=lambda s: RankConverter().convert(ctx, s),
             choices=[Rank.S, Rank.Sp, Rank.SS, Rank.SSp, Rank.SSS, Rank.SSSp],
         )
+        parser.add_argument("-k", "--kamaitachi", action="store_true")
 
         try:
             args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
@@ -1849,10 +1849,6 @@ class RecordsCog(commands.Cog, name="Records"):
         difficulty: Difficulty | None = args.difficulty
         genre: Genres | None = args.genre
         rank: Rank | None = args.rank
-
-        if (args.genre or args.rank) and not difficulty:
-            msg = "Must specify a difficulty when searching by genre or rank."
-            raise commands.BadArgument(msg)
 
         user = None
         str_level = None
@@ -1880,6 +1876,9 @@ class RecordsCog(commands.Cog, name="Records"):
         ):
             await self._best50_inner(ctx, user)
             return None
+
+        if str_level is None and difficulty is None and network == "chuninet":
+            msg = ""
 
         level = None
         internal_level: float | None = None
@@ -1910,18 +1909,30 @@ class RecordsCog(commands.Cog, name="Records"):
         async with ctx.typing():
             if network == "chuninet":
                 async with self.utils.chuninet(ctx, target_user_id) as client:
-                    records = await client.music_record_by_folder(
-                        level=level,
-                        genre=genre,
-                        difficulty=difficulty,
-                        rank=rank,
-                    )
-                    assert records is not None
+                    if level is not None:
+                        records = await client.music_record_by_folder(level=level)
+                    elif difficulty is not None:
+                        records = await client.music_record_by_folder(
+                            difficulty=difficulty
+                        )
+                    else:
+                        msg = "Must specify either level or difficulty."
+                        raise commands.BadArgument(msg)
+
+                    if difficulty is not None:
+                        records = [r for r in records if r.difficulty == difficulty]
+                    if rank is not None:
+                        records = [r for r in records if r.rank == rank]
+
+                    records = await self.utils.hydrate_records(records)
+
+                    if genre is not None:
+                        records = [
+                            r for r in records if r.extras[KEY_SONG_GENRE] == genre
+                        ]
 
                     if len(records) == 0:
                         return await ctx.reply("No scores found.", mention_author=False)
-
-                    records = await self.utils.hydrate_records(records)
             elif network == "kamaitachi":
                 async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
                     resp = await client.get(
@@ -1955,7 +1966,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     # our default has always been to sort descending, so
                     # `rating` or `rating-` should sort by descending.
                     # only `rating+` will sort by ascending
-                    reverse=not args.sort.endswith("+"),
+                    reverse=args.sort is None or not args.sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
