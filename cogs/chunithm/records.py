@@ -1783,7 +1783,7 @@ class RecordsCog(commands.Cog, name="Records"):
         `level`: Level (from 1 to 15+) to search for.
         `-d`: Difficulty to search for. Must be one of `BASIC`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
         `-g`: Genre to search for.
-        `-r`: Rank to search for. Anywhere between "S" and "SSS+" (inclusive), if specified.
+        `-r`: Rank to search for.
         `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`. You can optionally add `+` or `-` after a metric to sort in ascending or descending order, e.g. `score+`. The default is to sort by rating in descending order.
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
 
@@ -1837,7 +1837,6 @@ class RecordsCog(commands.Cog, name="Records"):
             "--rank",
             required=False,
             type=lambda s: RankConverter().convert(ctx, s),
-            choices=[Rank.S, Rank.Sp, Rank.SS, Rank.SSp, Rank.SSS, Rank.SSSp],
         )
         parser.add_argument("-k", "--kamaitachi", action="store_true")
 
