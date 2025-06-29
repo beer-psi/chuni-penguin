@@ -1,8 +1,7 @@
+import argparse
 import asyncio
-import contextlib
 import itertools
 import urllib.parse
-from argparse import ArgumentError
 from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -38,8 +37,7 @@ from chunithm_net.models.record import (
     Record,
 )
 from database.models import Song, SongJacket, UserConfig
-from utils import did_you_mean_text, floor_to_ndp, json_loads, shlex_split
-from utils.argparse import DiscordArguments
+from utils import did_you_mean_text, flags, floor_to_ndp, json_loads
 from utils.components import ScoreCardEmbed
 from utils.config import config
 from utils.constants import (
@@ -712,13 +710,17 @@ class RecordsCog(commands.Cog, name="Records"):
                 content=f"Most recent credits for {userinfo.name}:",
             )
 
-    @commands.command(
-        name="recent",
-        aliases=["rs"],
-        usage="[-k] [user]",
-    )
+    @flags.command("recent", aliases=["rs"])
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
     @logged_prefix_command
-    async def recent(self, ctx: Context, *, query: str = ""):
+    async def recent(
+        self,
+        ctx: Context,
+        *,
+        kamaitachi: bool = False,
+        user: discord.Member | discord.User | None = None,
+    ):
         """View your recent scores.
 
         **Parameters**:
@@ -726,21 +728,7 @@ class RecordsCog(commands.Cog, name="Records"):
         `-k, --kamaitachi`: Get recent scores from Kamaitachi, if the user has that linked.
         """
 
-        parser = DiscordArguments()
-        parser.add_argument("-k", "--kamaitachi", action="store_true")
-        parser.add_argument(
-            "user",
-            nargs="?",
-            default=None,
-            type=lambda s: MemberOrUserConverter().convert(ctx, s),
-        )
-
-        try:
-            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
-        except ArgumentError as e:
-            raise commands.BadArgument(str(e)) from e
-
-        await self._recent_inner(ctx, args.user, kamaitachi=args.kamaitachi)
+        await self._recent_inner(ctx, user, kamaitachi=kamaitachi)
 
     @app_commands.command(name="recent", description="View recent scores")
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -1000,13 +988,17 @@ class RecordsCog(commands.Cog, name="Records"):
             else:
                 await view.start(content=content)
 
-    @commands.command(
-        "compare",
-        aliases=["c"],
-        usage="[-k] [user]",
-    )
+    @flags.command("compare", aliases=["c"])
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
     @logged_prefix_command
-    async def compare(self, ctx: PenguinContext, *, query: str = ""):
+    async def compare(
+        self,
+        ctx: PenguinContext,
+        *,
+        kamaitachi: bool = False,
+        user: discord.Member | discord.User | None = None,
+    ):
         """Compare your best score with another score.
 
         By default, it's the most recently posted score. You can reply to another
@@ -1022,21 +1014,7 @@ class RecordsCog(commands.Cog, name="Records"):
         `-k, --kamaitachi`: Get scores from Kamaitachi, if the target user has a linked account.
         """
 
-        parser = DiscordArguments()
-        parser.add_argument("-k", "--kamaitachi", action="store_true")
-        parser.add_argument(
-            "user",
-            nargs="?",
-            default=None,
-            type=lambda s: MemberOrUserConverter().convert(ctx, s),
-        )
-
-        try:
-            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
-        except ArgumentError as e:
-            raise commands.BadArgument(str(e)) from e
-
-        await self._compare_inner(ctx, args.user, kamaitachi=args.kamaitachi)
+        await self._compare_inner(ctx, user, kamaitachi=kamaitachi)
 
     @app_commands.command(
         name="compare", description="Compare your best score with another score."
@@ -1204,17 +1182,23 @@ class RecordsCog(commands.Cog, name="Records"):
 
             return None
 
-    @commands.command(
-        "scores",
-        aliases=["score"],
-        usage="[-k] [user] <query...>",
+    @flags.command("scores", aliases=["score"])
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument(
+        "user",
+        nargs=flags.OPTIONAL_INVISIBLE,
+        default=None,
+        type=MemberOrUserConverter,
     )
+    @flags.argument("query", nargs="+")
     @logged_prefix_command
     async def scores(
         self,
         ctx: PenguinContext,
         *,
-        query: str = "",
+        kamaitachi: bool = False,
+        user: discord.Member | discord.User | None = None,
+        query: list[str],
     ):
         """Get a player's scores for a specific song.
 
@@ -1224,33 +1208,9 @@ class RecordsCog(commands.Cog, name="Records"):
         `-k, --kamaitachi`: Get scores from Kamaitachi, if the user has that linked.
         """
 
-        parser = DiscordArguments()
-        parser.add_argument("-k", "--kamaitachi", action="store_true")
+        _query = await AliasNameConverter(lower=True).convert(ctx, " ".join(query))
 
-        try:
-            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
-        except ArgumentError as e:
-            raise commands.BadArgument(str(e)) from e
-
-        user = None
-
-        if len(rest) > 0:
-            for converter in [commands.MemberConverter, commands.UserConverter]:
-                with contextlib.suppress(commands.BadArgument):
-                    user = await converter().convert(ctx, rest[0])
-                    break
-
-        if user is not None:
-            if len(rest) < 2:
-                msg = "You have not specified a song to search for."
-                raise commands.BadArgument(msg)
-            query = " ".join(rest[1:])
-        else:
-            query = " ".join(rest)
-
-        query = await AliasNameConverter(lower=True).convert(ctx, query)
-
-        await self._scores_inner(ctx, query, user, kamaitachi=args.kamaitachi)
+        await self._scores_inner(ctx, query=_query, user=user, kamaitachi=kamaitachi)
 
     @app_commands.command(
         name="scores",
@@ -1509,15 +1469,25 @@ class RecordsCog(commands.Cog, name="Records"):
                 mention_author=False,
             )
 
+    @flags.command("best50", aliases=["best30", "b30", "b50"])
+    @flags.argument("-c", "--classic", action="store_true")
+    @flags.argument("-i", "--image", action="store_true", help=argparse.SUPPRESS)
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("-n", "--new-rating", action="store_true")
+    @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
     @commands.bot_has_permissions(attach_files=True)
     @commands.cooldown(15, 600, commands.BucketType.member)
-    @commands.command(
-        "best50",
-        aliases=["b30", "best30", "b50"],
-        usage="[-c] [-k] [-n] [user]",
-    )
     @logged_prefix_command
-    async def best50(self, ctx: Context, *, query: str = ""):
+    async def best50(
+        self,
+        ctx: Context,
+        *,
+        classic: bool = False,
+        image: bool = False,
+        kamaitachi: bool = False,
+        new_rating: bool = False,
+        user: discord.Member | discord.User | None = None,
+    ):
         """View top 50 scores of you or another player.
 
         **Parameters**:
@@ -1530,30 +1500,17 @@ class RecordsCog(commands.Cog, name="Records"):
         Does nothing for official network.
         """
 
-        parser = DiscordArguments()
-        parser.add_argument("-i", "--image", action="store_true")
-        parser.add_argument("-c", "--classic", action="store_true")
-        parser.add_argument("-k", "--kamaitachi", action="store_true")
-        parser.add_argument("-n", "--new-rating", action="store_true")
-        parser.add_argument(
-            "user",
-            nargs="?",
-            default=None,
-            type=lambda s: MemberOrUserConverter().convert(ctx, s),
-        )
-
-        try:
-            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
-        except ArgumentError as e:
-            raise commands.BadArgument(str(e)) from e
+        if image and classic:
+            msg = "Cannot specify both `--image` and `--classic`."
+            raise commands.BadArgument(msg)
 
         await self._best50_inner(
             ctx,
-            args.user,
-            image=args.image,
-            classic=args.classic,
-            kamaitachi=args.kamaitachi,
-            new_rating=args.new_rating,
+            user,
+            image=image,
+            classic=classic,
+            kamaitachi=kamaitachi,
+            new_rating=new_rating,
         )
 
     @app_commands.command(name="best50", description="View top plays")
@@ -1764,16 +1721,44 @@ class RecordsCog(commands.Cog, name="Records"):
         await view.start()
         return None
 
-    @commands.command(
-        "top",
-        usage="[-d <difficulty>] [-g <genre>] [-r <rank>] [-s <sort_by>] [-k] [user] [level]",
+    @flags.command("top")
+    @flags.argument("-d", "--difficulty", required=False, type=DifficultyConverter)
+    @flags.argument("-g", "--genre", required=False, type=GenreConverter)
+    @flags.argument("-r", "--rank", required=False, type=RankConverter)
+    @flags.argument(
+        "-s",
+        "--sort",
+        choices=[
+            key + order
+            for key in (
+                "score",
+                "rating",
+                "op",
+                "op_percent",
+                "overpower",
+                "overpower_percent",
+            )
+            for order in ("", "-", "+")
+        ],
+        required=False,
     )
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument(
+        "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
+    )
+    @flags.argument("level", nargs="?", default=None)
     @logged_prefix_command
     async def top(
         self,
         ctx: Context,
         *,
-        query: str | None = None,
+        difficulty: Difficulty | None = None,
+        genre: Genres | None = None,
+        rank: Rank | None = None,
+        sort: str | None = None,
+        kamaitachi: bool = False,
+        user: discord.User | discord.Member | None = None,
+        level: str | None = None,
     ):
         """
         **View your best scores for a level.**
@@ -1798,118 +1783,58 @@ class RecordsCog(commands.Cog, name="Records"):
         `c>top @player -r sss -d mas`: View @player's best scores for SSS rank on MASTER difficulty.
         """
 
-        if query is None:
-            await self._best50_inner(ctx)
-            return None
-
-        parser = DiscordArguments()
-        parser.add_argument(
-            "-d",
-            "--difficulty",
-            required=False,
-            type=lambda s: DifficultyConverter().convert(ctx, s),
-        )
-        parser.add_argument(
-            "-s",
-            "--sort",
-            choices=[
-                key + order
-                for key in (
-                    "score",
-                    "rating",
-                    "op",
-                    "op_percent",
-                    "overpower",
-                    "overpower_percent",
-                )
-                for order in ("", "-", "+")
-            ],
-            required=False,
-        )
-        parser.add_argument(
-            "-g",
-            "--genre",
-            required=False,
-            type=lambda s: GenreConverter().convert(ctx, s),
-        )
-        parser.add_argument(
-            "-r",
-            "--rank",
-            required=False,
-            type=lambda s: RankConverter().convert(ctx, s),
-        )
-        parser.add_argument("-k", "--kamaitachi", action="store_true")
-
-        try:
-            args, rest = await parser.parse_known_intermixed_args(shlex_split(query))
-        except ArgumentError as e:
-            raise commands.BadArgument(str(e)) from e
-
-        difficulty: Difficulty | None = args.difficulty
-        genre: Genres | None = args.genre
-        rank: Rank | None = args.rank
-
-        user = None
-        str_level = None
-
-        if len(rest) > 0:
-            for converter in [commands.MemberConverter, commands.UserConverter]:
-                with contextlib.suppress(commands.BadArgument):
-                    user = await converter().convert(ctx, rest[0])
-                    rest = rest[1:]
-                    break
-
-        str_level = rest[0] if len(rest) > 0 else None
         target_user_id = ctx.author.id if user is None else user.id
         network = await self.utils.choose_preferred_network(
-            ctx, target_user_id, kamaitachi=args.kamaitachi
+            ctx, target_user_id, kamaitachi=kamaitachi
         )
 
         if (
-            user is not None
-            and str_level is None
+            network == "chuninet"
             and difficulty is None
             and genre is None
             and rank is None
-            and network == "chuninet"
+            and sort is None
+            and level is None
         ):
-            await self._best50_inner(ctx, user)
+            await self._best50_inner(ctx, user or ctx.author)
             return None
 
-        if str_level is None and difficulty is None and network == "chuninet":
+        if level is None and difficulty is None and network == "chuninet":
             msg = ""
 
-        level = None
+        level_folder: str | None = None
         internal_level: float | None = None
 
-        if str_level:
+        if level:
             # Three accepted use cases, "14", "14+" and "14.9"
             msg = "Invalid level."
 
-            if "." in str_level and str_level.replace(".", "", 1).isdigit():
-                internal_level = float(str_level)
-                level = str(int(internal_level))
+            if "." in level and level.replace(".", "", 1).isdigit():
+                internal_level = float(level)
+                level_folder = str(int(internal_level))
 
                 if internal_level * 10 % 10 >= 5:
-                    level += "+"
-            elif str_level[-1] == "+" and str_level[:-1].isdigit():
-                if int(str_level[:-1]) not in range(7, 16):
+                    level_folder += "+"
+            elif level[-1] == "+" and level[:-1].isdigit():
+                if int(level[:-1]) not in range(7, 16):
                     raise commands.BadArgument(msg)
 
-                level = str_level
-            elif str_level.isdigit():
-                if int(str_level) not in range(1, 16):
+                level_folder = level
+            elif level.isdigit():
+                if int(level) not in range(1, 16):
                     raise commands.BadArgument(msg)
 
-                level = str_level
+                level_folder = level
             else:
                 raise commands.BadArgument(msg)
 
         async with ctx.typing():
             if network == "chuninet":
                 async with self.utils.chuninet(ctx, target_user_id) as client:
-                    if level is not None:
-                        records = await client.music_record_by_folder(level=level)
+                    if level_folder is not None:
+                        records = await client.music_record_by_folder(
+                            level=level_folder
+                        )
                     elif difficulty is not None:
                         records = await client.music_record_by_folder(
                             difficulty=difficulty
@@ -1940,8 +1865,10 @@ class RecordsCog(commands.Cog, name="Records"):
                     data = resp.json()
                     records = convert_kt_pbs_to_records(data["body"])
 
-                    if level is not None:
-                        records = [r for r in records if r.extras[KEY_LEVEL] == level]
+                    if level_folder is not None:
+                        records = [
+                            r for r in records if r.extras[KEY_LEVEL] == level_folder
+                        ]
                     if difficulty is not None:
                         records = [r for r in records if r.difficulty == difficulty]
                     if rank is not None:
@@ -1960,39 +1887,39 @@ class RecordsCog(commands.Cog, name="Records"):
                 msg = "Invalid network. Expected chuninet or kamaitachi."
                 raise ValueError(msg)
 
-            if args.sort is None or args.sort.startswith("rating"):
+            if sort is None or sort.startswith("rating"):
                 records.sort(
                     # our default has always been to sort descending, so
                     # `rating` or `rating-` should sort by descending.
                     # only `rating+` will sort by ascending
-                    reverse=args.sort is None or not args.sort.endswith("+"),
+                    reverse=sort is None or not sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                     ),
                 )
-            elif args.sort.startswith("score"):
+            elif sort.startswith("score"):
                 records.sort(
-                    reverse=not args.sort.endswith("+"),
+                    reverse=not sort.endswith("+"),
                     key=lambda x: (
                         x.score,
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                     ),
                 )
-            elif args.sort.startswith(("overpower", "op")):
+            elif sort.startswith(("overpower", "op")):
                 records.sort(
-                    reverse=not args.sort.endswith("+"),
+                    reverse=not sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                     ),
                 )
-            elif args.sort.startswith(("overpower_percent", "op_percent")):
+            elif sort.startswith(("overpower_percent", "op_percent")):
                 records.sort(
-                    reverse=not args.sort.endswith("+"),
+                    reverse=not sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0))
                         / x.extras.get(KEY_OVERPOWER_MAX, Decimal(1)),

@@ -3,7 +3,7 @@
 """Discord argument parsing library.
 
 This module is a patch of the original argparse module, modifications being:
-    - Explicit arguments are ignored. For example, this would not pass with argparse::
+    - Explicit arguments are ignored. For example, this would not pass with argparse:
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-d", "--debug", action="store_true")
@@ -14,14 +14,17 @@ This module is a patch of the original argparse module, modifications being:
 """
 
 import contextlib
+import inspect
 import sys
 from argparse import (
     _UNRECOGNIZED_ARGS_ATTR,
+    ONE_OR_MORE,
     OPTIONAL,
     PARSER,
     REMAINDER,
     SUPPRESS,
     ZERO_OR_MORE,
+    Action,
     ArgumentError,
     ArgumentParser,
     ArgumentTypeError,
@@ -33,8 +36,28 @@ from collections.abc import Sequence
 from gettext import gettext as _
 from typing import IO, Any, override
 
-from discord.ext.commands import BadArgument
+from discord.ext.commands import BadArgument, Context, Converter
 from discord.utils import maybe_coroutine
+
+OPTIONAL_INVISIBLE = "?*"
+"""
+I need a better name for this, but the gist is that
+- This only applies to positionals
+- If there was an error converting the positional to the appropriate type,
+then no error occurs and the positional is simply not consumed. If possible,
+the argument will be pushed to the next positional argument, else an error is raised.
+"""
+
+
+class DiscordHelpFormatter(HelpFormatter):
+    @override
+    def _format_args(self, action: Action, default_metavar: str) -> str:
+        get_metavar = self._metavar_formatter(action, default_metavar)
+
+        if action.nargs == OPTIONAL_INVISIBLE:
+            return "[%s]" % get_metavar(1)
+
+        return super()._format_args(action, default_metavar)
 
 
 class DiscordArguments(ArgumentParser):
@@ -45,14 +68,13 @@ class DiscordArguments(ArgumentParser):
         description: str | None = None,
         epilog: str | None = None,
         parents: Sequence[ArgumentParser] = [],
-        formatter_class: object = HelpFormatter,
+        formatter_class: object = DiscordHelpFormatter,
         prefix_chars: str = "-",
         fromfile_prefix_chars: str | None = None,
         argument_default: Any = None,
         conflict_handler: str = "error",
         *,
-        allow_abbrev: bool = True,
-        exit_on_error: bool = True,
+        ctx: Context | None = None,
     ) -> None:
         super().__init__(
             prog,
@@ -69,6 +91,37 @@ class DiscordArguments(ArgumentParser):
             allow_abbrev=True,
             exit_on_error=False,
         )
+        self.ctx = ctx
+
+    @override
+    def _get_positional_kwargs(self, dest: str, **kwargs: Any) -> dict[str, Any]:
+        # make sure required is not specified
+        if "required" in kwargs:
+            msg = _("'required' is an invalid argument for positionals")
+            raise TypeError(msg)
+
+        # mark positional arguments as required if at least one is
+        # always required
+        nargs = kwargs.get("nargs")
+        if nargs not in [
+            OPTIONAL,
+            OPTIONAL_INVISIBLE,
+            ZERO_OR_MORE,
+            REMAINDER,
+            SUPPRESS,
+            0,
+        ]:
+            kwargs["required"] = True
+
+        # return the keyword arguments with no option strings
+        return dict(kwargs, dest=dest, option_strings=[])
+
+    @override
+    def _get_nargs_pattern(self, action: Action) -> str:
+        if action.nargs == OPTIONAL_INVISIBLE:
+            return "(A?)" if action.option_strings else "(-*A?-*)"
+
+        return super()._get_nargs_pattern(action)
 
     async def parse_args(self, args=None, namespace=None):
         args, argv = self.parse_known_args(args, namespace)
@@ -267,10 +320,33 @@ class DiscordArguments(ArgumentParser):
 
             # slice off the appropriate arg strings for each Positional
             # and add the Positional and its args to the list
-            for action, arg_count in zip(positionals, arg_counts, strict=False):
+            for i, (action, arg_count) in enumerate(
+                zip(positionals, arg_counts, strict=False)
+            ):
                 args = arg_strings[start_index : start_index + arg_count]
+
+                try:
+                    await take_action(action, args)
+                except ArgumentError:
+                    if action.nargs != OPTIONAL_INVISIBLE:
+                        raise
+
+                    next_action = positionals[i + 1]
+
+                    if next_action.nargs in (
+                        ZERO_OR_MORE,
+                        ONE_OR_MORE,
+                    ) or (
+                        next_action.nargs == OPTIONAL
+                        and arg_count == 1
+                        and arg_counts[i + 1] == 0
+                    ):
+                        arg_counts[i + 1] += arg_count
+                        continue
+
+                    raise
+
                 start_index += arg_count
-                await take_action(action, args)
 
             # slice off the Positionals that we just parsed and return the
             # index at which the Positionals' string args stopped
@@ -466,7 +542,7 @@ class DiscordArguments(ArgumentParser):
                 arg_strings.remove("--")
 
         # optional argument produces a default when not present
-        if not arg_strings and action.nargs == OPTIONAL:
+        if not arg_strings and action.nargs in [OPTIONAL, OPTIONAL_INVISIBLE]:
             value = action.const if action.option_strings else action.default
             if isinstance(value, str):
                 value = await self._get_value(action, value)
@@ -483,7 +559,11 @@ class DiscordArguments(ArgumentParser):
             self._check_value(action, value)
 
         # single argument or optional argument produces a single value
-        elif len(arg_strings) == 1 and action.nargs in [None, OPTIONAL]:
+        elif len(arg_strings) == 1 and action.nargs in [
+            None,
+            OPTIONAL,
+            OPTIONAL_INVISIBLE,
+        ]:
             (arg_string,) = arg_strings
             value = await self._get_value(action, arg_string)
             self._check_value(action, value)
@@ -512,6 +592,30 @@ class DiscordArguments(ArgumentParser):
 
     async def _get_value(self, action, arg_string):
         type_func = self._registry_get("type", action.type, action.type)
+
+        if inspect.isclass(type_func) and issubclass(type_func, Converter):
+            if self.ctx is None:
+                msg = "cannot use discord.py converters without a commands.Context"
+                raise ArgumentError(action, msg)
+
+            try:
+                if inspect.ismethod(type_func.convert):
+                    return await type_func.convert(self.ctx, arg_string)
+
+                return await type_func().convert(self.ctx, arg_string)
+            except Exception as e:  # noqa: BLE001
+                msg = str(e)
+                raise ArgumentError(action, msg) from None
+        elif isinstance(type_func, Converter):
+            if self.ctx is None:
+                msg = "cannot use discord.py converters without a commands.Context"
+                raise ArgumentError(action, msg)
+
+            try:
+                return await type_func.convert(self.ctx, arg_string)
+            except Exception as e:  # noqa: BLE001
+                msg = str(e)
+                raise ArgumentError(action, msg) from None
 
         if not callable(type_func):
             msg = _("%r is not callable")

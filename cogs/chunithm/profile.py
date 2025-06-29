@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-from argparse import ArgumentError
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from io import BytesIO
@@ -16,8 +15,7 @@ from sqlalchemy import select
 from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
 from database.models import UserConfig
-from utils import json_loads, shlex_split
-from utils.argparse import DiscordArguments
+from utils import flags, json_loads
 from utils.converters import MemberOrUserConverter
 from utils.logging import logged_app_command, logged_prefix_command
 from utils.views.profile import (
@@ -350,17 +348,16 @@ class ProfileCog(commands.Cog, name="Profile"):
                     mention_author=False,
                 )
 
-    @commands.command(
-        name="chunithm",
-        aliases=["chuni", "profile"],
-        usage="[-k] [user]",
-    )
+    @flags.command(name="chunithm", aliases=["chuni", "profile"])
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
     @logged_prefix_command
     async def chunithm(
         self,
         ctx: Context,
         *,
-        query: str = "",
+        kamaitachi: bool = False,
+        user: discord.Member | discord.User | None = None,
     ):
         """View your CHUNITHM profile.
 
@@ -369,21 +366,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         `-k, --kamaitachi`: Whether to view their Kamaitachi CHUNITHM profile instead.
         """
 
-        parser = DiscordArguments()
-        parser.add_argument("-k", "--kamaitachi", action="store_true")
-        parser.add_argument(
-            "user",
-            nargs="?",
-            default=None,
-            type=lambda s: MemberOrUserConverter().convert(ctx, s),
-        )
-
-        try:
-            args, _ = await parser.parse_known_intermixed_args(shlex_split(query))
-        except ArgumentError as e:
-            raise commands.BadArgument(str(e)) from e
-
-        await self._chunithm_inner(ctx, args.user, kamaitachi=args.kamaitachi)
+        await self._chunithm_inner(ctx, user=user, kamaitachi=kamaitachi)
 
     @app_commands.command(name="chunithm", description="View your CHUNITHM profile.")
     @app_commands.allowed_installs(guilds=True, users=True)

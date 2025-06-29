@@ -12,9 +12,9 @@ from sqlalchemy import delete
 from chunithm_net.models.enums import Difficulty, Genres
 from database.models import GuessScore
 from utils import shlex_split
-from utils.argparse import DiscordArguments
 from utils.context import PenguinGuildContext
 from utils.converters import DifficultyConverter, GenreConverter
+from utils.flags import DiscordArguments
 from utils.logging import logged_prefix_command, logger
 from utils.views.gaming import GuessLeaderboardView, RetryGameButton
 
