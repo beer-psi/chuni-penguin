@@ -1614,6 +1614,7 @@ class RecordsCog(commands.Cog, name="Records"):
         genre="Genre to search for.",
         rank="Rank to search for.",
         sort="Sort records by a criteria (default rating).",
+        sort_order="Specify the order to sort records by.",
         kamaitachi="Get scores from Kamaitachi, if the target user has a linked account",
     )
     @app_commands.choices(
@@ -1653,6 +1654,7 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Optional[Genres] = None,
         rank: Optional[Rank] = None,
         sort: Literal["rating", "score", "overpower", "overpower %"] = "rating",
+        sort_order: Literal["ascending", "descending"] = "descending",
         kamaitachi: bool = False,
     ):
         ctx = await Context.from_interaction(interaction)
@@ -1714,7 +1716,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         if sort == "rating":
             records.sort(
-                reverse=True,
+                reverse=sort_order != "ascending",
                 key=lambda x: (
                     x.extras.get(KEY_PLAY_RATING),
                     x.score,
@@ -1723,7 +1725,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
         elif sort == "score":
             records.sort(
-                reverse=True,
+                reverse=sort_order != "ascending",
                 key=lambda x: (
                     x.score,
                     x.extras.get(KEY_PLAY_RATING),
@@ -1732,7 +1734,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
         elif sort == "overpower":
             records.sort(
-                reverse=True,
+                reverse=sort_order != "ascending",
                 key=lambda x: (
                     x.extras.get(KEY_OVERPOWER_BASE),
                     x.extras.get(KEY_PLAY_RATING),
@@ -1741,7 +1743,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
         elif sort == "overpower %":
             records.sort(
-                reverse=True,
+                reverse=sort_order != "ascending",
                 key=lambda x: (
                     x.extras[KEY_OVERPOWER_BASE] / x.extras[KEY_OVERPOWER_MAX],
                     x.extras.get(KEY_OVERPOWER_BASE),
@@ -1749,9 +1751,6 @@ class RecordsCog(commands.Cog, name="Records"):
                     x.score,
                 ),
             )
-        else:
-            msg = f"Invalid sort type {sort}. Expected one of score, rating, overpower, overpower %."
-            raise commands.BadArgument(msg)
 
         view = B30View(
             ctx, records, show_average=False, show_reachable=False, show_lamps=True
@@ -1777,9 +1776,9 @@ class RecordsCog(commands.Cog, name="Records"):
         `user`: Discord username of the player. Yourself, if not provided.
         `level`: Level (from 1 to 15+) to search for.
         `-d`: Difficulty to search for. Must be one of `BASIC`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
-        `-g`: Genre to search for. Must be one of `POPS&ANIME`, `niconico`, `Touhou Project`, `ORIGINAL`, `VARIETY`, `Irodorimidori`, or `Gekimai`, if specified.
+        `-g`: Genre to search for.
         `-r`: Rank to search for. Anywhere between "S" and "SSS+" (inclusive), if specified.
-        `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`.
+        `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`. You can optionally add `+` or `-` after a metric to sort in ascending or descending order, e.g. `score+`. The default is to sort by rating in descending order.
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
 
         Genre and rank cannot be set at the same time. If genre or rank is set, difficulty must also be set.
@@ -1797,20 +1796,6 @@ class RecordsCog(commands.Cog, name="Records"):
         `c>top @player -r sss -d mas`: View @player's best scores for SSS rank on MASTER difficulty.
         """
 
-        def sort_type(arg: str) -> str:
-            if arg not in {
-                "score",
-                "rating",
-                "op",
-                "op_percent",
-                "overpower",
-                "overpower_percent",
-            }:
-                msg = "Invalid sort type. Expected one of score, rating, op, op_percent, overpower, overpower_percent."
-                raise ValueError(msg)
-
-            return arg
-
         if query is None:
             await self._best50_inner(ctx)
             return None
@@ -1822,7 +1807,23 @@ class RecordsCog(commands.Cog, name="Records"):
             required=False,
             type=lambda s: DifficultyConverter().convert(ctx, s),
         )
-        parser.add_argument("-s", "--sort", type=sort_type, required=False)
+        parser.add_argument(
+            "-s",
+            "--sort",
+            choices=[
+                key + order
+                for key in (
+                    "score",
+                    "rating",
+                    "op",
+                    "op_percent",
+                    "overpower",
+                    "overpower_percent",
+                )
+                for order in ("", "-", "+")
+            ],
+            required=False,
+        )
         parser.add_argument("-k", "--kamaitachi", action="store_true")
 
         group = parser.add_mutually_exclusive_group()
@@ -1837,6 +1838,7 @@ class RecordsCog(commands.Cog, name="Records"):
             "--rank",
             required=False,
             type=lambda s: RankConverter().convert(ctx, s),
+            choices=[Rank.S, Rank.Sp, Rank.SS, Rank.SSp, Rank.SSS, Rank.SSSp],
         )
 
         try:
@@ -1948,36 +1950,39 @@ class RecordsCog(commands.Cog, name="Records"):
                 msg = "Invalid network. Expected chuninet or kamaitachi."
                 raise ValueError(msg)
 
-            if args.sort is None or args.sort == "rating":
+            if args.sort is None or args.sort.startswith("rating"):
                 records.sort(
-                    reverse=True,
+                    # our default has always been to sort descending, so
+                    # `rating` or `rating-` should sort by descending.
+                    # only `rating+` will sort by ascending
+                    reverse=not args.sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                     ),
                 )
-            elif args.sort == "score":
+            elif args.sort.startswith("score"):
                 records.sort(
-                    reverse=True,
+                    reverse=not args.sort.endswith("+"),
                     key=lambda x: (
                         x.score,
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                     ),
                 )
-            elif args.sort in {"overpower", "op"}:
+            elif args.sort.startswith(("overpower", "op")):
                 records.sort(
-                    reverse=True,
+                    reverse=not args.sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                     ),
                 )
-            elif args.sort in {"overpower_percent", "op_percent"}:
+            elif args.sort.startswith(("overpower_percent", "op_percent")):
                 records.sort(
-                    reverse=True,
+                    reverse=not args.sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_OVERPOWER_BASE, Decimal(0))
                         / x.extras.get(KEY_OVERPOWER_MAX, Decimal(1)),
@@ -1986,9 +1991,6 @@ class RecordsCog(commands.Cog, name="Records"):
                         x.score,
                     ),
                 )
-            else:
-                msg = f"Invalid sort type {args.sort}. Expected one of score, rating, op, op_percent, overpower, overpower_percent."
-                raise commands.BadArgument(msg)
 
             if internal_level is not None:
                 records = [
