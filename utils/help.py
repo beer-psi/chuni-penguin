@@ -78,8 +78,11 @@ class HelpCommand(commands.HelpCommand):
     async def send_command_help(self, command: Command[Any, ..., Any], /) -> None:
         embed = discord.Embed(color=self.COLOUR)
         description_parts: list[str] = [
-            f"```{self.prefix}{command.qualified_name} {command.signature}```\n{command.help}"
+            f"```{self.prefix}{command.qualified_name} {command.signature}```"
         ]
+
+        if command.help is not None:
+            description_parts.append(f"\n{command.help}\n")
 
         params = command.clean_params.values()
 
@@ -98,7 +101,7 @@ class HelpCommand(commands.HelpCommand):
 
             if params_desc_parts:
                 description_parts.append(
-                    f"\n\n**Parameters:**\n{''.join(params_desc_parts)}"
+                    f"\n**Parameters:**\n{''.join(params_desc_parts)}"
                 )
 
         embed.description = "".join(description_parts)
@@ -110,8 +113,11 @@ class HelpCommand(commands.HelpCommand):
         embed = discord.Embed(color=self.COLOUR)
         embed = discord.Embed(color=self.COLOUR)
         description_parts: list[str] = [
-            f"```{self.prefix}{group.qualified_name} {group.signature}```\n{group.help}"
+            f"```{self.prefix}{group.qualified_name} {group.signature}```"
         ]
+
+        if group.help is not None:
+            description_parts.append(f"\n{group.help}\n")
 
         params = group.clean_params.values()
 
@@ -130,13 +136,13 @@ class HelpCommand(commands.HelpCommand):
 
             if params_desc_parts:
                 description_parts.append(
-                    f"\n\n**Parameters:**\n{''.join(params_desc_parts)}"
+                    f"\n**Parameters:**\n{''.join(params_desc_parts)}\n"
                 )
 
         if len(group.commands) > 0:
             commands = await self.filter_commands(group.commands, sort=True)
 
-            description_parts.append("\n\n**Commands:**\n")
+            description_parts.append("\n**Commands:**\n")
 
             for command in commands:
                 description_parts.append(
