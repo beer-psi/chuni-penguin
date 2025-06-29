@@ -35,7 +35,6 @@ class AutocompletersCog(commands.Cog, name="Autocompleters"):
             current,
             [x.alias for x in aliases],
             scorer=fuzz.QRatio,
-            processor=str.lower,
             limit=50,
             score_cutoff=SIMILARITY_THRESHOLD,
         )

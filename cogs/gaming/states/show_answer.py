@@ -54,13 +54,9 @@ class ShowAnswerState(GuessingGameState):
             else:
                 self.session.scores[accepted_user.id] += 1
 
+            content_lower = self.accepted_answer.content.lower()
             accuracy = max(
-                [
-                    fuzz.QRatio(
-                        self.accepted_answer.content, alias, processor=str.lower
-                    )
-                    for alias in self.aliases
-                ]
+                [fuzz.QRatio(content_lower, alias) for alias in self.aliases]
             )
 
             content = (
@@ -77,14 +73,20 @@ class ShowAnswerState(GuessingGameState):
             content = "Unknown reason."
             color = discord.Color.red()
 
+        description_parts = [f"**Answer**: {escape_markdown(self.song.title)}\n"]
+
+        if len(self.song.aliases) > 0:
+            description_parts.append(
+                f"-# {' / '.join([escape_markdown(x.alias) for x in self.song.aliases])}\n"
+            )
+
+        description_parts.append("\n")
+        description_parts.append(f"**Artist**: {escape_markdown(self.song.artist)}\n")
+        description_parts.append(f"**Category**: {escape_markdown(self.song.genre)}")
+
         embed = discord.Embed(
             color=color,
-            description=(
-                f"**Answer**: {'\n'.join([escape_markdown(x) for x in self.aliases])}\n"
-                "\n"
-                f"**Artist**: {escape_markdown(self.song.artist)}\n"
-                f"**Category**: {escape_markdown(self.song.genre)}"
-            ),
+            description="".join(description_parts),
         )
         embed.set_image(url="attachment://image.png")
 

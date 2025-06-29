@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw, ImageOps
 from rapidfuzz import fuzz
 from sqlalchemy import select, text
 from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy.orm import contains_eager
 
 from chunithm_net.models.enums import Difficulty, Genres
 from database.models import Alias, GuessScore, Song
@@ -110,28 +111,33 @@ class GuessingGameSession:
         return 1
 
     async def _get_random_song(self):
+        if self.ctx.guild is not None:
+            alias_guild_ids = [-1, self.ctx.guild.id]
+        else:
+            alias_guild_ids = [-1]
+
         condition = (Song.genre != "WORLD'S END") & (Song.removed == False)  # noqa: E712
 
         if self.genres is not None:
             condition &= Song.chunithm_catcode.in_([g.value for g in self.genres])
 
         async with self.bot.begin_db_session() as session:
-            stmt = select(Song).where(condition).order_by(text("RANDOM()")).limit(1)
-            song = (await session.execute(stmt)).scalar_one()
+            stmt = select(Song.id).where(condition).order_by(text("RANDOM()")).limit(1)
+            song_id = (await session.execute(stmt)).scalar_one()
 
-            stmt = select(Alias).where(
-                (Alias.song_id == song.id)
-                & (
-                    (Alias.guild_id == -1)
-                    | (
-                        Alias.guild_id
-                        == (self.ctx.guild.id if self.ctx.guild is not None else -1)
-                    )
+            stmt = (
+                select(Song)
+                .where(Song.id == song_id)
+                .outerjoin(
+                    Alias,
+                    (Alias.song_id == Song.id) & (Alias.guild_id.in_(alias_guild_ids)),
                 )
+                .options(contains_eager(Song.aliases))
             )
-            aliases = [song.title] + [
-                alias.alias for alias in (await session.execute(stmt)).scalars()
-            ]
+            song = (await session.execute(stmt)).scalars().unique().one()
+
+            aliases = [song.title.lower()]
+            aliases.extend([alias.alias.lower() for alias in song.aliases])
 
         return song, aliases
 
@@ -388,14 +394,10 @@ class GuessingGameSession:
             if m.channel != self.channel:
                 return False
 
+            content_lower = m.content.lower()
+
             is_correct_answer = (
-                max(
-                    [
-                        fuzz.QRatio(m.content, alias, processor=str.lower)
-                        for alias in aliases
-                    ]
-                )
-                >= 80
+                max([fuzz.QRatio(content_lower, alias) for alias in aliases]) >= 80
             )
 
             if not is_correct_answer and self.hardcore_mode:
@@ -403,6 +405,7 @@ class GuessingGameSession:
 
                 self._tasks.add(reaction_task)
                 reaction_task.add_done_callback(self._tasks.discard)
+
                 self._hardcore_mode_ignores.add(m.author.id)
 
             return is_correct_answer

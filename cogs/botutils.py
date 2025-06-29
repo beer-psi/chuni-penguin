@@ -152,14 +152,14 @@ class UtilsCog(commands.Cog, name="Utils"):
         global_aliases = self.alias_cache.setdefault(-1, [])
 
         for song in songs:
-            if song.title in titles:
-                continue
+            title_lower = song.title.lower()
 
-            titles.add(song.title)
+            if title_lower not in titles:
+                titles.add(title_lower)
 
-            global_aliases.append(
-                CachedAlias(None, song.title, song.title, song.id, -1)
-            )
+                global_aliases.append(
+                    CachedAlias(None, title_lower, song.title, song.id, -1)
+                )
 
             for alias in song.aliases:
                 guild_aliases = self.alias_cache.setdefault(alias.guild_id, [])
@@ -167,7 +167,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 guild_aliases.append(
                     CachedAlias(
                         alias.rowid,
-                        alias.alias,
+                        alias.alias.lower(),
                         song.title,
                         alias.song_id,
                         alias.guild_id,
@@ -544,7 +544,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         tuple[Song, Alias | None, float]
             The third item is the similarity of the matched song.
         """
-        aliases = self.alias_cache[-1].copy()
+        aliases = self.alias_cache[-1][:]
 
         if (
             guild_id is not None
@@ -553,10 +553,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             aliases.extend(guild_aliases)
 
         (_, similarity, index) = process.extractOne(
-            query,
-            [x.alias for x in aliases],
-            scorer=fuzz.QRatio,
-            processor=str.lower,
+            query, [x.alias for x in aliases], scorer=fuzz.QRatio
         )
         matching_alias = aliases[index]
 
@@ -588,7 +585,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         load_charts: bool = False,
         load_global_aliases: bool = False,
     ) -> SongSearchResult:
-        aliases = self.alias_cache[-1].copy()
+        aliases = self.alias_cache[-1][:]
 
         if (
             guild_id is not None
@@ -597,10 +594,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             aliases.extend(guild_aliases)
 
         (_, similarity, index) = process.extractOne(
-            query,
-            [x.alias for x in aliases],
-            scorer=fuzz.QRatio,
-            processor=str.lower,
+            query, [x.alias for x in aliases], scorer=fuzz.QRatio
         )
         matching_alias = aliases[index]
 

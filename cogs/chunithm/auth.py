@@ -67,6 +67,7 @@ class AuthCog(commands.Cog, name="Auth"):
             )
             await session.execute(stmt)
             await session.commit()
+
         await ctx.reply(msg, mention_author=False)
 
     async def _verify_and_login(self, id: int, clal: str) -> Optional[Exception]:
@@ -126,7 +127,7 @@ class AuthCog(commands.Cog, name="Auth"):
             user_name=ctx.author.name,
         )
 
-        if not isinstance(ctx.channel, discord.channel.DMChannel):
+        if ctx.guild is not None:
             please_delete_message = ""
 
             if clal is not None:
@@ -141,7 +142,7 @@ class AuthCog(commands.Cog, name="Auth"):
                     )
 
                     await ctx.message.delete()
-                except (discord.errors.Forbidden, discord.errors.NotFound):
+                except discord.errors.HTTPException:
                     await logger.awarning(
                         "Could not delete message with token exposed",
                         tag="failed_delete_message_exposing_keys",
@@ -175,7 +176,13 @@ class AuthCog(commands.Cog, name="Auth"):
                     "User logged in.", tag="user_logged_in", user_id=ctx.author.id
                 )
 
-                return await channel.send("Successfully logged in.")
+                return await ctx.respond_or_edit(
+                    embed=discord.Embed(
+                        color=discord.Color.green(),
+                        title="Successfully logged in",
+                        description="You can now use the bot's CHUNITHM-NET commands.",
+                    ),
+                )
 
             await logger.adebug(
                 "Invalid token provided.",
@@ -184,7 +191,7 @@ class AuthCog(commands.Cog, name="Auth"):
             )
 
             msg = f"Invalid cookie: {e}"
-            raise commands.BadArgument(msg)
+            raise commands.CommandError(msg)
 
         passcode = str(self.random.randrange(10**5, 10**6))
         view = LoginFlowView(ctx, passcode, config.web.base_url)

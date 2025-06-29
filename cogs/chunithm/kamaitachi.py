@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import sys
 from typing import TYPE_CHECKING, Literal, Optional
 
@@ -94,12 +95,13 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             if ctx.author.dm_channel
             else await ctx.author.create_dm()
         )
-        if not isinstance(ctx.channel, discord.channel.DMChannel):
+        if ctx.guild is not None:
             please_delete_message = ""
+
             if token is not None:
                 try:
                     await ctx.message.delete()
-                except (discord.errors.Forbidden, discord.errors.NotFound):
+                except discord.errors.HTTPException:
                     await logger.awarning(
                         "Could not delete message with token exposed",
                         tag="failed_delete_message_exposing_keys",
@@ -156,10 +158,11 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                 f"https://kamai.tachi.ac/oauth/request-auth?clientID={self.kt_client_id}&context={ctx.author.id}"
             )
 
-        return await channel.send(
-            content="Kamaitachi is a modern score tracker for arcade rhythm games.",
-            embed=embed,
-        )
+        if ctx.guild is not None:
+            with contextlib.suppress(discord.errors.Forbidden):
+                return await channel.send(embed=embed)
+        else:
+            return await ctx.respond_or_edit(embed=embed)
 
     @kamaitachi.command("unlink", aliases=["logout"])
     @logged_prefix_command
@@ -173,6 +176,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             raise commands.CommandError(msg)
 
         cookie.kamaitachi_token = None
+
         async with self.bot.begin_db_session() as session:
             await session.merge(cookie)
             await session.commit()
@@ -199,7 +203,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
 
-        if cookie is None:
+        if cookie is None or not cookie.cookie.startswith("#LWP-Cookies-2.0"):
             msg = f"Please login with `{ctx.clean_prefix}login` first before syncing with Kamaitachi."
             raise commands.CommandError(msg)
 
