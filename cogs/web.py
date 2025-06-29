@@ -307,8 +307,11 @@ class WebCog(commands.Cog, name="Web"):
 
     @override
     async def cog_load(self) -> None:
-        if not config.web.enable or (
-            self.bot.shard_id is not None and self.bot.shard_id != 0
+        # enable web AND on shard 0 to enable website
+        if (
+            not config.web.enable
+            or (self.bot.shard_id is not None and self.bot.shard_id != 0)
+            or (self.bot.shard_ids is not None and 0 not in self.bot.shard_ids)
         ):
             return
 
