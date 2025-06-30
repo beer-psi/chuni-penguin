@@ -19,7 +19,7 @@ from utils import json_dumps, json_loads
 from utils.command_tree import VersionableCommandTree
 from utils.config import config
 from utils.context import PenguinContext
-from utils.evtloop import get_event_loop
+from utils.event_loop import get_event_loop
 from utils.logging import logger
 
 if TYPE_CHECKING:

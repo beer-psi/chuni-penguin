@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import (
 
 from database.models import Base
 from utils.config import config
-from utils.evtloop import get_event_loop
+from utils.event_loop import get_event_loop
 from utils.logging import logger
 
 from .aliases import update_aliases
