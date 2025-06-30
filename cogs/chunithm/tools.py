@@ -36,7 +36,7 @@ from utils.constants import MAX_DIFFICULTY
 from utils.context import PenguinContext
 from utils.converters import DifficultyConverter
 from utils.kamaitachi import convert_kt_pbs_to_records
-from utils.logging import logged_prefix_command, logger
+from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
 if TYPE_CHECKING:
