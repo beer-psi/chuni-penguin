@@ -1,11 +1,14 @@
 import re
-from typing import Any, List, Mapping, Optional, override
+from typing import TYPE_CHECKING, Any, List, Mapping, Optional, override
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, Command, Group
 
 from utils.config import config
+
+if TYPE_CHECKING:
+    from bot import ChuniBot
 
 MENTION_PREFIX_RE = re.compile(r"<@[!&]?\d+>")
 
@@ -157,3 +160,7 @@ class HelpCommand(commands.HelpCommand):
         embed.description = "".join(description_parts)
 
         await self.get_destination().send(embed=embed)
+
+
+async def setup(bot: "ChuniBot"):
+    bot.help_command = HelpCommand()

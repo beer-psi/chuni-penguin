@@ -1,8 +1,8 @@
 import functools
 import logging
+import sys
 import time
-from logging import LogRecord
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from structlog.stdlib import BoundLogger
@@ -19,28 +19,50 @@ if TYPE_CHECKING:
 __all__ = ("logged_app_command", "logged_prefix_command", "logger")
 
 
-processors = structlog.get_config()["processors"][:-1]
+log_level = logging.DEBUG if config.dangerous.dev else logging.INFO
+shared_processors: list[structlog.typing.Processor] = [
+    structlog.contextvars.merge_contextvars,
+    structlog.processors.add_log_level,
+    structlog.processors.StackInfoRenderer(),
+    structlog.dev.set_exc_info,
+    structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
+]
+format_processors: list[structlog.typing.Processor] = [
+    structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+]
 
 if config.dangerous.dev:
-    wrapper = structlog.make_filtering_bound_logger(logging.DEBUG)
-    processors.append(structlog.dev.ConsoleRenderer())
+    format_processors.append(structlog.dev.ConsoleRenderer())
 else:
-    wrapper = structlog.make_filtering_bound_logger(logging.INFO)
-    processors.append(structlog.processors.dict_tracebacks)
-    processors.append(structlog.processors.JSONRenderer())
+    format_processors.append(structlog.processors.dict_tracebacks)
+    format_processors.append(structlog.processors.JSONRenderer())
 
-structlog.configure(processors=processors, wrapper_class=wrapper)
-logger: BoundLogger = structlog.get_logger()
+structlog.configure(
+    processors=[
+        *shared_processors,
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
 
+formatter = structlog.stdlib.ProcessorFormatter(
+    foreign_pre_chain=[
+        *shared_processors,
+        structlog.stdlib.add_logger_name,
+    ],
+    processors=format_processors,
+)
 
-class StructlogHandler(logging.Handler):
-    def __init__(self, level: int = 0) -> None:
-        super().__init__(level)
-        self._logger: BoundLogger = structlog.get_logger()
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(formatter)
 
-    @override
-    def emit(self, record: LogRecord) -> None:
-        self._logger.log(record.levelno, record.getMessage(), logger=record.name)
+for logger_name in ("chuni_penguin", "chunithm_net", "discord"):
+    _logger = logging.getLogger(logger_name)
+    _logger.addHandler(handler)
+    _logger.setLevel(log_level)
+
+logger: BoundLogger = structlog.get_logger("chuni_penguin")
 
 
 def logged_prefix_command(coro: "CommandCallback[CogT, ContextT, P, T]"):
@@ -121,14 +143,3 @@ def logged_app_command(coro: "AppCommandCallback[GroupT, P, T]"):
             )
 
     return callback
-
-
-log_level = logging.DEBUG if config.dangerous.dev else logging.INFO
-
-discord_logger = logging.getLogger("discord")
-discord_logger.setLevel(log_level)
-discord_logger.addHandler(StructlogHandler(log_level))
-
-chunithm_net_logger = logging.getLogger("chunithm_net")
-chunithm_net_logger.setLevel(log_level)
-chunithm_net_logger.addHandler(StructlogHandler(log_level))

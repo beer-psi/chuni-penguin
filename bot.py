@@ -20,7 +20,6 @@ from utils.command_tree import VersionableCommandTree
 from utils.config import config
 from utils.context import PenguinContext
 from utils.evtloop import get_event_loop
-from utils.help import HelpCommand
 from utils.logging import logger
 
 if TYPE_CHECKING:
@@ -86,7 +85,6 @@ class ChuniBot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(
             command_prefix=guild_specific_prefix(config.bot.default_prefix),
-            help_command=HelpCommand(),
             intents=discord.Intents(
                 guilds=True,
                 voice_states=True,

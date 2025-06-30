@@ -1,10 +1,11 @@
+import asyncio
 import importlib.util
 import sys
 
 
 def get_event_loop():
-    event_loop_impl = None
-    loop_factory = None
+    event_loop_impl = asyncio
+    loop_factory = asyncio.new_event_loop
 
     if sys.platform == "win32" and importlib.util.find_spec("winloop"):
         import winloop  # type: ignore[reportMissingImports]
