@@ -36,7 +36,7 @@ from utils.constants import MAX_DIFFICULTY
 from utils.context import PenguinContext
 from utils.converters import DifficultyConverter
 from utils.kamaitachi import convert_kt_pbs_to_records
-from utils.logging import logged_prefix_command
+from utils.logging import logged_prefix_command, logger
 from utils.ranks import rank_icon
 
 if TYPE_CHECKING:
@@ -492,7 +492,7 @@ class ToolsCog(commands.Cog, name="Tools"):
     async def recommend(
         self,
         ctx: Context,
-        count: Range[int, 1, 4] = 3,
+        count: Range[int, 1, 10] = 3,
         target_rating: Optional[float] = None,
     ):
         """Get random chart recommendations with target scores based on your rating.
@@ -540,8 +540,8 @@ class ToolsCog(commands.Cog, name="Tools"):
                             (item.extras[KEY_PLAY_RATING] for item in records),
                             default=Decimal(0),
                         )
-                        # set target rating to be 0.01 above the song with lowest rating in b30
-                        target_rating = float(min_rating) + 0.01
+                        # set target rating to be 0.05 above the song with lowest rating in b30
+                        target_rating = float(min_rating) + 0.05
 
             # set minimum target rating to 1 to prevent funny things from happening
             if target_rating is None or target_rating < 1:
@@ -549,7 +549,7 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             # Determine min-max const to recommend based on target rating.
             min_level = round(target_rating - 2.15, 2)
-            max_level = round(target_rating, 2)
+            max_level = round(target_rating - 1.5, 2)
 
             stmt = (
                 select(Chart)
