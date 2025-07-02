@@ -38,6 +38,7 @@ from chunithm_net.models.record import (
 from database.models import Song, SongJacket, UserConfig
 from utils import did_you_mean_text, flags, floor_to_ndp, json_loads
 from utils.components import ScoreCardEmbed
+from utils.config import config
 from utils.constants import (
     ASSETS_DIR,
     CURRENT_CHUNITHM_VERSION_KT,
@@ -764,6 +765,9 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
         url_whitelist = [JACKET_BASE, INTERNATIONAL_JACKET_BASE]
+
+        if config.web.serve_assets and config.web.base_url:
+            url_whitelist.append(config.web.base_url)
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             message: discord.Message | discord.MessageSnapshot
