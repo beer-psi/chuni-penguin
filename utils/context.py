@@ -1,6 +1,6 @@
 import contextlib
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, overload, override
+from typing import TYPE_CHECKING, Any, Self, overload, override
 
 import discord
 from discord.ext import commands
@@ -17,7 +17,7 @@ from utils.views.select_to_compare import SelectToCompareView
 
 if TYPE_CHECKING:
     # it's literally used i don't know why ruff tripped on this one
-    from bot import ChuniBot  # noqa: F401
+    from bot import ChuniBot
 
 
 class PenguinContext(commands.Context["ChuniBot"]):
@@ -40,6 +40,17 @@ class PenguinContext(commands.Context["ChuniBot"]):
         self.response = msg
 
         return msg
+
+    @classmethod
+    async def from_interaction(
+        cls, interaction: discord.Interaction["ChuniBot"], /
+    ) -> Self:
+        ctx = await super().from_interaction(interaction)
+        ctx.user_config = await interaction.client.utils.fetch_user_config(
+            interaction.user.id
+        )
+
+        return ctx
 
     @overload
     async def respond_or_edit(

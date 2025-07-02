@@ -1,5 +1,3 @@
-from typing import Optional
-
 import discord
 from discord.utils import escape_markdown
 
@@ -8,6 +6,7 @@ from chunithm_net.consts import (
     KEY_LEVEL,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
+    KEY_SONG_ID,
     KEY_TOTAL_COMBO,
 )
 from chunithm_net.models.enums import ChainType, ClearType, ComboType, Difficulty
@@ -19,6 +18,7 @@ from chunithm_net.models.record import (
 )
 from utils import floor_to_ndp
 from utils.calculation.overpower import calculate_play_overpower
+from utils.config import config
 from utils.ranks import rank_icon
 
 
@@ -28,12 +28,22 @@ class ScoreCardEmbed(discord.Embed):
         record: Record,
         *,
         show_lamps: bool = True,
-        index: Optional[int] = None,
+        index: int | None = None,
+        synthesis_alt_jacket: str | None = None,
     ):
         super().__init__(
             color=record.difficulty.color(),
         )
+
         self.set_thumbnail(url=record.jacket)
+
+        if record.extras.get(KEY_SONG_ID) == 2698:
+            if synthesis_alt_jacket == "none":
+                self.set_thumbnail(url=None)
+            elif synthesis_alt_jacket != "default" and config.web.serve_assets:
+                self.set_thumbnail(
+                    url=f"{config.web.base_url}/assets/jackets/2698_{synthesis_alt_jacket}.png"
+                )
 
         if show_lamps:
             lamps: list[ChainType | ClearType | ComboType] = [record.clear_lamp]

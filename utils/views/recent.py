@@ -36,15 +36,25 @@ def split_scores_into_credits(
 
 
 class RecentRecordsPageSource(ListPageSource[list["RecentRecord"]]):
-    def __init__(self, records: list["RecentRecord"]) -> None:
+    def __init__(
+        self,
+        records: list["RecentRecord"],
+        *,
+        synthesis_alt_jacket: str | None = None,
+    ) -> None:
         super().__init__(split_scores_into_credits(records), per_page=1)
+
+        self.synthesis_alt_jacket = synthesis_alt_jacket
 
     @override
     async def format_page(
         self, menu: "PaginationView", page: list[list["RecentRecord"]]
     ) -> dict[str, Any]:
         scores = page[0]
-        embeds: list[discord.Embed] = [ScoreCardEmbed(s) for s in scores]
+        embeds: list[discord.Embed] = [
+            ScoreCardEmbed(s, synthesis_alt_jacket=self.synthesis_alt_jacket)
+            for s in scores
+        ]
         embeds.append(
             discord.Embed(
                 description=f"Page {menu.current_page + 1}/{self.get_max_pages()}",
@@ -63,8 +73,14 @@ class RecentRecordsView(PaginationView):
         chuni_client: "ChuniNet",
         chuni_client_manager: AsyncContextManager["ChuniNet"],
         userinfo: "PlayerData",
+        synthesis_alt_jacket: str | None = None,
     ):
-        super().__init__(ctx, source=RecentRecordsPageSource(scores))
+        super().__init__(
+            ctx,
+            source=RecentRecordsPageSource(
+                scores, synthesis_alt_jacket=synthesis_alt_jacket
+            ),
+        )
         self.add_item(self.switch_to_26_50)
         self.add_item(self.dropdown)
 
@@ -72,8 +88,9 @@ class RecentRecordsView(PaginationView):
         self.chuni_client = chuni_client
         self.chuni_client_manager = chuni_client_manager
         self.userinfo = userinfo
+        self.synthesis_alt_jacket = synthesis_alt_jacket
 
-        self.utils: "UtilsCog" = bot.get_cog("Utils")  # type: ignore[reportGeneralTypeIssues]
+        self.utils: "UtilsCog" = bot.utils
 
         self._dropdown_options = [
             discord.SelectOption(
@@ -116,12 +133,16 @@ class RecentRecordsView(PaginationView):
         if interaction.message is not None:
             await interaction.message.edit(
                 content=f"Score of {self.userinfo.name}",
-                embed=ScoreCardEmbed(score),
+                embed=ScoreCardEmbed(
+                    score, synthesis_alt_jacket=self.synthesis_alt_jacket
+                ),
                 view=self,
             )
         else:
             await interaction.channel.send(
                 content=f"Score of {self.userinfo.name}",
-                embed=ScoreCardEmbed(score),
+                embed=ScoreCardEmbed(
+                    score, synthesis_alt_jacket=self.synthesis_alt_jacket
+                ),
                 view=self,
             )

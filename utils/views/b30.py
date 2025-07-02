@@ -24,6 +24,7 @@ class B30PageSource(ListPageSource["Record"]):
         show_average: bool = True,
         show_reachable: bool = True,
         show_lamps: bool = False,
+        synthesis_alt_jacket: str | None = None,
     ) -> None:
         super().__init__(records, per_page=per_page)
 
@@ -43,12 +44,18 @@ class B30PageSource(ListPageSource["Record"]):
         self.show_average = show_average
         self.show_reachable = show_reachable
         self.show_lamps = show_lamps
+        self.synthesis_alt_jacket = synthesis_alt_jacket
 
     @override
     async def format_page(self, menu: "PaginationView", page: list["Record"]):
         start = menu.current_page * self.per_page
         embeds: list[discord.Embed] = [
-            ScoreCardEmbed(record, show_lamps=self.show_lamps, index=start + i + 1)
+            ScoreCardEmbed(
+                record,
+                show_lamps=self.show_lamps,
+                index=start + i + 1,
+                synthesis_alt_jacket=self.synthesis_alt_jacket,
+            )
             for i, record in enumerate(page)
         ]
 
@@ -83,6 +90,7 @@ class B30View(PaginationView):
         show_average: bool = True,
         show_reachable: bool = True,
         show_lamps: bool = False,
+        synthesis_alt_jacket: str | None = None,
     ):
         super().__init__(
             ctx,
@@ -93,5 +101,6 @@ class B30View(PaginationView):
                 show_average=show_average,
                 show_reachable=show_reachable,
                 show_lamps=show_lamps,
+                synthesis_alt_jacket=synthesis_alt_jacket,
             ),
         )

@@ -15,12 +15,27 @@ if TYPE_CHECKING:
 
 
 class B30N20View(PaginationView):
-    def __init__(self, ctx: Context, b30: list["Record"], n20: list["Record"]):
+    def __init__(
+        self,
+        ctx: Context,
+        b30: list["Record"],
+        n20: list["Record"],
+        *,
+        synthesis_alt_jacket: str | None = None,
+    ):
         self.best30 = B30PageSource(
-            records=b30, rating_slots=30, per_page=3, show_reachable=False
+            records=b30,
+            rating_slots=30,
+            per_page=3,
+            show_reachable=False,
+            synthesis_alt_jacket=synthesis_alt_jacket,
         )
         self.new20 = B30PageSource(
-            records=n20, rating_slots=20, per_page=3, show_reachable=False
+            records=n20,
+            rating_slots=20,
+            per_page=3,
+            show_reachable=False,
+            synthesis_alt_jacket=synthesis_alt_jacket,
         )
 
         super().__init__(ctx, self.new20)

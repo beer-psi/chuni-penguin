@@ -638,7 +638,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
     async def _recent_inner(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
@@ -682,6 +682,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         show_average=False,
                         show_reachable=False,
                         show_lamps=True,
+                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
                     )
                     await view.start(
                         content=f"Most recent scores for {username} on Kamaitachi:"
@@ -714,7 +715,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_prefix_command
     async def recent(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         *,
         kamaitachi: bool = False,
         user: discord.Member | discord.User | None = None,
@@ -737,12 +738,12 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_app_command
     async def recent_slash(
         self,
-        interaction: Interaction,
+        interaction: Interaction["ChuniBot"],
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
     ):
-        ctx = await Context.from_interaction(interaction)
+        ctx = await PenguinContext.from_interaction(interaction)
 
         return await self._recent_inner(ctx, user, kamaitachi=kamaitachi)
 
@@ -953,7 +954,15 @@ class RecordsCog(commands.Cog, name="Records"):
             except ValueError:
                 pass
 
-            view = EmbedPaginationView(ctx, [ScoreCardEmbed(r) for r in records])
+            view = EmbedPaginationView(
+                ctx,
+                [
+                    ScoreCardEmbed(
+                        r, synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket
+                    )
+                    for r in records
+                ],
+            )
             view.current_page = page
 
             content = f"Top play for {username}{network}:"
@@ -1147,7 +1156,16 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     records = await self.utils.hydrate_records(records)
 
-            view = EmbedPaginationView(ctx, [ScoreCardEmbed(r) for r in records])
+            view = EmbedPaginationView(
+                ctx,
+                [
+                    ScoreCardEmbed(
+                        r,
+                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                    )
+                    for r in records
+                ],
+            )
             content = f"Top play for {username}{network}:"
 
             if ctx.response is not None:
@@ -1213,7 +1231,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
     async def _best50_inner(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         user: discord.User | discord.Member | None = None,
         *,
         image: bool | None = None,
@@ -1400,9 +1418,20 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if classic:
                 if new_records is not None:
-                    view = B30N20View(ctx, records, new_records)
+                    view = B30N20View(
+                        ctx,
+                        records,
+                        new_records,
+                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                    )
                 else:
-                    view = B30View(ctx, records, record_slots, show_reachable=False)
+                    view = B30View(
+                        ctx,
+                        records,
+                        record_slots,
+                        show_reachable=False,
+                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                    )
 
                 await view.start()
 
@@ -1454,7 +1483,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_prefix_command
     async def best50(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         *,
         classic: bool = False,
         image: bool = False,
@@ -1503,14 +1532,14 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_app_command
     async def best50_slash(
         self,
-        interaction: Interaction,
+        interaction: Interaction["ChuniBot"],
         user: discord.User | discord.Member | None = None,
         *,
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
     ):
-        ctx = await Context.from_interaction(interaction)
+        ctx = await PenguinContext.from_interaction(interaction)
 
         await self._best50_inner(
             ctx,
@@ -1591,7 +1620,7 @@ class RecordsCog(commands.Cog, name="Records"):
         sort_order: Literal["ascending", "descending"] = "descending",
         kamaitachi: bool = False,
     ):
-        ctx = await Context.from_interaction(interaction)
+        ctx = await PenguinContext.from_interaction(interaction)
         target_user_id = interaction.user.id if user is None else user.id
         network = await self.utils.choose_preferred_network(
             ctx, target_user_id, kamaitachi=kamaitachi
@@ -1693,7 +1722,12 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
         view = B30View(
-            ctx, records, show_average=False, show_reachable=False, show_lamps=True
+            ctx,
+            records,
+            show_average=False,
+            show_reachable=False,
+            show_lamps=True,
+            synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
         )
         await view.start()
         return None
@@ -1727,7 +1761,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @logged_prefix_command
     async def top(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         *,
         difficulty: Difficulty | None = None,
         genre: Genres | None = None,
@@ -1917,7 +1951,12 @@ class RecordsCog(commands.Cog, name="Records"):
                     return await ctx.reply("No scores found.", mention_author=False)
 
             view = B30View(
-                ctx, records, show_average=False, show_reachable=False, show_lamps=True
+                ctx,
+                records,
+                show_average=False,
+                show_reachable=False,
+                show_lamps=True,
+                synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
             )
             await view.start()
             return None
