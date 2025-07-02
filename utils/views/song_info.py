@@ -11,14 +11,22 @@ from sqlalchemy.orm import joinedload
 from chunithm_net.models.enums import Difficulty
 from database.models import Chart, Song
 from utils import get_jacket_url, yt_search_link
+from utils.config import config
 
 from ._pagination import ListPageSource, PaginationView
 
 
 class SongInfoPageSource(ListPageSource[Song]):
-    def __init__(self, entries: list[Song], *, detailed: bool) -> None:
+    def __init__(
+        self,
+        entries: list[Song],
+        *,
+        detailed: bool,
+        synthesis_alt_jacket: str | None = None,
+    ) -> None:
         super().__init__(entries, per_page=1)
         self.detailed: bool = detailed
+        self.synthesis_alt_jacket: str | None = synthesis_alt_jacket
 
     @override
     async def format_page(
@@ -95,6 +103,17 @@ class SongInfoPageSource(ListPageSource[Song]):
                     title=song.title,
                     color=discord.Color.yellow(),
                 ).set_thumbnail(url=get_jacket_url(song))
+
+                if song.id == 2698:
+                    if self.synthesis_alt_jacket == "none":
+                        embed.set_thumbnail(url=None)
+                    elif (
+                        self.synthesis_alt_jacket != "default"
+                        and config.web.serve_assets
+                    ):
+                        embed.set_thumbnail(
+                            url=f"{config.web.base_url}/assets/jackets/{song.id}_{self.synthesis_alt_jacket}.png"
+                        )
 
                 chart_level_desc = []
 
@@ -183,5 +202,11 @@ class SongInfoPaginationView(PaginationView):
         items: list[Song],
         *,
         detailed: bool = False,
+        synthesis_alt_jacket: str | None = None,
     ):
-        super().__init__(ctx, SongInfoPageSource(items, detailed=detailed))
+        super().__init__(
+            ctx,
+            SongInfoPageSource(
+                items, detailed=detailed, synthesis_alt_jacket=synthesis_alt_jacket
+            ),
+        )

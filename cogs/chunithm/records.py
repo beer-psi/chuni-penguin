@@ -1986,7 +1986,14 @@ class RecordsCog(commands.Cog, name="Records"):
             chart.song.raise_if_not_available()
 
             leaderboard = await client.music_leaderboard(chart.song.id, difficulty)
-            view = LeaderboardView(ctx, leaderboard, chart.song, difficulty, chart)
+            view = LeaderboardView(
+                ctx,
+                leaderboard,
+                chart.song,
+                difficulty,
+                chart,
+                synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+            )
 
             if ctx.response is not None:
                 await view.start_from(ctx.response, content="")

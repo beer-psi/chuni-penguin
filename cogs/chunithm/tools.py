@@ -338,7 +338,9 @@ class ToolsCog(commands.Cog, name="Tools"):
 
     @commands.hybrid_command("random")
     @logged_prefix_command
-    async def random(self, ctx: Context, level: str, count: Range[int, 1, 10] = 3):
+    async def random(
+        self, ctx: PenguinContext, level: str, count: Range[int, 1, 10] = 3
+    ):
         """Get random charts based on level/course/chart constant.
 
         Parameters
@@ -484,14 +486,19 @@ class ToolsCog(commands.Cog, name="Tools"):
                     await ctx.reply(SOUTHERN_CROSS_JUMPSCARE, mention_author=False)
                     return
 
-            embeds: list[discord.Embed] = [ChartCardEmbed(chart) for chart in charts]
+            embeds: list[discord.Embed] = [
+                ChartCardEmbed(
+                    chart, synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket
+                )
+                for chart in charts
+            ]
             await ctx.reply(content=content, embeds=embeds, mention_author=False)
 
     @commands.hybrid_command("recommend")
     @logged_prefix_command
     async def recommend(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         count: Range[int, 1, 10] = 3,
         target_rating: Optional[float] = None,
     ):
@@ -582,7 +589,13 @@ class ToolsCog(commands.Cog, name="Tools"):
                     target_score = 1_009_000
                 target_score = round_to_nearest(target_score, 50)
 
-                embeds.append(ChartCardEmbed(chart, target_score=target_score))
+                embeds.append(
+                    ChartCardEmbed(
+                        chart,
+                        target_score=target_score,
+                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                    )
+                )
             await ctx.reply(embeds=embeds, mention_author=False)
 
     @commands.hybrid_command("whatif")
@@ -817,7 +830,13 @@ class ToolsCog(commands.Cog, name="Tools"):
 
                     raise commands.CommandError(msg)
 
-                await ctx.respond_or_edit(embed=ChartCardEmbed(chart, border=True))
+                await ctx.respond_or_edit(
+                    embed=ChartCardEmbed(
+                        chart,
+                        border=True,
+                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                    )
+                )
 
     @commands.hybrid_command("chart")
     @commands.bot_has_permissions(attach_files=True)

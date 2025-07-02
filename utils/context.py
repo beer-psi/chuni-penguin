@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from chunithm_net.models.enums import Difficulty
-from database.models import Chart
+from database.models import Chart, UserConfig
 from utils import did_you_mean_text
 from utils.constants import SIMILARITY_THRESHOLD
 from utils.views.select_to_compare import SelectToCompareView
@@ -25,6 +25,7 @@ class PenguinContext(commands.Context["ChuniBot"]):
         super().__init__(*args, **kwargs)
 
         self.response: discord.Message | None = None
+        self.user_config: UserConfig = MISSING
 
     @override
     async def reply(self, content: str | None = None, **kwargs: Any) -> discord.Message:

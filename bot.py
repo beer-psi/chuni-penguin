@@ -177,7 +177,10 @@ class ChuniBot(commands.AutoShardedBot):
         *,
         cls: type[PenguinContext] = PenguinContext,
     ):
-        return await super().get_context(origin, cls=cls)
+        ctx = await super().get_context(origin, cls=cls)
+        ctx.user_config = await self.utils.fetch_user_config(ctx.author.id)
+
+        return ctx
 
     @property
     def utils(self) -> "UtilsCog":

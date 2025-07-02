@@ -442,7 +442,7 @@ class ProfileCog(commands.Cog, name="Profile"):
         """Adjust your experience with the bot.
 
         Currently, these options are supported:
-        - `synthesis-alt-jacket`: Changes the jacket art for the song "Synthesis." when rendering your best 50 image. The possible options are `none` (black background), `default` (use CHUNITHM's jacket art), `cytus2`, `vividstasis`, `musedash`.
+        - `synthesis-alt-jacket`: Changes the jacket art for the song "Synthesis." whereever applicable. The possible options are `none` (black background), `default` (use CHUNITHM's jacket art), `cytus2`, `vividstasis`, `musedash`.
         - `privacy`: Do not allow other users to view your profile and scores using the bot. You can still use commands, but to others it will seem like you're not logged in. The possible options are `true` (enabled) and `false` (disabled).
 
         **Parameters:**

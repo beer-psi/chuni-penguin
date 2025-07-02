@@ -17,6 +17,7 @@ from utils import (
 )
 from utils.config import config
 from utils.constants import SIMILARITY_THRESHOLD
+from utils.context import PenguinContext
 from utils.converters import AliasNameConverter, AliasNameTransformer
 from utils.logging import logged_app_command, logged_prefix_command
 from utils.views.song_info import SongInfoPaginationView
@@ -431,13 +432,16 @@ class SearchCog(commands.Cog, name="Search"):
         *,
         detailed: bool = False,
     ):
-        ctx = await Context.from_interaction(interaction)
+        ctx = await PenguinContext.from_interaction(interaction)
         return await self._info_inner(ctx, query=query, detailed=detailed)
 
     @commands.command("info", signature="[-d] <query>")
     @logged_prefix_command
     async def info(
-        self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
+        self,
+        ctx: PenguinContext,
+        *,
+        query: Annotated[str, AliasNameConverter(lower=True)],
     ):
         """Search for a song.
 
@@ -457,7 +461,9 @@ class SearchCog(commands.Cog, name="Search"):
         query = " ".join(args.query)
         return await self._info_inner(ctx, query=query, detailed=args.detailed)
 
-    async def _info_inner(self, ctx: Context, *, query: str, detailed: bool = False):
+    async def _info_inner(
+        self, ctx: PenguinContext, *, query: str, detailed: bool = False
+    ):
         async with ctx.typing():
             guild_id = ctx.guild.id if ctx.guild is not None else None
             result = await self.utils.find_songs(
@@ -472,7 +478,12 @@ class SearchCog(commands.Cog, name="Search"):
                     mention_author=False,
                 )
 
-            view = SongInfoPaginationView(ctx, result.songs, detailed=detailed)
+            view = SongInfoPaginationView(
+                ctx,
+                result.songs,
+                detailed=detailed,
+                synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+            )
             await view.start()
 
             # straight up jorking it

@@ -7,6 +7,7 @@ from chunithm_net.models.enums import Difficulty
 from utils import floor_to_ndp, get_jacket_url, sdvxin_link, yt_search_link
 from utils.border import calculate_border, calculate_score_deduction_per_judgement
 from utils.calculation.rating import calculate_rating
+from utils.config import config
 from utils.ranks import rank_icon
 
 if TYPE_CHECKING:
@@ -20,6 +21,7 @@ class ChartCardEmbed(discord.Embed):
         *,
         target_score: Optional[int] = None,
         border: bool = False,
+        synthesis_alt_jacket: str | None = None,
     ) -> None:
         difficulty = Difficulty.from_short_form(chart.difficulty)
 
@@ -30,6 +32,14 @@ class ChartCardEmbed(discord.Embed):
         )
 
         self.set_thumbnail(url=get_jacket_url(chart.song))
+
+        if chart.song.id == 2698:
+            if synthesis_alt_jacket == "none":
+                self.set_thumbnail(url=None)
+            elif synthesis_alt_jacket != "default" and config.web.serve_assets:
+                self.set_thumbnail(
+                    url=f"{config.web.base_url}/assets/jackets/{chart.song.id}_{synthesis_alt_jacket}.png"
+                )
 
         self.add_field(
             name="Category",
