@@ -9,7 +9,6 @@ from math import ceil
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 
 import discord
-import httpx
 import msgspec
 from discord import Interaction, app_commands
 from discord.ext import commands
@@ -39,7 +38,6 @@ from chunithm_net.models.record import (
 from database.models import Song, SongJacket, UserConfig
 from utils import did_you_mean_text, flags, floor_to_ndp, json_loads
 from utils.components import ScoreCardEmbed
-from utils.config import config
 from utils.constants import (
     ASSETS_DIR,
     CURRENT_CHUNITHM_VERSION_KT,
@@ -765,14 +763,6 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
         url_whitelist = [JACKET_BASE, INTERNATIONAL_JACKET_BASE]
-        check_served_jackets = False
-
-        if config.web.serve_assets and config.web.base_url is not None:
-            url = httpx.URL(config.web.base_url)
-
-            if not url.host.startswith("127.") and url.host != "localhost":
-                url_whitelist.append(f"{config.web.base_url}/assets/jackets/")
-                check_served_jackets = True
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             message: discord.Message | discord.MessageSnapshot
@@ -836,14 +826,6 @@ class RecordsCog(commands.Cog, name="Records"):
 
             condition = SongJacket.jacket_url.in_(thumbnail_urls)
 
-            if check_served_jackets:
-                ids = [
-                    int(x.split("/")[-1].split(".")[0])
-                    for x in thumbnail_urls
-                    if f"{config.web.base_url}/assets/jackets/" in x
-                ]
-                condition |= SongJacket.song_id.in_(ids)
-
             sql = (
                 select(SongJacket)
                 .where(condition)
@@ -888,14 +870,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 song.raise_if_not_available()
 
             embed = next(
-                x
-                for x in embeds
-                if (jacket.jacket_url in {x.thumbnail.url, x.image.url})
-                or (
-                    check_served_jackets
-                    and f"{config.web.base_url}/assets/jackets/{jacket.song_id}.png"
-                    in {x.thumbnail.url, x.image.url}
-                )
+                x for x in embeds if jacket.jacket_url in {x.thumbnail.url, x.image.url}
             )
 
             if kamaitachi:

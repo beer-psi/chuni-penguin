@@ -10,6 +10,8 @@ from structlog.stdlib import BoundLogger
 
 from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
 from database.models import Song, SongJacket
+from utils.config import config
+from utils.constants import ASSETS_DIR
 
 from .chunirec import ChunithmOfficialSong, MaimaiOfficialSong
 
@@ -172,6 +174,17 @@ async def update_jackets(
                 "jacket_url": f"https://mimixd.app/images/render/cover/{song.image_url}",
             }
         )
+
+    if config.web.serve_assets and config.web.base_url:
+        for jacket in (ASSETS_DIR / "jackets").iterdir():
+            song_id_str = jacket.stem.split("_")[0]
+
+            jackets.append(
+                {
+                    "song_id": int(song_id_str),
+                    "jacket_url": f"{config.web.base_url}/assets/jackets/{jacket.name}",
+                }
+            )
 
     async with async_session() as session:
         logger.info("Upserting %d jacket URLs.", len(jackets))
