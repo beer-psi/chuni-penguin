@@ -549,7 +549,11 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             # Determine min-max const to recommend based on target rating.
             min_level = round(target_rating - 2.15, 2)
-            max_level = round(target_rating - 1.5, 2)
+
+            if target_rating < 12:
+                max_level = round(target_rating - 1, 2)
+            else:
+                max_level = round(target_rating - 1.5, 2)
 
             stmt = (
                 select(Chart)
