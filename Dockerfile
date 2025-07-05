@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:0.6.13-python3.12-bookworm AS base
+FROM ghcr.io/astral-sh/uv:0.7.19-python3.13-bookworm AS base
 
 # Needed for fixing permissions of files created by Docker:
 ARG UID=1000 \
