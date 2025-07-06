@@ -34,7 +34,7 @@ from utils.calculation.rating import calculate_rating, calculate_score_for_ratin
 from utils.components import ChartCardEmbed
 from utils.constants import MAX_DIFFICULTY
 from utils.context import PenguinContext
-from utils.converters import DifficultyConverter
+from utils.converters import AliasNameConverter, DifficultyConverter
 from utils.kamaitachi import convert_kt_pbs_to_records
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
@@ -758,7 +758,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         ctx: PenguinContext,
         difficulty_or_notecount: str,
         *,
-        query: str | None = None,
+        query: Annotated[str | None, AliasNameConverter(lower=True)] = None,
     ):
         """Display the number of permissible JUSTICE, ATTACK and MISS to achieve specific ranks on a chart.
 
@@ -857,7 +857,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         ctx: PenguinContext,
         difficulty: Annotated[Difficulty, DifficultyConverter],
         *,
-        query: str,
+        query: Annotated[str, AliasNameConverter(lower=True)],
     ):
         """Renders a chart view from sdvx.in for a given song and difficulty.
 
