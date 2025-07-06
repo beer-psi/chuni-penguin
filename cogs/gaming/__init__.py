@@ -168,7 +168,11 @@ class GamingCog(commands.Cog, name="Games"):
         "jacket",
         usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
     )
-    @commands.bot_has_permissions(add_reactions=True, read_messages=True)
+    @commands.bot_has_permissions(
+        add_reactions=True,
+        read_messages=True,
+        attach_files=True,
+    )
     @logged_prefix_command
     async def guess_jacket(self, ctx: Context, *, arguments: str = ""):
         """Starts a jacket art guessing game.
@@ -194,7 +198,11 @@ class GamingCog(commands.Cog, name="Games"):
         "audio",
         usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
     )
-    @commands.bot_has_permissions(add_reactions=True, read_messages=True)
+    @commands.bot_has_permissions(
+        add_reactions=True,
+        read_messages=True,
+        attach_files=True,
+    )
     @logged_prefix_command
     async def guess_audio(self, ctx: Context, *, arguments: str = ""):
         """Starts an audio guessing game using voice messages.
@@ -223,7 +231,11 @@ class GamingCog(commands.Cog, name="Games"):
         usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
     )
     @commands.guild_only()
-    @commands.bot_has_permissions(add_reactions=True, read_messages=True)
+    @commands.bot_has_permissions(
+        add_reactions=True,
+        read_messages=True,
+        attach_files=True,
+    )
     @logged_prefix_command
     async def guess_voice(self, ctx: PenguinGuildContext, *, arguments: str = ""):
         """Starts an audio guessing game in a voice call.
