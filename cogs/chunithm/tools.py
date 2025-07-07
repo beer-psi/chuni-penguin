@@ -781,6 +781,13 @@ class ToolsCog(commands.Cog, name="Tools"):
                     msg = "Notecount should be larger than 0."
                     raise commands.BadArgument(msg)
 
+                if (
+                    notecount
+                    > 99_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999
+                ):
+                    msg = "Notecount is too large."
+                    raise commands.BadArgument(msg)
+
                 deductions = calculate_score_deduction_per_judgement(notecount)
 
                 embed = discord.Embed(
