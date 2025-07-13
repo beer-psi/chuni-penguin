@@ -88,7 +88,7 @@ class PenguinContext(commands.Context["ChuniBot"]):
         kwargs.pop("allowed_mentions", None)
 
         if self.response is not None:
-            kwargs = {
+            edit_kwargs = {
                 "content": content,
                 "embed": kwargs.get("embed", MISSING),
                 "embeds": kwargs.get("embeds", MISSING),
@@ -97,12 +97,14 @@ class PenguinContext(commands.Context["ChuniBot"]):
                 "allowed_mentions": discord.AllowedMentions.none(),
             }
 
-            if not isinstance(self.response, WebhookMessage):
-                kwargs["suppress"] = kwargs.get("suppress_embeds", False)
-                kwargs["delete_after"] = kwargs.get("delete_after")
+            if isinstance(self.response, discord.InteractionMessage):
+                edit_kwargs["delete_after"] = kwargs.get("delete_after", False)
+            elif not isinstance(self.response, WebhookMessage):
+                edit_kwargs["suppress"] = kwargs.get("suppress_embeds", False)
+                edit_kwargs["delete_after"] = kwargs.get("delete_after")
 
             with contextlib.suppress(discord.errors.NotFound):
-                return await self.response.edit(**kwargs)
+                return await self.response.edit(**edit_kwargs)
 
         return await self.reply(content=content, mention_author=False, **kwargs)
 
