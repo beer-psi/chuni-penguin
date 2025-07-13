@@ -97,6 +97,14 @@ class FluffCog(commands.Cog, name="Fluff"):
             mention_author=False,
         )
 
+    @commands.hybrid_command("ar")
+    @logged_prefix_command
+    async def ar(self, ctx: Context):
+        await ctx.reply(
+            content="https://cdn.discordapp.com/attachments/785983013430231081/1385525318642827316/twitter_1935670382146855418.gif",
+            mention_author=False,
+        )
+
 
 async def setup(bot: "ChuniBot"):
     await bot.add_cog(FluffCog(bot))
