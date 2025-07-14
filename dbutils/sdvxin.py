@@ -69,6 +69,7 @@ TITLE_MAPPING = {
     "Love's Theme of BADASS": "Love's Theme of BADASS ～バッド・アス 愛のテーマ～",
     "Make Up Your World": "Make Up Your World feat. キョンシーのCiちゃん & らっぷびと",
     "Mass Destruction (''P3'' + ''P3F'' ver.)": 'Mass Destruction ("P3" + "P3F" ver.)',
+    "MegiddO": "MegiddØ",
     "NYAN-NYA, More! ラブシャイン、Chu?": "NYAN-NYA, More! ラブシャイン、Chu♥",
     "Okeanos": "Ωκεανος",
     "Pump": "Pump!n",
