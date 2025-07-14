@@ -113,6 +113,7 @@ TITLE_MAPPING = {
     "私の中の幻想的世界観": "私の中の幻想的世界観及びその顕現を想起させたある現実での出来事に関する一考察",
     "萌豚功夫大乱舞": "萌豚♥功夫♥大乱舞",
     "優勝Princess": "優勝Princess♡",
+    "宵の平安京 Stargaze": "宵の平安京 Stargazer",
     "ＧＯ！ＧＯ！ラブリズム ～あーりん書類審査通過記念Ver.～": "ＧＯ！ＧＯ！ラブリズム♥ ～あーりん書類審査通過記念Ver.～",
     "《真紅》～ Pavane Pour La Flamme": "《真紅》 ～ Pavane Pour La Flamme",
     "《楽土》～ One and Only One": "《楽土》 ～ One and Only One",
