@@ -37,6 +37,7 @@ from utils.calculation.overpower import (
 )
 from utils.calculation.rating import calculate_rating
 from utils.config import config
+from utils.context_manager import AsyncRcContextManager
 from utils.logging import logger
 from utils.types import MissingDetailedParams
 
@@ -90,7 +91,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         self.user_agents: KeiyoushiUserAgents = MISSING
 
         # user_id: (refcount, ChuniNet)
-        self._chuni_net_sessions: dict[int, tuple[int, ChuniNet]] = {}
+        self._chuni_net_sessions: dict[int, AsyncRcContextManager[ChuniNet]] = {}
 
     async def cog_load(self) -> None:
         self._update_user_agents.start()
@@ -261,55 +262,44 @@ class UtilsCog(commands.Cog, name="Utils"):
             )
             raise commands.CommandError(msg)
 
-        if (
-            target_id in self._chuni_net_sessions
-            and self._chuni_net_sessions[target_id][0] != 0
-        ):
-            refcount, session = self._chuni_net_sessions[target_id]
-            logger.debug(
-                "Using cached CHUNITHM-NET session",
-                tag="cached_chunithm_net_session",
-                refcount=refcount,
+        if (rc := self._chuni_net_sessions.get(target_id)) and rc.refcount > 0:
+            logger.debug("using cached chunithm-net session", tag="cached_chunithm_net_session", user_id=target_id, refcount=rc.refcount)
+
+            async with rc as session:
+                yield session
+
+            return
+
+        jar = await self.fetch_cookie(target_id)
+
+        if jar is None:
+            msg = self._get_not_logged_in_message(
+                "chuninet", author_id, target_id, is_interaction=is_interaction
             )
-        else:
-            jar = await self.fetch_cookie(target_id)
+            raise commands.CommandError(msg)
 
-            if jar is None:
-                msg = self._get_not_logged_in_message(
-                    "chuninet", author_id, target_id, is_interaction=is_interaction
-                )
-                raise commands.CommandError(msg)
+        session = ChuniNet(jar)
+        session.session.headers["user-agent"] = self.user_agents.desktop[
+            (target_id >> 22) % len(self.user_agents.desktop)
+        ]
 
-            session = ChuniNet(jar)
-            refcount = 0
-
-            session.session.headers["user-agent"] = self.user_agents.desktop[
-                (target_id >> 22) % len(self.user_agents.desktop)
-            ]
-
-        try:
-            self._chuni_net_sessions[target_id] = (refcount + 1, session)
-            yield session
-        finally:
-            refcount, session = self._chuni_net_sessions[target_id]
-            refcount -= 1
-
-            if refcount == 0:
-                async with self.bot.begin_db_session() as db_session:
-                    await db_session.execute(
-                        update(Cookie)
-                        .where(Cookie.discord_id == target_id)
-                        .values(
-                            cookie=f"#LWP-Cookies-2.0\n{session.session._cookies.jar.as_lwp_str()}"  # pyright: ignore[reportAttributeAccessIssue]
-                        )
+        async def on_exit(session):
+            async with self.bot.begin_db_session() as db_session:
+                await db_session.execute(
+                    update(Cookie)
+                    .where(Cookie.discord_id == target_id)
+                    .values(
+                        cookie=f"#LWP-Cookies-2.0\n{session.session._cookies.jar.as_lwp_str()}"  # pyright: ignore[reportAttributeAccessIssue]
                     )
-                    await db_session.commit()
+                )
+                await db_session.commit()
 
-                await session.close()
+            del self._chuni_net_sessions[target_id]
 
-                del self._chuni_net_sessions[target_id]
-            else:
-                self._chuni_net_sessions[target_id] = refcount, session
+        self._chuni_net_sessions[target_id] = AsyncRcContextManager(session, on_exit=[on_exit])
+
+        async with self._chuni_net_sessions[target_id] as session:
+            yield session
 
     @contextlib.asynccontextmanager
     async def kamaitachi_client(
