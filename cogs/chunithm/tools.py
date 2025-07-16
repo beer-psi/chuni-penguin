@@ -930,8 +930,24 @@ class ToolsCog(commands.Cog, name="Tools"):
             output = await asyncio.to_thread(
                 compose_chart_view, bg_resp.content, data_resp.content, bar_resp.content
             )
+
+            if song.bpm is not None:
+                displayed_bpm = str(song.bpm)
+
+                if (
+                    song.min_bpm is not None
+                    and song.max_bpm is not None
+                    and song.min_bpm != song.max_bpm
+                ):
+                    displayed_bpm = (
+                        f"{displayed_bpm} ({song.min_bpm}~{song.max_bpm})"
+                    )
+            else:
+                displayed_bpm = "Unknown"
+
             content = (
                 f"**{chart_display_name}**\n"
+                f"BPM: {displayed_bpm}\n"
                 f"CHAIN: {chart.maxcombo or '-'} / TAP: {chart.tap or '-'} / HOLD: {chart.hold or '-'} / SLIDE: {chart.slide or '-'} / AIR: {chart.air or '-'} / FLICK: {chart.flick or '-'}\n"
             )
 
@@ -988,7 +1004,7 @@ VOLCANIC_JUMPSCARE = """🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨    𝓿𝓸𝓵𝓬𝓪𝓷𝓲𝓬
 🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨
-🟨🟨🟥🟨🟨 
+🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨
 """  # noqa: W291, RUF001
 
@@ -1003,11 +1019,11 @@ FORSAKEN_TALE_JUMPSCARE = """恐怖！Forsaken Tale！
 
 TOA_CHAN_TOYBOX_SONG_ID = 2428
 TOA_CHAN_TOYBOX_JUMPSCARE = """恐怖！とあちゃんのおもちゃ箱！
-😂🟦🟦 
+😂🟦🟦
       🟦     🟦
-      🟦     ⚡       
-      🟦          ⚡          
-😂🟦               😂           
+      🟦     ⚡
+      🟦          ⚡
+😂🟦               😂
       🟦             ➡️
       🟦       ➡️
       🟦➡️
@@ -1019,7 +1035,7 @@ TOA_CHAN_TOYBOX_JUMPSCARE = """恐怖！とあちゃんのおもちゃ箱！
       🟦             ⬅️
       🟦       ➡️
       🟦➡️
-      🟦       ⬅️  
+      🟦       ⬅️
       🟦             ⬅️
       🟦     😡
       🟦           😡
