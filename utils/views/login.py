@@ -9,6 +9,7 @@ from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
 from chunithm_net import _AUTHENTICATION_URL
+from utils.logging import logger
 
 from ._pagination import ListPageSource, PaginationView
 
@@ -90,6 +91,14 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
                 ),
                 ephemeral=True,
             )
+
+    @override
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        await logger.aexception(
+            "error in SEGA ID login modal",
+            tag="error_sega_id_login_modal",
+            exc_info=error,
+        )
 
 
 class LoginWithSegaIDView(discord.ui.View):
