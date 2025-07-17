@@ -1,3 +1,4 @@
+# ruff: noqa: RUF003
 import asyncio
 import itertools
 import random
@@ -358,16 +359,46 @@ class ToolsCog(commands.Cog, name="Tools"):
             "ii": ["11+", "12", "12+"],
             "iii": ["12+", "13", "13+"],
             "iv": ["13+", "14", "14+"],
+            "sibyl": [None, None, None],
             "v": ["14", "14+", "15"],
             "inf": ["14+", "15", "15+"],
             "random": [None, None, None],
             "wallpanic": ["10+", "11", "11+"],
         }
+        sibyl_songs: list[list[int]] = [
+            [
+                850,  # 《混乱》 ～ Muspell
+                851,  # 《理想》 ～ Cloudland
+                852,  # 《逃避》 ～ The Deserter
+                853,  # 《最愛》 ～ Curse
+                1029,  # 《狂乱》 ～ Cataclysm
+                1031,  # 《信仰》 ～ Eudaimonia
+                2091,  # 《紀律》 ～ As One
+                2092,  # 《種子》 ～ Set You Free
+                2458,  # 《楽土》 ～ One and Only One
+                2459,  # 《散華》 ～ EMBARK
+            ],
+            [
+                854,  # 《運命》 ～ Ray of Hope
+                1030,  # 《投影》 ～ Oh My Baby Doll
+                1032,  # 《選別》 ～ Refuge
+                1033,  # 《本能》 ～ ReCoda
+                2090,  # 《偏愛》 ～ Shattered Memories
+                2093,  # 《自戒》 ～ Paganelope
+                2457,  # 《真紅》 ～ Pavane Pour La Flamme
+                2460,  # 《慈雨》 ～ La Symphonie de Salacia: Agony Movement
+            ],
+            [
+                918,  # 《破滅》 ～ Rhapsody for The End
+                2461,  # 《創造》 ～ Cries, beyond The End
+            ],
+        ]
         course_condition: dict[str, str] = {
             "i": "CLASS I: 50 LIFE, MISS -1, CLEAR +10",
             "ii": "CLASS II: 50 LIFE, MISS -1",
             "iii": "CLASS III: 30 LIFE, MISS -1",
             "iv": "CLASS IV: 500 LIFE, JUSTICE or lower -1",
+            "sibyl": "CLASS IV - シビュラ精霊記 Random Set: 100 LIFE, ATTACK or lower -1",
             "v": "CLASS V: 300 LIFE, JUSTICE or lower -1",
             "inf": "CLASS ∞: 200 LIFE, JUSTICE or lower -1",
             "random": "CLASS EXTRA - RANDOM: 50 LIFE, MISS -1",
@@ -396,7 +427,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 content = course_condition[course_class]
                 track_levels = course_levels[course_class]
 
-                for track_level in track_levels:
+                for i, track_level in enumerate(track_levels):
                     chart_stmt = stmt.limit(1)
 
                     if track_level is not None:
@@ -405,6 +436,10 @@ class ToolsCog(commands.Cog, name="Tools"):
                         chart_stmt = chart_stmt.where(
                             (Chart.song_id >= 8244) & (Chart.song_id <= 8249)
                         )
+                    elif course_class == "sibyl":
+                        chart_stmt = chart_stmt.where(
+                            Chart.song_id.in_(sibyl_songs[i]) & Chart.difficulty == "MAS"
+                        )  # fmt: skip
 
                     chart = (await session.execute(chart_stmt)).scalar_one_or_none()
 
@@ -939,9 +974,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     and song.max_bpm is not None
                     and song.min_bpm != song.max_bpm
                 ):
-                    displayed_bpm = (
-                        f"{displayed_bpm} ({song.min_bpm}~{song.max_bpm})"
-                    )
+                    displayed_bpm = f"{displayed_bpm} ({song.min_bpm}~{song.max_bpm})"
             else:
                 displayed_bpm = "Unknown"
 
