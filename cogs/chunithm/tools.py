@@ -37,7 +37,7 @@ from utils.constants import MAX_DIFFICULTY
 from utils.context import PenguinContext
 from utils.converters import AliasNameConverter, DifficultyConverter
 from utils.kamaitachi import convert_kt_pbs_to_records
-from utils.logging import logged_prefix_command
+from utils.logging import logged_prefix_command, logger
 from utils.ranks import rank_icon
 
 if TYPE_CHECKING:
@@ -438,7 +438,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                         )
                     elif course_class == "sibyl":
                         chart_stmt = chart_stmt.where(
-                            Chart.song_id.in_(sibyl_songs[i]) & Chart.difficulty == "MAS"
+                            Chart.song_id.in_(sibyl_songs[i]) & (Chart.difficulty == "MAS")
                         )  # fmt: skip
 
                     chart = (await session.execute(chart_stmt)).scalar_one_or_none()
