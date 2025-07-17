@@ -5,7 +5,7 @@ import sys
 import time
 from pathlib import Path
 from types import FrameType
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import discord
 import discord.utils
@@ -181,6 +181,16 @@ class ChuniBot(commands.AutoShardedBot):
         ctx.user_config = await self.utils.fetch_user_config(ctx.author.id)
 
         return ctx
+
+    @override
+    async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
+        await logger.aerror(
+            "exception in event handler",
+            tag="error_event_handler",
+            event_method=event_method,
+            args=args,
+            kwargs=kwargs,
+        )
 
     @property
     def utils(self) -> "UtilsCog":
