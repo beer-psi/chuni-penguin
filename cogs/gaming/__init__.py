@@ -35,17 +35,24 @@ async def run_state_machine(
     session: GuessingGameSession,
     initial_state: GuessingGameState,
 ):
+    voice_channel = session.voice_client.channel if session.voice_client else None
     current_state: GuessingGameState | None = initial_state
 
     while current_state is not None:
         async with cog.state_for_game_session_lock:
             cog.state_for_game_session[channel.id] = current_state
 
+            if voice_channel is not None:
+                cog.state_for_game_session[voice_channel.id] = current_state
+
         try:
             next_state = await current_state()
 
             if next_state is None:
                 await cog._clear_state(channel.id)
+
+                if voice_channel is not None:
+                    await cog._clear_state(voice_channel.id)
 
                 if session.voice_client is not None:
                     await session.voice_client.disconnect()
@@ -60,6 +67,9 @@ async def run_state_machine(
                 exc_info=e,
             )
             await cog._clear_state(channel.id)
+
+            if voice_channel is not None:
+                await cog._clear_state(voice_channel.id)
 
             if session.voice_client is not None:
                 await session.voice_client.disconnect()
@@ -284,7 +294,7 @@ class GamingCog(commands.Cog, name="Games"):
 
         await voice_channel.connect(self_deaf=True)
 
-        await self._guess_without_voice_channel(
+        self.game_sessions[voice_channel.id] = await self._guess_without_voice_channel(
             ctx, GuessingGameType.VOICE_CHANNEL, arguments
         )
 
@@ -324,6 +334,8 @@ class GamingCog(commands.Cog, name="Games"):
 
         self.game_tasks.add(game_task)
         game_task.add_done_callback(self.game_tasks.discard)
+
+        return session
 
     @commands.hybrid_command("skip")
     @commands.bot_has_permissions(add_reactions=True)
@@ -421,6 +433,34 @@ class GamingCog(commands.Cog, name="Games"):
         async with self.game_sessions_lock:
             if channel_id in self.game_sessions:
                 del self.game_sessions[channel_id]
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
+        # Listen to voice channel disconnects so we can stop voice games early.
+        if member != self.bot.user:
+            return
+
+        # To be disconnected, you must be in a voice channel first.
+        if before.channel is None:
+            return
+
+        # We are not disconnected if the after channel is not None.
+        if after.channel is not None:
+            return
+
+        # We clear game states before disconnecting from the call, so this should be
+        # safe if the game ended normally.
+        async with self.state_for_game_session_lock:
+            if (state := self.state_for_game_session.get(before.channel.id)) is None:
+                return
+
+        if isinstance(state, GuessingGameSkippableState):
+            await state.skip()
 
 
 async def setup(bot: "ChuniBot") -> None:

@@ -5,7 +5,7 @@ import discord
 from discord.utils import escape_markdown
 from rapidfuzz import fuzz
 
-from cogs.gaming._session import GuessingGameSession
+from cogs.gaming._session import GuessingGameSession, GuessingGameType
 from database.models import Song
 
 from .base import GuessingGameState
@@ -15,6 +15,7 @@ from .end_game import (
     EndGameTimedOut,
     EndGameTooManyWrongAnswers,
     EndGameUserCanceled,
+    EndGameVoiceDisconnected,
 )
 from .wait import WaitState
 
@@ -95,6 +96,11 @@ class ShowAnswerState(GuessingGameState):
 
         if self.session.stopped_by:
             next_state = EndGameUserCanceled(self.session)
+        elif (
+            self.session.game_type == GuessingGameType.VOICE_CHANNEL
+            and self.session.voice_client is None
+        ):
+            next_state = EndGameVoiceDisconnected(self.session)
         elif self.session.check_score_limit_reached():
             next_state = EndGameReachedScoreLimit(self.session)
         elif self.session.check_question_limit_reached():

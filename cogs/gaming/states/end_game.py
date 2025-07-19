@@ -206,3 +206,17 @@ class EndGameTooManyWrongAnswers(GuessingGameState):
             f"More than {self.session.wrong_answers_limit} question{'s' if self.session.wrong_answers_limit != 1 else ''} was answered wrongly.",
         )
         return None
+
+
+class EndGameVoiceDisconnected(GuessingGameState):
+    def __init__(self, session: GuessingGameSession) -> None:
+        self.session = session
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        await end_game(
+            self.session,
+            discord.Color.red(),
+            "The bot was externally disconnected from the voice call.",
+        )
+        return None

@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING, override
 
 import discord
 
+from cogs.gaming.states.end_game import EndGameVoiceDisconnected
+
 from .base import GuessingGameState
 from .wait_for_answer import WaitForAnswerState
 
@@ -16,8 +18,11 @@ class AskVoiceCallQuestionState(GuessingGameState):
     @override
     async def __call__(self) -> "GuessingGameState | None":
         # we should already be in a voice channel if we reach here, so voice_client should not
-        # be null. if it's null, it's a bug
-        assert self.session.voice_client is not None
+        # be null. if it's null, it's a bug.
+
+        if self.session.voice_client is None:
+            return EndGameVoiceDisconnected(self.session)
+
         assert self.session.voice_client.channel is not None
 
         (

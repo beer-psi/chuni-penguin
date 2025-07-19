@@ -2,10 +2,10 @@ import asyncio
 import contextlib
 from typing import override
 
-from cogs.gaming._session import GuessingGameSession
+from cogs.gaming._session import GuessingGameSession, GuessingGameType
 
 from .base import GuessingGameSkippableState, GuessingGameState
-from .end_game import EndGameUserCanceled
+from .end_game import EndGameUserCanceled, EndGameVoiceDisconnected
 
 
 class WaitState(GuessingGameSkippableState):
@@ -30,6 +30,11 @@ class WaitState(GuessingGameSkippableState):
 
         if self.session.stopped_by:
             return EndGameUserCanceled(self.session)
+        if (
+            self.session.game_type == GuessingGameType.VOICE_CHANNEL
+            and self.session.voice_client is None
+        ):
+            return EndGameVoiceDisconnected(self.session)
 
         return self.next_state
 
