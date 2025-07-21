@@ -1923,21 +1923,21 @@ class RecordsCog(commands.Cog, name="Records"):
                         x.extras.get(KEY_OVERPOWER, Decimal(0)),
                     ),
                 )
-            elif sort.startswith(("overpower", "op")):
-                records.sort(
-                    reverse=not sort.endswith("+"),
-                    key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
-                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
-                        x.score,
-                    ),
-                )
             elif sort.startswith(("overpower_percent", "op_percent")):
                 records.sort(
                     reverse=not sort.endswith("+"),
                     key=lambda x: (
                         x.extras.get(KEY_OVERPOWER, Decimal(0))
                         / x.extras.get(KEY_OVERPOWER_MAX, Decimal(1)),
+                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
+                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
+                        x.score,
+                    ),
+                )
+            elif sort.startswith(("overpower", "op")):
+                records.sort(
+                    reverse=not sort.endswith("+"),
+                    key=lambda x: (
                         x.extras.get(KEY_OVERPOWER, Decimal(0)),
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
