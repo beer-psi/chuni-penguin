@@ -177,8 +177,16 @@ class ChuniBot(commands.AutoShardedBot):
         *,
         cls: type[PenguinContext] = PenguinContext,
     ):
-        ctx = await super().get_context(origin, cls=cls)
-        ctx.user_config = await self.utils.fetch_user_config(ctx.author.id)
+        try:
+            ctx = await super().get_context(origin, cls=cls)
+        except Exception as e:
+            await logger.aexception(
+                "could not get context", tag="error_get_context", exc_info=e
+            )
+            raise
+
+        if ctx.command is not None:
+            ctx.user_config = await self.utils.fetch_user_config(ctx.author.id)
 
         return ctx
 
