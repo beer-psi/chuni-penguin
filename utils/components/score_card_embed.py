@@ -4,6 +4,7 @@ from discord.utils import escape_markdown
 from chunithm_net.consts import (
     KEY_INTERNAL_LEVEL,
     KEY_LEVEL,
+    KEY_OVERPOWER,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
     KEY_SONG_ID,
@@ -17,7 +18,6 @@ from chunithm_net.models.record import (
     Record,
 )
 from utils import floor_to_ndp
-from utils.calculation.overpower import calculate_play_overpower
 from utils.config import config
 from utils.ranks import rank_icon
 
@@ -72,7 +72,7 @@ class ScoreCardEmbed(discord.Embed):
 
         footer_sections = []
         if play_rating := record.extras.get(KEY_PLAY_RATING):
-            play_overpower = calculate_play_overpower(record)
+            play_overpower = record.extras[KEY_OVERPOWER]
             overpower_max = record.extras[KEY_OVERPOWER_MAX]
             play_op_display = f"{floor_to_ndp(play_overpower, 2)} ({floor_to_ndp(play_overpower / overpower_max * 100, 2)}%)"
 

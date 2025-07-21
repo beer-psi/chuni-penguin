@@ -19,7 +19,7 @@ from chunithm_net import ChuniNet
 from chunithm_net.consts import (
     KEY_INTERNAL_LEVEL,
     KEY_LEVEL,
-    KEY_OVERPOWER_BASE,
+    KEY_OVERPOWER,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
     KEY_SONG_GENRE,
@@ -34,6 +34,7 @@ from utils import get_jacket_url
 from utils.calculation.overpower import (
     calculate_overpower_base,
     calculate_overpower_max,
+    calculate_play_overpower,
 )
 from utils.calculation.rating import calculate_rating
 from utils.config import config
@@ -263,7 +264,12 @@ class UtilsCog(commands.Cog, name="Utils"):
             raise commands.CommandError(msg)
 
         if (rc := self._chuni_net_sessions.get(target_id)) and rc.refcount > 0:
-            logger.debug("using cached chunithm-net session", tag="cached_chunithm_net_session", user_id=target_id, refcount=rc.refcount)
+            logger.debug(
+                "using cached chunithm-net session",
+                tag="cached_chunithm_net_session",
+                user_id=target_id,
+                refcount=rc.refcount,
+            )
 
             async with rc as session:
                 yield session
@@ -296,7 +302,9 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             del self._chuni_net_sessions[target_id]
 
-        self._chuni_net_sessions[target_id] = AsyncRcContextManager(session, on_exit=[on_exit])
+        self._chuni_net_sessions[target_id] = AsyncRcContextManager(
+            session, on_exit=[on_exit]
+        )
 
         async with self._chuni_net_sessions[target_id] as session:
             yield session
@@ -485,9 +493,10 @@ class UtilsCog(commands.Cog, name="Utils"):
                     record.score, internal_level
                 )
 
-            if KEY_OVERPOWER_BASE not in record.extras:
-                record.extras[KEY_OVERPOWER_BASE] = calculate_overpower_base(
-                    record.score, internal_level
+            if KEY_OVERPOWER not in record.extras:
+                record.extras[KEY_OVERPOWER] = calculate_play_overpower(
+                    calculate_overpower_base(record.score, internal_level),
+                    record.combo_lamp,
                 )
 
             if KEY_OVERPOWER_MAX not in record.extras:

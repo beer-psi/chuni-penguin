@@ -1,8 +1,6 @@
 from decimal import Decimal
 
-from chunithm_net.consts import KEY_OVERPOWER_BASE, KEY_OVERPOWER_MAX
 from chunithm_net.models.enums import ComboType
-from chunithm_net.models.record import Record
 from utils import floor_to_ndp
 
 
@@ -43,14 +41,12 @@ def calculate_overpower_max(internal_level: float) -> Decimal:
     return Decimal(str(internal_level)) * 5 + 15
 
 
-def calculate_play_overpower(score: Record) -> Decimal:
-    play_overpower = score.extras[KEY_OVERPOWER_BASE]
+def calculate_play_overpower(overpower_base: Decimal, combo_lamp: ComboType) -> Decimal:
+    play_overpower = overpower_base
 
-    if score.score == 1010000:
-        play_overpower = score.extras[KEY_OVERPOWER_MAX]
-    elif score.combo_lamp in {ComboType.ALL_JUSTICE, ComboType.ALL_JUSTICE_CRITICAL}:
+    if combo_lamp in {ComboType.ALL_JUSTICE, ComboType.ALL_JUSTICE_CRITICAL}:
         play_overpower += Decimal(1)
-    elif score.combo_lamp == ComboType.FULL_COMBO:
-        play_overpower += Decimal(0.5)
+    elif combo_lamp == ComboType.FULL_COMBO:
+        play_overpower += Decimal("0.5")
 
     return play_overpower

@@ -23,7 +23,7 @@ from chunithm_net.consts import (
     JACKET_BASE,
     KEY_INTERNAL_LEVEL,
     KEY_LEVEL,
-    KEY_OVERPOWER_BASE,
+    KEY_OVERPOWER,
     KEY_OVERPOWER_MAX,
     KEY_PLAY_RATING,
     KEY_SONG_GENRE,
@@ -1693,7 +1693,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 key=lambda x: (
                     x.extras.get(KEY_PLAY_RATING),
                     x.score,
-                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras.get(KEY_OVERPOWER),
                 ),
             )
         elif sort == "score":
@@ -1702,14 +1702,14 @@ class RecordsCog(commands.Cog, name="Records"):
                 key=lambda x: (
                     x.score,
                     x.extras.get(KEY_PLAY_RATING),
-                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras.get(KEY_OVERPOWER),
                 ),
             )
         elif sort == "overpower":
             records.sort(
                 reverse=sort_order != "ascending",
                 key=lambda x: (
-                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras.get(KEY_OVERPOWER),
                     x.extras.get(KEY_PLAY_RATING),
                     x.score,
                 ),
@@ -1718,8 +1718,8 @@ class RecordsCog(commands.Cog, name="Records"):
             records.sort(
                 reverse=sort_order != "ascending",
                 key=lambda x: (
-                    x.extras[KEY_OVERPOWER_BASE] / x.extras[KEY_OVERPOWER_MAX],
-                    x.extras.get(KEY_OVERPOWER_BASE),
+                    x.extras[KEY_OVERPOWER] / x.extras[KEY_OVERPOWER_MAX],
+                    x.extras.get(KEY_OVERPOWER),
                     x.extras.get(KEY_PLAY_RATING),
                     x.score,
                 ),
@@ -1911,7 +1911,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     key=lambda x: (
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
-                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
+                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
                     ),
                 )
             elif sort.startswith("score"):
@@ -1920,14 +1920,14 @@ class RecordsCog(commands.Cog, name="Records"):
                     key=lambda x: (
                         x.score,
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
-                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
+                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
                     ),
                 )
             elif sort.startswith(("overpower", "op")):
                 records.sort(
                     reverse=not sort.endswith("+"),
                     key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
+                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                     ),
@@ -1936,9 +1936,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 records.sort(
                     reverse=not sort.endswith("+"),
                     key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0))
+                        x.extras.get(KEY_OVERPOWER, Decimal(0))
                         / x.extras.get(KEY_OVERPOWER_MAX, Decimal(1)),
-                        x.extras.get(KEY_OVERPOWER_BASE, Decimal(0)),
+                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
                         x.extras.get(KEY_PLAY_RATING, Decimal(0)),
                         x.score,
                     ),
