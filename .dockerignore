@@ -13,3 +13,4 @@ bot.ini
 
 # mount this into docker
 assets
+data
