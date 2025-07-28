@@ -37,6 +37,7 @@ VERSIONS = [
     "LUMINOUS",
     "LUMINOUS PLUS",
     "VERSE",
+    "X-VERSE",
 ]
 WE_LEVEL_OVERRIDES = {
     8244: "分☆☆☆ (LASTMORN)",
@@ -99,7 +100,6 @@ def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
                 ASSETS_DIR
                 / "jackets"
                 / f"{song_id}{alt_suffix}_{difficulty.value}.png",
-                optimize=True,
             )
 
 
