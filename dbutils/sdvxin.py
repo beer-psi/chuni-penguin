@@ -184,7 +184,11 @@ async def update_sdvxin(
                     script_data = None
                     level = None
 
-                    if category == "end":
+                    if category == "end" and sdvx_in_id == "01052":
+                        condition = (
+                            Song.id == 8306
+                        )  # Invitation WE got revived under a different ID.
+                    elif category == "end":
                         script_resp = await client.get(
                             f"https://sdvx.in{script['src']}"
                         )
