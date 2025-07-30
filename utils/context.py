@@ -39,6 +39,9 @@ class PenguinContext(commands.Context["ChuniBot"]):
 
         self.response = msg
 
+        if delete_tracker := self.bot.delete_tracker:
+            await delete_tracker.track_command(self.message, self.response)
+
         return msg
 
     @classmethod

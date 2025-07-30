@@ -37,7 +37,7 @@ from utils.constants import MAX_DIFFICULTY
 from utils.context import PenguinContext
 from utils.converters import AliasNameConverter, DifficultyConverter
 from utils.kamaitachi import convert_kt_pbs_to_records
-from utils.logging import logged_prefix_command, logger
+from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
 
 if TYPE_CHECKING:
@@ -1039,7 +1039,7 @@ VOLCANIC_JUMPSCARE = """🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨
 🟨🟨🟥🟨🟨
-"""  # noqa: W291, RUF001
+"""  # noqa: RUF001
 
 FORSAKEN_TALE_SONG_ID = 2652
 FORSAKEN_TALE_JUMPSCARE = """恐怖！Forsaken Tale！
@@ -1075,7 +1075,7 @@ TOA_CHAN_TOYBOX_JUMPSCARE = """恐怖！とあちゃんのおもちゃ箱！
       🟦     😡
       🟦           😡
       🟦    😡
-      🟦          😡"""  # noqa: RUF001, W291
+      🟦          😡"""  # noqa: RUF001
 
 CROSSMYTHOS_RHAPSODIA_SONG_ID = 2802
 CROSSMYTHOS_RHAPSODIA_JUMPSCARE = """恐怖！Crossmythos Rhapsodia！

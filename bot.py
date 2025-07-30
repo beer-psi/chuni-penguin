@@ -25,6 +25,7 @@ from utils.logging import logger
 if TYPE_CHECKING:
     from cogs.botutils import UtilsCog
     from cogs.database import DatabaseCog
+    from cogs.delete_tracker import DeleteTrackerCog
     from cogs.gaming import GamingCog
     from cogs.web import WebCog
 
@@ -215,6 +216,10 @@ class ChuniBot(commands.AutoShardedBot):
     @property
     def app(self):
         return cast("WebCog", self.get_cog("Web")).web_app
+
+    @property
+    def delete_tracker(self):
+        return cast("DeleteTrackerCog | None", self.get_cog("DeleteTracker"))
 
     async def _close_games(self):
         gaming = cast("GamingCog | None", self.get_cog("Games"))

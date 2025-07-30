@@ -76,7 +76,7 @@ class HelpCommand(commands.HelpCommand):
 
         embed.description = "".join(description_parts)
 
-        await self.get_destination().send(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     async def send_command_help(self, command: Command[Any, ..., Any], /) -> None:
         embed = discord.Embed(color=self.COLOUR)
@@ -109,7 +109,7 @@ class HelpCommand(commands.HelpCommand):
 
         embed.description = "".join(description_parts)
 
-        await self.get_destination().send(embed=embed)
+        await self.context.reply(embed=embed, mention_author=False)
 
     @override
     async def send_group_help(self, group: Group[Any, ..., Any], /) -> None:
@@ -159,7 +159,7 @@ class HelpCommand(commands.HelpCommand):
 
         embed.description = "".join(description_parts)
 
-        await self.get_destination().send(embed=embed)
+        await self.context.reply(embed=embed, mention_author=False)
 
 
 async def setup(bot: "ChuniBot"):

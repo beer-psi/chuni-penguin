@@ -118,31 +118,35 @@ class RecentRecordsView(PaginationView):
 
         await interaction.response.edit_message(view=self)
 
-    @discord.ui.select(placeholder="Select a score", row=1)
-    async def dropdown(
-        self, interaction: discord.Interaction, select: discord.ui.Select
-    ):
-        if not isinstance(interaction.channel, discord.abc.Messageable):
-            return
-        await interaction.response.defer()
+    if TYPE_CHECKING:
+        dropdown: discord.ui.Select
+    else:
 
-        idx = int(select.values[0])
-        score = await self.chuni_client.detailed_recent_record(self.scores[idx])
-        score = await self.utils.hydrate_record(score)
+        @discord.ui.select(placeholder="Select a score", row=1)
+        async def dropdown(
+            self, interaction: discord.Interaction, select: discord.ui.Select
+        ):
+            if not isinstance(interaction.channel, discord.abc.Messageable):
+                return
+            await interaction.response.defer()
 
-        if interaction.message is not None:
-            await interaction.message.edit(
-                content=f"Score of {self.userinfo.name}",
-                embed=ScoreCardEmbed(
-                    score, synthesis_alt_jacket=self.synthesis_alt_jacket
-                ),
-                view=self,
-            )
-        else:
-            await interaction.channel.send(
-                content=f"Score of {self.userinfo.name}",
-                embed=ScoreCardEmbed(
-                    score, synthesis_alt_jacket=self.synthesis_alt_jacket
-                ),
-                view=self,
-            )
+            idx = int(select.values[0])
+            score = await self.chuni_client.detailed_recent_record(self.scores[idx])
+            score = await self.utils.hydrate_record(score)
+
+            if interaction.message is not None:
+                await interaction.message.edit(
+                    content=f"Score of {self.userinfo.name}",
+                    embed=ScoreCardEmbed(
+                        score, synthesis_alt_jacket=self.synthesis_alt_jacket
+                    ),
+                    view=self,
+                )
+            else:
+                await interaction.channel.send(
+                    content=f"Score of {self.userinfo.name}",
+                    embed=ScoreCardEmbed(
+                        score, synthesis_alt_jacket=self.synthesis_alt_jacket
+                    ),
+                    view=self,
+                )
