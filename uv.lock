@@ -379,7 +379,7 @@ requires-dist = [
     { name = "async-lru", specifier = ">=2.0.5" },
     { name = "beautifulsoup4", specifier = ">=4.12.3" },
     { name = "brotli", marker = "extra == 'speedup'", specifier = ">=1.1.0" },
-    { name = "discord-ext-track-edits", specifier = ">=0.1.0" },
+    { name = "discord-ext-track-edits", specifier = ">=0.1.2" },
     { name = "discord-py", extras = ["voice"], specifier = ">=2.4.0" },
     { name = "faust-cchardet", marker = "extra == 'speedup'", specifier = ">=2.1.19" },
     { name = "httpx", specifier = ">=0.27.2" },
@@ -485,15 +485,15 @@ wheels = [
 
 [[package]]
 name = "discord-ext-track-edits"
-version = "0.1.0"
+version = "0.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "discord-py" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/61/9c/3ac10b214e48627afd76c4020ca698c6d97a0de3d3fb7c32d3661823ad56/discord_ext_track_edits-0.1.0.tar.gz", hash = "sha256:c3513a1070f62d2b62a468d9158ff88e4197aac30b9633cb63a2a2b8cfb3ef49", size = 6006, upload-time = "2025-07-31T10:42:41.052Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/b4/57667590a515544527c763c1436a8570d563ddd0e0c047fddab00a9ed92c/discord_ext_track_edits-0.1.2.tar.gz", hash = "sha256:d18094719026573b00a5ea0d001ed846f42ade50232cd05fbdf97ca8de7abbb6", size = 6565, upload-time = "2025-07-31T17:54:37.378Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/13/a346153a4292715a3b1892042dd175d52857b14c589c40483796fbbe3304/discord_ext_track_edits-0.1.0-py3-none-any.whl", hash = "sha256:d27b32770273ddebf252d0c7f57f35ce4c93a056e55efcba4bcbcea7b0491de6", size = 7323, upload-time = "2025-07-31T10:42:39.33Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/fb/faca49c9840cd34b24b7c5e3770ea224b8f30b8893ddb70bbedf4141baec/discord_ext_track_edits-0.1.2-py3-none-any.whl", hash = "sha256:7cbee63305fa9706d301acc0f9c91680a547ea1898347222ed61b99393c332e2", size = 7990, upload-time = "2025-07-31T17:54:35.383Z" },
 ]
 
 [[package]]

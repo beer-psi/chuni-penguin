@@ -17,7 +17,7 @@ dependencies = [
     "structlog>=25.2.0",
     "async-lru>=2.0.5",
     "pypatch>=1.0.2",
-    "discord-ext-track-edits>=0.1.0",
+    "discord-ext-track-edits>=0.1.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.12"
