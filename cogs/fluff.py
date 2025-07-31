@@ -47,7 +47,7 @@ class FluffCog(commands.Cog, name="Fluff"):
         self.random = random.Random()
         self.random.seed()
 
-    @commands.hybrid_command("8ball")
+    @commands.hybrid_command("8ball", extras={"invoke_on_edit": False})
     @app_commands.describe(question="A question to ask the mysterious 8ball")
     @logged_prefix_command
     async def eight_ball(self, ctx: Context, *, question: str):
