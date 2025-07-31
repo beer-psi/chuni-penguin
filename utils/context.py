@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Self, overload, override
 
 import discord
 from discord.ext import commands
+from discord.ext.track_edits import EditTrackableContext
 from discord.utils import MISSING, escape_markdown
 from discord.webhook.async_ import WebhookMessage
 from sqlalchemy import select
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from bot import ChuniBot
 
 
-class PenguinContext(commands.Context["ChuniBot"]):
+class PenguinContext(EditTrackableContext["ChuniBot"]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -38,14 +39,6 @@ class PenguinContext(commands.Context["ChuniBot"]):
             msg = await self.send(content, **kwargs)
 
         self.response = msg
-
-        if (
-            self.interaction is None
-            and self.command is not None
-            and self.command.extras.get("track_deletion", True)
-            and (delete_tracker := self.bot.delete_tracker)
-        ):
-            await delete_tracker.track_command(self.message, self.response)
 
         return msg
 

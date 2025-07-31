@@ -29,7 +29,7 @@ class AuthCog(commands.Cog, name="Auth"):
         self.utils = self.bot.utils
         self.random = SystemRandom()
 
-    @commands.hybrid_command(name="logout")
+    @commands.hybrid_command(name="logout", extras={"invoke_on_edit": False})
     @logged_prefix_command
     async def logout(self, ctx: Context, *, invalidate: bool = False):
         """Logs you out of the bot.

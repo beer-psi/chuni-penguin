@@ -185,7 +185,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             content="Successfully unlinked with Kamaitachi.", mention_author=False
         )
 
-    @kamaitachi.command("sync", aliases=["s"])
+    @kamaitachi.command("sync", aliases=["s"], extras={"invoke_on_edit": False})
     @logged_prefix_command
     async def kamaitachi_sync(
         self, ctx: PenguinContext, sync: Literal["recent", "pb"] = "recent"

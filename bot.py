@@ -3,6 +3,7 @@ import contextlib
 import signal
 import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 from types import FrameType
 from typing import TYPE_CHECKING, Any, cast, override
@@ -10,6 +11,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 import discord
 import discord.utils
 from discord.ext import commands
+from discord.ext.track_edits import EditTrackerCog
 from sqlalchemy import select, text
 
 from cogs import COG_LIST
@@ -110,6 +112,8 @@ class ChuniBot(commands.AutoShardedBot):
         # Database setup
         if config.dangerous.dev:
             await self.load_extension("jishaku")
+
+        await self.add_cog(EditTrackerCog(self, max_duration=timedelta(minutes=5)))
 
         for cog in COG_LIST:
             try:
@@ -216,10 +220,6 @@ class ChuniBot(commands.AutoShardedBot):
     @property
     def app(self):
         return cast("WebCog", self.get_cog("Web")).web_app
-
-    @property
-    def delete_tracker(self):
-        return cast("DeleteTrackerCog | None", self.get_cog("DeleteTracker"))
 
     async def _close_games(self):
         gaming = cast("GamingCog | None", self.get_cog("Games"))

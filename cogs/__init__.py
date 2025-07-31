@@ -5,7 +5,6 @@ COG_LIST: list[str] = [
     "cogs.botutils",
     "cogs.autocompleters",
     "cogs.events",
-    "cogs.delete_tracker",
     "cogs.fluff",
     "cogs.gaming",
     "cogs.misc",
