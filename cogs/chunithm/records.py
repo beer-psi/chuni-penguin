@@ -140,6 +140,8 @@ def _render_b30_entry(
             jacket_basename = "2698_vividstasis"
         elif user_config.synthesis_alt_jacket == "musedash":
             jacket_basename = "2698_musedash"
+        elif user_config.synthesis_alt_jacket == "musicdiver":
+            jacket_basename = "2698_musicdiver"
         elif user_config.synthesis_alt_jacket == "none":
             jacket_basename = "__nonexistent"
 

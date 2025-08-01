@@ -212,6 +212,9 @@ async def merge_options(
                         xml_path.parent / "CHU_UI_Jacket_2698_vividstasis.dds"
                     )
                     musedash_alt = xml_path.parent / "CHU_UI_Jacket_2698_MuseDash.dds"
+                    musicdiver_alt = (
+                        xml_path.parent / "CHU_UI_Jacket_2698_MusicDiver.dds"
+                    )
 
                     if cytus2_alt.exists():
                         pool.submit(
@@ -235,6 +238,14 @@ async def merge_options(
                             song_id_int,
                             musedash_alt,
                             "_musedash",
+                        )
+
+                    if musicdiver_alt.exists():
+                        pool.submit(
+                            extract_jacket,
+                            song_id_int,
+                            musicdiver_alt,
+                            "_musicdiver",
                         )
 
             if we_tag_name != "Invalid":
