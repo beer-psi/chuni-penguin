@@ -87,7 +87,9 @@ def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
         if song_id >= 8000:
             return
 
-        im_small = im.resize((B30_JACKET_WIDTH, B30_JACKET_HEIGHT))
+        im_small = im.resize(
+            (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), Image.Resampling.LANCZOS
+        )
 
         # pregenerate jacket art merged with b50 base
         for difficulty in Difficulty:

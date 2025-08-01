@@ -167,7 +167,7 @@ def _render_b30_entry(
                 # convert the jacket to RGB since ImageEnhance explodes in different modes
                 # resize the jacket
                 jacket = jacket.convert("RGB").resize(
-                    (B30_JACKET_WIDTH, B30_JACKET_HEIGHT)
+                    (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), Image.Resampling.LANCZOS
                 )
 
         except (FileNotFoundError, ValueError):
