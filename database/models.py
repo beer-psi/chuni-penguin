@@ -169,6 +169,9 @@ class Alias(Base):
         nullable=False,
     )
     owner_id: Mapped[Optional[int]] = mapped_column(BigInteger(), nullable=True)
+    uses: Mapped[int] = mapped_column(
+        nullable=False, default=0, server_default=text("0")
+    )
 
     song: Mapped["Song"] = relationship(back_populates="aliases")
 

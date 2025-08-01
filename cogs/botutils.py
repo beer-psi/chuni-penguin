@@ -568,8 +568,14 @@ class UtilsCog(commands.Cog, name="Utils"):
             song = (await session.execute(stmt)).scalar_one_or_none()
 
             if matching_alias.id is not None:
-                stmt = select(Alias).where(Alias.rowid == matching_alias.id)
+                stmt = (
+                    update(Alias)
+                    .where(Alias.rowid == matching_alias.id)
+                    .values(uses=Alias.uses + 1)
+                    .returning(Alias)
+                )
                 alias = (await session.execute(stmt)).scalar_one_or_none()
+                await session.commit()
             else:
                 alias = None
 
@@ -616,8 +622,14 @@ class UtilsCog(commands.Cog, name="Utils"):
             songs = (await session.execute(stmt)).scalars().unique()
 
             if matching_alias.id is not None:
-                stmt = select(Alias).where(Alias.rowid == matching_alias.id)
+                stmt = (
+                    update(Alias)
+                    .where(Alias.rowid == matching_alias.id)
+                    .values(uses=Alias.uses + 1)
+                    .returning(Alias)
+                )
                 alias = (await session.execute(stmt)).scalar_one_or_none()
+                await session.commit()
             else:
                 alias = None
 
