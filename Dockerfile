@@ -14,7 +14,7 @@ ENV UV_PYTHON_DOWNLOADS=0
 
 # for building faust-cchardet
 RUN apt-get update && apt-get upgrade --yes \
-    && apt-get install --no-install-recommends --yes build-essentials pkg-config \
+    && apt-get install --no-install-recommends --yes build-essential pkg-config \
     # clear out apt cache
     && apt-get purge --yes --auto-remove --option APT::AutoRemove::RecommendsImportant=false \
     && apt-get clean --yes && rm --recursive --force /var/lib/apt/lists/*
