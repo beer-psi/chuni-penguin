@@ -48,4 +48,5 @@ ENV PATH="/code/.venv/bin:$PATH"
 ENV GIT_SHA="$GIT_SHA"
 
 USER bot
+WORKDIR /code
 ENTRYPOINT ["/code/.venv/bin/python3", "bot.py"]
