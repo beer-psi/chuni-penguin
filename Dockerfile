@@ -39,8 +39,8 @@ RUN apt-get update && apt-get upgrade --yes \
     && apt-get purge --yes --auto-remove --option APT::AutoRemove::RecommendsImportant=false \
     && apt-get clean --yes && rm --recursive --force /var/lib/apt/lists/*
 
-RUN groupadd --gid "${GID}" --system bot \
-    && useradd --home '/code' --gid bot --no-log-init --system --uid "${UID}" bot \
+RUN groupadd --gid "${GID}" bot \
+    && useradd --home '/code' --gid bot --no-log-init --uid "${UID}" bot \
     && chown --recursive bot:bot '/code'
 
 COPY --from=builder --chown=bot:bot /code /code
