@@ -1,46 +1,44 @@
-FROM ghcr.io/astral-sh/uv:0.7.19-python3.13-bookworm-slim AS base
-
 # Needed for fixing permissions of files created by Docker:
-ARG UID=1000 \
-    GID=1000
+ARG UID=1000
+ARG GID=1000
+ARG GIT_SHA=unknown
 
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONHASHSEED=random \
-    PYTHONDONTWRITEBYTECODE=1 \
-    # pip:
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_DEFAULT_TIMEOUT=100 \
-    PIP_ROOT_USER_ACTION=ignore
+FROM ghcr.io/astral-sh/uv:0.7.19-python3.13-bookworm-slim AS builder
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
-SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-
-RUN apt-get update && apt-get upgrade -y \
-    && apt-get install --no-install-recommends -y \
-    build-essential \
-    pkg-config \
-    libuv1 \
-    curl \
-    git \
-    ffmpeg \
-    # clear out apt cache
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+# Disable Python downloads, because we want to use the system interpreter
+# across both images. If using a managed Python version, it needs to be
+# copied from the build image into the final image; see `standalone.Dockerfile`
+# for an example.
+ENV UV_PYTHON_DOWNLOADS=0
 
 WORKDIR /code
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project --all-extras --no-dev --no-group test
+RUN --mount=type=bind,source=patches,target=patches \
+    /code/.venv/bin/pypatch apply patches/discord-py-10210.patch discord
+COPY . /code
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --all-extras --no-dev --no-group test
 
-RUN groupadd -g "${GID}" -r bot \
-    && useradd -d '/code' -g bot -l -r -u "${UID}" bot \
-    && chown -R bot:bot '/code'
+FROM python:3.13-slim-bookworm
 
-COPY --chown=bot:bot pyproject.toml uv.lock .python-version /code/
-RUN uv sync --frozen --all-extras --no-group dev --no-group test
+RUN apt-get update && apt-get upgrade --yes \
+    && apt-get install --no-install-recommends --yes ffmpeg \
+    # clear out apt cache
+    && apt-get purge --yes --auto-remove --option APT::AutoRemove::RecommendsImportant=false \
+    && apt-get clean --yes && rm --recursive --force /var/lib/apt/lists/*
 
-COPY --chown=bot:bot patches /code/patches
-RUN /code/.venv/bin/pypatch apply patches/discord-py-10210.patch discord
+RUN groupadd --gid "${GID}" --system bot \
+    && useradd --home '/code' --gid bot --no-log-init --system --uid "${UID}" bot \
+    && chown --recursive bot:bot '/code'
 
-COPY --chown=bot:bot . /code
+COPY --from=builder --chown=bot:bot /code /code
+
+ENV PATH="/code/.venv/bin:$PATH"
+ENV GIT_SHA="$GIT_SHA"
 
 USER bot
 ENTRYPOINT ["/code/.venv/bin/python3", "bot.py"]

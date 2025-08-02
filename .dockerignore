@@ -11,6 +11,8 @@ bot.ini
 **/bot.example.ini
 **/README.md
 
+.git
+
 # mount this into docker
 assets
 data

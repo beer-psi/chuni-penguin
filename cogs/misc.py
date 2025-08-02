@@ -1,4 +1,5 @@
 import asyncio
+import os
 import platform
 import time
 import tomllib
@@ -136,20 +137,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
             embed.set_thumbnail(url=self.bot.user.avatar.url)
 
         version = await asyncio.to_thread(_get_version_from_pyproject)
-
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "git",
-                "rev-parse",
-                "--short",
-                "HEAD",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, _ = await process.communicate()
-            revision = stdout.decode("utf-8").replace("\n", "")
-        except FileNotFoundError:
-            revision = "unknown"
+        revision = os.environ.get("GIT_SHA", "unknown")
 
         version_name = VERSION_NAMES.get(version)
 
