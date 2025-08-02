@@ -1,8 +1,3 @@
-# Needed for fixing permissions of files created by Docker:
-ARG UID=1000
-ARG GID=1000
-ARG GIT_SHA=unknown
-
 FROM ghcr.io/astral-sh/uv:0.7.19-python3.13-bookworm-slim AS builder
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
@@ -31,6 +26,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-extras --no-dev --no-group test
 
 FROM python:3.13-slim-bookworm
+
+# Needed for fixing permissions of files created by Docker:
+ARG UID=1000
+ARG GID=1000
+
+ARG GIT_SHA=unknown
 
 RUN apt-get update && apt-get upgrade --yes \
     && apt-get install --no-install-recommends --yes ffmpeg \
