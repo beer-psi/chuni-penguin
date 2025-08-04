@@ -44,9 +44,17 @@ def calculate_overpower_max(internal_level: float) -> Decimal:
 def calculate_play_overpower(overpower_base: Decimal, combo_lamp: ComboType) -> Decimal:
     play_overpower = overpower_base
 
-    if combo_lamp in {ComboType.ALL_JUSTICE, ComboType.ALL_JUSTICE_CRITICAL}:
-        play_overpower += Decimal(1)
-    elif combo_lamp == ComboType.FULL_COMBO:
+    if combo_lamp in (
+        ComboType.FULL_COMBO,
+        ComboType.ALL_JUSTICE,
+        ComboType.ALL_JUSTICE_CRITICAL,
+    ):
         play_overpower += Decimal("0.5")
+
+    if combo_lamp in (ComboType.ALL_JUSTICE, ComboType.ALL_JUSTICE_CRITICAL):
+        play_overpower += Decimal("0.5")
+
+    if combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
+        play_overpower += Decimal("0.25")
 
     return play_overpower
