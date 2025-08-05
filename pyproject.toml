@@ -31,6 +31,7 @@ speedup = [
     "winloop>=0.1.6; sys_platform == 'win32'",
     "zstandard>=0.23.0",
     "aiodns>=3.2.0; sys_platform != 'win32'",
+    "ciso8601>=2.3.2",
 ]
 
 [dependency-groups]

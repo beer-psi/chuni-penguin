@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import datetime
 import signal
 import sys
 import time
@@ -36,6 +37,13 @@ BOT_DIR = Path(__file__).parent
 
 discord.utils._from_json = json_loads
 discord.utils._to_json = json_dumps
+
+with contextlib.suppress(ImportError):
+    import ciso8601
+
+    discord.utils.parse_time = (
+        lambda timestamp: ciso8601.parse_datetime(timestamp) if timestamp else None
+    )
 
 
 class KeyboardInterruptHandler:

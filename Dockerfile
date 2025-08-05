@@ -48,4 +48,4 @@ ENV LD_PRELOAD="/usr/lib/libmimalloc.so.2"
 
 USER bot
 WORKDIR /code
-ENTRYPOINT ["/code/.venv/bin/python3", "bot.py"]
+ENTRYPOINT ["/code/.venv/bin/python3", "-O", "bot.py"]
