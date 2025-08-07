@@ -1813,6 +1813,9 @@ class RecordsCog(commands.Cog, name="Records"):
             and sort is None
             and level is None
         ):
+            if not ctx.bot_permissions.attach_files:
+                raise commands.BotMissingPermissions(["attach_files"])
+
             await self._best50_inner(ctx, user or ctx.author)
             return None
 
