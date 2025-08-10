@@ -3,6 +3,7 @@ import contextlib
 import signal
 import sys
 import time
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from pathlib import Path
 from types import FrameType
@@ -225,14 +226,33 @@ class ChuniBot(commands.AutoShardedBot):
         await self.invoke(ctx)
 
     @override
+    async def _run_event(
+        self,
+        coro: Callable[..., Coroutine[Any, Any, Any]],
+        event_name: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        try:
+            await coro(*args, **kwargs)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:  # noqa: BLE001
+            await logger.aerror(
+                "exception in event handler",
+                tag="error_event_handler",
+                event_method=event_name,
+                args=args,
+                kwargs=kwargs,
+                exc_info=e,
+            )
+
+            with contextlib.suppress(asyncio.CancelledError):
+                await self.on_error(event_name, *args, **kwargs)
+
+    @override
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
-        await logger.aerror(
-            "exception in event handler",
-            tag="error_event_handler",
-            event_method=event_method,
-            args=args,
-            kwargs=kwargs,
-        )
+        pass
 
     @property
     def utils(self) -> "UtilsCog":
