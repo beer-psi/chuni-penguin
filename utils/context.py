@@ -98,13 +98,15 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
             }
 
             if isinstance(self.response, discord.InteractionMessage):
-                edit_kwargs["delete_after"] = kwargs.get("delete_after", False)
+                edit_kwargs["delete_after"] = kwargs.get("delete_after")
             elif not isinstance(self.response, WebhookMessage):
                 edit_kwargs["suppress"] = kwargs.get("suppress_embeds", False)
                 edit_kwargs["delete_after"] = kwargs.get("delete_after")
 
             with contextlib.suppress(discord.errors.NotFound):
-                return await self.response.edit(**edit_kwargs)
+                self.response = await self.response.edit(**edit_kwargs)
+
+                return self.response
 
         return await self.reply(content=content, mention_author=False, **kwargs)
 
