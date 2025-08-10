@@ -213,6 +213,11 @@ class AuthCog(commands.Cog, name="Auth"):
                     content=f"If you're trying to link your Kamaitachi account, use `{ctx.clean_prefix}kamaitachi link` instead!",
                 )
             except discord.errors.Forbidden:
+                await logger.awarning(
+                    "could not send login instructions",
+                    tag="error_dm_login",
+                    user_id=ctx.author.id,
+                )
                 return None
 
         try:
