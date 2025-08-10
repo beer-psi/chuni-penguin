@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context
+from discord.utils import MISSING
 from sqlalchemy import delete
 
 from chunithm_net.models.enums import Difficulty, Genres
@@ -129,7 +130,7 @@ class GamingCog(commands.Cog, name="Games"):
         )
         parser.add_argument("-q", "--questions", type=int, required=False, default=20)
         parser.add_argument("-s", "--score", type=int, required=False, default=None)
-        parser.add_argument("-t", "--time", type=int, required=False, default=20)
+        parser.add_argument("-t", "--time", type=int, required=False, default=MISSING)
         parser.add_argument("-w", "--wrong", type=int, required=False, default=None)
         parser.add_argument("-h", "--hardcore", action="store_true")
         parser.add_argument("-g", "--genre", type=str, nargs="*")
@@ -226,7 +227,7 @@ class GamingCog(commands.Cog, name="Games"):
         - `ULTIMA` with 1 second of the song played.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
-        `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
+        `-t`, `--time`: The time (in seconds) for each question. Defaults to the audio length + 5 seconds
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
@@ -256,10 +257,10 @@ class GamingCog(commands.Cog, name="Games"):
         - `ADVANCED` with 10 seconds of the song played.
         - `EXPERT` with 7 seconds of the song played.
         - `MASTER` with 4 seconds of the song played.
-        - `ULTIMA` with 1 seconds of the song played.
+        - `ULTIMA` with 1 second of the song played.
         `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
         `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
-        `-t`, `--time`: The time (in seconds) for each question. Default is 20 seconds.
+        `-t`, `--time`: The time (in seconds) for each question. Defaults to the audio length + 5 seconds.
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
@@ -327,6 +328,15 @@ class GamingCog(commands.Cog, name="Games"):
                 hardcore_mode=args.hardcore,
                 genres=args.genres,
             )
+
+            if session.time_per_question is MISSING:
+                if session.game_type == GuessingGameType.IMAGE:
+                    session.time_per_question = 20
+                elif session.game_type in (
+                    GuessingGameType.VOICE_MESSAGE,
+                    GuessingGameType.VOICE_CHANNEL,
+                ):
+                    session.time_per_question = session.get_audio_length() + 5
 
         game_task = asyncio.create_task(
             run_state_machine(self, ctx.channel, session, StartState(session))
