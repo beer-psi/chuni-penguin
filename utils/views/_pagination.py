@@ -169,11 +169,7 @@ class PaginationView(discord.ui.View, Generic[PageT]):
         kwargs = await self._before_start(content=content)
 
         self.message = message
-        await message.edit(
-            **kwargs,
-            view=self,
-            allowed_mentions=AllowedMentions.none(),
-        )
+        await message.edit(**kwargs, view=self)
 
     async def start_in(
         self, messageable: discord.abc.Messageable, *, content: str | None = None
