@@ -35,7 +35,7 @@ class PenguinCommandTree(CommandTree["ChuniBot"]):
     async def interaction_check(
         self, interaction: discord.Interaction["ChuniBot"], /
     ) -> bool:
-        if interaction.client.is_owner(interaction.user):
+        if await interaction.client.is_owner(interaction.user):
             return True
 
         if interaction.user.id in interaction.client.denylist:

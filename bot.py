@@ -211,7 +211,7 @@ class ChuniBot(commands.AutoShardedBot):
 
         ctx = await self.get_context(message)
 
-        if self.is_owner(ctx.author):
+        if await self.is_owner(ctx.author):
             await self.invoke(ctx)
             return
 
