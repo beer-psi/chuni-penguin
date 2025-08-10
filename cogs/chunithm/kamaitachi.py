@@ -235,7 +235,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     detailed_recent = await chuni_client.detailed_recent_record(recent)
                     scores.append(detailed_recent)
 
-                    if len(scores) % 10 == 0:
+                    if len(scores) % 10 == 0 or len(scores) == len(recents):
                         await ctx.respond_or_edit(
                             f"Fetching recent scores from CHUNITHM-NET... {len(scores)}/{len(recents)}"
                         )
