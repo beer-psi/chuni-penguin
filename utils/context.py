@@ -86,7 +86,6 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         the response if we've replied before."""
 
         kwargs.pop("mention_author", None)
-        kwargs.pop("allowed_mentions", None)
 
         if self.response is not None:
             edit_kwargs = {
@@ -95,7 +94,7 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
                 "embeds": kwargs.get("embeds", MISSING),
                 "attachments": kwargs.get("files", MISSING),
                 "view": kwargs.get("view", MISSING),
-                "allowed_mentions": discord.AllowedMentions.none(),
+                "allowed_mentions": kwargs.get("allowed_mentions", MISSING),
             }
 
             if isinstance(self.response, discord.InteractionMessage):

@@ -94,6 +94,7 @@ class ChuniBot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(
             command_prefix=guild_specific_prefix(config.bot.default_prefix),
+            tree_cls=PenguinCommandTree,
             intents=discord.Intents(
                 guilds=True,
                 voice_states=True,
@@ -101,7 +102,7 @@ class ChuniBot(commands.AutoShardedBot):
                 typing=True,
                 message_content=True,
             ),
-            tree_cls=PenguinCommandTree,
+            allowed_mentions=discord.AllowedMentions.none(),
         )
 
         self.add_check(ensure_text_command_permissions().predicate)
