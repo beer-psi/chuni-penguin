@@ -18,7 +18,7 @@ from cogs import COG_LIST
 from cogs.gaming.states.base import GuessingGameSkippableState
 from database.models import Denylist, Prefix
 from utils import json_dumps, json_loads
-from utils.command_tree import VersionableCommandTree
+from utils.command_tree import PenguinCommandTree
 from utils.config import config
 from utils.context import PenguinContext
 from utils.event_loop import get_event_loop
@@ -101,7 +101,7 @@ class ChuniBot(commands.AutoShardedBot):
                 typing=True,
                 message_content=True,
             ),
-            tree_cls=VersionableCommandTree,
+            tree_cls=PenguinCommandTree,
         )
 
         self.add_check(ensure_text_command_permissions().predicate)
@@ -165,7 +165,7 @@ class ChuniBot(commands.AutoShardedBot):
             prefix_count=len(self.prefixes),
         )
 
-        tree = cast(VersionableCommandTree, self.tree)
+        tree = cast(PenguinCommandTree, self.tree)
         current_tree_hash = await tree.get_hash()
 
         # very much an abuse but i can't be asked to add yet another database table
@@ -211,7 +211,11 @@ class ChuniBot(commands.AutoShardedBot):
 
         ctx = await self.get_context(message)
 
-        if not self.is_owner(ctx.author) and ctx.author.id in self.denylist:
+        if self.is_owner(ctx.author):
+            await self.invoke(ctx)
+            return
+
+        if ctx.author.id in self.denylist:
             return
 
         if ctx.guild is not None and ctx.guild.id in self.denylist:
