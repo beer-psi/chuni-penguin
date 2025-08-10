@@ -258,3 +258,10 @@ class UserConfig(Base):
     privacy_mode: Mapped[bool] = mapped_column(
         default=False, server_default=text("FALSE")
     )
+
+
+class Denylist(Base):
+    __tablename__ = "denylist"
+
+    object_id: Mapped[int] = mapped_column(primary_key=True)
+    # TODO: We might want to have more granular controls in the future?

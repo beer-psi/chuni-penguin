@@ -5,18 +5,18 @@ import time
 import tomllib
 from pathlib import Path
 from random import random
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord.ext import commands, tasks
-from discord.ext.commands import Context, Greedy
+from discord.ext.commands import Context
 from discord.utils import oauth_url
 from sqlalchemy import delete, func, select
 
 from database.models import Cookie, Prefix, Song
 from utils.config import config
 from utils.constants import VERSION_NAMES
-from utils.context import PenguinContext, PenguinGuildContext
+from utils.context import PenguinGuildContext
 from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
@@ -33,47 +33,6 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     async def cog_unload(self) -> None:
         self.listening.stop()
-
-    @commands.command("treesync", hidden=True, invoke_without_command=True)
-    @commands.is_owner()
-    @logged_prefix_command
-    async def sync(
-        self,
-        ctx: PenguinContext,
-        guilds: Greedy[discord.Object],
-        spec: Optional[Literal["~", "*", "^"]] = None,
-    ) -> None:
-        if not guilds:
-            if spec == "~":
-                synced = await ctx.bot.tree.sync(guild=ctx.guild)
-            elif spec == "*":
-                if ctx.guild is None:
-                    raise commands.NoPrivateMessage
-
-                ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                synced = await ctx.bot.tree.sync(guild=ctx.guild)
-            elif spec == "^":
-                ctx.bot.tree.clear_commands(guild=ctx.guild)
-                await ctx.bot.tree.sync(guild=ctx.guild)
-                synced = []
-            else:
-                synced = await ctx.bot.tree.sync()
-
-            await ctx.respond_or_edit(
-                f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
-            )
-            return
-
-        ret = 0
-        for guild in guilds:
-            try:
-                await ctx.bot.tree.sync(guild=guild)
-            except discord.HTTPException:
-                pass
-            else:
-                ret += 1
-
-        await ctx.respond_or_edit(f"Synced the tree to {ret}/{len(guilds)}.")
 
     @commands.hybrid_command("source", aliases=["src"])
     @logged_prefix_command

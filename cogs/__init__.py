@@ -3,6 +3,7 @@ COG_LIST: list[str] = [
     "cogs.database",
     "cogs.web",
     "cogs.botutils",
+    "cogs.admin",
     "cogs.autocompleters",
     "cogs.events",
     "cogs.fluff",

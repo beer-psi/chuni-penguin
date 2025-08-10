@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-import datetime
 import signal
 import sys
 import time
@@ -17,7 +16,7 @@ from sqlalchemy import select, text
 
 from cogs import COG_LIST
 from cogs.gaming.states.base import GuessingGameSkippableState
-from database.models import Prefix
+from database.models import Denylist, Prefix
 from utils import json_dumps, json_loads
 from utils.command_tree import VersionableCommandTree
 from utils.config import config
@@ -110,6 +109,7 @@ class ChuniBot(commands.AutoShardedBot):
         self.launch_time: float = -1
         self.prefixes: dict[int, str] = {}
         self.command_start_time: dict[commands.Context, int] = {}
+        self.denylist: set[int] = set()
 
     async def start(self, *args, **kwargs):
         self.launch_time = time.time()
@@ -154,8 +154,10 @@ class ChuniBot(commands.AutoShardedBot):
         # Load guild prefixes
         async with self.begin_db_session() as session:
             prefixes = (await session.execute(select(Prefix))).scalars()
+            denylist = (await session.execute(select(Denylist))).scalars()
 
         self.prefixes = {prefix.guild_id: prefix.prefix for prefix in prefixes}
+        self.denylist = {d.object_id for d in denylist}
 
         await logger.ainfo(
             "Loaded guild prefixes",
@@ -201,6 +203,21 @@ class ChuniBot(commands.AutoShardedBot):
             ctx.user_config = await self.utils.fetch_user_config(ctx.author.id)
 
         return ctx
+
+    @override
+    async def process_commands(self, message: discord.Message, /) -> None:
+        if message.author.bot:
+            return
+
+        ctx = await self.get_context(message)
+
+        if not self.is_owner(ctx.author) and ctx.author.id in self.denylist:
+            return
+
+        if ctx.guild is not None and ctx.guild.id in self.denylist:
+            return
+
+        await self.invoke(ctx)
 
     @override
     async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
