@@ -47,5 +47,8 @@ ENV GIT_SHA="$GIT_SHA"
 ENV LD_PRELOAD="/usr/lib/libmimalloc.so.2"
 
 USER bot
+
+RUN mkdir -p /code/.cache
+
 WORKDIR /code
 ENTRYPOINT ["/code/.venv/bin/python3", "-O", "bot.py"]
