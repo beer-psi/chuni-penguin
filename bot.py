@@ -11,6 +11,9 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 import discord
 import discord.utils
+import hishel
+import httpx
+import platformdirs
 from discord.ext import commands
 from discord.ext.track_edits import EditTrackerCog
 from sqlalchemy import select, text
@@ -23,6 +26,7 @@ from utils.command_tree import PenguinCommandTree
 from utils.config import config
 from utils.context import PenguinContext
 from utils.event_loop import get_event_loop
+from utils.hishel import HishelMsgspecSerializer
 from utils.logging import logger
 
 if TYPE_CHECKING:
@@ -112,6 +116,21 @@ class ChuniBot(commands.AutoShardedBot):
         self.prefixes: dict[int, str] = {}
         self.command_start_time: dict[commands.Context, int] = {}
         self.denylist: set[int] = set()
+        self.caching_http_client = hishel.AsyncCacheClient(
+            timeout=httpx.Timeout(timeout=60.0),
+            follow_redirects=True,
+            transport=httpx.AsyncHTTPTransport(retries=5),
+            controller=hishel.Controller(
+                cacheable_methods=["GET", "HEAD"],
+                allow_heuristics=True,
+                allow_stale=True,
+            ),
+            storage=hishel.AsyncFileStorage(
+                serializer=HishelMsgspecSerializer(),
+                base_path=Path(platformdirs.user_cache_dir("chuni-penguin", "beerpsi")),
+                check_ttl_every=300,
+            ),
+        )
 
     async def start(self, *args, **kwargs):
         self.launch_time = time.time()

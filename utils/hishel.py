@@ -1,6 +1,6 @@
-from datetime import datetime
 from typing import Any, override
 
+import discord.utils
 import hishel
 import httpcore
 import msgspec
@@ -12,33 +12,38 @@ from hishel._serializers import (
 from hishel._utils import normalized_url
 
 
-class HishelCachedRequest(msgspec.Struct):
-    method: bytes = msgspec.field(name="m")
-    url: str = msgspec.field(name="u")
-    headers: list[tuple[bytes, bytes]] = msgspec.field(name="h")
-    extensions: dict[str, Any] = msgspec.field(name="e")
+class HishelCachedRequest(msgspec.Struct, array_like=True):
+    method: bytes
+    url: str
+    headers: list[tuple[bytes, bytes]]
+    extensions: dict[str, Any]
 
 
-class HishelCachedResponse(msgspec.Struct):
-    status: int = msgspec.field(name="s")
-    headers: list[tuple[bytes, bytes]] = msgspec.field(name="h")
-    content: bytes = msgspec.field(name="c")
-    extensions: dict[str, bytes] = msgspec.field(name="e")
+class HishelCachedResponse(msgspec.Struct, array_like=True):
+    status: int
+    headers: list[tuple[bytes, bytes]]
+    content: bytes
+    extensions: dict[str, bytes]
 
 
-class HishelCacheMetadata(msgspec.Struct):
-    cache_key: str = msgspec.field(name="k")
-    number_of_uses: int = msgspec.field(name="n")
-    created_at: str = msgspec.field(name="t")
+class HishelCacheMetadata(msgspec.Struct, array_like=True):
+    cache_key: str
+    number_of_uses: int
+    created_at: str
 
 
-class HishelCacheEntry(msgspec.Struct):
-    response: HishelCachedResponse = msgspec.field(name="r")
-    request: HishelCachedRequest = msgspec.field(name="q")
-    metadata: HishelCacheMetadata = msgspec.field(name="m")
+class HishelCacheEntry(msgspec.Struct, array_like=True):
+    response: HishelCachedResponse
+    request: HishelCachedRequest
+    metadata: HishelCacheMetadata
 
 
 class HishelMsgspecSerializer(hishel.BaseSerializer):
+    def __init__(self) -> None:
+        super().__init__()
+        self._encoder = msgspec.msgpack.Encoder()
+        self._decoder = msgspec.msgpack.Decoder(HishelCacheEntry)
+
     @override
     def dumps(
         self,
@@ -46,7 +51,7 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
         request: httpcore.Request,
         metadata: Metadata,
     ) -> str | bytes:
-        return msgspec.msgpack.encode(
+        return self._encoder.encode(
             HishelCacheEntry(
                 response=HishelCachedResponse(
                     status=response.status,
@@ -71,9 +76,7 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
                 metadata=HishelCacheMetadata(
                     cache_key=metadata["cache_key"],
                     number_of_uses=metadata["number_of_uses"],
-                    created_at=metadata["created_at"].strftime(
-                        "%a, %d %b %Y %H:%M:%S GMT"
-                    ),
+                    created_at=metadata["created_at"].isoformat(),
                 ),
             )
         )
@@ -82,7 +85,7 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
     def loads(  # pyright: ignore[reportIncompatibleMethodOverride]
         self, data: bytes
     ) -> tuple[httpcore.Response, httpcore.Request, hishel._serializers.Metadata]:
-        full = msgspec.msgpack.decode(data, type=HishelCacheEntry)
+        full = self._decoder.decode(data)
         response_data = full.response
         request_data = full.request
         metadata = full.metadata
@@ -114,10 +117,7 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
             request,
             {
                 "cache_key": metadata.cache_key,
-                "created_at": datetime.strptime(  # noqa: DTZ007
-                    metadata.created_at,
-                    "%a, %d %b %Y %H:%M:%S GMT",
-                ),
+                "created_at": discord.utils.parse_time(metadata.created_at),
                 "number_of_uses": metadata.number_of_uses,
             },
         )

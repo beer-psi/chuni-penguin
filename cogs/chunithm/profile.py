@@ -156,7 +156,8 @@ class ProfileCog(commands.Cog, name="Profile"):
             avatar_urls = basic_data.avatar
 
             async def task(url):
-                resp = await client.session.get(url)
+                resp = await self.bot.caching_http_client.get(url)
+
                 async with contextlib.aclosing(resp) as resp:
                     return await resp.aread()
 
@@ -292,8 +293,8 @@ class ProfileCog(commands.Cog, name="Profile"):
                 embed = embed.set_thumbnail(url=player_data.character)
             elif player_data.character is not None:
                 character_resp, charaframe_resp = await asyncio.gather(
-                    client.session.get(player_data.character),
-                    client.session.get(player_data.character_frame),
+                    self.bot.caching_http_client.get(player_data.character),
+                    self.bot.caching_http_client.get(player_data.character_frame),
                 )
 
                 character = Image.open(BytesIO(character_resp.content))
