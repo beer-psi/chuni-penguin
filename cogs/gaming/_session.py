@@ -6,14 +6,17 @@ from enum import Enum
 from typing import TYPE_CHECKING, cast
 
 import discord
+import rapidfuzz
 from discord.ext.commands import Context
 from PIL import Image, ImageDraw, ImageOps
 from rapidfuzz import fuzz
 from sqlalchemy import select, text
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import contains_eager
+from sqlalchemy.sql import update
 
 from chunithm_net.models.enums import Difficulty, Genres
+from cogs.botutils import CachedAlias
 from database.models import Alias, GuessScore, Song
 from utils import json_loads
 from utils.constants import ASSETS_DIR
@@ -136,8 +139,28 @@ class GuessingGameSession:
             )
             song = (await session.execute(stmt)).scalars().unique().one()
 
-            aliases = [song.title.lower()]
-            aliases.extend([alias.alias.lower() for alias in song.aliases])
+            aliases = [
+                CachedAlias(
+                    id=None,
+                    alias=song.title.lower(),
+                    title=song.title,
+                    song_id=song.id,
+                    guild_id=None,
+                )
+            ]
+
+            aliases.extend(
+                [
+                    CachedAlias(
+                        id=alias.rowid,
+                        alias=alias.alias.lower(),
+                        title=song.title,
+                        song_id=song.id,
+                        guild_id=alias.guild_id,
+                    )
+                    for alias in song.aliases
+                ]
+            )
 
         return song, aliases
 
@@ -351,6 +374,15 @@ class GuessingGameSession:
             await session.execute(stmt)
             await session.commit()
 
+    async def increment_alias_uses(self, alias_id: int):
+        async with self.bot.begin_db_session() as session, session.begin():
+            stmt = (
+                update(Alias).where(Alias.rowid == alias_id).values(uses=Alias.uses + 1)
+            )
+
+            await session.execute(stmt)
+            await session.commit()
+
     def print_score_list(self):
         if len(self.scores) == 0:
             return "No one got any points."
@@ -369,7 +401,7 @@ class GuessingGameSession:
 
         return score_list
 
-    def create_wait_for_answer_task(self, aliases: list[str]):
+    def create_wait_for_answer_task(self, aliases: list[CachedAlias]):
         self.last_question_was_answered = False
         self._hardcore_mode_ignores.clear()
 
@@ -396,9 +428,13 @@ class GuessingGameSession:
 
             content_lower = m.content.lower()
 
-            is_correct_answer = (
-                max([fuzz.QRatio(content_lower, alias) for alias in aliases]) >= 80
+            result = rapidfuzz.process.extractOne(
+                content_lower,
+                [alias.alias for alias in aliases],
+                scorer=fuzz.QRatio,
+                score_cutoff=80,
             )
+            is_correct_answer = result is not None
 
             if not is_correct_answer and self.hardcore_mode:
                 reaction_task = asyncio.create_task(m.add_reaction("❌"))
@@ -407,6 +443,17 @@ class GuessingGameSession:
                 reaction_task.add_done_callback(self._tasks.discard)
 
                 self._hardcore_mode_ignores.add(m.author.id)
+
+            if is_correct_answer:
+                alias = aliases[result[2]]
+
+                if alias.id is not None:
+                    update_uses_task = asyncio.create_task(
+                        self.increment_alias_uses(alias.id)
+                    )
+
+                    self._tasks.add(update_uses_task)
+                    update_uses_task.add_done_callback(self._tasks.discard)
 
             return is_correct_answer
 

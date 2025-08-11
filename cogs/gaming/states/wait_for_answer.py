@@ -3,6 +3,7 @@ import io
 import time
 from typing import TYPE_CHECKING, override
 
+from cogs.botutils import CachedAlias
 from database.models import Song
 
 from .base import GuessingGameSkippableState, GuessingGameState
@@ -18,7 +19,7 @@ class WaitForAnswerState(GuessingGameSkippableState):
         session: "GuessingGameSession",
         *,
         song: Song,
-        aliases: list[str],
+        aliases: list[CachedAlias],
         answer_image: io.BufferedIOBase,
     ) -> None:
         self.session = session

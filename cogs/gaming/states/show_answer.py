@@ -2,9 +2,11 @@ import io
 from typing import override
 
 import discord
+import rapidfuzz
 from discord.utils import escape_markdown
 from rapidfuzz import fuzz
 
+from cogs.botutils import CachedAlias
 from cogs.gaming._session import GuessingGameSession, GuessingGameType
 from database.models import Song
 
@@ -25,7 +27,7 @@ class ShowAnswerState(GuessingGameState):
         self,
         session: GuessingGameSession,
         song: Song,
-        aliases: list[str],
+        aliases: list[CachedAlias],
         answer_image: io.BufferedIOBase,
         accepted_answer: discord.Message | None,
         guess_time: float | None = None,
@@ -56,8 +58,10 @@ class ShowAnswerState(GuessingGameState):
                 self.session.scores[accepted_user.id] += 1
 
             content_lower = self.accepted_answer.content.lower()
-            accuracy = max(
-                [fuzz.QRatio(content_lower, alias) for alias in self.aliases]
+            (_, accuracy, _) = rapidfuzz.process.extractOne(
+                content_lower,
+                [alias.alias for alias in self.aliases],
+                scorer=fuzz.QRatio,
             )
 
             content = (
