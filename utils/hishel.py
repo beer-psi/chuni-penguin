@@ -5,7 +5,6 @@ import hishel
 import httpcore
 import msgspec
 from hishel._serializers import (
-    HEADERS_ENCODING,
     KNOWN_REQUEST_EXTENSIONS,
     KNOWN_RESPONSE_EXTENSIONS,
     Metadata,
@@ -14,29 +13,29 @@ from hishel._utils import normalized_url
 
 
 class HishelCachedRequest(msgspec.Struct):
-    method: str
-    url: str
-    headers: list[tuple[str, str]]
-    extensions: dict[str, Any]
+    method: bytes = msgspec.field(name="m")
+    url: str = msgspec.field(name="u")
+    headers: list[tuple[bytes, bytes]] = msgspec.field(name="h")
+    extensions: dict[str, Any] = msgspec.field(name="e")
 
 
 class HishelCachedResponse(msgspec.Struct):
-    status: int
-    headers: list[tuple[str, str]]
-    content: bytes
-    extensions: dict[str, str]
+    status: int = msgspec.field(name="s")
+    headers: list[tuple[bytes, bytes]] = msgspec.field(name="h")
+    content: bytes = msgspec.field(name="c")
+    extensions: dict[str, bytes] = msgspec.field(name="e")
 
 
 class HishelCacheMetadata(msgspec.Struct):
-    cache_key: str
-    number_of_uses: int
-    created_at: str
+    cache_key: str = msgspec.field(name="k")
+    number_of_uses: int = msgspec.field(name="n")
+    created_at: str = msgspec.field(name="t")
 
 
 class HishelCacheEntry(msgspec.Struct):
-    response: HishelCachedResponse
-    request: HishelCachedRequest
-    metadata: HishelCacheMetadata
+    response: HishelCachedResponse = msgspec.field(name="r")
+    request: HishelCachedRequest = msgspec.field(name="q")
+    metadata: HishelCacheMetadata = msgspec.field(name="m")
 
 
 class HishelMsgspecSerializer(hishel.BaseSerializer):
@@ -51,24 +50,18 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
             HishelCacheEntry(
                 response=HishelCachedResponse(
                     status=response.status,
-                    headers=[
-                        (k.decode(HEADERS_ENCODING), v.decode(HEADERS_ENCODING))
-                        for k, v in response.headers
-                    ],
+                    headers=response.headers,
                     content=response.content,
                     extensions={
-                        k: v.decode("ascii")
-                        for k, v in response.extensions.items()
-                        if k in KNOWN_RESPONSE_EXTENSIONS
+                        key: value
+                        for key, value in response.extensions.items()
+                        if key in KNOWN_RESPONSE_EXTENSIONS
                     },
                 ),
                 request=HishelCachedRequest(
-                    method=request.method.decode("ascii"),
+                    method=request.method,
                     url=normalized_url(request.url),
-                    headers=[
-                        (k.decode(HEADERS_ENCODING), v.decode(HEADERS_ENCODING))
-                        for k, v in request.headers
-                    ],
+                    headers=request.headers,
                     extensions={
                         key: value
                         for key, value in request.extensions.items()
@@ -95,14 +88,11 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
         metadata = full.metadata
 
         response = httpcore.Response(
-            status=full.response.status,
-            headers=[
-                (key.encode(HEADERS_ENCODING), value.encode(HEADERS_ENCODING))
-                for key, value in full.response.headers
-            ],
+            status=response_data.status,
+            headers=response_data.headers,
             content=response_data.content,
             extensions={
-                key: value.encode("ascii")
+                key: value
                 for key, value in response_data.extensions.items()
                 if key in KNOWN_RESPONSE_EXTENSIONS
             },
@@ -111,10 +101,7 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
         request = httpcore.Request(
             method=request_data.method,
             url=request_data.url,
-            headers=[
-                (key.encode(HEADERS_ENCODING), value.encode(HEADERS_ENCODING))
-                for key, value in request_data.headers
-            ],
+            headers=request_data.headers,
             extensions={
                 key: value
                 for key, value in request_data.extensions.items()
