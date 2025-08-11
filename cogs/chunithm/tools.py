@@ -4,10 +4,13 @@ import itertools
 import random
 from decimal import Decimal
 from io import BytesIO
+from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
 
 import discord
+import hishel
 import httpx
+import platformdirs
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context, Range
@@ -36,6 +39,7 @@ from utils.components import ChartCardEmbed
 from utils.constants import MAX_DIFFICULTY
 from utils.context import PenguinContext
 from utils.converters import AliasNameConverter, DifficultyConverter
+from utils.hishel import HishelMsgspecSerializer
 from utils.kamaitachi import convert_kt_pbs_to_records
 from utils.logging import logged_prefix_command
 from utils.ranks import rank_icon
@@ -90,6 +94,22 @@ class ToolsCog(commands.Cog, name="Tools"):
         self.bot = bot
         self.utils = self.bot.utils
         self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
+
+        self.http_client = hishel.AsyncCacheClient(
+            timeout=httpx.Timeout(timeout=60.0),
+            follow_redirects=True,
+            transport=httpx.AsyncHTTPTransport(retries=5),
+            controller=hishel.Controller(
+                cacheable_methods=["GET", "HEAD"],
+                allow_heuristics=True,
+                allow_stale=True,
+            ),
+            storage=hishel.AsyncFileStorage(
+                serializer=HishelMsgspecSerializer(),
+                base_path=Path(platformdirs.user_cache_dir("chuni-penguin", "beerpsi")),
+                check_ttl_every=300,
+            ),
+        )
 
     @commands.hybrid_command("anmitsu", aliases=["rub"])
     @logged_prefix_command
@@ -947,16 +967,11 @@ class ToolsCog(commands.Cog, name="Tools"):
                     f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
                 )
 
-            async with httpx.AsyncClient(
-                timeout=httpx.Timeout(timeout=60.0),
-                follow_redirects=True,
-                transport=httpx.AsyncHTTPTransport(retries=5),
-            ) as client:
-                bg_resp, data_resp, bar_resp = await asyncio.gather(
-                    client.get(bg_url),
-                    client.get(data_url),
-                    client.get(bar_url),
-                )
+            bg_resp, data_resp, bar_resp = await asyncio.gather(
+                self.http_client.get(bg_url),
+                self.http_client.get(data_url),
+                self.http_client.get(bar_url),
+            )
 
             if bg_resp.is_error or data_resp.is_error or bar_resp.is_error:
                 msg = f"Failed to fetch chart view for {chart_display_name}. Please try again later."
