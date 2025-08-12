@@ -1,6 +1,6 @@
+from datetime import datetime
 from typing import Any, override
 
-import discord.utils
 import hishel
 import httpcore
 import msgspec
@@ -29,7 +29,7 @@ class HishelCachedResponse(msgspec.Struct, array_like=True):
 class HishelCacheMetadata(msgspec.Struct, array_like=True):
     cache_key: str
     number_of_uses: int
-    created_at: str
+    created_at: datetime
 
 
 class HishelCacheEntry(msgspec.Struct, array_like=True):
@@ -76,7 +76,7 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
                 metadata=HishelCacheMetadata(
                     cache_key=metadata["cache_key"],
                     number_of_uses=metadata["number_of_uses"],
-                    created_at=metadata["created_at"].isoformat(),
+                    created_at=metadata["created_at"],
                 ),
             )
         )
@@ -117,7 +117,7 @@ class HishelMsgspecSerializer(hishel.BaseSerializer):
             request,
             {
                 "cache_key": metadata.cache_key,
-                "created_at": discord.utils.parse_time(metadata.created_at),
+                "created_at": metadata.created_at,
                 "number_of_uses": metadata.number_of_uses,
             },
         )
