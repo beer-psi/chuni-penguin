@@ -60,6 +60,13 @@ class SearchCog(commands.Cog, name="Search"):
 
             self.bot.add_command(new_command)
 
+    async def _song_title_autocomplete(
+        self,
+        interaction: "discord.Interaction[ChuniBot]",
+        current: str,
+    ):
+        return await self.autocompleters.song_title_autocomplete(interaction, current)
+
     @commands.hybrid_command("find")
     @logged_prefix_command
     async def find(self, ctx: Context, level: str):
@@ -104,11 +111,12 @@ class SearchCog(commands.Cog, name="Search"):
         await ctx.send_help(ctx.command)
 
     @alias.command("add")
+    @app_commands.autocomplete(song_title_or_alias=_song_title_autocomplete)
     @logged_prefix_command
     async def addalias(
         self,
         ctx: Context,
-        song_title_or_alias: Annotated[str, AliasNameConverter(lower=True)],
+        song_title_or_alias: Annotated[str, AliasNameConverter],
         added_alias: Annotated[str, AliasNameConverter],
         *,
         global_alias: bool = False,
@@ -145,6 +153,7 @@ class SearchCog(commands.Cog, name="Search"):
             msg = "You are not allowed to add global aliases."
             raise commands.CheckFailure(msg)
 
+        source_alias_lower = song_title_or_alias.lower()
         added_alias_lower = added_alias.lower()
 
         if global_alias:
@@ -172,12 +181,12 @@ class SearchCog(commands.Cog, name="Search"):
             stmt = select(Song).where(
                 # Limit to non-WE entries. WE entries are redirected to
                 # their non-WE respectives when song-searching anyways.
-                (func.lower(Song.title) == song_title_or_alias) & (Song.id < 8000)
+                (func.lower(Song.title) == source_alias_lower) & (Song.id < 8000)
             )
             song = (await session.execute(stmt)).scalar_one_or_none()
 
             if song is None:
-                condition = func.lower(Alias.alias) == song_title_or_alias
+                condition = func.lower(Alias.alias) == source_alias_lower
 
                 if not global_alias:
                     condition = condition & (
@@ -185,13 +194,13 @@ class SearchCog(commands.Cog, name="Search"):
                     )
 
                 stmt = select(Alias).where(condition).options(joinedload(Alias.song))
-                alias = (await session.execute(stmt)).scalar_one_or_none()
+                alias_unit = (await session.execute(stmt)).scalar_one_or_none()
 
-                if alias is None:
+                if alias_unit is None:
                     msg = f"**{emd(song_title_or_alias)}** does not exist."
                     raise commands.BadArgument(msg)
 
-                song = alias.song
+                song = alias_unit.song
 
             if global_alias:
                 stmt = (
@@ -229,12 +238,12 @@ class SearchCog(commands.Cog, name="Search"):
                     )
                     .options(joinedload(Alias.song))
                 )
-                alias = (await session.execute(stmt)).scalar_one_or_none()
+                alias_unit = (await session.execute(stmt)).scalar_one_or_none()
 
-                if alias is not None:
+                if alias_unit is not None:
                     msg = (
                         f"**{emd(added_alias)}** already exists "
-                        f"({'global ' if alias.guild_id == -1 else ''}alias for **{emd(alias.song.title)}**)."
+                        f"({'global ' if alias_unit.guild_id == -1 else ''}alias for **{emd(alias_unit.song.title)}**)."
                     )
                     raise commands.BadArgument(msg)
 
@@ -250,14 +259,13 @@ class SearchCog(commands.Cog, name="Search"):
 
         await self.utils._reload_alias_cache()
 
-        alias = "an alias"
-        if global_alias:
-            alias = "a global alias"
+        alias_unit = "an alias" if not global_alias else "a global alias"
 
         await ctx.reply(
-            f"Added **{emd(added_alias)}** as {alias} for **{emd(song_title_or_alias)}**.",
+            f"Added **{emd(added_alias)}** as {alias_unit} for **{emd(song_title_or_alias)}**.",
             mention_author=False,
         )
+
         return None
 
     @alias.command("remove", aliases=["delete"])
@@ -266,7 +274,7 @@ class SearchCog(commands.Cog, name="Search"):
         self,
         ctx: Context,
         *,
-        removed_alias: Annotated[str, AliasNameConverter(lower=True)],
+        removed_alias: Annotated[str, AliasNameConverter],
     ):
         """Remove an alias for this server.
 
@@ -298,7 +306,7 @@ class SearchCog(commands.Cog, name="Search"):
             self.bot.begin_db_session() as session,
             session.begin(),
         ):
-            condition = func.lower(Alias.alias) == removed_alias
+            condition = func.lower(Alias.alias) == removed_alias.lower()
 
             if is_alias_manager:
                 guild_condition = Alias.guild_id == -1
@@ -410,20 +418,13 @@ class SearchCog(commands.Cog, name="Search"):
                 mention_author=False,
             )
 
-    async def song_title_autocomplete(
-        self,
-        interaction: "discord.Interaction[ChuniBot]",
-        current: str,
-    ):
-        return await self.autocompleters.song_title_autocomplete(interaction, current)
-
     @app_commands.command(name="info", description="Search for a song.")
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
         query="Song title to search for. You don't have to be exact; try things out!",
         detailed="Display detailed chart information (note counts and designer name)",
     )
-    @app_commands.autocomplete(query=song_title_autocomplete)
+    @app_commands.autocomplete(query=_song_title_autocomplete)
     @logged_app_command
     async def info_slash(
         self,
