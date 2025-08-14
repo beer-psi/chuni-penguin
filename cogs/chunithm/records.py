@@ -66,6 +66,7 @@ from utils.views import (
     RecentRecordsView,
     SelectToCompareView,
 )
+from utils.views.confirmation import ConfirmationYesView
 from utils.views.embeds import EmbedPaginationView
 from utils.views.leaderboard import LeaderboardView
 
@@ -1054,11 +1055,17 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
             if result.similarity < SIMILARITY_THRESHOLD:
-                return await ctx.respond_or_edit(
-                    did_you_mean_text(
+                view = ConfirmationYesView(ctx)
+
+                await view.start(
+                    content=did_you_mean_text(
                         ctx.clean_prefix, result.songs[0], result.matched_alias
                     )
                 )
+                await view.wait()
+
+                if not view.result:
+                    return
 
             # if we're fetching scores from Kamaitachi, we don't need to care about whether
             # the song is available in CHUNITHM International.
@@ -1094,7 +1101,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     await ctx.respond_or_edit(
                         content="Timed out before selecting a song.", view=None
                     )
-                    return None
+                    return
 
                 song = songs[int(view.value)]
             elif len(songs) > 0:
@@ -1135,7 +1142,7 @@ class RecordsCog(commands.Cog, name="Records"):
                             msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
 
                         await ctx.respond_or_edit(msg)
-                        return None
+                        return
 
                     network = " on Kamaitachi"
                     records = await self.utils.hydrate_records(records)
@@ -1158,7 +1165,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         await ctx.respond_or_edit(
                             f"No records found for {user_info.name} on **{displayed_song}**."
                         )
-                        return None
+                        return
 
                     records = await self.utils.hydrate_records(records)
 
@@ -1179,7 +1186,7 @@ class RecordsCog(commands.Cog, name="Records"):
             else:
                 await view.start(content=content)
 
-            return None
+            return
 
     @flags.command("scores", aliases=["score"])
     @flags.argument("-k", "--kamaitachi", action="store_true")
@@ -2005,6 +2012,9 @@ class RecordsCog(commands.Cog, name="Records"):
             chart = await ctx.find_chart(
                 difficulty, query, "Select a chart to see leaderboard for:"
             )
+
+            if chart is None:
+                return
 
             chart.song.raise_if_not_available()
 

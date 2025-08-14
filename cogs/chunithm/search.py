@@ -20,6 +20,7 @@ from utils.constants import SIMILARITY_THRESHOLD
 from utils.context import PenguinContext
 from utils.converters import AliasNameConverter, AliasNameTransformer
 from utils.logging import logged_app_command, logged_prefix_command
+from utils.views.confirmation import ConfirmationYesView
 from utils.views.song_info import SongInfoPaginationView
 from utils.views.songlist import SonglistView
 
@@ -366,10 +367,20 @@ class SearchCog(commands.Cog, name="Search"):
         guild_id = ctx.guild.id if ctx.guild is not None else None
         song, alias, similarity = await self.utils.find_song(query, guild_id=guild_id)
 
-        if song is None or similarity < SIMILARITY_THRESHOLD:
-            return await ctx.reply(
+        if song is None:
+            await ctx.reply(
                 did_you_mean_text(ctx.clean_prefix, song, alias), mention_author=False
             )
+            return
+
+        if similarity < SIMILARITY_THRESHOLD:
+            view = ConfirmationYesView(ctx)
+
+            await view.start(content=did_you_mean_text(ctx.clean_prefix, song, alias))
+            await view.wait()
+
+            if not view.result:
+                return
 
         async with self.bot.begin_db_session() as session:
             stmt = select(Alias).where(Alias.song_id == song.id)
@@ -401,8 +412,6 @@ class SearchCog(commands.Cog, name="Search"):
         embed.description = embed.description.strip()
 
         await ctx.reply(embed=embed, mention_author=False)
-
-        return None
 
     @alias.command("reload", with_app_command=False, hidden=True)
     @commands.is_owner()
@@ -472,12 +481,17 @@ class SearchCog(commands.Cog, name="Search"):
             )
 
             if result.similarity < SIMILARITY_THRESHOLD:
-                return await ctx.reply(
-                    did_you_mean_text(
+                view = ConfirmationYesView(ctx)
+
+                await view.start(
+                    content=did_you_mean_text(
                         ctx.clean_prefix, result.songs[0], result.matched_alias
-                    ),
-                    mention_author=False,
+                    )
                 )
+                await view.wait()
+
+                if not view.result:
+                    return
 
             view = SongInfoPaginationView(
                 ctx,
@@ -496,8 +510,6 @@ class SearchCog(commands.Cog, name="Search"):
                 await ctx.send(
                     content="https://cdn.discordapp.com/attachments/1348088922055512197/1358215134937612338/vlc-record-2025-04-05-19h01m28s-2025-04-05_18-57-05.mkv-.mp4"
                 )
-
-            return None
 
 
 async def setup(bot: "ChuniBot"):

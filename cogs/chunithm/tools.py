@@ -866,6 +866,9 @@ class ToolsCog(commands.Cog, name="Tools"):
                     "Select a chart to view rank borders for:",
                 )
 
+                if chart is None:
+                    return
+
                 if chart.maxcombo is None:
                     song = chart.song
                     msg = f"We currently don't have note counts for {escape_markdown(song.title)} [{chart.difficulty}]. Try using `{ctx.clean_prefix}border <notecount>` instead."
@@ -915,6 +918,10 @@ class ToolsCog(commands.Cog, name="Tools"):
             chart = await ctx.find_chart(
                 difficulty, query, "Select a chart to see chart view for:"
             )
+
+            if chart is None:
+                return
+
             song = chart.song
 
             chart_display_name = f"{escape_markdown(song.title)} [{difficulty} {chart.const or chart.level}]"

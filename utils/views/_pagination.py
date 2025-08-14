@@ -1,12 +1,10 @@
-import traceback
 from typing import Any, Generic, Protocol, TypeVar, override
 
 import discord.ui
-from discord import AllowedMentions, Interaction
+from discord import Interaction
 from discord.ext.commands import Context
 
-from utils.config import config
-from utils.logging import logger
+from utils.views._base import PenguinView
 
 PageT = TypeVar("PageT")
 PageItemT = TypeVar("PageItemT")
@@ -59,7 +57,7 @@ class ListPageSource(PageSourceProtocol[list[PageItemT]], Generic[PageItemT]):
         return self.entries[start:end]
 
 
-class PaginationView(discord.ui.View, Generic[PageT]):
+class PaginationView(PenguinView, Generic[PageT]):
     def __init__(
         self,
         ctx: Context,
@@ -67,11 +65,9 @@ class PaginationView(discord.ui.View, Generic[PageT]):
         *,
         timeout: float | None = 180,
     ):
-        super().__init__(timeout=timeout)
+        super().__init__(ctx, timeout=timeout)
 
-        self.ctx: Context = ctx
         self.source: PageSourceProtocol = source
-        self.message: discord.Message | None = None
 
         self._current_page: int = 0
 
@@ -141,6 +137,7 @@ class PaginationView(discord.ui.View, Generic[PageT]):
         else:
             await interaction.response.edit_message(**kwargs, view=self)
 
+    @override
     async def _before_start(self, *, content: str | None = None):
         await self.source._prepare_once()
 
@@ -153,91 +150,6 @@ class PaginationView(discord.ui.View, Generic[PageT]):
         self._update_labels(self.current_page)
 
         return kwargs
-
-    async def start(self, *, content: str | None = None, ephemeral: bool = False):
-        kwargs = await self._before_start(content=content)
-
-        self.message = await self.ctx.reply(
-            **kwargs,
-            view=self,
-            ephemeral=ephemeral,
-            mention_author=False,
-        )
-        return self.message
-
-    async def start_from(self, message: discord.Message, *, content: str | None = None):
-        kwargs = await self._before_start(content=content)
-
-        self.message = message
-        await message.edit(**kwargs, view=self)
-
-    async def start_in(
-        self, messageable: discord.abc.Messageable, *, content: str | None = None
-    ):
-        kwargs = await self._before_start(content=content)
-
-        self.message = await messageable.send(**kwargs, view=self)
-        return self.message
-
-    @override
-    async def interaction_check(self, interaction: Interaction, /) -> bool:
-        if interaction.user is not None and interaction.user.id in {
-            self.ctx.bot.owner_id,
-            self.ctx.author.id,
-        }:
-            return True
-
-        await interaction.response.send_message(
-            "This menu cannot be controlled by you, sorry!",
-            ephemeral=True,
-        )
-        return False
-
-    @override
-    async def on_timeout(self) -> None:
-        for item in self.children:
-            if (
-                not isinstance(item, discord.ui.Button)
-                or item.style != discord.ButtonStyle.link
-            ):
-                self.remove_item(item)
-
-        if self.message is not None:
-            await self.message.edit(view=self)
-
-    @override
-    async def on_error(
-        self, interaction: Interaction, error: Exception, item: discord.ui.Item[Any], /
-    ) -> None:
-        await logger.aexception(
-            "Unhandled view error", tag="view_error", exc_info=error
-        )
-
-        embed = discord.Embed(
-            color=discord.Color.red(),
-            title="Error",
-            description=(
-                "An unhandled error occurred. It dropped this message:\n"
-                "```python\n"
-                f"{''.join(traceback.format_exception_only(error))}\n"
-                "```\n"
-                "The error has been logged. Please try again later."
-            ),
-        )
-
-        if config.bot.support_server_invite:
-            assert embed.description is not None
-
-            embed.description += "\n"
-            embed.description += (
-                f"If this error keeps happening, please join the [support server]({config.bot.support_server_invite}) "
-                "and report the bug in the #help-bugs channel!"
-            )
-
-        if interaction.response.is_done():
-            await interaction.followup.send(embed=embed, ephemeral=True)
-        else:
-            await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @discord.ui.button(label="<<", style=discord.ButtonStyle.grey, disabled=True)
     async def to_first_page(
@@ -266,88 +178,3 @@ class PaginationView(discord.ui.View, Generic[PageT]):
         # this should always happen since this button only shows up if there's a max page.
         if max_pages is not None:
             await self.show_page(interaction, max_pages - 1)
-
-
-# class PaginationView(discord.ui.View):
-#     message: discord.Message
-
-#     def __init__(self, ctx: Context, items: Sequence, per_page: int = 5):
-#         super().__init__(timeout=120)
-#         self.ctx = ctx
-#         self._items = items
-#         self._page = 0
-#         self.per_page = per_page
-#         self.max_index = ceil(len(self._items) / per_page) - 1
-
-#         if self.max_index == 0:
-#             for item in self.children:
-#                 if isinstance(item, discord.ui.Button):
-#                     self.remove_item(item)
-#         elif self.max_index == 1:
-#             self.remove_item(self.to_last_page)
-#             self.remove_item(self.to_first_page)
-
-#     @property
-#     def page(self):
-#         return self._page
-
-#     @page.setter
-#     def page(self, value):
-#         self._page = max(0, min(value, self.max_index))
-#         self.toggle_buttons()
-
-#     @property
-#     def items(self):
-#         return self._items
-
-#     @items.setter
-#     def items(self, value):
-#         self._items = value
-#         self.max_index = ceil(len(self._items) / self.per_page) - 1
-
-#     async def interaction_check(self, interaction: Interaction) -> bool:
-#         return interaction.user == self.ctx.author
-
-#     async def on_timeout(self) -> None:
-#         for item in self.children:
-#             if hasattr(item, "disabled"):
-#                 item.disabled = True  # type: ignore[reportGeneralTypeIssues]
-#         self.clear_items()
-#         await self.message.edit(view=self)
-
-#     def toggle_buttons(self):
-#         self.to_first_page.disabled = self.to_previous_page.disabled = self.page == 0
-#         self.to_next_page.disabled = self.to_last_page.disabled = (
-#             self.page == self.max_index
-#         )
-
-#     @abstractmethod
-#     async def callback(self, interaction: discord.Interaction): ...
-
-#     @discord.ui.button(label="<<", style=discord.ButtonStyle.grey, disabled=True)
-#     async def to_first_page(
-#         self, interaction: discord.Interaction, _: discord.ui.Button
-#     ):
-#         self.page = 0
-#         await self.callback(interaction)
-
-#     @discord.ui.button(label="<", style=discord.ButtonStyle.grey, disabled=True)
-#     async def to_previous_page(
-#         self, interaction: discord.Interaction, _: discord.ui.Button
-#     ):
-#         self.page -= 1
-#         await self.callback(interaction)
-
-#     @discord.ui.button(label=">", style=discord.ButtonStyle.grey)
-#     async def to_next_page(
-#         self, interaction: discord.Interaction, _: discord.ui.Button
-#     ):
-#         self.page += 1
-#         await self.callback(interaction)
-
-#     @discord.ui.button(label=">>", style=discord.ButtonStyle.grey)
-#     async def to_last_page(
-#         self, interaction: discord.Interaction, _: discord.ui.Button
-#     ):
-#         self.page = self.max_index
-#         await self.callback(interaction)

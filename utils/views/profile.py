@@ -12,6 +12,7 @@ from chunithm_net.exceptions import (
     ChuniNetError,
     InvalidFriendCode,
 )
+from utils.views._base import PenguinView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -101,7 +102,13 @@ class PersistentHideFriendCodeButton(
 
     @override
     async def interaction_check(self, interaction: Interaction, /) -> bool:
-        return interaction.user.id == self.user_id
+        if interaction.user.id == self.user_id:
+            return True
+
+        await interaction.response.send_message(
+            "This menu cannot be controlled by you, sorry!", ephemeral=True
+        )
+        return False
 
     @override
     async def callback(self, interaction: Interaction):
@@ -149,14 +156,12 @@ class PersistentSendFriendRequestButton(
         )
 
 
-class ProfileView(discord.ui.View):
-    message: discord.Message
-
+class ProfileView(PenguinView):
     def __init__(
         self, ctx: Context, profile: "PlayerData", *, timeout: Optional[float] = 120
     ):
-        super().__init__(timeout=timeout)
-        self.ctx = ctx
+        super().__init__(ctx, timeout=timeout)
+
         self.profile = profile
         self.friend_code_visible = False
         self.send_friend_request_button = None
@@ -164,7 +169,11 @@ class ProfileView(discord.ui.View):
         if not self.profile.friend_code:
             self.clear_items()
 
+    @override
     async def on_timeout(self) -> None:
+        if self.message is None:
+            return
+
         if self.friend_code_visible and self.profile.friend_code is not None:
             persistent_view = discord.ui.View(timeout=None)
             persistent_view.add_item(PersistentHideFriendCodeButton(self.ctx.author.id))
