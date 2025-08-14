@@ -63,6 +63,7 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         files: Sequence[discord.File] = ...,
         suppress_embeds: bool = ...,
         delete_after: float | None = ...,
+        allowed_mentions: discord.AllowedMentions = ...,
         view: discord.ui.View | None = ...,
         ephemeral: bool = ...,
     ) -> discord.Message: ...
@@ -76,6 +77,7 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         files: Sequence[discord.File] = ...,
         suppress_embeds: bool = ...,
         delete_after: float | None = ...,
+        allowed_mentions: discord.AllowedMentions = ...,
         view: discord.ui.View | None = ...,
         ephemeral: bool = ...,
     ) -> discord.Message: ...

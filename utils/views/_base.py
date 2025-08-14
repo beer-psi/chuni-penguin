@@ -1,13 +1,15 @@
 import traceback
-from typing import Any, Generic, TypeVar, override
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
 import discord
-from discord.ext import commands
 
 from utils.config import config
 from utils.logging import logger
 
-ContextT = TypeVar("ContextT", bound=commands.Context, covariant=True)
+if TYPE_CHECKING:
+    from utils.context import PenguinContext
+
+ContextT = TypeVar("ContextT", bound="PenguinContext", covariant=True)
 
 
 class PenguinView(discord.ui.View, Generic[ContextT]):
@@ -25,11 +27,8 @@ class PenguinView(discord.ui.View, Generic[ContextT]):
     async def start(self, *, content: str | None = None, ephemeral: bool = False):
         kwargs = await self._before_start(content=content)
 
-        self.message = await self.ctx.reply(
-            **kwargs,
-            view=self,
-            ephemeral=ephemeral,
-            mention_author=False,
+        self.message = await self.ctx.respond_or_edit(
+            **kwargs, view=self, ephemeral=ephemeral
         )
         return self.message
 
