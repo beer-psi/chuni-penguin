@@ -14,6 +14,7 @@ from chunithm_net.models.enums import Difficulty
 from database.models import Chart, UserConfig
 from utils import did_you_mean_text
 from utils.constants import SIMILARITY_THRESHOLD
+from utils.views.confirmation import ConfirmationYesView
 from utils.views.select_to_compare import SelectToCompareView
 
 if TYPE_CHECKING:
@@ -115,7 +116,7 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         difficulty: Difficulty,
         query: str,
         select_prompt: str = "Select a chart:",
-    ) -> Chart:
+    ) -> Chart | None:
         """Finds a chart with the given difficulty and query, prompting the user if there are multiple
         options.
 
@@ -127,8 +128,14 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         result = await self.bot.utils.find_songs(query, guild_id=guild_id)
 
         if result.similarity < SIMILARITY_THRESHOLD:
+            view = ConfirmationYesView(self)
             msg = did_you_mean_text(self.prefix, result.songs[0], result.matched_alias)
-            raise commands.CommandError(msg)
+
+            await view.start(content=msg)
+            await view.wait()
+
+            if not view.result:
+                return None
 
         song_ids = {s.id for s in result.songs}
 
