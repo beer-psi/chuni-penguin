@@ -32,7 +32,7 @@ class LeaderboardPageSource(ListPageSource):
         self.song: Song = song
         self.difficulty: Difficulty = difficulty
         self.chart: Chart | None = chart
-        self.synthesis_alt_jacket: str | None = None
+        self.synthesis_alt_jacket: str | None = synthesis_alt_jacket
 
     @override
     async def format_page(
