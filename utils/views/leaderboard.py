@@ -99,5 +99,6 @@ class LeaderboardView(PaginationView):
                 difficulty,
                 chart,
                 per_page=per_page,
+                synthesis_alt_jacket=synthesis_alt_jacket,
             ),
         )
