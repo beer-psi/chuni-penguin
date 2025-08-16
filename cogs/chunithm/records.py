@@ -66,7 +66,7 @@ from utils.views import (
     RecentRecordsView,
     SelectToCompareView,
 )
-from utils.views.confirmation import ConfirmationYesView
+from utils.views.confirmation import ConfirmationYesAddAliasView
 from utils.views.embeds import EmbedPaginationView
 from utils.views.leaderboard import LeaderboardView
 
@@ -913,9 +913,6 @@ class RecordsCog(commands.Cog, name="Records"):
                     if len(records) == 0:
                         msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
 
-                        if len(song.title) <= 5:
-                            msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
-
                         await ctx.respond_or_edit(msg)
                         return
 
@@ -1055,7 +1052,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
             if result.similarity < SIMILARITY_THRESHOLD:
-                view = ConfirmationYesView(ctx)
+                view = ConfirmationYesAddAliasView(ctx)
 
                 await view.start(
                     content=did_you_mean_text(
@@ -1137,9 +1134,6 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     if len(records) == 0:
                         msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
-
-                        if len(song.title) <= 5:
-                            msg += " If you have a score on this song, it's probably because Tachi's PB search is buggy on short titles."
 
                         await ctx.respond_or_edit(msg)
                         return
