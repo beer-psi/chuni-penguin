@@ -66,7 +66,7 @@ from utils.views import (
     RecentRecordsView,
     SelectToCompareView,
 )
-from utils.views.confirmation import ConfirmationYesAddAliasView
+from utils.views.confirmation import ConfirmationYesView
 from utils.views.embeds import EmbedPaginationView
 from utils.views.leaderboard import LeaderboardView
 
@@ -1052,7 +1052,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
             if result.similarity < SIMILARITY_THRESHOLD:
-                view = ConfirmationYesAddAliasView(ctx)
+                view = ConfirmationYesView(ctx)
 
                 await view.start(
                     content=did_you_mean_text(
