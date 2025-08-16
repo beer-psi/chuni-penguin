@@ -146,7 +146,7 @@ class UtilsCog(commands.Cog, name="Utils"):
     async def _reload_alias_cache(self) -> None:
         async with self.bot.begin_db_session() as session:
             stmt = select(Song).options(joinedload(Song.aliases))
-            songs = (await session.execute(stmt)).scalars().unique()
+            songs = (await session.execute(stmt)).scalars().unique().all()
 
         self.alias_cache.clear()
 
