@@ -176,6 +176,16 @@ class UtilsCog(commands.Cog, name="Utils"):
                     )
                 )
 
+        for song in songs:
+            artist_lower = song.artist.lower()
+
+            if artist_lower not in titles:
+                titles.add(artist_lower)
+
+                global_aliases.append(
+                    CachedAlias(None, artist_lower, song.title, song.id, -1)
+                )
+
     async def guild_prefix(self, ctx: Context) -> str:
         default_prefix: str = config.bot.default_prefix
         if ctx.guild is None:
