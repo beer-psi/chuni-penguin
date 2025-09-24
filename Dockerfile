@@ -18,8 +18,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project --all-extras --no-dev --no-group test
-RUN --mount=type=bind,source=patches,target=patches \
-    /code/.venv/bin/pypatch apply patches/discord-py-10210.patch discord
 COPY . /code
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-extras --no-dev --no-group test
