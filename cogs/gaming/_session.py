@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 import discord
 import rapidfuzz
+from discord.ext import songbird
 from discord.ext.commands import Context
 from PIL import Image, ImageDraw, ImageOps
 from rapidfuzz import fuzz
@@ -79,6 +80,8 @@ class GuessingGameSession:
 
         self.last_question_was_answered: bool = False
 
+        self.volume: float = 0.15
+
         self._tasks: set[asyncio.Task] = set()
 
     @property
@@ -91,7 +94,7 @@ class GuessingGameSession:
 
     @property
     def voice_client(self):
-        return cast(discord.VoiceClient | None, self.ctx.voice_client)
+        return cast(songbird.SongbirdClient | None, self.ctx.voice_client)
 
     def get_crop_dimensions(self):
         if self.difficulty == Difficulty.BASIC:
@@ -223,7 +226,7 @@ class GuessingGameSession:
 
         return song, aliases, answer_image_buffer, cropped_image_buffer
 
-    async def get_voice_message_question(self):
+    async def get_voice_question(self):
         while True:
             song, aliases = await self._get_random_song()
 
@@ -293,6 +296,25 @@ class GuessingGameSession:
             random.randrange(0, audio_duration - audio_length), 60 / (song.bpm / 4)
         )
 
+        return (
+            song,
+            aliases,
+            jacket_path.open("rb"),
+            audio_path,
+            audio_start,
+            audio_length,
+        )
+
+    async def get_voice_message_question(self):
+        (
+            song,
+            aliases,
+            jacket_art,
+            audio_path,
+            audio_start,
+            audio_length,
+        ) = await self.get_voice_question()
+
         ffmpeg_process = await asyncio.subprocess.create_subprocess_exec(
             "ffmpeg",
             "-ss",
@@ -317,7 +339,7 @@ class GuessingGameSession:
             song,
             aliases,
             io.BytesIO(stdout),
-            jacket_path.open("rb"),
+            jacket_art,
         )
 
     def check_score_limit_reached(self):

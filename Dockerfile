@@ -9,12 +9,15 @@ ENV UV_PYTHON_DOWNLOADS=0
 
 # for building faust-cchardet
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive build-base pkgconf \
+    && apk add --no-interactive build-base pkgconf rust cargo opus libcrypto3 libssl3 \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /code
 RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cargo/git/db \
+    --mount=type=cache,target=/root/.cargo/registry/cache \
+    --mount=type=cache,target=/root/.cargo/registry/index \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project --all-extras --no-dev --no-group test

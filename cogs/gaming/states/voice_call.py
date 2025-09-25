@@ -1,6 +1,9 @@
+import asyncio
+from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
 import discord
+from discord.ext import songbird
 
 from cogs.gaming.states.end_game import EndGameVoiceDisconnected
 
@@ -28,9 +31,11 @@ class AskVoiceCallQuestionState(GuessingGameState):
         (
             song,
             aliases,
-            audio_buffer,
             jacket_art,
-        ) = await self.session.get_voice_message_question()
+            audio_path,
+            audio_start,
+            audio_length,
+        ) = await self.session.get_voice_question()
 
         question_embed = discord.Embed(
             title="Guess the song!",
@@ -53,18 +58,23 @@ class AskVoiceCallQuestionState(GuessingGameState):
 
         await self.session.channel.send(embed=question_embed, mention_author=False)
 
-        # if you use the asset extraction scripts provided, audio should always be opus.
-        self.session.voice_client.play(
-            discord.FFmpegOpusAudio(
-                audio_buffer,
-                bitrate=96,
-                codec="copy",
-                pipe=True,
-                options="-reconnect 1 -reconnect_streamed 1 -timeout 10",
-            ),
-            after=lambda _: audio_buffer.close(),
-        )
+        track = songbird.Track(songbird.File(str(audio_path)))
+        track.pause()
+
+        track_handle = await self.session.voice_client.play(track)
+
+        track_handle.set_volume(self.session.volume)
+        await track_handle.seek(timedelta(seconds=audio_start))
+        track_handle.play()
+
+        async def stop_music():
+            await asyncio.sleep(audio_length)
+            track_handle.stop()
 
         return WaitForAnswerState(
-            self.session, song=song, aliases=aliases, answer_image=jacket_art
+            self.session,
+            song=song,
+            aliases=aliases,
+            answer_image=jacket_art,
+            stop_music_task=asyncio.create_task(stop_music()),
         )

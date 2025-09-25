@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
 import discord
-from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext import commands, songbird
+from discord.ext.commands import Context, Range
 from discord.utils import MISSING
 from sqlalchemy import delete
 
@@ -293,7 +293,7 @@ class GamingCog(commands.Cog, name="Games"):
         if missing:
             raise commands.BotMissingPermissions(missing)
 
-        await voice_channel.connect(self_deaf=True)
+        await voice_channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
 
         self.game_sessions[voice_channel.id] = await self._guess_without_voice_channel(
             ctx, GuessingGameType.VOICE_CHANNEL, arguments
@@ -346,6 +346,40 @@ class GamingCog(commands.Cog, name="Games"):
         game_task.add_done_callback(self.game_tasks.discard)
 
         return session
+
+    @commands.hybrid_command("volume")
+    @commands.guild_only()
+    @commands.bot_has_permissions(add_reactions=True)
+    @logged_prefix_command
+    async def volume(self, ctx: Context, volume: Range[int, 1, 100]):
+        """Sets the volume of the current voice guessing game."""
+
+        assert isinstance(ctx.author, discord.Member)
+
+        if ctx.voice_client is None:
+            msg = "There are no active voice guessing games in this server."
+            raise commands.CommandError(msg)
+
+        if (
+            ctx.author.voice is None
+            or ctx.author.voice.channel != ctx.voice_client.channel
+        ):
+            msg = "You are not in the current voice guessing game."
+            raise commands.CommandError(msg)
+
+        async with self.game_sessions_lock:
+            if ctx.channel.id not in self.game_sessions:
+                msg = "There are no ongoing games in this channel."
+                raise commands.CommandError(msg)
+
+            self.game_sessions[ctx.channel.id].volume = volume / 100
+
+        cast(songbird.SongbirdClient, ctx.voice_client).set_volume(volume / 100)
+
+        if ctx.interaction is not None:
+            await ctx.reply(f"Set volume to {volume}%", mention_author=False)
+        else:
+            await ctx.message.add_reaction("✅")
 
     @commands.hybrid_command("skip")
     @commands.bot_has_permissions(add_reactions=True)

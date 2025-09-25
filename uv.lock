@@ -334,6 +334,7 @@ dependencies = [
     { name = "alembic" },
     { name = "async-lru" },
     { name = "beautifulsoup4" },
+    { name = "discord-ext-songbird" },
     { name = "discord-ext-track-edits" },
     { name = "discord-py", extra = ["voice"] },
     { name = "hishel" },
@@ -385,6 +386,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12.3" },
     { name = "brotli", marker = "extra == 'speedup'", specifier = ">=1.1.0" },
     { name = "ciso8601", marker = "extra == 'speedup'", specifier = ">=2.3.2" },
+    { name = "discord-ext-songbird", git = "https://github.com/beer-psi/discord-ext-songbird.git" },
     { name = "discord-ext-track-edits", specifier = ">=0.1.2" },
     { name = "discord-py", extras = ["voice"], specifier = ">=2.6.3" },
     { name = "faust-cchardet", marker = "extra == 'speedup'", specifier = ">=2.1.19" },
@@ -504,6 +506,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/79/b7cee656cfb17a7f2c1b9c3cee03dd5d8000ca299ad4038ba64b61a9b044/coverage-7.6.12-cp313-cp313t-win32.whl", hash = "sha256:eb5507795caabd9b2ae3f1adc95f67b1104971c22c624bb354232d65c4fc90b3", size = 212033, upload-time = "2025-02-11T14:46:35.79Z" },
     { url = "https://files.pythonhosted.org/packages/b6/c3/f7aaa3813f1fa9a4228175a7bd368199659d392897e184435a3b66408dd3/coverage-7.6.12-cp313-cp313t-win_amd64.whl", hash = "sha256:f60a297c3987c6c02ffb29effc70eadcbb412fe76947d394a1091a3615948e2f", size = 213240, upload-time = "2025-02-11T14:46:38.119Z" },
     { url = "https://files.pythonhosted.org/packages/fb/b2/f655700e1024dec98b10ebaafd0cedbc25e40e4abe62a3c8e2ceef4f8f0a/coverage-7.6.12-py3-none-any.whl", hash = "sha256:eb8668cfbc279a536c633137deeb9435d2962caec279c3f8cf8b91fff6ff8953", size = 200552, upload-time = "2025-02-11T14:47:01.999Z" },
+]
+
+[[package]]
+name = "discord-ext-songbird"
+version = "0.1.0"
+source = { git = "https://github.com/beer-psi/discord-ext-songbird.git#794a013b6e663f755f44c79e3dda3a97079c44d6" }
+dependencies = [
+    { name = "discord-py" },
+    { name = "typing-extensions" },
 ]
 
 [[package]]
