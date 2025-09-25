@@ -37,6 +37,15 @@ class AskVoiceCallQuestionState(GuessingGameState):
             audio_length,
         ) = await self.session.get_voice_question()
 
+        track = songbird.Track(songbird.File(str(audio_path)))
+        track.pause()
+
+        track_handle = await self.session.voice_client.play(track)
+
+        await track_handle.make_playable()
+        track_handle.set_volume(self.session.volume)
+        await track_handle.seek(timedelta(seconds=audio_start))
+
         question_embed = discord.Embed(
             title="Guess the song!",
             description=(
@@ -57,14 +66,6 @@ class AskVoiceCallQuestionState(GuessingGameState):
             )
 
         await self.session.channel.send(embed=question_embed, mention_author=False)
-
-        track = songbird.Track(songbird.File(str(audio_path)))
-        track.pause()
-
-        track_handle = await self.session.voice_client.play(track)
-
-        track_handle.set_volume(self.session.volume)
-        await track_handle.seek(timedelta(seconds=audio_start))
         track_handle.play()
 
         async def stop_music():
