@@ -9,7 +9,7 @@ ENV UV_PYTHON_DOWNLOADS=0
 
 # for building faust-cchardet
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive build-base pkgconf rust cargo opus libcrypto3 libssl3 \
+    && apk add --no-interactive build-base pkgconf git rust cargo opus libcrypto3 libssl3 \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
