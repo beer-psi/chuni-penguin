@@ -46,6 +46,7 @@ class GuessingGameSession:
         wrong_answers_limit: int | None = None,
         hardcore_mode: bool = False,
         genres: list[Genres] | None = None,
+        volume: int = 15,
     ) -> None:
         self.ctx: Context = ctx
 
@@ -80,7 +81,7 @@ class GuessingGameSession:
 
         self.last_question_was_answered: bool = False
 
-        self.volume: float = 0.15
+        self.volume: int = volume
 
         self._tasks: set[asyncio.Task] = set()
 

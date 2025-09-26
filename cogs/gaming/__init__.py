@@ -102,6 +102,7 @@ class GuessArguments:
     wrong: int | None
     hardcore: bool
     genres: list[Genres] | None
+    volume: int
 
 
 class GamingCog(commands.Cog, name="Games"):
@@ -134,6 +135,7 @@ class GamingCog(commands.Cog, name="Games"):
         parser.add_argument("-w", "--wrong", type=int, required=False, default=None)
         parser.add_argument("-h", "--hardcore", action="store_true")
         parser.add_argument("-g", "--genre", type=str, nargs="*")
+        parser.add_argument("-v", "--volume", type=int, required=False, default=15)
 
         try:
             args, _ = await parser.parse_known_intermixed_args(shlex_split(arguments))
@@ -147,9 +149,14 @@ class GamingCog(commands.Cog, name="Games"):
         wrong: int | None = args.wrong
         hardcore: bool = args.hardcore
         genre: list[str] | None = args.genre
+        volume: int = args.volume
 
         if genre is not None and len(genre) == 0:
             msg = "No genres were specified."
+            raise commands.BadArgument(msg)
+
+        if volume < 0 or volume > 100:
+            msg = "Volume must be between 0 and 100."
             raise commands.BadArgument(msg)
 
         return GuessArguments(
@@ -162,6 +169,7 @@ class GamingCog(commands.Cog, name="Games"):
             await asyncio.gather(*[GenreConverter().convert(ctx, x) for x in genre])
             if genre is not None
             else None,
+            volume,
         )
 
     @commands.group(
@@ -239,7 +247,7 @@ class GamingCog(commands.Cog, name="Games"):
 
     @guess.command(
         "voice",
-        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-v <volume>] [-g <genres...>]",
     )
     @commands.guild_only()
     @commands.bot_has_permissions(
@@ -264,6 +272,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
+        `-v`, `--volume`: The starting volume of the audio. Defaults to 15% (can be very loud!)
         """
 
         if self.shutting_down:
@@ -327,6 +336,7 @@ class GamingCog(commands.Cog, name="Games"):
                 wrong_answers_limit=args.wrong,
                 hardcore_mode=args.hardcore,
                 genres=args.genres,
+                volume=args.volume,
             )
 
             if session.time_per_question is MISSING:
@@ -372,7 +382,7 @@ class GamingCog(commands.Cog, name="Games"):
                 msg = "There are no ongoing games in this channel."
                 raise commands.CommandError(msg)
 
-            self.game_sessions[ctx.channel.id].volume = volume / 100
+            self.game_sessions[ctx.channel.id].volume = volume
 
         cast(songbird.SongbirdClient, ctx.voice_client).set_volume(volume / 100)
 

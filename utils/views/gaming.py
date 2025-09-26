@@ -3,6 +3,7 @@ import re
 from typing import TYPE_CHECKING, Any, Sequence, cast, override
 
 import discord
+from discord.ext import songbird
 from discord.utils import escape_markdown
 from sqlalchemy import Row, desc, func, select
 
@@ -177,7 +178,7 @@ class GuessLeaderboardView(PaginationView):
 
 class RetryGameButton(
     discord.ui.DynamicItem[discord.ui.Button],
-    template=r"retryguess(?P<mode>[012]):(?P<difficulty>\d+):(?P<questions>\d+):(?P<score>\d*):(?P<time>\d+):(?P<wrong>\d*):(?P<hardcore>[01]):(?P<genres>[\d,]*)",
+    template=r"retryguess(?P<mode>[012]):(?P<difficulty>\d+):(?P<questions>\d+):(?P<score>\d*):(?P<time>\d+):(?P<wrong>\d*):(?P<hardcore>[01]):(?P<genres>[\d,]*)(?::(?P<volume>\d+))?",
 ):
     def __init__(
         self,
@@ -190,6 +191,7 @@ class RetryGameButton(
         wrong: int | None,
         hardcore: bool,
         genres: list[Genres] | None,
+        volume: int,
         row: int | None = None,
     ) -> None:
         if mode == GuessingGameType.IMAGE:
@@ -206,7 +208,7 @@ class RetryGameButton(
             discord.ui.Button(
                 style=discord.ButtonStyle.green,
                 label="Retry",
-                custom_id=f"retryguess{mode_id}:{difficulty.value}:{questions}:{score if score is not None else ''}:{time}:{wrong if wrong is not None else ''}:{'1' if hardcore else '0'}:{','.join([str(g.value) for g in genres]) if genres else ''}",
+                custom_id=f"retryguess{mode_id}:{difficulty.value}:{questions}:{score if score is not None else ''}:{time}:{wrong if wrong is not None else ''}:{'1' if hardcore else '0'}:{','.join([str(g.value) for g in genres]) if genres else ''}:{volume}",
             ),
             row=row,
         )
@@ -219,6 +221,7 @@ class RetryGameButton(
         self.wrong = wrong
         self.hardcore = hardcore
         self.genres = genres
+        self.volume = volume
 
     @classmethod
     async def from_custom_id(  # pyright: ignore[reportIncompatibleMethodOverride]
@@ -249,6 +252,7 @@ class RetryGameButton(
             if match["genres"]
             else None
         )
+        volume = int(match["volume"]) if match["volume"] else 15
 
         return cls(
             mode=mode,
@@ -259,10 +263,11 @@ class RetryGameButton(
             wrong=wrong,
             hardcore=hardcore,
             genres=genres,
+            volume=volume,
         )
 
     @override
-    async def callback(self, interaction: discord.Interaction["ChuniBot"]) -> Any:
+    async def callback(self, interaction: discord.Interaction["ChuniBot"]) -> Any:  # pyright: ignore[reportIncompatibleMethodOverride]
         gaming = cast("GamingCog | None", interaction.client.get_cog("Games"))
 
         if gaming is None:
@@ -319,7 +324,7 @@ class RetryGameButton(
                 )
                 return
 
-            await interaction.user.voice.channel.connect(self_deaf=True)
+            await interaction.user.voice.channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
 
         ctx = await interaction.client.get_context(interaction.message)
         ctx.author = interaction.user
@@ -343,6 +348,7 @@ class RetryGameButton(
                     wrong_answers_limit=self.wrong,
                     hardcore_mode=self.hardcore,
                     genres=self.genres,
+                    volume=self.volume,
                 )
             )
 

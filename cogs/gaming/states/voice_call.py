@@ -43,7 +43,7 @@ class AskVoiceCallQuestionState(GuessingGameState):
         track_handle = await self.session.voice_client.play(track)
 
         await track_handle.make_playable()
-        track_handle.set_volume(self.session.volume)
+        track_handle.set_volume(self.session.volume / 100)
         await track_handle.seek(timedelta(seconds=audio_start))
 
         question_embed = discord.Embed(

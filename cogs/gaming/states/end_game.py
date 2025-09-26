@@ -107,6 +107,7 @@ async def end_game(
         wrong=session.wrong_answers_limit,
         hardcore=session.hardcore_mode,
         genres=session.genres,
+        volume=session.volume,
     )
 
     if len(retry_btn.custom_id) <= 100:
