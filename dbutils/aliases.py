@@ -1,6 +1,6 @@
 import aiohttp
 import msgspec
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
@@ -69,7 +69,7 @@ async def update_aliases(
 
         insert_statement = insert(Alias)
         upsert_statement = insert_statement.on_conflict_do_update(
-            index_elements=[Alias.alias, Alias.guild_id],
+            index_elements=[func.lower(Alias.alias), Alias.guild_id],
             set_={"song_id": insert_statement.excluded.song_id},
         )
         await session.execute(upsert_statement, inserted_aliases)
