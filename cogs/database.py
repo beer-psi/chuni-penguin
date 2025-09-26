@@ -45,8 +45,8 @@ def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
         # Foreign keys need to be enabled to have an effect. https://www.sqlite.org/foreignkeys.html#fk_enable
         cursor.execute("PRAGMA foreign_keys=ON")
 
-        # Wait until database isn't locked any more for 100ms before throwing "Database is busy" errors.
-        cursor.execute("PRAGMA busy_timeout=100")
+        # Wait until database isn't locked any more for 1000ms before throwing "Database is busy" errors.
+        cursor.execute("PRAGMA busy_timeout=1000")
 
         # Enables query planner optimization.
         cursor.execute("PRAGMA optimize=0x10002")

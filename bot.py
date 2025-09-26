@@ -206,7 +206,7 @@ class ChuniBot(commands.AutoShardedBot):
                 await session.execute(text(f"PRAGMA user_version={current_tree_hash}"))
 
     @override
-    async def get_context(
+    async def get_context(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         origin: discord.Message | discord.Interaction,
         *,
