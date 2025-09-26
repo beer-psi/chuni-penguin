@@ -106,7 +106,7 @@ class SearchCog(commands.Cog, name="Search"):
             view = SonglistView(ctx, list(charts))
             await view.start()
 
-    @commands.hybrid_group("alias", invoke_without_command=True)
+    @commands.hybrid_group("alias")
     @logged_prefix_command
     async def alias(self, ctx: Context):
         await ctx.send_help(ctx.command)
@@ -445,7 +445,7 @@ class SearchCog(commands.Cog, name="Search"):
         ctx = await PenguinContext.from_interaction(interaction)
         return await self._info_inner(ctx, query=query, detailed=detailed)
 
-    @commands.command("info", signature="[-d] <query>")
+    @commands.command("info", usage="[-d] <query>")
     @logged_prefix_command
     async def info(
         self,
