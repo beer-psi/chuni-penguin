@@ -1,5 +1,5 @@
 FROM ghcr.io/astral-sh/uv:0.8.4-python3.13-alpine AS builder
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV PYTHONOPTIMIZE=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 # Disable Python downloads, because we want to use the system interpreter
 # across both images. If using a managed Python version, it needs to be
