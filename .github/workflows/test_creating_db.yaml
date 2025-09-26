@@ -1,31 +1,31 @@
-name: Test DB generation
+name: "Test DB generation"
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - trunk
+      - "develop"
+      - "trunk"
     paths:
       - ".github/workflows/test_creating_db.yaml"
-      - "utils/config.py" # Contains default value for DB path
       - "database/**"
       - "dbutils/**"
+      - "utils/**"
       - "pyproject.toml"
-      - "requirements.lock"
-      - "requirements-dev.lock"
+      - "uv.lock"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: "Check out repository"
-        uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683" # v4
+        uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8" # v5
 
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@1edb52594c857e2b5b13128931090f0640537287" # v5
+        uses: "astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4" # v6
 
-      - name: Install dependencies
-        run: uv sync --frozen
+      - name: "Install dependencies"
+        run: "uv sync --frozen"
 
       - name: Configuration
         run: |
@@ -34,19 +34,19 @@ jobs:
           sed -i 's/# chunirec_token = <token>/chunirec_token = ${{ secrets.CHUNIREC_TOKEN }}/' bot.ini
 
       - name: Create database from schema
-        run: uv run python -m dbutils create
+        run: "uv run python -m dbutils create"
 
       - name: Update database with information from Chunirec + Zetaraku + Official website
-        run: uv run python -m dbutils update chunirec
+        run: "uv run python -m dbutils update chunirec"
 
       - name: Update sdvx.in chart views
-        run: uv run python -m dbutils update sdvxin
+        run: "uv run python -m dbutils update sdvxin"
 
       - name: Update database aliases
-        run: uv run python -m dbutils update alias
+        run: "uv run python -m dbutils update alias"
 
       - name: Update song jacket lookup
-        run: uv run python -m dbutils update jackets
+        run: "uv run python -m dbutils update jackets"
 
       - name: Upload created database
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
