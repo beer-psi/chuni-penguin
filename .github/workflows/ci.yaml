@@ -58,6 +58,9 @@ jobs:
       - name: "Check out repository"
         uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8" # v5
 
+      - name: "Commit hash"
+        run: 'echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV'
+
       - name: "(unfortunately) closed source components"
         run: |
           curl -L "$CR_COG_LINK" -o "$CR_COG_PATH"
@@ -90,7 +93,7 @@ jobs:
         uses: "docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83" # v6
         with:
           build-args: |
-            GIT_SHA=${{ github.sha }}
+            GIT_SHA=${{ env.SHORT_SHA }}
             UID=${{ vars.UID }}
             GID=${{ vars.GID }}
           context: "."
