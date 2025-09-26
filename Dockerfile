@@ -46,6 +46,7 @@ COPY --from=builder --chown=bot:bot /code /code
 ENV PATH="/code/.venv/bin:$PATH"
 ENV GIT_SHA="$GIT_SHA"
 ENV LD_PRELOAD="/usr/lib/libmimalloc.so.2"
+ENV PYTHONOPTIMIZE=1
 
 USER bot
 
