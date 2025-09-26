@@ -18,9 +18,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute(
-        "CREATE INDEX ix_aliases_lower_alias ON aliases (LOWER(alias))"
-    )
+    op.execute("CREATE INDEX ix_aliases_lower_alias ON aliases (LOWER(alias))")
     op.execute(
         "CREATE UNIQUE INDEX ix_aliases_lower_alias_guild_id ON aliases (LOWER(alias), guild_id)"
     )

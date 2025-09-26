@@ -41,8 +41,11 @@ def test_calculate_border(notecount: int):
         else:
             min_score = rank.min_score
 
-        assert round(
-            judgements.jcrit * score_per_jcrit
-            + judgements.justice * score_per_justice
-            + judgements.attack * score_per_attack
-        ) >= min_score
+        assert (
+            round(
+                judgements.jcrit * score_per_jcrit
+                + judgements.justice * score_per_justice
+                + judgements.attack * score_per_attack
+            )
+            >= min_score
+        )

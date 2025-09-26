@@ -59,7 +59,9 @@ class DatabaseCog(commands.Cog, name="Database"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
 
-        self._engine: AsyncEngine = create_async_engine(config.bot.db_connection_string)
+        self._engine: AsyncEngine = create_async_engine(
+            config.bot.db_connection_string, hide_parameters=True
+        )
         self._sessionmaker: async_sessionmaker[AsyncSession] = async_sessionmaker(
             self._engine, expire_on_commit=False
         )
