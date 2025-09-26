@@ -305,7 +305,7 @@ class ChuniBot(commands.AutoShardedBot):
                 await asyncio.gather(
                     *[
                         s.channel.send(embed=warning_embed)
-                        for s in gaming.game_sessions.values()
+                        for s in set(gaming.game_sessions.values())
                     ]
                 )
 
