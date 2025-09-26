@@ -26,6 +26,7 @@ VERSION_NAMES = {
     "v2025.4": "Oracle",
     "v2025.5": "黎命に殉ず",
     "v2025.6": "deadeye",
+    "v2025.9": "Elusive Enforcer",
 }
 
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
