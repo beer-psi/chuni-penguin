@@ -1,19 +1,13 @@
-version: "3.9"
-
 services:
   bot:
-    build:
-      dockerfile: Dockerfile
-      args:
-        - UID=1000
-        - GID=1000
-        - GIT_SHA
+    image: "ghcr.io/beer-psi/chuni-penguin:trunk"
     volumes:
-      - ./data:/code/data:rw
-      - ./assets:/code/assets:rw
-      - ./bot.ini:/code/bot.ini
+      - "./data:/code/data:rw" # database
+      - "./assets:/code/assets:rw" # assets
+      - "./bot.ini:/code/bot.ini" # config
+      - "/home/user/.cache/chuni-penguin:/code/.cache/chuni-penguin:rw" # cache for sdvxin chart views
     expose:
       - 5730
     restart: unless-stopped
     # this is to allow a grace period for guessing games to finish
-    stop_grace_period: "6m"
+    stop_grace_period: "6m30s"
