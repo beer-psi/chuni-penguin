@@ -48,6 +48,9 @@ jobs:
       - name: Update song jacket lookup
         run: "uv run python -m dbutils update jackets"
 
+      - name: Update Tachi-related information
+        run: "uv run python -m dbutils update tachi"
+
       - name: Upload created database
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

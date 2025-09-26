@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 import itertools
-import urllib.parse
 from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -9,7 +8,6 @@ from math import ceil
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
 
 import discord
-import msgspec
 from discord import Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -54,7 +52,6 @@ from utils.converters import (
     RankConverter,
 )
 from utils.kamaitachi import (
-    KTChunithmPersonalBestResponseBody,
     convert_kt_pbs_to_records,
     convert_kt_scores_to_records,
     convert_kt_to_record,
@@ -668,16 +665,13 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     username = data["body"]["username"]
 
-                    resp = await client.get(
-                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/scores/recent"
-                    )
-                    data = json_loads(resp.content)
+                    data = await client.recent_scores()
 
-                    if not data["success"]:
-                        msg = f"Could not retrieve recent scores from Kamaitachi: {data['description']}"
+                    if not data.success:
+                        msg = f"Could not retrieve recent scores from Kamaitachi: {data.description}"
                         raise commands.CommandError(msg)
 
-                    recents = convert_kt_scores_to_records(data["body"])
+                    recents = convert_kt_scores_to_records(data.body)
                     recents = await self.utils.hydrate_records(recents)
 
                     view = B30View(
@@ -896,19 +890,28 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     username = data["body"]["username"]
 
-                    resp = await client.get(
-                        f"https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs?search={urllib.parse.quote(song.title)}"
+                    responses = await asyncio.gather(
+                        *[
+                            client.pb_for_chart(chart.tachi_chart_id)
+                            for chart in song.charts
+                            if chart.tachi_chart_id is not None
+                        ]
                     )
-                    data = json_loads(resp.content)
 
-                    if not data["success"]:
-                        msg = f"Could not get scores from Kamaitachi: {data['description']}"
-                        raise commands.CommandError(msg)
+                    records = []
 
-                    raw_records = convert_kt_pbs_to_records(data["body"])
-                    records = [
-                        pb for pb in raw_records if pb.extras[KEY_SONG_ID] == song.id
-                    ]
+                    for response in responses:
+                        if not response.success:
+                            # the user has not played this chart
+                            continue
+
+                        assert response.body is not None
+
+                        records.append(
+                            convert_kt_to_record(
+                                response.body.pb, song.title, response.body.chart
+                            )
+                        )
 
                     if len(records) == 0:
                         msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
@@ -1118,19 +1121,28 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     username = data["body"]["username"]
 
-                    resp = await client.get(
-                        f"https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs?search={urllib.parse.quote(song.title)}"
+                    responses = await asyncio.gather(
+                        *[
+                            client.pb_for_chart(chart.tachi_chart_id)
+                            for chart in song.charts
+                            if chart.tachi_chart_id is not None
+                        ]
                     )
-                    data = json_loads(resp.content)
 
-                    if not data["success"]:
-                        msg = f"Could not get scores from Kamaitachi: {data['description']}"
-                        raise commands.CommandError(msg)
+                    records = []
 
-                    raw_records = convert_kt_pbs_to_records(data["body"])
-                    records = [
-                        pb for pb in raw_records if pb.extras[KEY_SONG_ID] == song.id
-                    ]
+                    for response in responses:
+                        if not response.success:
+                            # the user has not played this chart
+                            continue
+
+                        assert response.body is not None
+
+                        records.append(
+                            convert_kt_to_record(
+                                response.body.pb, song.title, response.body.chart
+                            )
+                        )
 
                     if len(records) == 0:
                         msg = f"No records found for {username} on **{escape_markdown(song.title)}** on Kamaitachi."
@@ -1266,24 +1278,18 @@ class RecordsCog(commands.Cog, name="Records"):
                     current_rating = None
 
                     if new_rating:
-                        resp = await client.get(
-                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
-                        )
+                        data = await client.pbs()
                     else:
-                        resp = await client.get(
-                            "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
-                        )
+                        data = await client.best_pbs("rating")
 
-                    data = json_loads(resp.content)
-
-                if not data["success"]:
-                    msg = f"Could not retrieve your best scores from Kamaitachi: {data['description']}"
+                if not data.success:
+                    msg = f"Could not retrieve your best scores from Kamaitachi: {data.description}"
                     raise commands.CommandError(msg)
 
+                assert data.body is not None
+
                 if new_rating:
-                    raw_body = msgspec.convert(
-                        data["body"], KTChunithmPersonalBestResponseBody
-                    )
+                    raw_body = data.body
                     song_id_map = {s.id: s for s in raw_body.songs}
                     chart_id_map = {c.chart_id: c for c in raw_body.charts}
 
@@ -1303,7 +1309,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     )
                     records = [
                         convert_kt_to_record(
-                            pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                            pb, song_id_map[pb.song_id].title, chart_id_map[pb.chart_id]
                         )
                         for pb in old_pbs[:30]
                     ]
@@ -1326,7 +1332,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     )
                     new_records = [
                         convert_kt_to_record(
-                            pb, song_id_map[pb.song_id], chart_id_map[pb.chart_id]
+                            pb, song_id_map[pb.song_id].title, chart_id_map[pb.chart_id]
                         )
                         for pb in new_pbs[:20]
                     ]
@@ -1350,7 +1356,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         )
                     )
                 else:
-                    pbs = convert_kt_pbs_to_records(data["body"])
+                    pbs = convert_kt_pbs_to_records(data.body)
                     pbs = await self.utils.hydrate_records(pbs)
 
                     records = pbs[:50]
@@ -1669,11 +1675,8 @@ class RecordsCog(commands.Cog, name="Records"):
                     return await interaction.followup.send("No scores found.")
         elif network == "kamaitachi":
             async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
-                resp = await client.get(
-                    "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
-                )
-                data = resp.json()
-                records = convert_kt_pbs_to_records(data["body"])
+                data = await client.pbs()
+                records = convert_kt_pbs_to_records(data.body)
 
                 if level is not None:
                     records = [r for r in records if r.extras[KEY_LEVEL] == level]
@@ -1880,11 +1883,8 @@ class RecordsCog(commands.Cog, name="Records"):
                         return await ctx.reply("No scores found.", mention_author=False)
             elif network == "kamaitachi":
                 async with self.utils.kamaitachi_client(ctx, target_user_id) as client:
-                    resp = await client.get(
-                        "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single/pbs/all"
-                    )
-                    data = resp.json()
-                    records = convert_kt_pbs_to_records(data["body"])
+                    data = await client.pbs()
+                    records = convert_kt_pbs_to_records(data.body)
 
                     if level_folder is not None:
                         records = [

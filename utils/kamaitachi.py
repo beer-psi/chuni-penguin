@@ -1,7 +1,9 @@
+import urllib.parse
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Generic, Literal, TypeVar
 
+import httpx
 import msgspec
 
 from chunithm_net.consts import (
@@ -164,6 +166,11 @@ class KTChunithmChart(msgspec.Struct, rename="camel"):
 
 
 class KTChunithmPersonalBestResponseBody(msgspec.Struct):
+    pb: KTChunithmPersonalBest
+    chart: KTChunithmChart
+
+
+class KTChunithmPersonalBestsResponseBody(msgspec.Struct):
     pbs: list[KTChunithmPersonalBest]
     songs: list[KTChunithmSong]
     charts: list[KTChunithmChart]
@@ -249,6 +256,7 @@ class KTStatusResponseBody(msgspec.Struct, rename="camel"):
 
 
 KTChunithmPersonalBestResponse = KTResponse[KTChunithmPersonalBestResponseBody]
+KTChunithmPersonalBestsResponse = KTResponse[KTChunithmPersonalBestsResponseBody]
 KTChunithmScoreResponse = KTResponse[KTChunithmScoreResponseBody]
 KTBatchManualResponse = KTResponse[KTBatchManualResponseBody]
 KTImportPollStatusResponse = KTResponse[
@@ -282,12 +290,12 @@ KT_REVERSE_NOTE_LAMP_MAP: dict[ComboType, KTChunithmNoteLamp] = {
 
 def convert_kt_to_record(
     score: KTChunithmScore | KTChunithmPersonalBest,
-    song: KTChunithmSong,
+    song_title: str,
     chart: KTChunithmChart,
 ):
     judgements = score.score_data.judgements
     record = Record(
-        title=song.title,
+        title=song_title,
         difficulty=getattr(Difficulty, chart.difficulty),
         score=score.score_data.score,
         rank=getattr(Rank, score.score_data.grade.replace("+", "p")),
@@ -346,27 +354,39 @@ def convert_kt_to_record(
     return record
 
 
-def convert_kt_pbs_to_records(raw_body: Any) -> list[Record]:
-    body = msgspec.convert(raw_body, KTChunithmPersonalBestResponseBody)
-
-    songs_by_id = {s.id: s for s in body.songs}
-    charts_by_id = {c.chart_id: c for c in body.charts}
-
-    return [
-        convert_kt_to_record(pb, songs_by_id[pb.song_id], charts_by_id[pb.chart_id])
-        for pb in body.pbs
-    ]
-
-
-def convert_kt_scores_to_records(raw_body: Any) -> list[Record]:
-    body = msgspec.convert(raw_body, KTChunithmScoreResponseBody)
+def convert_kt_pbs_to_records(
+    raw_body: Any | KTChunithmPersonalBestsResponseBody,
+) -> list[Record]:
+    if isinstance(raw_body, KTChunithmPersonalBestsResponseBody):
+        body = raw_body
+    else:
+        body = msgspec.convert(raw_body, KTChunithmPersonalBestsResponseBody)
 
     songs_by_id = {s.id: s for s in body.songs}
     charts_by_id = {c.chart_id: c for c in body.charts}
 
     return [
         convert_kt_to_record(
-            score, songs_by_id[score.song_id], charts_by_id[score.chart_id]
+            pb, songs_by_id[pb.song_id].title, charts_by_id[pb.chart_id]
+        )
+        for pb in body.pbs
+    ]
+
+
+def convert_kt_scores_to_records(
+    raw_body: Any | KTChunithmScoreResponseBody,
+) -> list[Record]:
+    if isinstance(raw_body, KTChunithmScoreResponseBody):
+        body = raw_body
+    else:
+        body = msgspec.convert(raw_body, KTChunithmScoreResponseBody)
+
+    songs_by_id = {s.id: s for s in body.songs}
+    charts_by_id = {c.chart_id: c for c in body.charts}
+
+    return [
+        convert_kt_to_record(
+            score, songs_by_id[score.song_id].title, charts_by_id[score.chart_id]
         )
         for score in body.scores
     ]
@@ -426,3 +446,56 @@ def convert_to_kt_batch_manual(
         batch_manual.scores.append(tachi_score)
 
     return batch_manual
+
+
+class KamaitachiClient:
+    def __init__(
+        self, client: httpx.AsyncClient, base_url: str = "https://kamai.tachi.ac"
+    ) -> None:
+        self._client = client
+        self.base_url = base_url
+
+    async def get(self, url: str) -> httpx.Response:
+        return await self._client.get(url)
+
+    async def chunithm_profile(self) -> httpx.Response:
+        return await self._client.get(
+            f"{self.base_url}/api/v1/users/me/games/chunithm/Single"
+        )
+
+    async def pb_for_chart(self, chart_id: str) -> KTChunithmPersonalBestResponse:
+        resp = await self._client.get(
+            f"{self.base_url}/api/v1/users/me/games/chunithm/Single/pbs/{chart_id}"
+        )
+
+        return msgspec.json.decode(resp.content, type=KTChunithmPersonalBestResponse)
+
+    async def pbs(self) -> KTChunithmPersonalBestsResponse:
+        resp = await self._client.get(
+            f"{self.base_url}/api/v1/users/me/games/chunithm/Single/pbs/all"
+        )
+
+        return msgspec.json.decode(resp.content, type=KTChunithmPersonalBestsResponse)
+
+    async def best_pbs(
+        self, algorithm: str = "rating"
+    ) -> KTChunithmPersonalBestsResponse:
+        resp = await self._client.get(
+            f"{self.base_url}/api/v1/users/me/games/chunithm/Single/pbs/best?alg={urllib.parse.quote(algorithm)}"
+        )
+
+        return msgspec.json.decode(resp.content, type=KTChunithmPersonalBestsResponse)
+
+    async def search_pbs(self, query: str) -> KTChunithmPersonalBestsResponse:
+        resp = await self._client.get(
+            f"{self.base_url}/api/v1/users/me/games/chunithm/Single/pbs?search={urllib.parse.quote(query)}"
+        )
+
+        return msgspec.json.decode(resp.content, type=KTChunithmPersonalBestsResponse)
+
+    async def recent_scores(self) -> KTChunithmScoreResponse:
+        resp = await self._client.get(
+            f"{self.base_url}/api/v1/users/me/games/chunithm/Single/scores/recent"
+        )
+
+        return msgspec.json.decode(resp.content, type=KTChunithmScoreResponse)

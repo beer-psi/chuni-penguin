@@ -1,5 +1,3 @@
-# ruff: noqa: RUF001
-
 import argparse
 from pathlib import Path
 
@@ -21,6 +19,7 @@ from .chunirec import update_db
 from .jackets import update_jackets
 from .merge_options import merge_options
 from .sdvxin import update_sdvxin
+from .tachi import update_tachi
 
 
 async def main():
@@ -35,7 +34,7 @@ async def main():
         "update", help="Fill the database with data from various sources"
     )
     update.add_argument(
-        "source", choices=["chunirec", "sdvxin", "jackets", "alias", "dump"]
+        "source", choices=["chunirec", "sdvxin", "jackets", "alias", "dump", "tachi"]
     )
     update.add_argument(
         "--data-dir",
@@ -85,6 +84,8 @@ async def main():
             await update_sdvxin(logger, async_session)
         if args.source == "alias":
             await update_aliases(logger, async_session)
+        if args.source == "tachi":
+            await update_tachi(logger, async_session)
         if args.source == "dump":
             if args.data_dir is None:
                 update.print_help()

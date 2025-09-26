@@ -39,6 +39,7 @@ from utils.calculation.overpower import (
 from utils.calculation.rating import calculate_rating
 from utils.config import config
 from utils.context_manager import AsyncRcContextManager
+from utils.kamaitachi import KamaitachiClient
 from utils.logging import logger
 from utils.types import MissingDetailedParams
 
@@ -354,7 +355,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         )
 
         async with client:
-            yield client
+            yield KamaitachiClient(client)
 
     async def choose_preferred_network(
         self,

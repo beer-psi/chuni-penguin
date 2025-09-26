@@ -138,6 +138,8 @@ class Chart(Base):
     charter: Mapped[Optional[str]] = mapped_column(nullable=True)
     version: Mapped[Optional[str]] = mapped_column(nullable=True)
 
+    tachi_chart_id: Mapped[Optional[str]] = mapped_column(nullable=True)
+
     song: Mapped["Song"] = relationship(back_populates="charts")
     sdvxin_chart_view: Mapped[Optional["SdvxinChartView"]] = relationship(
         back_populates="chunithm_chart",
