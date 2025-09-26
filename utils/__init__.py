@@ -11,7 +11,6 @@ from discord.utils import escape_markdown
 
 from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
 from chunithm_net.models.enums import Difficulty
-from utils.config import config
 
 if TYPE_CHECKING:
     from typing import TypeVar
@@ -77,6 +76,8 @@ def round_to_nearest(number: "T", value: int) -> "T":
 def did_you_mean_text(
     prefix: str | None, result: "Song | None", alias: "Alias | None"
 ) -> str:
+    from utils.config import config
+
     did_you_mean = ""
     if result is not None:
         did_you_mean = f"Did you mean **{escape_markdown(result.title)}**?"
@@ -118,6 +119,8 @@ def sdvxin_link(view: "SdvxinChartView") -> str:
 
 
 def get_jacket_url(song: "Song") -> str:
+    from utils.config import config
+
     current_time = datetime.now(TOKYO_TZ)
     is_maintenance = 4 <= current_time.hour <= 7
 
