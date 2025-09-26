@@ -511,7 +511,7 @@ wheels = [
 [[package]]
 name = "discord-ext-songbird"
 version = "0.1.0"
-source = { git = "https://github.com/beer-psi/discord-ext-songbird.git#d1e0c6a150bdda20af61039905604d3e63626c40" }
+source = { git = "https://github.com/beer-psi/discord-ext-songbird.git#2462a5b296c72ede6537feebe7b9690010572d4d" }
 dependencies = [
     { name = "discord-py" },
     { name = "typing-extensions" },
