@@ -327,7 +327,7 @@ wheels = [
 
 [[package]]
 name = "chuni-penguin"
-version = "2025.6"
+version = "2025.10a0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiosqlite" },
