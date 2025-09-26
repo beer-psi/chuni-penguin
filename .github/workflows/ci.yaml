@@ -58,6 +58,15 @@ jobs:
       - name: "Check out repository"
         uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8" # v5
 
+      - name: "(unfortunately) closed source components"
+        run: |
+          curl -L "$CR_COG_LINK" -o "$CR_COG_PATH"
+          echo "COG_LIST += ['$CG_COG_NAME']" >> cogs/__init__.py
+        env:
+          CR_COG_LINK: "${{ secrets.CR_COG_LINK }}"
+          CR_COG_PATH: "${{ secrets.CR_COG_PATH }}"
+          CR_COG_NAME: "${{ secrets.CR_COG_NAME }}"
+
       - name: "Set up QEMU"
         uses: "docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392" # v3
 
@@ -101,6 +110,7 @@ jobs:
           oauth-client-id: "${{ secrets.TS_OAUTH_CLIENT_ID }}"
           oauth-secret: "${{ secrets.TS_OAUTH_SECRET }}"
           tags: "tag:ci"
+          use-cache: "true"
 
       - name: "Setup SSH"
         uses: "webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd" # v0.9
