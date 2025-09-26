@@ -6,7 +6,7 @@ on:
       - "develop"
       - "trunk"
     paths:
-      - ".github/workflows/deploy.yaml"
+      - ".github/workflows/test.yaml"
       - "chunithm_net/**"
       - "cogs/**"
       - "database/**"
