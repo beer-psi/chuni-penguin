@@ -21,7 +21,7 @@ class WaitForAnswerState(GuessingGameSkippableState):
         song: Song,
         aliases: list[CachedAlias],
         answer_image: io.BufferedIOBase,
-        stop_music_task: asyncio.Task[None],
+        stop_music_task: asyncio.Task[None] | None = None,
     ) -> None:
         self.session = session
 
@@ -80,8 +80,10 @@ class WaitForAnswerState(GuessingGameSkippableState):
                 timed_out=True,
             )
         finally:
-            if self.session.voice_client is not None:
+            if self._stop_music_task is not None:
                 self._stop_music_task.cancel()
+
+            if self.session.voice_client is not None:
                 self.session.voice_client.stop()
 
             self.session.questions_done += 1
