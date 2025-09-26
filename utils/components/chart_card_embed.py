@@ -5,7 +5,10 @@ from discord.utils import escape_markdown
 
 from chunithm_net.models.enums import Difficulty
 from utils import floor_to_ndp, get_jacket_url, sdvxin_link, yt_search_link
-from utils.border import calculate_border, calculate_score_deduction_per_judgement
+from utils.calculation.border import (
+    calculate_border,
+    calculate_score_deduction_per_judgement,
+)
 from utils.calculation.rating import calculate_rating
 from utils.config import config
 from utils.ranks import rank_icon

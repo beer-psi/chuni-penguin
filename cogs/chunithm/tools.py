@@ -25,7 +25,10 @@ from utils import (
     sdvxin_link,
     yt_search_link,
 )
-from utils.border import calculate_border, calculate_score_deduction_per_judgement
+from utils.calculation.border import (
+    calculate_border,
+    calculate_score_deduction_per_judgement,
+)
 from utils.calculation.overpower import (
     calculate_overpower_base,
     calculate_overpower_max,
