@@ -6,7 +6,7 @@ on:
       - "develop"
       - "trunk"
     paths: &filelist
-      - ".github/workflows/bot.yaml"
+      - ".github/workflows/ci.yaml"
       - "chunithm_net/**"
       - "assets/**"
       - "cogs/**"
