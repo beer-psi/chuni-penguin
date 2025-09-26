@@ -880,6 +880,10 @@ class RecordsCog(commands.Cog, name="Records"):
                     msg = "Kamaitachi does not support WORLD'S END charts."
                     raise commands.CommandError(msg)
 
+                if all(chart.tachi_chart_id is None for chart in song.charts):
+                    msg = "This song is not available on Kamaitachi."
+                    raise commands.CommandError(msg)
+
                 async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)
@@ -1111,6 +1115,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 raise commands.BadArgument(msg)
 
             if kamaitachi:
+                if all(chart.tachi_chart_id is None for chart in song.charts):
+                    msg = "This song is not available on Kamaitachi."
+                    raise commands.CommandError(msg)
+
                 async with self.utils.kamaitachi_client(ctx, target_id) as client:
                     resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
                     data = json_loads(resp.content)

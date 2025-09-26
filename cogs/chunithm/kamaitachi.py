@@ -52,7 +52,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         self.kt_client_secret = kt_client_secret
         self.user_agent = f"ChuniPenguin (https://github.com/Rapptz/discord.py {discord.__version__}) Python/{sys.version_info[0]}.{sys.version_info[1]} httpx/{httpx.__version__}"
 
-    @commands.hybrid_group("kamaitachi", aliases=["kt"], invoke_without_command=True)
+    @commands.hybrid_group("kamaitachi", aliases=["kt"])
     @logged_prefix_command
     async def kamaitachi(self, ctx: Context):
         pass
