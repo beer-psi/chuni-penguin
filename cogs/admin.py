@@ -15,7 +15,7 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
 
-    @commands.command("treesync", invoke_without_command=True)
+    @commands.command("treesync")
     @commands.is_owner()
     async def sync(
         self,

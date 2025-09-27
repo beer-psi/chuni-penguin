@@ -18,6 +18,7 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - "web.py"
+      - "Dockerfile"
   pull_request:
     branches:
       - "develop"
@@ -35,7 +36,15 @@ jobs:
         uses: "astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4" # v6
 
       - name: "Install dependencies"
-        run: "uv sync --group test --frozen"
+        run: "uv sync --frozen"
+
+      - name: "Linting"
+        run: "uv run ruff check"
+        env:
+          RUFF_OUTPUT_FORMAT: "github"
+
+      - name: "Type checking"
+        run: "uv run basedpyright"
 
       - name: "Run tests"
         run: "uv run pytest -v --html=report.html --self-contained-html tests"
@@ -47,6 +56,7 @@ jobs:
           name: "test-report"
           path: "report.html"
           if-no-files-found: "error"
+
   build:
     runs-on: "ubuntu-latest"
     needs: ["test"]

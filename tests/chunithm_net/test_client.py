@@ -86,7 +86,7 @@ async def test_client_throws_chuninet_errors(
             headers={"Content-Type": "text/html; charset=UTF-8"},
         )
 
-    with pytest.raises(ChuniNetError, match="Error code 100001: An error coccured."):
+    with pytest.raises(ChuniNetError, match=r"Error code 100001: An error coccured."):
         async with ChuniNet(jar) as client:
             await client.authenticate()
 
