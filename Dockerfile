@@ -24,6 +24,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY . /code
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-extras --no-dev --no-group test
+RUN python -m compileall -x '/\.venv' .
 
 FROM python:3.13-alpine
 
