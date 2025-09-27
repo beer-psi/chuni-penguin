@@ -3,6 +3,7 @@ import csv
 import itertools
 import subprocess
 from pathlib import Path
+import traceback
 from typing import Optional, overload
 from xml.etree import ElementTree
 
@@ -50,11 +51,11 @@ WE_LEVEL_OVERRIDES = {
 B30_JACKET_WIDTH = 110
 B30_JACKET_HEIGHT = 110
 B30_BASE_IMAGES = {
-    Difficulty.BASIC: Image.open(ASSETS_DIR / "b50" / "b50_base_0.png"),
-    Difficulty.ADVANCED: Image.open(ASSETS_DIR / "b50" / "b50_base_1.png"),
-    Difficulty.EXPERT: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
-    Difficulty.MASTER: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
-    Difficulty.ULTIMA: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
+    Difficulty.BASIC: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_0.png"),
+    Difficulty.ADVANCED: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_1.png"),
+    Difficulty.EXPERT: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
+    Difficulty.MASTER: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
+    Difficulty.ULTIMA: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
 }
 
 
@@ -75,34 +76,38 @@ def gettext(
 
 
 def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
-    with Image.open(jacket_file) as im:
-        im = im.convert("RGB")
-        im.save(
-            ASSETS_DIR / "jackets" / f"{song_id}{alt_suffix}.png",
-            format="PNG",
-            optimize=True,
-        )
-
-        # world's ends arent going to show up in b50 anytime soon
-        if song_id >= 8000:
-            return
-
-        im_small = im.resize(
-            (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), Image.Resampling.LANCZOS
-        )
-
-        # pregenerate jacket art merged with b50 base
-        for difficulty in Difficulty:
-            if difficulty == Difficulty.WORLDS_END:
-                continue
-
-            b30_base_image = B30_BASE_IMAGES[difficulty].copy()
-            b30_base_image.paste(im_small, (10, 60))
-            b30_base_image.save(
-                ASSETS_DIR
-                / "jackets"
-                / f"{song_id}{alt_suffix}_{difficulty.value}.png",
+    try:
+        with Image.open(jacket_file) as im:
+            im = im.convert("RGB")
+            im.save(
+                ASSETS_DIR / "jackets" / f"{song_id}{alt_suffix}.png",
+                format="PNG",
+                optimize=True,
             )
+
+            # world's ends arent going to show up in b50 anytime soon
+            if song_id >= 8000:
+                return
+
+            im_small = im.resize(
+                (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), Image.Resampling.LANCZOS
+            )
+
+            # pregenerate jacket art merged with b50 base
+            for difficulty in Difficulty:
+                if difficulty == Difficulty.WORLDS_END:
+                    continue
+
+                with B30_BASE_IMAGES[difficulty]() as b30_base_image:
+                    b30_base_image.paste(im_small, (10, 60))
+                    b30_base_image.save(
+                        ASSETS_DIR
+                        / "jackets"
+                        / f"{song_id}{alt_suffix}_{difficulty.value}.png",
+                    )
+    except Exception:
+        traceback.print_exc()
+        raise
 
 
 def extract_audio(song_id: int, cue_file: Path):
