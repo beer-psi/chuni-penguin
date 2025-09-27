@@ -12,7 +12,13 @@ bot.ini
 **/README.md
 
 .git
+.gitattributes
+.gitignore
+.python-version
+Justfile
+docker-compose.example.yml
 
 # mount this into docker
 assets
 data
+tests
