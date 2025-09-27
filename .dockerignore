@@ -18,13 +18,15 @@ bot.ini
 .python-version
 .vscode
 Justfile
+
+Dockerfile
+.dockerignore
 docker-compose.example.yml
 
 # mount this into docker
 assets
 data
 tests
-
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
