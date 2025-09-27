@@ -2,8 +2,8 @@ import concurrent.futures
 import csv
 import itertools
 import subprocess
-from pathlib import Path
 import traceback
+from pathlib import Path
 from typing import Optional, overload
 from xml.etree import ElementTree
 
