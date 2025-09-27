@@ -1489,7 +1489,7 @@ class RecordsCog(commands.Cog, name="Records"):
             await ctx.reply(
                 content=content,
                 file=discord.File(
-                    b30_image, filename=f"chuni-penguin-b30-{generation_timestamp}.png"
+                    b30_image, filename=f"chuni-penguin-b50-{generation_timestamp}.png"
                 ),
                 mention_author=False,
             )
