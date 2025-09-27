@@ -43,7 +43,8 @@ discord.utils._from_json = json_loads
 discord.utils._to_json = json_dumps
 
 with contextlib.suppress(ImportError):
-    import ciso8601
+    # type checkers need to be a lot smarter about optional dependencies
+    import ciso8601  # pyright: ignore[reportMissingImports]
 
     discord.utils.parse_time = (
         lambda timestamp: ciso8601.parse_datetime(timestamp) if timestamp else None

@@ -50,8 +50,10 @@ class TypePairedDict(dict):
     @overload
     def get(self, key: TypePairedDictKey[KT], default: T) -> T | KT: ...
 
+    # Keys are expected to only ever be TypePairedDictKeys. If using a dict
+    # with any key type is desired, just use a normal dictionary.
     @override
-    def get(
+    def get(  # pyright: ignore[reportIncompatibleMethodOverride]
         self, key: TypePairedDictKey[KT], default: T | KT | None = None
     ) -> T | KT | None:
         return super().get(key)

@@ -33,8 +33,9 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
 
         self.code = code
 
+    # The client attached to the interaction is definitely ChuniBot.
     @override
-    async def on_submit(self, interaction: Interaction["ChuniBot"]) -> None:
+    async def on_submit(self, interaction: Interaction["ChuniBot"]) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         await interaction.response.defer(ephemeral=True)
 
         jar = CookieJar()
