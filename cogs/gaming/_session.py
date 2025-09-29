@@ -19,9 +19,9 @@ from sqlalchemy.sql import update
 from chunithm_net.models.enums import Difficulty, Genres
 from cogs.botutils import CachedAlias
 from database.models import Alias, GuessScore, Song
-from utils import json_loads
 from utils.constants import ASSETS_DIR
 from utils.logging import logger
+from utils.oggopus import crop_audio, get_audio_duration
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -169,6 +169,9 @@ class GuessingGameSession:
         return song, aliases
 
     async def get_image_question(self):
+        # DANGER: this loops indefinitely if there are no assets filled. Consider
+        # checking the assets for available audio/jackets instead of randomly
+        # rolling songs and then checking afterwards.
         while True:
             song, aliases = await self._get_random_song()
 
@@ -228,6 +231,9 @@ class GuessingGameSession:
         return song, aliases, answer_image_buffer, cropped_image_buffer
 
     async def get_voice_question(self):
+        # DANGER: this loops indefinitely if there are no assets filled. Consider
+        # checking the assets for available audio/jackets instead of randomly
+        # rolling songs and then checking afterwards.
         while True:
             song, aliases = await self._get_random_song()
 
@@ -254,40 +260,13 @@ class GuessingGameSession:
                 )
                 continue
 
-            ffprobe_process = await asyncio.subprocess.create_subprocess_exec(
-                "ffprobe",
-                "-i",
-                str(audio_path),
-                "-print_format",
-                "json",
-                "-show_format",
-                "-show_error",
-                "-loglevel",
-                "fatal",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+            audio_duration = int(
+                await asyncio.to_thread(get_audio_duration, audio_path)
             )
-            stdout, _ = await ffprobe_process.communicate()
-            ffprobe_data = json_loads(stdout)
-
-            if "error" in ffprobe_data:
-                await logger.awarning(
-                    "Invalid audio data",
-                    tag="invalid_audio_data",
-                    song_id=song.id,
-                    song_title=song.title,
-                    song_artist=song.artist,
-                    error=ffprobe_data["error"],
-                )
-                continue
-
-            audio_duration = int(float((ffprobe_data["format"]["duration"])))
 
             break
 
         # TODO: Implement the rest of the logic
-        # - The audio cut should not fall into silence
-        # - use self.get_audio_length() to figure out the length to cut
         # - optionally apply filters for upper difficulties(?)
         audio_length = self.get_audio_length()
 
@@ -316,32 +295,14 @@ class GuessingGameSession:
             audio_length,
         ) = await self.get_voice_question()
 
-        ffmpeg_process = await asyncio.subprocess.create_subprocess_exec(
-            "ffmpeg",
-            "-ss",
-            str(audio_start),
-            "-i",
-            str(audio_path),
-            "-t",
-            str(audio_length),
-            "-f",
-            "ogg",
-            "-acodec",
-            "libopus",
-            "-filter:a",
-            "volume=0.15",
-            "pipe:1",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
-        stdout, _ = await ffmpeg_process.communicate()
+        output = io.BytesIO()
 
-        return (
-            song,
-            aliases,
-            io.BytesIO(stdout),
-            jacket_art,
+        await asyncio.to_thread(
+            crop_audio, audio_path, audio_start, audio_length, output
         )
+        output.seek(0)  # this is in-memory, should be fine being sync
+
+        return (song, aliases, output, jacket_art)
 
     def check_score_limit_reached(self):
         if self.score_limit is None:

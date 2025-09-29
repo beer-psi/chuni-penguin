@@ -35,7 +35,7 @@ ARG GID=1000
 ARG GIT_SHA=unknown
 
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive ffmpeg mimalloc \
+    && apk add --no-interactive mimalloc \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
