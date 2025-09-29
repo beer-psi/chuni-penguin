@@ -1,41 +1,21 @@
-database
-!database/alembic
-!database/models.py
+*
 
-bot.ini
+!/chunithm_net
+!/cogs
+!/database
+!/dbutils
+!/utils
+!/.python-version
+!/alembic.ini
+!/bot.py
+!/LICENSE
+!/pyproject.toml
+!/README.md
+!/uv.lock
 
-**/.github
-**/.vscode
-
-**/.pre-commit-config.yaml
-**/bot.example.ini
-**/README.md
-
-.git
-.gitattributes
-.github
-.gitignore
-.python-version
-.vscode
-Justfile
-
-Dockerfile
-.dockerignore
-docker-compose.example.yml
-
-# mount this into docker
-assets
-data
-tests
-
-# Created by https://www.toptal.com/developers/gitignore/api/python
-# Edit at https://www.toptal.com/developers/gitignore?templates=python
-
-### Python ###
 # Byte-compiled / optimized / DLL files
-**/__pycache__
+**/__pycache__/
 **/*.py[cod]
-**/*$py.class
 
-**/.venv
-**/.*_cache
+# C extensions
+*.so

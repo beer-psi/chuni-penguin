@@ -1,5 +1,5 @@
 FROM ghcr.io/astral-sh/uv:0.8.22-python3.13-alpine AS builder
-ENV PYTHONOPTIMIZE=1 PYTHONNODEBUGRANGES=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV PYTHONOPTIMIZE=1 PYTHONNODEBUGRANGES=1 UV_LINK_MODE=copy
 
 # Disable Python downloads, because we want to use the system interpreter
 # across both images. If using a managed Python version, it needs to be
@@ -24,7 +24,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY . /code
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-extras --no-dev --no-group test
-RUN python -m compileall -x '/\.venv' .
+RUN python -m compileall -b . && find . -type f -name '*.py' -exec rm {} \;
 
 FROM python:3.13-alpine
 
@@ -54,4 +54,4 @@ USER bot
 RUN mkdir -p /code/.cache
 
 WORKDIR /code
-ENTRYPOINT ["/code/.venv/bin/python3", "bot.py"]
+ENTRYPOINT ["/code/.venv/bin/python3", "bot.pyc"]
