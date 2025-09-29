@@ -35,7 +35,7 @@ ARG GID=1000
 ARG GIT_SHA=unknown
 
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive mimalloc opus openssl libgcc \
+    && apk add --no-interactive mimalloc opus libssl3 libcrypto3 libgcc \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
