@@ -133,6 +133,8 @@ class ChuniBot(commands.AutoShardedBot):
             ),
         )
 
+        self._close_games_count: int = 0
+
     async def start(self, *args, **kwargs):
         self.launch_time = time.time()
         return await super().start(*args, **kwargs)
@@ -294,26 +296,29 @@ class ChuniBot(commands.AutoShardedBot):
         gaming = cast("GamingCog | None", self.get_cog("Games"))
 
         if gaming is not None:
-            gaming.shutting_down = True
+            self._close_games_count += 1
 
-            warning_embed = discord.Embed(
-                color=discord.Color.yellow(),
-                title="Warning",
-                description="I'll be going down for an update soon. Please finish your game in five minutes.",
-            )
+            if self._close_games_count <= 1:
+                gaming.shutting_down = True
 
-            async with gaming.game_sessions_lock:
-                await asyncio.gather(
-                    *[
-                        s.channel.send(embed=warning_embed)
-                        for s in set(gaming.game_sessions.values())
-                    ]
+                warning_embed = discord.Embed(
+                    color=discord.Color.yellow(),
+                    title="Warning",
+                    description="I'll be going down for an update soon. Please finish your game in five minutes.",
                 )
 
-            if len(gaming.game_tasks) > 0:
+                async with gaming.game_sessions_lock:
+                    await asyncio.gather(
+                        *[
+                            s.channel.send(embed=warning_embed)
+                            for s in set(gaming.game_sessions.values())
+                        ]
+                    )
+
+            if len(gaming.game_tasks) > 0 and self._close_games_count <= 1:
                 _, pending = await asyncio.wait(gaming.game_tasks, timeout=300)
             else:
-                pending = set()
+                pending = gaming.game_tasks
 
             async with gaming.game_sessions_lock:
                 for session in gaming.game_sessions.values():
