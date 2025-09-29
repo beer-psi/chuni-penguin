@@ -3,7 +3,6 @@ import io
 import random
 import shutil
 import subprocess
-from functools import lru_cache
 from pathlib import Path
 
 import msgspec
@@ -11,15 +10,14 @@ import pytest
 
 from utils.oggopus import OggStream, crop_audio, get_audio_duration
 
+audio_files = list(Path("assets/audio").glob("*.ogg"))
 
-@lru_cache
-def audio_files() -> list[Path]:
-    return list(Path("assets/audio").glob("*.ogg"))
+if len(audio_files) == 0:
+    pytest.skip(reason="No test files", allow_module_level=True)
 
 
-@pytest.mark.skipif(len(audio_files()) == 0, reason="No test files")
+@pytest.mark.parametrize("input", random.choices(audio_files, k=20))
 @pytest.mark.skipif(shutil.which("ffprobe") is None, reason="ffprobe not installed")
-@pytest.mark.parametrize("input", random.choices(audio_files(), k=20))
 def test_get_audio_duration(input: Path):
     duration = get_audio_duration(input)
     duration_ffmpeg = float(
@@ -43,9 +41,8 @@ def test_get_audio_duration(input: Path):
     assert pytest.approx(duration) == duration_ffmpeg
 
 
-@pytest.mark.skipif(len(audio_files()) == 0, reason="No test files")
+@pytest.mark.parametrize("input", random.choices(audio_files, k=20))
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
-@pytest.mark.parametrize("input", random.choices(audio_files(), k=20))
 def test_crop_audio(input: Path):
     duration = get_audio_duration(input)
     crop_duration = random.randrange(1, 15)
