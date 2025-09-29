@@ -9,7 +9,7 @@ ENV UV_PYTHON_DOWNLOADS=0
 
 # for building faust-cchardet
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive build-base pkgconf git rust cargo opus-dev openssl-dev \
+    && apk add --no-interactive build-base pkgconf git rust cargo opus-dev openssl-dev libgcc \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
@@ -35,7 +35,7 @@ ARG GID=1000
 ARG GIT_SHA=unknown
 
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive mimalloc opus openssl \
+    && apk add --no-interactive mimalloc opus openssl libgcc \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
