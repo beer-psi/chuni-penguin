@@ -324,7 +324,9 @@ class RetryGameButton(
                 )
                 return
 
-            await interaction.user.voice.channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
+            await interaction.user.voice.channel.connect(
+                cls=songbird.SongbirdClient, self_deaf=True
+            )
 
         ctx = await interaction.client.get_context(interaction.message)
         ctx.author = interaction.user
