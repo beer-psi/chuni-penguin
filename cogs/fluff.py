@@ -8,6 +8,7 @@ from discord import (
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from utils.context import PenguinContext
 from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
@@ -102,6 +103,16 @@ class FluffCog(commands.Cog, name="Fluff"):
     async def ar(self, ctx: Context):
         await ctx.reply(
             content="https://cdn.discordapp.com/attachments/785983013430231081/1385525318642827316/twitter_1935670382146855418.gif",
+            mention_author=False,
+        )
+
+    @commands.hybrid_command("eastereggs", aliases=["easter"])
+    @logged_prefix_command
+    async def easter_eggs(self, ctx: PenguinContext):
+        count = await ctx.bot.database.count_easter_eggs_found(ctx.author.id)
+
+        await ctx.reply(
+            content=f"You've found {count}/7 easter eggs!",
             mention_author=False,
         )
 

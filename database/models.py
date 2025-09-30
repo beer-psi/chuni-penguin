@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     Index,
+    PrimaryKeyConstraint,
     String,
     UniqueConstraint,
     text,
@@ -267,3 +268,12 @@ class Denylist(Base):
 
     object_id: Mapped[int] = mapped_column(primary_key=True)
     # TODO: We might want to have more granular controls in the future?
+
+
+class EasterEggFound(Base):
+    __tablename__ = "easter_eggs_found"
+
+    discord_id: Mapped[int] = mapped_column(BigInteger())
+    easter_egg: Mapped[str] = mapped_column()
+
+    __table_args__ = (PrimaryKeyConstraint(discord_id, easter_egg),)
