@@ -10,6 +10,7 @@ on:
       - ".github/workflows/test_creating_db.yaml"
       - "database/**"
       - "dbutils/**"
+      - "packages/**"
       - "utils/**"
       - "pyproject.toml"
       - "uv.lock"

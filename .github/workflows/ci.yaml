@@ -12,6 +12,7 @@ on:
       - "cogs/**"
       - "database/**"
       - "dbutils/**"
+      - "packages/**"
       - "tests/**"
       - "utils/**"
       - "bot.py"
