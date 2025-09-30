@@ -17,16 +17,10 @@ static CRC: PyOnceLock<crc::Crc<u32>> = PyOnceLock::new();
 #[pyo3(signature = (data, init = 0))]
 fn crc32_ogg(data: &[u8], init: u32) -> u32 {
     let crc = Python::attach(|py| CRC.get_or_init(py, || crc::Crc::<u32>::new(&CRC_32_OGG)));
+    let mut digest = crc.digest_with_initial(init);
 
-    match init {
-        0 => crc.checksum(data),
-        _ => {
-            let mut digest = crc.digest_with_initial(init);
-
-            digest.update(data);
-            digest.finalize()
-        }
-    }
+    digest.update(data);
+    digest.finalize()
 }
 
 /// A Python module implemented in Rust.
