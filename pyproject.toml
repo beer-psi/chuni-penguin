@@ -63,9 +63,12 @@ no-sources = false
 universal = true
 generate-hashes = true
 
+[tool.uv.workspace]
+members = ["packages/*"]
+
 [tool.uv.sources]
 discord-ext-songbird = { git = "https://github.com/beer-psi/discord-ext-songbird.git" }
-penguin-native = { path = "./packages/penguin-native" }
+penguin-native = { workspace = true }
 
 [tool.ruff]
 respect-gitignore = true
