@@ -19,7 +19,36 @@ from pathlib import Path
 from typing import IO, Final, TypeVar
 
 from discord.oggparse import OggError
-from penguin_native import crc32_ogg
+
+try:
+    from penguin_native import crc32_ogg
+except ImportError:
+    from collections.abc import Buffer
+    from functools import lru_cache
+
+    @lru_cache(maxsize=None)
+    def create_crc32_table(poly: int):
+        table: list[int] = []
+
+        for i in range(256):
+            k = i << 24
+
+            for _ in range(8):
+                k = (k << 1) ^ poly if k & 0x80000000 else k << 1
+
+            table.append(k & 0xFFFFFFFF)
+
+        return table
+
+    def crc32_ogg(data: Buffer, crc: int = 0):
+        table = create_crc32_table(0x04C11DB7)
+
+        for byte in memoryview(data):
+            lookup_index = ((crc >> 24) ^ byte) & 0xFF
+            crc = ((crc & 0xFFFFFF) << 8) ^ table[lookup_index]
+
+        return crc
+
 
 # up to the number of segments
 OGG_HEADER_FORMAT: Final = struct.Struct("<BBQIIIB")
