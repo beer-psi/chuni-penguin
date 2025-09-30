@@ -6,6 +6,12 @@ resolution-markers = [
     "python_full_version < '3.13'",
 ]
 
+[manifest]
+members = [
+    "chuni-penguin",
+    "penguin-native",
+]
+
 [[package]]
 name = "aiodns"
 version = "3.2.0"
@@ -318,6 +324,7 @@ dependencies = [
     { name = "hishel" },
     { name = "httpx" },
     { name = "msgspec" },
+    { name = "penguin-native" },
     { name = "pillow" },
     { name = "platformdirs" },
     { name = "rapidfuzz" },
@@ -375,6 +382,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27.2" },
     { name = "lxml", marker = "extra == 'speedup'", specifier = ">=5.3.0" },
     { name = "msgspec", specifier = ">=0.18.6" },
+    { name = "penguin-native", editable = "packages/penguin-native" },
     { name = "pillow", specifier = ">=11.0.0" },
     { name = "platformdirs", specifier = ">=4.3.8" },
     { name = "rapidfuzz", specifier = ">=3.10.0" },
@@ -889,6 +897,10 @@ sdist = { url = "https://files.pythonhosted.org/packages/d0/63/68dbb6eb2de9cb10e
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/ef/eb23f262cca3c0c4eb7ab1933c3b1f03d021f2c48f54763065b6f0e321be/packaging-24.2-py3-none-any.whl", hash = "sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759", size = 65451, upload-time = "2024-11-08T09:47:44.722Z" },
 ]
+
+[[package]]
+name = "penguin-native"
+source = { editable = "packages/penguin-native" }
 
 [[package]]
 name = "pillow"
