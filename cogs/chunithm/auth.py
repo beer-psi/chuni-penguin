@@ -112,11 +112,17 @@ class AuthCog(commands.Cog, name="Auth"):
     async def login(self, ctx: PenguinContext, clal: Optional[str] = None):
         """Link with your CHUNITHM-NET account.
 
+        You must enable direct messages with the bot. Alternatively, use the slash
+        command variant, `/login`.
+
         Parameters
         ----------
         clal: Optional[str]
             IGNORE IF YOU DON'T KNOW WHAT THIS IS FOR. You will get instructions on how to log in.
         """
+
+        if ctx.interaction is not None and ctx.guild is not None:
+            await ctx.interaction.response.defer(ephemeral=True, thinking=True)
 
         channel = ctx.channel
 
@@ -127,7 +133,8 @@ class AuthCog(commands.Cog, name="Auth"):
             user_name=ctx.author.name,
         )
 
-        if ctx.guild is not None:
+        # if message in guild and is text command
+        if ctx.guild is not None and ctx.interaction is None:
             please_delete_message = ""
 
             if clal is not None:
@@ -202,7 +209,7 @@ class AuthCog(commands.Cog, name="Auth"):
             user_id=ctx.author.id,
         )
 
-        if ctx.channel == channel:
+        if ctx.channel == channel or ctx.interaction is not None:
             msg = await view.start(
                 content=f"If you're trying to link your Kamaitachi account, use `{ctx.clean_prefix}kamaitachi link` instead!",
             )
