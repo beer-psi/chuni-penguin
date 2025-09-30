@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, override
 import sqlalchemy.event
 from discord.ext import commands, tasks
 from rapidfuzz import fuzz
-from sqlalchemy import text
+from sqlalchemy import func, select, text
+from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import (
@@ -16,6 +17,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from database.models import EasterEggFound
 from utils.config import config
 
 if TYPE_CHECKING:
@@ -91,6 +93,23 @@ class DatabaseCog(commands.Cog, name="Database"):
     async def optimize_database(self):
         async with self.bot.begin_db_session() as session:
             await session.execute(text("PRAGMA optimize"))
+
+    async def user_found_easter_egg(self, user_id: int, easter_egg: str):
+        async with self._sessionmaker() as session:
+            query = (
+                insert(EasterEggFound)
+                .values(discord_id=user_id, easter_egg=easter_egg)
+                .on_conflict_do_nothing()
+            )
+            await session.execute(query)
+            await session.commit()
+
+    async def count_easter_eggs_found(self, user_id: int):
+        async with self._sessionmaker() as session:
+            result = await session.execute(
+                select(func.count()).where(EasterEggFound.discord_id == user_id)
+            )
+            return result.scalar_one()
 
 
 async def setup(bot: "ChuniBot"):

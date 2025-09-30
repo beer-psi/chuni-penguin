@@ -16,7 +16,7 @@ from sqlalchemy import delete, func, select
 from database.models import Cookie, Prefix, Song
 from utils.config import config
 from utils.constants import VERSION_NAMES
-from utils.context import PenguinGuildContext
+from utils.context import PenguinContext, PenguinGuildContext
 from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
@@ -36,14 +36,16 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     @commands.hybrid_command("source", aliases=["src"])
     @logged_prefix_command
-    async def source(self, ctx: Context):
+    async def source(self, ctx: PenguinContext):
         """Get the source code for this bot."""
 
-        reply = (
-            "https://tenor.com/view/metal-gear-rising-metal-gear-rising-revengeance-senator-armstrong-revengeance-i-made-it-the-fuck-up-gif-25029602"
-            if random() < 0.1
-            else "<https://github.com/beer-psi/chuni-penguin>"
-        )
+        if random() <= 0.1:
+            await ctx.bot.database.user_found_easter_egg(
+                ctx.author.id, "i-made-it-the-fuck-up"
+            )
+            reply = "https://tenor.com/view/metal-gear-rising-metal-gear-rising-revengeance-senator-armstrong-revengeance-i-made-it-the-fuck-up-gif-25029602"
+        else:
+            reply = "<https://github.com/beer-psi/chuni-penguin>"
 
         await ctx.reply(reply, mention_author=False)
 

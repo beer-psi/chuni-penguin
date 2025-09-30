@@ -477,9 +477,15 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             if not course_mode:
                 if XL_TECHNO_SONG_ID in master_song_ids:
+                    await ctx.bot.database.user_found_easter_egg(
+                        ctx.author.id, "xl-techno-more-dance-remix-jumpscare"
+                    )
                     await ctx.reply(XL_TECHNO_JUMPSCARE, mention_author=False)
                     return
                 if VOLCANIC_SONG_ID in master_song_ids:
+                    await ctx.bot.database.user_found_easter_egg(
+                        ctx.author.id, "volcanic-jumpscare"
+                    )
                     await ctx.reply(VOLCANIC_JUMPSCARE, mention_author=False)
                     return
                 if (
@@ -492,12 +498,18 @@ class ToolsCog(commands.Cog, name="Tools"):
                         level != "15.7" or random.random() < 0.25
                     )
                 ):
-                    await ctx.reply(
-                        random.choice(
-                            [CROSSMYTHOS_RHAPSODIA_JUMPSCARE, FORSAKEN_TALE_JUMPSCARE]
-                        ),
-                        mention_author=False,
-                    )
+                    if random.random() > 0.5:
+                        await ctx.bot.database.user_found_easter_egg(
+                            ctx.author.id, "crossmythos-rhapsodia-jumpscare"
+                        )
+                        jumpscare = CROSSMYTHOS_RHAPSODIA_JUMPSCARE
+                    else:
+                        await ctx.bot.database.user_found_easter_egg(
+                            ctx.author.id, "forsaken-tale-jumpscare"
+                        )
+                        jumpscare = FORSAKEN_TALE_JUMPSCARE
+
+                    await ctx.reply(jumpscare, mention_author=False)
                     return
                 if CROSSMYTHOS_RHAPSODIA_SONG_ID in master_song_ids and (
                     # since there's only 4 15.7s in the game as of current,
@@ -505,6 +517,9 @@ class ToolsCog(commands.Cog, name="Tools"):
                     # without this guard.
                     level != "15.7" or random.random() < 0.25
                 ):
+                    await ctx.bot.database.user_found_easter_egg(
+                        ctx.author.id, "crossmythos-rhapsodia-jumpscare"
+                    )
                     await ctx.reply(
                         CROSSMYTHOS_RHAPSODIA_JUMPSCARE, mention_author=False
                     )
@@ -515,12 +530,21 @@ class ToolsCog(commands.Cog, name="Tools"):
                     # without this guard.
                     level != "15.7" or random.random() < 0.25
                 ):
+                    await ctx.bot.database.user_found_easter_egg(
+                        ctx.author.id, "forsaken-tale-jumpscare"
+                    )
                     await ctx.reply(FORSAKEN_TALE_JUMPSCARE, mention_author=False)
                     return
                 if TOA_CHAN_TOYBOX_SONG_ID in master_song_ids:
+                    await ctx.bot.database.user_found_easter_egg(
+                        ctx.author.id, "toa-chans-toybox-jumpscare"
+                    )
                     await ctx.reply(TOA_CHAN_TOYBOX_JUMPSCARE, mention_author=False)
                     return
                 if SOUTHERN_CROSS_SONG_ID in master_song_ids:
+                    await ctx.bot.database.user_found_easter_egg(
+                        ctx.author.id, "southern-cross-jumpscare"
+                    )
                     await ctx.reply(SOUTHERN_CROSS_JUMPSCARE, mention_author=False)
                     return
 

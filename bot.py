@@ -281,6 +281,10 @@ class ChuniBot(commands.AutoShardedBot):
         return self.get_cog("Utils")  # pyright: ignore[reportReturnType]
 
     @property
+    def database(self) -> "DatabaseCog":
+        return cast("DatabaseCog", self.get_cog("Database"))
+
+    @property
     def engine(self):
         return cast("DatabaseCog", self.get_cog("Database")).engine
 
