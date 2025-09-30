@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cargo/registry/index \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --all-extras --no-dev --no-group test --no-install-package penguin-native
+    uv sync --locked --no-install-project --all-extras --no-dev --no-group test --no-install-workspace
 COPY . /code
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-extras --no-dev --no-group test
@@ -55,3 +55,4 @@ RUN mkdir -p /code/.cache
 
 WORKDIR /code
 ENTRYPOINT ["/code/.venv/bin/python3", "bot.pyc"]
+
