@@ -21,9 +21,8 @@ from typing import IO, Final, TypeVar
 from discord.oggparse import OggError
 
 try:
-    from penguin_native import crc32_ogg
+    from penguin_native import crc32_ogg  # pyright: ignore[reportMissingImports]
 except ImportError:
-    from collections.abc import Buffer
     from functools import lru_cache
 
     @lru_cache(maxsize=None)
@@ -40,14 +39,14 @@ except ImportError:
 
         return table
 
-    def crc32_ogg(data: Buffer, crc: int = 0):
+    def crc32_ogg(data: bytes | bytearray, init: int = 0):
         table = create_crc32_table(0x04C11DB7)
 
         for byte in memoryview(data):
-            lookup_index = ((crc >> 24) ^ byte) & 0xFF
-            crc = ((crc & 0xFFFFFF) << 8) ^ table[lookup_index]
+            lookup_index = ((init >> 24) ^ byte) & 0xFF
+            init = ((init & 0xFFFFFF) << 8) ^ table[lookup_index]
 
-        return crc
+        return init
 
 
 # up to the number of segments
