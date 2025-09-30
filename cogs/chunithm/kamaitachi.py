@@ -86,6 +86,20 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
     @kamaitachi.command("link", aliases=["login"])
     @logged_prefix_command
     async def kamaitachi_link(self, ctx: PenguinContext, token: Optional[str] = None):
+        """Link with your Kamaitachi account.
+
+        You must enable direct messages with the bot. Alternatively, use the slash
+        command variant, `/kamaitachi link`.
+
+        Parameters
+        ----------
+        token: Optional[str]
+            IGNORE IF YOU DON'T KNOW WHAT THIS IS FOR. You will get a URL to link your account.
+        """
+
+        if ctx.interaction is not None and ctx.guild is not None:
+            await ctx.interaction.response.defer(ephemeral=True, thinking=True)
+
         async with self.bot.begin_db_session() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
@@ -95,7 +109,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             if ctx.author.dm_channel
             else await ctx.author.create_dm()
         )
-        if ctx.guild is not None:
+
+        if ctx.guild is not None and ctx.interaction is None:
             please_delete_message = ""
 
             if token is not None:
@@ -158,7 +173,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                 f"https://kamai.tachi.ac/oauth/request-auth?clientID={self.kt_client_id}&context={ctx.author.id}"
             )
 
-        if ctx.guild is not None:
+        if ctx.guild is not None and ctx.interaction is None:
             with contextlib.suppress(discord.errors.Forbidden):
                 return await channel.send(embed=embed)
         else:
