@@ -14,13 +14,40 @@ import itertools
 import os
 import struct
 from collections import deque
-from collections.abc import Buffer
 from enum import IntFlag, auto
-from functools import lru_cache
 from pathlib import Path
 from typing import IO, Final, TypeVar
 
 from discord.oggparse import OggError
+
+try:
+    from penguin_native import crc32_ogg  # pyright: ignore[reportMissingImports]
+except ImportError:
+    from functools import lru_cache
+
+    @lru_cache(maxsize=None)
+    def create_crc32_table(poly: int):
+        table: list[int] = []
+
+        for i in range(256):
+            k = i << 24
+
+            for _ in range(8):
+                k = (k << 1) ^ poly if k & 0x80000000 else k << 1
+
+            table.append(k & 0xFFFFFFFF)
+
+        return table
+
+    def crc32_ogg(data: bytes | bytearray, init: int = 0):
+        table = create_crc32_table(0x04C11DB7)
+
+        for byte in memoryview(data):
+            lookup_index = ((init >> 24) ^ byte) & 0xFF
+            init = ((init & 0xFFFFFF) << 8) ^ table[lookup_index]
+
+        return init
+
 
 # up to the number of segments
 OGG_HEADER_FORMAT: Final = struct.Struct("<BBQIIIB")
@@ -49,31 +76,6 @@ CONFIGURATION_NUMBER_TO_FRAME_DURATION: Final = [
     2.5, 5, 10, 20,
 ]
 # fmt: on
-
-
-@lru_cache(maxsize=None)
-def create_crc32_table(poly: int):
-    table: list[int] = []
-
-    for i in range(256):
-        k = i << 24
-
-        for _ in range(8):
-            k = (k << 1) ^ poly if k & 0x80000000 else k << 1
-
-        table.append(k & 0xFFFFFFFF)
-
-    return table
-
-
-def crc32(data: Buffer, crc: int = 0, poly: int = 0x04C11DB7):
-    table = create_crc32_table(poly)
-
-    for byte in memoryview(data):
-        lookup_index = ((crc >> 24) ^ byte) & 0xFF
-        crc = ((crc & 0xFFFFFF) << 8) ^ table[lookup_index]
-
-    return crc
 
 
 class OggHeaderType(IntFlag):
@@ -111,13 +113,6 @@ class OggPage:
             msg = "Invalid Ogg page; must start with capturing pattern OggS"
             raise ValueError(msg)
 
-        # skip over the checksum in the header
-        checksum = crc32(
-            header_bytes[: OGG_HEADER_BEFORE_CHECKSUM_FORMAT.size + 4]
-            + b"\x00\x00\x00\x00"
-            + header_bytes[OGG_HEADER_BEFORE_CHECKSUM_FORMAT.size + 8 :]
-        )
-
         (
             version,
             header_type,
@@ -134,10 +129,19 @@ class OggPage:
 
         segment_table_bytes = f.read(page_segments)
         segment_table = list(segment_table_bytes)
-        checksum = crc32(segment_table_bytes, checksum)
 
         data = f.read(sum(segment_table))
-        checksum = crc32(data, checksum)
+        checksum = crc32_ogg(
+            b"".join(
+                [
+                    header_bytes[: OGG_HEADER_BEFORE_CHECKSUM_FORMAT.size + 4],
+                    b"\x00\x00\x00\x00",
+                    header_bytes[OGG_HEADER_BEFORE_CHECKSUM_FORMAT.size + 8 :],
+                    segment_table_bytes,
+                    data,
+                ]
+            )
+        )
 
         if checksum != expected_checksum:
             msg = f"Corrupt Ogg page: {checksum=} != {expected_checksum=}"
@@ -158,7 +162,6 @@ class OggPage:
     def dump(self, f: IO[bytes]):
         packet_start = f.tell()
 
-        checksum = crc32(b"OggS")
         f.write(b"OggS")
 
         header_bytes = OGG_HEADER_FORMAT.pack(
@@ -170,17 +173,17 @@ class OggPage:
             0,
             len(self._segment_table),
         )
-        checksum = crc32(header_bytes, checksum)
         f.write(header_bytes)
 
         segment_table_bytes = bytes(self._segment_table)
-        checksum = crc32(segment_table_bytes, checksum)
         f.write(segment_table_bytes)
 
-        checksum = crc32(self._data, checksum)
         f.write(self._data)
 
         packet_end = f.tell()
+        checksum = crc32_ogg(
+            b"".join([b"OggS", header_bytes, segment_table_bytes, self._data])
+        )
 
         f.seek(packet_start + 4 + OGG_HEADER_BEFORE_CHECKSUM_FORMAT.size)
         f.write(checksum.to_bytes(4, "little"))

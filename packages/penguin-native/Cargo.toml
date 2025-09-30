@@ -1,0 +1,13 @@
+[package]
+name = "penguin-native"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "penguin_native"
+crate-type = ["cdylib"]
+
+[dependencies]
+crc = "3.3.0"
+pyo3 = "0.26.0"

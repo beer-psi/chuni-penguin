@@ -34,6 +34,7 @@ speedup = [
     "zstandard>=0.23.0",
     "aiodns>=3.2.0; sys_platform != 'win32'",
     "ciso8601>=2.3.2",
+    "penguin-native",
 ]
 
 [dependency-groups]
@@ -62,8 +63,12 @@ no-sources = false
 universal = true
 generate-hashes = true
 
+[tool.uv.workspace]
+members = ["packages/*"]
+
 [tool.uv.sources]
 discord-ext-songbird = { git = "https://github.com/beer-psi/discord-ext-songbird.git" }
+penguin-native = { workspace = true }
 
 [tool.ruff]
 respect-gitignore = true

@@ -4,6 +4,7 @@
 !/cogs
 !/database
 !/dbutils
+!/packages
 !/utils
 !/.python-version
 !/alembic.ini
