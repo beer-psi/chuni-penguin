@@ -27,7 +27,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cargo/registry/cache \
     --mount=type=cache,target=/root/.cargo/registry/index \
     uv sync --frozen --all-extras --no-dev --no-group test
-RUN python -m compileall -b -x 'database/alembic/versions' . && find . -type f -not -path "*database/alembic/versions*" -name '*.py' -exec rm {} \;
+RUN python -m compileall -b -x 'database/alembic/versions' . \
+    && find . -type f -not -path "*database/alembic/versions*" -name '*.py' -exec rm {} \;
+RUN rm -rf packages/penguin-native/target
 
 FROM python:3.13-alpine
 
