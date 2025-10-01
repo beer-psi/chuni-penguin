@@ -34,6 +34,7 @@ RUN python -m compileall -b -x 'database/alembic/versions' . \
 RUN rm -rf packages/penguin-native/target
 
 FROM python:${PYTHON_BUILD_VERSION}-alpine
+ARG PYTHON_BUILD_VERSION
 
 # Needed for fixing permissions of files created by Docker:
 ARG UID=1000
