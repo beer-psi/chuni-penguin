@@ -1,4 +1,6 @@
-FROM ghcr.io/astral-sh/uv:0.8.22-python3.13-alpine AS builder
+ARG PYTHON_BUILD_VERSION=3.13
+
+FROM ghcr.io/astral-sh/uv:0.8.22-python${PYTHON_BUILD_VERSION}-alpine AS builder
 ENV PYTHONOPTIMIZE=1 PYTHONNODEBUGRANGES=1 UV_LINK_MODE=copy
 
 # Disable Python downloads, because we want to use the system interpreter
@@ -31,7 +33,8 @@ RUN python -m compileall -b -x 'database/alembic/versions' . \
     && find . -type f -not -path "*database/alembic/versions*" -name '*.py' -exec rm {} \;
 RUN rm -rf packages/penguin-native/target
 
-FROM python:3.13-alpine
+FROM python:${PYTHON_BUILD_VERSION}-alpine
+ARG PYTHON_BUILD_VERSION
 
 # Needed for fixing permissions of files created by Docker:
 ARG UID=1000
@@ -40,9 +43,12 @@ ARG GID=1000
 ARG GIT_SHA=unknown
 
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive mimalloc opus libssl3 libcrypto3 libgcc \
+    && apk add --no-interactive mimalloc opus libssl3 libcrypto3 libgcc patch \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
+
+RUN --mount=type=bind,source=patches/python3-musl-find-library.patch,target=python3-musl-find-library.patch \
+    patch "/usr/local/lib/python${PYTHON_BUILD_VERSION}/ctypes/util.py" python3-musl-find-library.patch
 
 RUN addgroup -g "${GID}" bot \
     && adduser -D -h "/code" -G bot -u "${UID}" bot
