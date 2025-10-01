@@ -5,6 +5,7 @@
 !/database
 !/dbutils
 !/packages
+!/patches
 !/utils
 !/.python-version
 !/alembic.ini
