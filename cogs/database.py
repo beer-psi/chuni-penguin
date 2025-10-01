@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from database.models import EasterEggFound
+from database.models import EasterEggFound, Song
 from utils.config import config
 
 if TYPE_CHECKING:
@@ -57,6 +57,16 @@ def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
         cursor.execute("PRAGMA recursive_triggers=ON")
 
 
+class SongQueries:
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        self._sessionmaker = sessionmaker
+
+    async def get_hidden_on_chuninet(self):
+        async with self._sessionmaker() as session:
+            query = select(Song).where(Song.is_hidden_on_chuninet == True)  # noqa: E712
+            return (await session.execute(query)).scalars().all()
+
+
 class DatabaseCog(commands.Cog, name="Database"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
@@ -67,6 +77,8 @@ class DatabaseCog(commands.Cog, name="Database"):
         self._sessionmaker: async_sessionmaker[AsyncSession] = async_sessionmaker(
             self._engine, expire_on_commit=False
         )
+
+        self.songs = SongQueries(self._sessionmaker)
 
     @override
     async def cog_load(self) -> None:
