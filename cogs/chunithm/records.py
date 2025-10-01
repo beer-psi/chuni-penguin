@@ -1729,11 +1729,41 @@ class RecordsCog(commands.Cog, name="Records"):
             async with self.utils.chuninet(ctx, target_user_id) as client:
                 if level is not None:
                     records = await client.music_record_by_folder(level=level)
+                    hidden_charts = (
+                        await ctx.bot.database.charts.get_hidden_on_chuninet(
+                            level=level
+                        )
+                    )
                 elif difficulty is not None:
                     records = await client.music_record_by_folder(difficulty=difficulty)
+                    hidden_charts = (
+                        await ctx.bot.database.charts.get_hidden_on_chuninet(
+                            difficulty=difficulty
+                        )
+                    )
                 else:
                     msg = "Must specify either level or difficulty."
                     raise app_commands.AppCommandError(msg)
+
+                # if there are relevant hidden charts
+                if hidden_charts:
+                    hidden_song_ids = {c.song_id for c in hidden_charts}
+                    record_charts = {
+                        (r.extras[KEY_SONG_ID], r.difficulty) for r in records
+                    }
+
+                    for song_id in hidden_song_ids:
+                        # get the records for the hidden chart's song id
+                        hidden_records = await client.music_record(song_id)
+
+                        # and insert it into our records, if a record is not already there
+                        records.extend(
+                            [
+                                r
+                                for r in hidden_records
+                                if (song_id, r.difficulty) not in record_charts
+                            ]
+                        )
 
                 if difficulty is not None:
                     records = [r for r in records if r.difficulty == difficulty]
@@ -1933,13 +1963,43 @@ class RecordsCog(commands.Cog, name="Records"):
                         records = await client.music_record_by_folder(
                             level=level_folder
                         )
+                        hidden_charts = (
+                            await ctx.bot.database.charts.get_hidden_on_chuninet(
+                                level=level
+                            )
+                        )
                     elif difficulty is not None:
                         records = await client.music_record_by_folder(
                             difficulty=difficulty
                         )
+                        hidden_charts = (
+                            await ctx.bot.database.charts.get_hidden_on_chuninet(
+                                difficulty=difficulty
+                            )
+                        )
                     else:
                         msg = "Must specify either level or difficulty."
                         raise commands.BadArgument(msg)
+
+                    # if there are relevant hidden charts
+                    if hidden_charts:
+                        hidden_song_ids = {c.song_id for c in hidden_charts}
+                        record_charts = {
+                            (r.extras[KEY_SONG_ID], r.difficulty) for r in records
+                        }
+
+                        for song_id in hidden_song_ids:
+                            # get the records for the hidden chart's song id
+                            hidden_records = await client.music_record(song_id)
+
+                            # and insert it into our records, if a record is not already there
+                            records.extend(
+                                [
+                                    r
+                                    for r in hidden_records
+                                    if (song_id, r.difficulty) not in record_charts
+                                ]
+                            )
 
                     if difficulty is not None:
                         records = [r for r in records if r.difficulty == difficulty]
