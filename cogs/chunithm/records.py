@@ -39,6 +39,7 @@ from utils.components import ScoreCardEmbed
 from utils.config import config
 from utils.constants import (
     ASSETS_DIR,
+    CURRENT_CHUNITHM_VERSION,
     CURRENT_CHUNITHM_VERSION_KT,
     SIMILARITY_THRESHOLD,
 )
@@ -1375,6 +1376,8 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 records = await self.utils.hydrate_records(records)
             else:
+                hidden_songs = await ctx.bot.database.songs.get_hidden_on_chuninet()
+
                 async with self.utils.chuninet(ctx, target_id) as client:
                     player_data = await client.player_data()
                     player_name = player_data.name
@@ -1436,6 +1439,69 @@ class RecordsCog(commands.Cog, name="Records"):
                         )
                     )
                     new_record_slots = 20
+
+                    # Sometimes, SEGA likes to hide some scores from appearing in
+                    # CHUNITHM-NET. This is a workaround. Basically:
+                    # - Fetch music records of all hidden songs
+                    # - For each record, check if there are already enough slots in the
+                    # respective new/old rating list:
+                    #   - If there are already enough rating slots, and if the hidden score's
+                    # rating is higher than the last item in the rating list, replace the last item
+                    # with the hidden record.
+                    #   - If there are not enough rating slots, just add the song as is.
+                    #   - Sort the list again.
+                    for hidden_song in hidden_songs:
+                        if hidden_song.version == CURRENT_CHUNITHM_VERSION:
+                            chart_list = new20_charts
+                            record_list = new_records
+                            record_list_slots = new_record_slots
+                        else:
+                            chart_list = best30_charts
+                            record_list = records
+                            record_list_slots = record_slots
+
+                        hidden_song_records = await self.utils.hydrate_records(
+                            await client.music_record(hidden_song.id)
+                        )
+
+                        for hidden_song_record in hidden_song_records:
+                            if (
+                                hidden_song.id,
+                                hidden_song_record.difficulty,
+                            ) in chart_list:
+                                # chart is actually not hidden
+                                continue
+
+                            if len(record_list) >= record_list_slots:
+                                # record list is definitely sorted by rating
+                                min_rating_record = record_list[-1]
+
+                                if (
+                                    hidden_song_record.extras[KEY_PLAY_RATING]
+                                    > min_rating_record.extras[KEY_PLAY_RATING]
+                                ):
+                                    del record_list[-1]
+                                    chart_list.remove(
+                                        (
+                                            min_rating_record.extras[KEY_SONG_ID],
+                                            min_rating_record.difficulty,
+                                        )
+                                    )
+
+                                    chart_list.append(
+                                        (hidden_song.id, hidden_song_record.difficulty)
+                                    )
+                                    record_list.append(hidden_song_record)
+                            else:
+                                chart_list.append(
+                                    (hidden_song.id, hidden_song_record.difficulty)
+                                )
+                                record_list.append(hidden_song_record)
+
+                            record_list.sort(
+                                key=lambda r: r.extras[KEY_PLAY_RATING],
+                                reverse=True,
+                            )
 
             if classic:
                 if new_records is not None:
@@ -1663,11 +1729,41 @@ class RecordsCog(commands.Cog, name="Records"):
             async with self.utils.chuninet(ctx, target_user_id) as client:
                 if level is not None:
                     records = await client.music_record_by_folder(level=level)
+                    hidden_charts = (
+                        await ctx.bot.database.charts.get_hidden_on_chuninet(
+                            level=level
+                        )
+                    )
                 elif difficulty is not None:
                     records = await client.music_record_by_folder(difficulty=difficulty)
+                    hidden_charts = (
+                        await ctx.bot.database.charts.get_hidden_on_chuninet(
+                            difficulty=difficulty
+                        )
+                    )
                 else:
                     msg = "Must specify either level or difficulty."
                     raise app_commands.AppCommandError(msg)
+
+                # if there are relevant hidden charts
+                if hidden_charts:
+                    hidden_song_ids = {c.song_id for c in hidden_charts}
+                    record_charts = {
+                        (r.extras[KEY_SONG_ID], r.difficulty) for r in records
+                    }
+
+                    for song_id in hidden_song_ids:
+                        # get the records for the hidden chart's song id
+                        hidden_records = await client.music_record(song_id)
+
+                        # and insert it into our records, if a record is not already there
+                        records.extend(
+                            [
+                                r
+                                for r in hidden_records
+                                if (song_id, r.difficulty) not in record_charts
+                            ]
+                        )
 
                 if difficulty is not None:
                     records = [r for r in records if r.difficulty == difficulty]
@@ -1867,13 +1963,43 @@ class RecordsCog(commands.Cog, name="Records"):
                         records = await client.music_record_by_folder(
                             level=level_folder
                         )
+                        hidden_charts = (
+                            await ctx.bot.database.charts.get_hidden_on_chuninet(
+                                level=level
+                            )
+                        )
                     elif difficulty is not None:
                         records = await client.music_record_by_folder(
                             difficulty=difficulty
                         )
+                        hidden_charts = (
+                            await ctx.bot.database.charts.get_hidden_on_chuninet(
+                                difficulty=difficulty
+                            )
+                        )
                     else:
                         msg = "Must specify either level or difficulty."
                         raise commands.BadArgument(msg)
+
+                    # if there are relevant hidden charts
+                    if hidden_charts:
+                        hidden_song_ids = {c.song_id for c in hidden_charts}
+                        record_charts = {
+                            (r.extras[KEY_SONG_ID], r.difficulty) for r in records
+                        }
+
+                        for song_id in hidden_song_ids:
+                            # get the records for the hidden chart's song id
+                            hidden_records = await client.music_record(song_id)
+
+                            # and insert it into our records, if a record is not already there
+                            records.extend(
+                                [
+                                    r
+                                    for r in hidden_records
+                                    if (song_id, r.difficulty) not in record_charts
+                                ]
+                            )
 
                     if difficulty is not None:
                         records = [r for r in records if r.difficulty == difficulty]

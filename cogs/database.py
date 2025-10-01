@@ -17,7 +17,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from database.models import EasterEggFound
+from chunithm_net.models.enums import Difficulty
+from database.models import Chart, EasterEggFound, Song
 from utils.config import config
 
 if TYPE_CHECKING:
@@ -57,6 +58,41 @@ def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
         cursor.execute("PRAGMA recursive_triggers=ON")
 
 
+class SongQueries:
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        self._sessionmaker = sessionmaker
+
+    async def get_hidden_on_chuninet(self):
+        async with self._sessionmaker() as session:
+            query = select(Song).where(
+                (Song.is_hidden_on_chuninet == True) & (Song.available == True)  # noqa: E712
+            )
+            return (await session.execute(query)).scalars().all()
+
+
+class ChartQueries:
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        self._sessionmaker = sessionmaker
+
+    async def get_hidden_on_chuninet(
+        self, level: str | None = None, difficulty: Difficulty | None = None
+    ):
+        query = (
+            select(Chart)
+            .join(Song, Chart.song_id == Song.id)
+            .where((Song.is_hidden_on_chuninet == True) & (Song.available == True))  # noqa: E712
+        )
+
+        if level is not None:
+            query = query.where(Chart.level == level)
+
+        if difficulty is not None:
+            query = query.where(Chart.difficulty == difficulty.short_form())
+
+        async with self._sessionmaker() as session:
+            return (await session.execute(query)).scalars().all()
+
+
 class DatabaseCog(commands.Cog, name="Database"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
@@ -67,6 +103,9 @@ class DatabaseCog(commands.Cog, name="Database"):
         self._sessionmaker: async_sessionmaker[AsyncSession] = async_sessionmaker(
             self._engine, expire_on_commit=False
         )
+
+        self.songs = SongQueries(self._sessionmaker)
+        self.charts = ChartQueries(self._sessionmaker)
 
     @override
     async def cog_load(self) -> None:
