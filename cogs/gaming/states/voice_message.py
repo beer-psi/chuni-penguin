@@ -5,6 +5,7 @@ import discord
 from discord.http import handle_message_parameters
 
 from utils import json_dumps, json_loads
+from utils.oggopus import generate_waveform
 
 from .base import GuessingGameState
 from .wait_for_answer import WaitForAnswerState
@@ -41,12 +42,10 @@ class AskVoiceMessageQuestionState(GuessingGameState):
                 text=f"Question {self.session.questions_done + 1}"
             )
 
-        await self.session.channel.send(embed=question_embed, mention_author=False)
-
         with handle_message_parameters(
             file=discord.File(audio_buffer, filename="question.ogg"),
             nonce=secrets.randbits(64),
-            flags=discord.MessageFlags._from_value(8192),
+            flags=discord.MessageFlags(voice=True),
         ) as params:
             assert params.multipart is not None
 
@@ -55,12 +54,15 @@ class AskVoiceMessageQuestionState(GuessingGameState):
             )
             payload = json_loads(payload_json_part["value"])
             payload["attachments"][0]["duration_secs"] = self.session.get_audio_length()
-            payload["attachments"][0]["waveform"] = "AA=="
+            payload["attachments"][0]["waveform"] = generate_waveform(
+                audio_buffer, self.session.get_audio_length()
+            )
             payload_json_part["value"] = json_dumps(payload)
 
             file_0_part = next(x for x in params.multipart if x["name"] == "files[0]")
             file_0_part["content_type"] = "audio/ogg"
 
+            await self.session.channel.send(embed=question_embed)
             await self.session.bot.http.send_message(
                 self.session.channel.id, params=params
             )

@@ -9,6 +9,8 @@
 #
 # If you use different audio files and formats, feel free to just use ffmpeg, but
 # I don't want to carry around ~150MB just to deal with some oggs.
+import base64
+import audioop
 import io
 import itertools
 import os
@@ -18,6 +20,7 @@ from enum import IntFlag, auto
 from pathlib import Path
 from typing import IO, Final, TypeVar
 
+import discord
 from discord.oggparse import OggError
 
 try:
@@ -583,3 +586,82 @@ def crop_audio(file: str | Path, start: float, duration: float, output: T) -> T:
     # might have exhausted the stream without meeting the duration, in which case
     # just return what we have
     return output
+
+
+def generate_waveform(fp: IO[bytes], duration: float):
+    """
+    Generate a Discord voice message waveform given the audio and duration in seconds.
+    """
+
+    pos = fp.tell()
+
+    stream = OggStream(fp)
+    header_page = next(stream.iter_pages())
+    header_packet = next(header_page.iter_packets())
+
+    if header_packet[:8] != b"OpusHead":
+        msg = f"Input is not an OggOpus file. Expected first packet to start with OpusHead, got {header_packet[:8]}."
+        raise OggError(msg)
+
+    metadata_page = next(stream.iter_pages())
+    metadata_packet = next(metadata_page.iter_packets())
+
+    if metadata_packet[:8] != b"OpusTags":
+        msg = f"Input is not an OggOpus file. Expected second packet to start with OpusTags, got {metadata_packet[:8]}."
+        raise OggError(msg)
+
+    (
+        version,
+        _channel_count,
+        _pre_skip,
+        input_sample_rate,
+        _output_gain,
+        _mapping_family,
+    ) = OPUS_HEAD_FORMAT.unpack_from(header_packet, 8)
+
+    # Implementations SHOULD treat streams where the upper four bits of the version
+    # number match that of a recognized specification as backwards compatible with
+    # that specification.
+    #
+    # Section 5.1.2, RFC 7845
+    if (version & 0xF0) != 0:
+        msg = f"Unsupported Opus version {version}"
+        raise OggError(msg)
+
+    # The waveform is intended to be a preview of the entire voice message,
+    # with 1 byte per datapoint encoded in base64. Clients sample the recording at most
+    # once per 100 milliseconds, but will downsample so that no more than
+    # 256 datapoints are in the waveform.
+    #
+    # ... that is what Discord docs say, but I've found that for shorter durations
+    # it's usually 150-200ms per sample. Let's go with 150ms.
+    ms_per_sample = duration * 100 // 256 if duration >= 256 else 150
+    decoder = discord.opus.Decoder()
+    waveform = bytearray()
+    samples = bytearray()
+    current_time_ms: float = 0
+
+    for page in stream.iter_pages():
+        for packet in page.iter_packets():
+            # pcm s16le
+            pcm = decoder.decode(packet, fec=False)
+            num_samples = len(pcm) // 2
+            current_time_ms += num_samples * 1000 / input_sample_rate
+
+            samples.extend(pcm)
+
+            if current_time_ms >= ms_per_sample:
+                avg = audioop.max(samples, 2)
+
+                waveform.append(abs(avg) * 254 // 32767 + 1)
+                samples.clear()
+                current_time_ms = 0
+
+    # double the waveform if the audio is quiet
+    if not any(wave >= 128 for wave in waveform):
+        waveform = bytearray([wave * 2 for wave in waveform])
+
+    if fp.seekable:
+        fp.seek(pos)
+
+    return base64.b64encode(waveform).decode("ascii")
