@@ -9,8 +9,8 @@
 #
 # If you use different audio files and formats, feel free to just use ffmpeg, but
 # I don't want to carry around ~150MB just to deal with some oggs.
-import base64
 import audioop
+import base64
 import io
 import itertools
 import os
