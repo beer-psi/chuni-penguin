@@ -64,7 +64,9 @@ class SongQueries:
 
     async def get_hidden_on_chuninet(self):
         async with self._sessionmaker() as session:
-            query = select(Song).where(Song.is_hidden_on_chuninet == True)  # noqa: E712
+            query = select(Song).where(
+                (Song.is_hidden_on_chuninet == True) & (Song.available == True)  # noqa: E712
+            )
             return (await session.execute(query)).scalars().all()
 
 
@@ -78,7 +80,7 @@ class ChartQueries:
         query = (
             select(Chart)
             .join(Song, Chart.song_id == Song.id)
-            .where(Song.is_hidden_on_chuninet == True)  # noqa: E712
+            .where((Song.is_hidden_on_chuninet == True) & (Song.available == True))  # noqa: E712
         )
 
         if level is not None:
