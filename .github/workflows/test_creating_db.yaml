@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  test-creating-db:
     runs-on: ubuntu-latest
     steps:
       - name: "Check out repository"
