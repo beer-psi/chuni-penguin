@@ -8,8 +8,8 @@ from httpx_aiohttp import AIOHTTPTransport
 
 from chunithm_net.models.leaderboard import Leaderboard, LeaderboardEntry
 
-from ._auth import ChunithmNetAuth
 from ._bs4 import BS4_FEATURE
+from ._hooks import ChunithmNetAuth, raise_on_chunithm_net_error, raise_on_maintenance
 from .consts import _KEY_DETAILED_PARAMS
 from .exceptions import AlreadyAddedAsFriend, InvalidFriendCode
 from .models.enums import Difficulty, Genres, Rank
@@ -43,6 +43,9 @@ class ChuniNet:
             cookies=cookies,
             timeout=httpx.Timeout(timeout=60.0),
             follow_redirects=True,
+            event_hooks={
+                "response": [raise_on_maintenance, raise_on_chunithm_net_error]
+            },
             transport=AIOHTTPTransport(retries=5),
             headers={
                 # clients are recommended to update this user agent
