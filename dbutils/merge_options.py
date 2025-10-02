@@ -8,6 +8,7 @@ from typing import Optional, overload
 from xml.etree import ElementTree
 
 import httpx
+import httpx_aiohttp
 from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.dialects.sqlite import insert
@@ -144,7 +145,9 @@ async def merge_options(
     extract_jackets: bool,
     extract_audios: bool,
 ):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(
+        transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
+    ) as client:
         songlist = (
             await client.get("https://chunithm.sega.jp/storage/json/music.json")
         ).json()

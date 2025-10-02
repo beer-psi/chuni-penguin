@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 import httpx
+import httpx_aiohttp
 import msgspec
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -58,7 +59,9 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         pass
 
     async def _verify_and_login(self, token: str) -> Optional[str]:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(
+            transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
+        ) as client:
             client.headers["User-Agent"] = self.user_agent
             client.headers["Authorization"] = f"Bearer {token}"
 
@@ -232,7 +235,9 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
 
         async with (
             self.utils.chuninet(ctx) as chuni_client,
-            httpx.AsyncClient() as tachi_client,
+            httpx.AsyncClient(
+                transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
+            ) as tachi_client,
         ):
             tachi_client.headers["User-Agent"] = self.user_agent
             tachi_client.headers["Authorization"] = f"Bearer {cookie.kamaitachi_token}"

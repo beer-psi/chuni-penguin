@@ -4,18 +4,14 @@ from typing import TYPE_CHECKING, Optional
 
 import httpx
 from bs4 import BeautifulSoup
+from httpx_aiohttp import AIOHTTPTransport
 
 from chunithm_net.models.leaderboard import Leaderboard, LeaderboardEntry
 
 from ._bs4 import BS4_FEATURE
-from ._httpx_hooks import raise_on_chunithm_net_error, raise_on_scheduled_maintenance
+from ._httpx import ChunithmNetAuth
 from .consts import _KEY_DETAILED_PARAMS
-from .exceptions import (
-    AlreadyAddedAsFriend,
-    ChuniNetError,
-    InvalidFriendCode,
-    InvalidTokenException,
-)
+from .exceptions import AlreadyAddedAsFriend, InvalidFriendCode
 from .models.enums import Difficulty, Genres, Rank
 from .models.record import MusicRecord, RecentRecord, Record
 from .parser import (
@@ -43,24 +39,20 @@ _BASE_URL = httpx.URL("https://chunithm-net-eng.com")
 class ChuniNet:
     def __init__(self, cookies: CookieJar) -> None:
         self.session = httpx.AsyncClient(
+            base_url=_BASE_URL,
             cookies=cookies,
-            event_hooks={
-                "response": [
-                    raise_on_scheduled_maintenance,
-                    raise_on_chunithm_net_error,
-                ],
-            },
             timeout=httpx.Timeout(timeout=60.0),
             follow_redirects=True,
-            transport=httpx.AsyncHTTPTransport(retries=5),
+            transport=AIOHTTPTransport(retries=5),
             headers={
                 # clients are recommended to update this user agent
                 "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/114.0",
                 "accept-language": "en-US,en;q=0.5",
                 "upgrade-insecure-requests": "1",
-                "referer": "https://chunithm-net-eng.com/",
+                "referer": str(_BASE_URL.join("/")),
             },
         )
+        self.session.auth = ChunithmNetAuth(self.session)
 
     async def __aenter__(self):
         return self
@@ -253,8 +245,7 @@ class ChuniNet:
         return parse_course_list(soup)
 
     async def change_player_name(self, new_name: str) -> bool:
-        resp = await self._request(
-            "POST",
+        resp = await self.session.post(
             "mobile/home/userOption/updateUserName/update/",
             data={
                 "userName": new_name,
@@ -281,7 +272,7 @@ class ChuniNet:
         raise ValueError(msg)
 
     async def logout(self) -> bool:
-        resp = await self._request("GET", "mobile/home/userOption/logout/")
+        resp = await self.session.get("mobile/home/userOption/logout/")
         return resp.url.host == _AUTHENTICATION_URL.host
 
     async def send_friend_request(self, friend_code: str):
@@ -300,8 +291,7 @@ class ChuniNet:
                 raise AlreadyAddedAsFriend
             raise InvalidFriendCode
 
-        await self._request(
-            "POST",
+        await self.session.post(
             "mobile/friend/search/sendInvite/",
             data={
                 "idx": friend_code,
@@ -388,38 +378,7 @@ class ChuniNet:
         path: str,
         **kwargs,
     ) -> BeautifulSoup:
-        resp = await self._request(method, path, **kwargs)
+        resp = await self.session.request(method, path, **kwargs)
         text = "".join([part async for part in resp.aiter_text()])
 
         return BeautifulSoup(text, BS4_FEATURE)
-
-    async def _request(self, method: str, path: str, **kwargs) -> httpx.Response:
-        url = _BASE_URL.join(path)
-
-        try:
-            response = await self.session.request(method, url, **kwargs)
-
-            if response.url.path == "/mobile/":
-                await response.aclose()
-
-                raise ChuniNetError(200004, "")  # noqa: TRY301
-        except ChuniNetError as e:
-            if e.code not in {
-                200004,  # invalid session
-                200002,  # connection time expired
-            }:
-                raise
-        else:
-            return response
-
-        auth_response = await self.session.get(_AUTHENTICATION_URL)
-
-        if auth_response.url.host == _AUTHENTICATION_URL.host:
-            await auth_response.aclose()
-            raise InvalidTokenException
-
-        if str(url) == str(auth_response.url):
-            return auth_response
-
-        await auth_response.aclose()
-        return await self.session.request(method, url, **kwargs)

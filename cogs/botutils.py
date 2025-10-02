@@ -6,6 +6,7 @@ from http.cookiejar import LWPCookieJar
 from typing import TYPE_CHECKING, Literal, Optional, Sequence, TypeVar
 
 import httpx
+import httpx_aiohttp
 import msgspec
 from discord import Interaction
 from discord.ext import commands, tasks
@@ -104,7 +105,9 @@ class UtilsCog(commands.Cog, name="Utils"):
 
     @tasks.loop(hours=24)
     async def _update_user_agents(self):
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(
+            transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
+        ) as client:
             resp = await client.get(
                 "https://keiyoushi.github.io/user-agents/user-agents.min.json"
             )
@@ -347,7 +350,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         client = httpx.AsyncClient(
             timeout=httpx.Timeout(60.0),
             follow_redirects=True,
-            transport=httpx.AsyncHTTPTransport(retries=5),
+            transport=httpx_aiohttp.AIOHTTPTransport(retries=5),
         )
         client.headers["Authorization"] = f"Bearer {cookie.kamaitachi_token}"
         client.headers["User-Agent"] = (
