@@ -100,6 +100,10 @@ class AIOHTTPResponseStream(httpx.AsyncByteStream):
 
     async def __aiter__(self) -> "AsyncIterator[bytes]":
         with map_aiohttp_exceptions():
+            if self._response._body is not None:
+                yield self._response._body
+                return
+
             async for part, _end_of_http_chunk in self._response.content.iter_chunks():
                 yield part
 
