@@ -8,8 +8,8 @@ from httpx_aiohttp import AIOHTTPTransport
 
 from chunithm_net.models.leaderboard import Leaderboard, LeaderboardEntry
 
+from ._auth import ChunithmNetAuth
 from ._bs4 import BS4_FEATURE
-from ._httpx import ChunithmNetAuth
 from .consts import _KEY_DETAILED_PARAMS
 from .exceptions import AlreadyAddedAsFriend, InvalidFriendCode
 from .models.enums import Difficulty, Genres, Rank
