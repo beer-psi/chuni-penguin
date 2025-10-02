@@ -28,21 +28,9 @@ class ChunithmNetAuth(httpx.Auth):
     ) -> Generator[httpx.Request, httpx.Response, None]:
         response = yield request
 
-        if response.status_code == SERVICE_UNAVAILABLE:
-            raise MaintenanceException
+        error: ChuniNetError | None = response.extensions.get("chunithm_net_error")
 
-        if response.url.path == "/mobile/error/":
-            dom = BeautifulSoup(response.content, BS4_FEATURE)
-            error_blocks = dom.select(".block.text_l .font_small")
-            code = int(error_blocks[0].text.split(": ", 1)[1])
-            description = error_blocks[1].text if len(error_blocks) > 1 else ""
-
-            if code not in {
-                ChuniNetError.CONNECTION_EXPIRED,
-                ChuniNetError.INVALID_SESSION,
-            }:
-                raise ChuniNetError(code, description)
-        elif response.url.path != "/mobile/":
+        if response.url.path != "/mobile/" and error is None:
             return
 
         auth_response = yield self.client.build_request("GET", _AUTHENTICATION_URL)
@@ -61,3 +49,26 @@ class ChunithmNetAuth(httpx.Auth):
             headers=request.headers,
             extensions=request.extensions,
         )
+
+
+async def raise_on_chunithm_net_error(response: httpx.Response):
+    if response.url.path != "/mobile/error/":
+        return
+
+    dom = BeautifulSoup(await response.aread(), BS4_FEATURE)
+    error_blocks = dom.select(".block.text_l .font_small")
+    code = int(error_blocks[0].text.split(": ", 1)[1])
+    description = error_blocks[1].text if len(error_blocks) > 1 else ""
+
+    error = response.extensions["chunithm_net_error"] = ChuniNetError(code, description)
+
+    if code not in {
+        ChuniNetError.CONNECTION_EXPIRED,
+        ChuniNetError.INVALID_SESSION,
+    }:
+        raise error
+
+
+async def raise_on_maintenance(response: httpx.Response):
+    if response.status_code == SERVICE_UNAVAILABLE:
+        raise MaintenanceException
