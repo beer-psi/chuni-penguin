@@ -44,7 +44,7 @@ dev = [
     "types-beautifulsoup4>=4.12.0.20240907",
     "jishaku>=2.5.2",
     "ruff==0.13.2",
-    "basedpyright==1.31.5",
+    "basedpyright==1.31.6",
     { include-group = "test" },
 ]
 test = [
