@@ -1,15 +1,16 @@
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import discord
-
-from cogs.gaming._session import GuessingGameSession
 
 from .base import GuessingGameState
 from .wait_for_answer import WaitForAnswerState
 
+if TYPE_CHECKING:
+    from cogs.gaming._session import GuessingGameSession
+
 
 class AskImageQuestionState(GuessingGameState):
-    def __init__(self, session: GuessingGameSession) -> None:
+    def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 
     @override

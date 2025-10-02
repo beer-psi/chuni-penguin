@@ -1,5 +1,5 @@
 import io
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import discord
 import rapidfuzz
@@ -7,7 +7,6 @@ from discord.utils import escape_markdown
 from rapidfuzz import fuzz
 
 from cogs.botutils import CachedAlias
-from cogs.gaming._session import GuessingGameSession, GuessingGameType
 from database.models import Song
 
 from .base import GuessingGameState
@@ -21,11 +20,14 @@ from .end_game import (
 )
 from .wait import WaitState
 
+if TYPE_CHECKING:
+    from cogs.gaming._session import GuessingGameSession
+
 
 class ShowAnswerState(GuessingGameState):
     def __init__(
         self,
-        session: GuessingGameSession,
+        session: "GuessingGameSession",
         song: Song,
         aliases: list[CachedAlias],
         answer_image: io.BufferedIOBase,
@@ -46,6 +48,8 @@ class ShowAnswerState(GuessingGameState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
+        from cogs.gaming._session import GuessingGameType
+
         if self.accepted_answer is not None:
             accepted_user = self.accepted_answer.author
 
@@ -116,7 +120,7 @@ class ShowAnswerState(GuessingGameState):
         else:
             content += " Next question in 3 seconds..."
             next_state = WaitState(
-                self.session, 3, self.session.question_state(self.session)
+                self.session, 3, self.session.question_state_cls(self.session)
             )
 
         await self.session.channel.send(

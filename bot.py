@@ -20,7 +20,6 @@ from discord.ext.track_edits import EditTrackerCog
 from sqlalchemy import select, text
 
 from cogs import COG_LIST
-from cogs.gaming.states.base import GuessingGameSkippableState
 from database.models import Denylist, Prefix
 from utils import json_dumps, json_loads
 from utils.command_tree import PenguinCommandTree
@@ -327,12 +326,7 @@ class ChuniBot(commands.AutoShardedBot):
 
             async with gaming.game_sessions_lock:
                 for session in gaming.game_sessions.values():
-                    session.stopped_by = self.user
-
-            async with gaming.state_for_game_session_lock:
-                for state in gaming.state_for_game_session.values():
-                    if isinstance(state, GuessingGameSkippableState):
-                        await state.skip()
+                    await session.stop(self.user)  # pyright: ignore[reportArgumentType]
 
             if len(pending) > 0:
                 await asyncio.wait(pending)

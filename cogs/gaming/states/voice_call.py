@@ -40,7 +40,10 @@ class AskVoiceCallQuestionState(GuessingGameState):
         track = songbird.Track(songbird.File(str(audio_path)))
         track.pause()
 
-        track_handle = await self.session.voice_client.play(track)
+        try:
+            track_handle = await self.session.voice_client.play(track)
+        except discord.ClientException:
+            return EndGameVoiceDisconnected(self.session)
 
         await track_handle.make_playable()
         track_handle.set_volume(self.session.volume / 100)
