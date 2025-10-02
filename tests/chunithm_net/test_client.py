@@ -4,7 +4,10 @@ from http.cookiejar import Cookie, LWPCookieJar
 from pathlib import Path
 from random import choices
 
+import httpx
+import httpx_aiohttp
 import pytest
+from pytest import MonkeyPatch
 from pytest_httpx import HTTPXMock
 
 from chunithm_net import ChuniNet
@@ -63,6 +66,20 @@ def user_id():
 @pytest.fixture
 def token():
     return "".join(choices("abcdef" + string.digits, k=32))
+
+
+@pytest.fixture(autouse=True)
+def patch_aiohttp_transport(monkeypatch: MonkeyPatch, httpx_mock: HTTPXMock):
+    async def mocked_handle_async_request(
+        transport: httpx_aiohttp.AIOHTTPTransport, request: httpx.Request
+    ) -> httpx.Response:
+        return await httpx_mock._handle_async_request(transport, request)  # pyright: ignore[reportArgumentType]
+
+    monkeypatch.setattr(
+        httpx_aiohttp.AIOHTTPTransport,
+        "handle_async_request",
+        mocked_handle_async_request,
+    )
 
 
 @pytest.mark.asyncio

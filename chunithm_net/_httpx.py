@@ -31,24 +31,27 @@ class ChunithmNetAuth(httpx.Auth):
         if response.status_code == SERVICE_UNAVAILABLE:
             raise MaintenanceException
 
-        if response.url.path != "/mobile/error/":
+        if response.url.path == "/mobile/error/":
+            dom = BeautifulSoup(response.content, BS4_FEATURE)
+            error_blocks = dom.select(".block.text_l .font_small")
+            code = int(error_blocks[0].text.split(": ", 1)[1])
+            description = error_blocks[1].text if len(error_blocks) > 1 else ""
+
+            if code not in {
+                ChuniNetError.CONNECTION_EXPIRED,
+                ChuniNetError.INVALID_SESSION,
+            }:
+                raise ChuniNetError(code, description)
+        elif response.url.path != "/mobile/":
             return
-
-        dom = BeautifulSoup(response.content, BS4_FEATURE)
-        error_blocks = dom.select(".block.text_l .font_small")
-        code = int(error_blocks[0].text.split(": ", 1)[1])
-        description = error_blocks[1].text if len(error_blocks) > 1 else ""
-
-        if code not in {
-            ChuniNetError.CONNECTION_EXPIRED,
-            ChuniNetError.INVALID_SESSION,
-        }:
-            raise ChuniNetError(code, description)
 
         auth_response = yield self.client.build_request("GET", _AUTHENTICATION_URL)
 
         if auth_response.url.host == _AUTHENTICATION_URL.host:
             raise InvalidTokenException
+
+        if str(auth_response.url) == str(request.url):
+            return
 
         # Build a new request so that cookies are refreshed
         yield self.client.build_request(
