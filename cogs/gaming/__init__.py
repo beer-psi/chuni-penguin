@@ -30,69 +30,6 @@ if TYPE_CHECKING:
     from cogs.events import EventsCog
 
 
-async def run_state_machine(
-    cog: "GamingCog",
-    channel: "MessageableChannel",
-    session: GuessingGameSession,
-    initial_state: GuessingGameState,
-):
-    voice_channel = session.voice_client.channel if session.voice_client else None
-    current_state: GuessingGameState | None = initial_state
-
-    while current_state is not None:
-        async with cog.state_for_game_session_lock:
-            cog.state_for_game_session[channel.id] = current_state
-
-            if voice_channel is not None:
-                cog.state_for_game_session[voice_channel.id] = current_state
-
-        try:
-            next_state = await current_state()
-
-            if next_state is None:
-                await cog._clear_state(channel.id)
-
-                if voice_channel is not None:
-                    await cog._clear_state(voice_channel.id)
-
-                if session.voice_client is not None:
-                    await session.voice_client.disconnect()
-
-                break
-
-            current_state = next_state
-        except Exception as e:  # noqa: BLE001
-            await logger.aexception(
-                "Error running guessing game",
-                tag="guessing_game_error",
-                exc_info=e,
-            )
-            await cog._clear_state(channel.id)
-
-            if voice_channel is not None:
-                await cog._clear_state(voice_channel.id)
-
-            if session.voice_client is not None:
-                await session.voice_client.disconnect()
-
-            if events_cog := cast("EventsCog | None", cog.bot.get_cog("Events")):
-                await events_cog._submit_error_to_webhook(session.ctx, e)
-
-            embed = discord.Embed(
-                color=discord.Color.red(),
-                title="Game ended",
-                description=(
-                    "The game ended due to an error:\n"
-                    "```python\n"
-                    f"{''.join(traceback.format_exception_only(e))}\n"
-                    "```\n"
-                    "If this keeps happening, please ping the owner or contact them in the support Discord."
-                ),
-            )
-            await channel.send(embed=embed)
-            break
-
-
 @dataclass
 class GuessArguments:
     difficulty: Difficulty
@@ -114,9 +51,6 @@ class GamingCog(commands.Cog, name="Games"):
 
         self.game_sessions: dict[int, GuessingGameSession] = {}
         self.game_sessions_lock = asyncio.Lock()
-
-        self.state_for_game_session: dict[int, GuessingGameState] = {}
-        self.state_for_game_session_lock = asyncio.Lock()
 
         self.shutting_down = False
 
@@ -348,8 +282,20 @@ class GamingCog(commands.Cog, name="Games"):
                 ):
                     session.time_per_question = session.get_audio_length() + 5
 
+        voice_channel_id = (
+            session.voice_client.channel.id
+            if session.voice_client is not None
+            else None
+        )
+
+        async def after(e):
+            await self._clear_state(ctx.channel.id)
+
+            if voice_channel_id is not None:
+                await self._clear_state(voice_channel_id)
+
         game_task = asyncio.create_task(
-            run_state_machine(self, ctx.channel, session, StartState(session))
+            session.run(after=after), name=f"chuni-penguin-guess-{ctx.channel.id}"
         )
 
         self.game_tasks.add(game_task)
@@ -405,11 +351,7 @@ class GamingCog(commands.Cog, name="Games"):
                 msg = "There are no ongoing games in this channel."
                 raise commands.CommandError(msg)
 
-        async with self.state_for_game_session_lock:
-            state = self.state_for_game_session[ctx.channel.id]
-
-        if isinstance(state, GuessingGameSkippableState):
-            await state.skip()
+            await self.game_sessions[ctx.channel.id].skip()
 
         if ctx.interaction is not None:
             await ctx.reply("Skipped!", mention_author=False)
@@ -437,13 +379,12 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "You cannot stop a game unless you started it or have the Manage Server permission."
             raise commands.CommandError(msg)
 
-        async with self.state_for_game_session_lock:
-            state = self.state_for_game_session[ctx.channel.id]
+        async with self.game_sessions_lock:
+            if ctx.channel.id not in self.game_sessions:
+                msg = "The game has already stopped."
+                raise commands.CommandError(msg)
 
-        session.stopped_by = ctx.author
-
-        if isinstance(state, GuessingGameSkippableState):
-            await state.skip()
+            await self.game_sessions[ctx.channel.id].stop(ctx.author)
 
         if ctx.interaction is not None:
             await ctx.reply("Stopped!", mention_author=False)
@@ -480,10 +421,6 @@ class GamingCog(commands.Cog, name="Games"):
         await ctx.message.add_reaction("✅")
 
     async def _clear_state(self, channel_id: int):
-        async with self.state_for_game_session_lock:
-            if channel_id in self.state_for_game_session:
-                del self.state_for_game_session[channel_id]
-
         async with self.game_sessions_lock:
             if channel_id in self.game_sessions:
                 del self.game_sessions[channel_id]
@@ -509,12 +446,11 @@ class GamingCog(commands.Cog, name="Games"):
 
         # We clear game states before disconnecting from the call, so this should be
         # safe if the game ended normally.
-        async with self.state_for_game_session_lock:
-            if (state := self.state_for_game_session.get(before.channel.id)) is None:
+        async with self.game_sessions_lock:
+            if before.channel.id not in self.game_sessions:
                 return
 
-        if isinstance(state, GuessingGameSkippableState):
-            await state.skip()
+            await self.game_sessions[before.channel.id].skip()
 
 
 async def setup(bot: "ChuniBot") -> None:

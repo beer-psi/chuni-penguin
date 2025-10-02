@@ -1,17 +1,18 @@
 import asyncio
 import contextlib
-from typing import override
-
-from cogs.gaming._session import GuessingGameSession, GuessingGameType
+from typing import TYPE_CHECKING, override
 
 from .base import GuessingGameSkippableState, GuessingGameState
 from .end_game import EndGameUserCanceled, EndGameVoiceDisconnected
+
+if TYPE_CHECKING:
+    from cogs.gaming._session import GuessingGameSession
 
 
 class WaitState(GuessingGameSkippableState):
     def __init__(
         self,
-        session: GuessingGameSession,
+        session: "GuessingGameSession",
         wait_time_s: int,
         next_state: GuessingGameState,
     ):
@@ -23,6 +24,8 @@ class WaitState(GuessingGameSkippableState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
+        from cogs.gaming._session import GuessingGameType
+
         self._task = asyncio.create_task(asyncio.sleep(self.wait_time_s))
 
         with contextlib.suppress(asyncio.CancelledError):
