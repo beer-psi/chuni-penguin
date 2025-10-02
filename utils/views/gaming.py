@@ -9,7 +9,6 @@ from sqlalchemy import Row, desc, func, select
 
 from chunithm_net.models.enums import Difficulty, Genres
 from cogs.gaming._session import GuessingGameSession, GuessingGameType
-from cogs.gaming.states.start import StartState
 from database.models import GuessScore
 from utils.config import config
 from utils.context import PenguinGuildContext
@@ -354,10 +353,22 @@ class RetryGameButton(
                 )
             )
 
-        from cogs.gaming import run_state_machine
+        voice_channel_id = (
+            interaction.guild.voice_client.channel.id
+            if interaction.guild is not None
+            and isinstance(interaction.guild.voice_client, songbird.SongbirdClient)
+            else None
+        )
+
+        async def after(e):
+            await gaming._clear_state(interaction.channel_id)  # pyright: ignore[reportArgumentType]
+
+            if voice_channel_id is not None:
+                await gaming._clear_state(voice_channel_id)
 
         game_task = asyncio.create_task(
-            run_state_machine(gaming, session.ctx.channel, session, StartState(session))
+            session.run(after=after),
+            name=f"chuni-penguin-guess-{interaction.channel_id}",
         )
 
         gaming.game_tasks.add(game_task)
