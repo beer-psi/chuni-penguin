@@ -32,7 +32,7 @@ speedup = [
     "lxml>=5.3.0",
     "uvloop>=0.21.0; sys_platform != 'win32' and implementation_name == 'cpython'",
     "winloop>=0.1.6; sys_platform == 'win32' and implementation_name == 'cpython'",
-    "zstandard>=0.23.0",
+    "zstandard>=0.23.0; python_version <= '3.13'",
     "aiodns>=3.2.0; sys_platform != 'win32'",
     "ciso8601>=2.3.2",
     "penguin-native",

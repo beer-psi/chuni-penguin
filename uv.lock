@@ -308,7 +308,7 @@ speedup = [
     { name = "penguin-native" },
     { name = "uvloop", marker = "implementation_name == 'cpython' and sys_platform != 'win32'" },
     { name = "winloop", marker = "implementation_name == 'cpython' and sys_platform == 'win32'" },
-    { name = "zstandard" },
+    { name = "zstandard", marker = "python_full_version < '3.14'" },
 ]
 
 [package.dev-dependencies]
@@ -358,7 +358,7 @@ requires-dist = [
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2024.2" },
     { name = "uvloop", marker = "implementation_name == 'cpython' and sys_platform != 'win32' and extra == 'speedup'", specifier = ">=0.21.0" },
     { name = "winloop", marker = "implementation_name == 'cpython' and sys_platform == 'win32' and extra == 'speedup'", specifier = ">=0.1.6" },
-    { name = "zstandard", marker = "extra == 'speedup'", specifier = ">=0.23.0" },
+    { name = "zstandard", marker = "python_full_version < '3.14' and extra == 'speedup'", specifier = ">=0.23.0" },
 ]
 provides-extras = ["speedup"]
 
