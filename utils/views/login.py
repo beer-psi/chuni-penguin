@@ -19,8 +19,14 @@ if TYPE_CHECKING:
 
 
 class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
-    username = discord.ui.TextInput(label="SEGA ID Username", min_length=1)
-    password = discord.ui.TextInput(label="SEGA ID Password", min_length=1)
+    username = discord.ui.TextInput(label="SEGA ID username", min_length=1)
+    password = discord.ui.TextInput(label="SEGA ID password", min_length=1)
+    otp = discord.ui.TextInput(
+        label="Two-factor authentication code (if enabled)",
+        min_length=6,
+        max_length=6,
+        required=False,
+    )
 
     def __init__(
         self,
@@ -58,18 +64,46 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
                 follow_redirects=False,
             )
 
-            if (
-                location := resp.headers.get("location")
-            ) is None or "https://chunithm-net-eng.com" not in location:
+            location = resp.headers.get("location")
+            correct_username_password = False
+
+            if location == "https://lng-tgk-aime-gw.am-all.net/common_auth/login/otp":
+                correct_username_password = True
+
+                if not self.otp.value:
+                    await interaction.followup.send(
+                        embed=discord.Embed(
+                            color=discord.Color.red(),
+                            title="Error",
+                            description="Two-factor authentication was enabled, but a code was not provided.",
+                        ),
+                        ephemeral=True,
+                    )
+                    return
+
+                resp = await client.post(
+                    "https://lng-tgk-aime-gw.am-all.net/common_auth/login/otpauth",
+                    data={"password": self.otp.value},
+                    follow_redirects=False,
+                )
+                location = resp.headers.get("location")
+
+            if location is None or "https://chunithm-net-eng.com" not in location:
+                if correct_username_password:
+                    description = "Invalid two-factor authentication code."
+                else:
+                    description = "Invalid username or password."
+
                 await interaction.followup.send(
                     embed=discord.Embed(
                         color=discord.Color.red(),
                         title="Error",
-                        description="Invalid username or password.",
+                        description=description,
                     ),
                     ephemeral=True,
                 )
                 return
+
             clal = client.cookies.get("clal", domain="lng-tgk-aime-gw.am-all.net")
 
             if clal is None:
