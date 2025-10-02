@@ -261,10 +261,10 @@ class EventsCog(commands.Cog, name="Events"):
         ):
             embed.description = str(exc)
 
-        if isinstance(exc, httpx.TimeoutException):
+        if isinstance(exc, (httpx.TimeoutException, aiohttp.ServerTimeoutError)):
             embed.description = "Timed out trying to connect to the network."
 
-        if isinstance(exc, httpx.TransportError):
+        if isinstance(exc, (httpx.TransportError, aiohttp.ClientConnectionError)):
             embed.description = (
                 "An unknown network error occured trying to connect to the network.\n"
                 "\n"
