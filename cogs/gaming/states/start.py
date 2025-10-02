@@ -1,15 +1,16 @@
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import discord
-
-from cogs.gaming._session import GuessingGameSession
 
 from .base import GuessingGameState
 from .wait import WaitState
 
+if TYPE_CHECKING:
+    from cogs.gaming._session import GuessingGameSession
+
 
 class StartState(GuessingGameState):
-    def __init__(self, session: GuessingGameSession) -> None:
+    def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 
     @override
@@ -61,4 +62,4 @@ class StartState(GuessingGameState):
             )
 
         await self.session.ctx.send(embed=embed)
-        return WaitState(self.session, 5, self.session.question_state(self.session))
+        return WaitState(self.session, 5, self.session.question_state_cls(self.session))

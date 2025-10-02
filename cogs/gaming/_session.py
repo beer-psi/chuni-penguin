@@ -1,9 +1,11 @@
 import asyncio
 import io
 import random
+import traceback
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import discord
 import rapidfuzz
@@ -18,10 +20,17 @@ from sqlalchemy.sql import update
 
 from chunithm_net.models.enums import Difficulty, Genres
 from cogs.botutils import CachedAlias
+from cogs.events import EventsCog
 from database.models import Alias, GuessScore, Song
 from utils.constants import ASSETS_DIR
 from utils.logging import logger
 from utils.oggopus import crop_audio, get_audio_duration
+
+from .states.base import GuessingGameSkippableState, GuessingGameState
+from .states.image import AskImageQuestionState
+from .states.start import StartState
+from .states.voice_call import AskVoiceCallQuestionState
+from .states.voice_message import AskVoiceMessageQuestionState
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -31,6 +40,19 @@ class GuessingGameType(Enum):
     IMAGE = "Jacket"
     VOICE_MESSAGE = "Audio"
     VOICE_CHANNEL = "Voice"
+
+    def question_state_cls(self):
+        if self == GuessingGameType.IMAGE:
+            return AskImageQuestionState
+
+        if self == GuessingGameType.VOICE_MESSAGE:
+            return AskVoiceMessageQuestionState
+
+        if self == GuessingGameType.VOICE_CHANNEL:
+            return AskVoiceCallQuestionState
+
+        msg = "Unknown game mode"
+        raise ValueError(msg)
 
 
 class GuessingGameSession:
@@ -55,7 +77,9 @@ class GuessingGameSession:
             raise ValueError(msg)
 
         self.difficulty: Difficulty = difficulty
-        self.game_type: GuessingGameType = game_type
+
+        self._game_type: GuessingGameType = game_type
+        self._question_state_cls = self._game_type.question_state_cls()
 
         self.questions_done: int = 0
         self.questions_timed_out: int = 0
@@ -84,6 +108,21 @@ class GuessingGameSession:
         self.volume: int = volume
 
         self._tasks: set[asyncio.Task] = set()
+        self._lock: asyncio.Lock = asyncio.Lock()
+        self._current_state: GuessingGameState | None = StartState(self)
+
+    @property
+    def game_type(self) -> GuessingGameType:
+        return self._game_type
+
+    @game_type.setter
+    def game_type(self, value: GuessingGameType):
+        self._game_type = value
+        self._question_state_cls = value.question_state_cls()
+
+    @property
+    def question_state_cls(self):
+        return self._question_state_cls
 
     @property
     def bot(self) -> "ChuniBot":
@@ -96,6 +135,81 @@ class GuessingGameSession:
     @property
     def voice_client(self):
         return cast(songbird.SongbirdClient | None, self.ctx.voice_client)
+
+    async def run(
+        self,
+        after: Callable[[Exception | None], Awaitable[Any]] | None = None,
+    ):
+        state = self._current_state
+
+        while state is not None:
+            async with self._lock:
+                self._current_state = state
+
+            try:
+                next_state = await state()
+
+                if next_state is None:
+                    async with self._lock:
+                        self._current_state = None
+
+                    if after is not None:
+                        await after(None)
+
+                    if self.voice_client is not None:
+                        await self.voice_client.disconnect()
+
+                    break
+
+                state = next_state
+            except Exception as e:  # noqa: BLE001
+                await logger.aexception(
+                    "Error running guessing game",
+                    tag="guessing_game_error",
+                    exc_info=e,
+                )
+
+                async with self._lock:
+                    self._current_state = None
+
+                if after is not None:
+                    await after(e)
+
+                if self.voice_client is not None:
+                    await self.voice_client.disconnect()
+
+                if events_cog := self.ctx.bot.get_cog("Events"):
+                    assert isinstance(events_cog, EventsCog)
+                    await events_cog._submit_error_to_webhook(self.ctx, e)
+
+                embed = discord.Embed(
+                    color=discord.Color.red(),
+                    title="Game ended",
+                    description=(
+                        "The game ended due to an error:\n"
+                        "```python\n"
+                        f"{''.join(traceback.format_exception_only(e))}\n"
+                        "```\n"
+                        "If this keeps happening, please ping the owner or contact them in the support Discord."
+                    ),
+                )
+                await self.channel.send(embed=embed)
+
+                break
+
+    async def skip(self):
+        async with self._lock:
+            if isinstance(self._current_state, GuessingGameSkippableState):
+                await self._current_state.skip()
+
+    async def stop(
+        self, stopped_by: discord.User | discord.Member | discord.ClientUser
+    ):
+        async with self._lock:
+            self.stopped_by = stopped_by
+
+            if isinstance(self._current_state, GuessingGameSkippableState):
+                await self._current_state.skip()
 
     def get_crop_dimensions(self):
         if self.difficulty == Difficulty.BASIC:
@@ -459,23 +573,3 @@ class GuessingGameSession:
                 "message", check=on_message_check, timeout=self.time_per_question
             )
         )
-
-    @property
-    def question_state(self):
-        if self.game_type == GuessingGameType.IMAGE:
-            from .states.image import AskImageQuestionState
-
-            return AskImageQuestionState
-
-        if self.game_type == GuessingGameType.VOICE_MESSAGE:
-            from .states.voice_message import AskVoiceMessageQuestionState
-
-            return AskVoiceMessageQuestionState
-
-        if self.game_type == GuessingGameType.VOICE_CHANNEL:
-            from .states.voice_call import AskVoiceCallQuestionState
-
-            return AskVoiceCallQuestionState
-
-        msg = "Unsupported gamemode"
-        raise ValueError(msg)

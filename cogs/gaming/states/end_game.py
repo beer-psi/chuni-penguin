@@ -1,12 +1,13 @@
 import random
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.utils import MISSING
 
-from cogs.gaming._session import GuessingGameSession
-
 from .base import GuessingGameState
+
+if TYPE_CHECKING:
+    from cogs.gaming._session import GuessingGameSession
 
 # Tips that don't need any sort of session data.
 STATIC_TIPS = tips = [
@@ -45,7 +46,7 @@ STATIC_TIPS = tips = [
 
 
 async def end_game(
-    session: GuessingGameSession,
+    session: "GuessingGameSession",
     color: discord.Color,
     description: str,
     *,
@@ -121,7 +122,7 @@ async def end_game(
 
 
 class EndGameTimedOut(GuessingGameState):
-    def __init__(self, session: GuessingGameSession, n_unanswered: int) -> None:
+    def __init__(self, session: "GuessingGameSession", n_unanswered: int) -> None:
         self.session = session
         self.n_unanswered = n_unanswered
 
@@ -137,7 +138,7 @@ class EndGameTimedOut(GuessingGameState):
 
 
 class EndGameReachedQuestionLimit(GuessingGameState):
-    def __init__(self, session: GuessingGameSession) -> None:
+    def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 
     @override
@@ -151,7 +152,7 @@ class EndGameReachedQuestionLimit(GuessingGameState):
 
 
 class EndGameReachedScoreLimit(GuessingGameState):
-    def __init__(self, session: GuessingGameSession) -> None:
+    def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 
     @override
@@ -165,7 +166,7 @@ class EndGameReachedScoreLimit(GuessingGameState):
 
 
 class EndGameUserCanceled(GuessingGameState):
-    def __init__(self, session: GuessingGameSession) -> None:
+    def __init__(self, session: "GuessingGameSession") -> None:
         if session.stopped_by is None:
             msg = "Cannot reach this state if stopped_by is None."
             raise ValueError(msg)
@@ -194,7 +195,7 @@ class EndGameUserCanceled(GuessingGameState):
 
 
 class EndGameTooManyWrongAnswers(GuessingGameState):
-    def __init__(self, session: GuessingGameSession) -> None:
+    def __init__(self, session: "GuessingGameSession") -> None:
         if session.wrong_answers_limit is None:
             msg = "Cannot reach this state if wrong answers limit is not set."
             raise ValueError(msg)
@@ -212,7 +213,7 @@ class EndGameTooManyWrongAnswers(GuessingGameState):
 
 
 class EndGameVoiceDisconnected(GuessingGameState):
-    def __init__(self, session: GuessingGameSession) -> None:
+    def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 
     @override
