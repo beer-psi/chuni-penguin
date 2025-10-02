@@ -13,6 +13,7 @@ import discord
 import discord.utils
 import hishel
 import httpx
+import httpx_aiohttp
 import platformdirs
 from discord.ext import commands
 from discord.ext.track_edits import EditTrackerCog
@@ -120,7 +121,7 @@ class ChuniBot(commands.AutoShardedBot):
         self.caching_http_client = hishel.AsyncCacheClient(
             timeout=httpx.Timeout(timeout=60.0),
             follow_redirects=True,
-            transport=httpx.AsyncHTTPTransport(retries=5),
+            transport=httpx_aiohttp.AIOHTTPTransport(retries=5),
             controller=hishel.Controller(
                 cacheable_methods=["GET", "HEAD"],
                 allow_heuristics=True,

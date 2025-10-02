@@ -1,4 +1,5 @@
 import httpx
+import httpx_aiohttp
 from sqlalchemy import bindparam, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
@@ -9,7 +10,9 @@ from database.models import Chart
 async def update_tachi(
     logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
 ):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(
+        transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
+    ) as client:
         resp = await client.get(
             "https://raw.githubusercontent.com/zkrising/Tachi/main/seeds/collections/charts-chunithm.json"
         )

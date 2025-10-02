@@ -2,6 +2,7 @@ import re
 from typing import TypedDict
 
 import httpx
+import httpx_aiohttp
 import msgspec
 from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
@@ -56,7 +57,7 @@ def normalize_artist(artist: str):
 async def update_jackets(
     logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
 ):
-    client = httpx.AsyncClient()
+    client = httpx.AsyncClient(transport=httpx_aiohttp.AIOHTTPTransport(retries=5))
 
     jackets: list[SongJacketInsertCols] = []
     song_title_artist_lookup: dict[str, Song] = {}

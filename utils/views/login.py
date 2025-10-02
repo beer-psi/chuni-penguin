@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any, override
 
 import discord.ui
 import httpx
+import httpx_aiohttp
 from discord import Interaction
 from discord.abc import MISSING
 from discord.ext.commands import Context
@@ -43,7 +44,7 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
         async with httpx.AsyncClient(
             cookies=jar,
             timeout=httpx.Timeout(timeout=60.0),
-            transport=httpx.AsyncHTTPTransport(retries=5),
+            transport=httpx_aiohttp.AIOHTTPTransport(retries=5),
         ) as client:
             await client.get(_AUTHENTICATION_URL)
 
