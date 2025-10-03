@@ -11,6 +11,9 @@ COOKIE_CHARACTERS = f"{string.ascii_lowercase}{string.digits}"
 
 
 def is_valid_clal(clal: str) -> bool:
+    if clal.startswith("clal="):
+        clal = clal[5:]
+
     return len(clal) == 64 and all(c in COOKIE_CHARACTERS for c in clal)
 
 
