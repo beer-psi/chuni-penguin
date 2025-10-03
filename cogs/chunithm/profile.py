@@ -16,6 +16,7 @@ from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
 from database.models import UserConfig
 from utils import flags, json_loads
+from utils.config import config
 from utils.context import PenguinContext
 from utils.converters import MemberOrUserConverter
 from utils.logging import logged_app_command, logged_prefix_command
@@ -195,6 +196,8 @@ class ProfileCog(commands.Cog, name="Profile"):
 
             user_id = data["body"]["id"]
             username = data["body"]["username"]
+            custom_banner_location = data["body"]["customBannerLocation"]
+            custom_pfp_location = data["body"]["customPfpLocation"]
 
             resp = await client.get(
                 "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
@@ -212,6 +215,22 @@ class ProfileCog(commands.Cog, name="Profile"):
             color=0xCA1961,
             url=f"https://kamai.tachi.ac/u/{username}/games/chunithm/Single",
         )
+
+        if (
+            config.web.enable
+            and config.web.base_url is not None
+            and "localhost" not in config.web.base_url
+            and "127.0.0.1" not in config.web.base_url
+        ):
+            if custom_banner_location is not None:
+                embed.set_image(
+                    url=f"{config.web.base_url}/kamaitachi/users/{user_id}/banner/{custom_banner_location}"
+                )
+            if custom_pfp_location is not None:
+                embed.set_thumbnail(
+                    url=f"{config.web.base_url}/kamaitachi/users/{user_id}/pfp/{custom_pfp_location}"
+                )
+
         description = ""
 
         if "dan" in stats["gameStats"]["classes"]:
