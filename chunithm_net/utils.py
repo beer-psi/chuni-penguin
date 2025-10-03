@@ -1,3 +1,4 @@
+import string
 from datetime import datetime
 from typing import cast
 from zoneinfo import ZoneInfo
@@ -5,6 +6,12 @@ from zoneinfo import ZoneInfo
 from bs4.element import ResultSet, Tag
 
 from .models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
+
+COOKIE_CHARACTERS = f"{string.ascii_lowercase}{string.digits}"
+
+
+def is_valid_clal(clal: str) -> bool:
+    return len(clal) == 64 and all(c in COOKIE_CHARACTERS for c in clal)
 
 
 def chuni_int(s: str) -> int:

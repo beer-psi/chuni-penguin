@@ -1,3 +1,4 @@
+import contextlib
 from asyncio import TimeoutError
 from http.cookiejar import Cookie as HTTPCookie
 from http.cookiejar import LWPCookieJar
@@ -12,10 +13,10 @@ from sqlalchemy import update
 
 from chunithm_net import ChuniNet
 from chunithm_net.exceptions import ChuniNetException, InvalidTokenException
+from chunithm_net.utils import is_valid_clal
 from database.models import Cookie
 from utils.config import config
 from utils.context import PenguinContext
-from utils.context_manager import asuppress
 from utils.logging import logged_app_command, logged_prefix_command, logger
 from utils.views.login import LoginFlowView
 
@@ -42,22 +43,22 @@ class AuthCog(commands.Cog, name="Auth"):
         msg = "Successfully logged out."
 
         if invalidate:
-            async with (
-                asuppress(InvalidTokenException),
-                self.utils.chuninet(ctx) as client,
-            ):
-                result = await client.logout()
+            logged_out = False
 
-                if not result:
-                    await logger.awarning(
-                        "Could not sign user out of CHUNITHM-NET",
-                        tag="chunithm_net_logout_failed",
-                        user_id=ctx.author.id,
-                    )
-                    msg = (
-                        "There was an error signing out from CHUNITHM-NET. "
-                        "However, your account has been deleted from our records."
-                    )
+            with contextlib.suppress(InvalidTokenException):
+                async with self.utils.chuninet(ctx) as client:
+                    logged_out = await client.logout()
+
+            if not logged_out:
+                await logger.awarning(
+                    "Could not sign user out of CHUNITHM-NET",
+                    tag="chunithm_net_logout_failed",
+                    user_id=ctx.author.id,
+                )
+                msg = (
+                    "There was an error signing out from CHUNITHM-NET. "
+                    "However, your account has been deleted from our records."
+                )
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             stmt = (
@@ -177,7 +178,7 @@ class AuthCog(commands.Cog, name="Auth"):
                 f"Login instructions have been sent to your DMs. {please_delete_message}"
                 "(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)"
             )
-        elif clal is not None:
+        elif clal is not None and is_valid_clal(clal):
             if (e := await self._verify_and_login(ctx.author.id, clal)) is None:
                 await logger.adebug(
                     "User logged in.", tag="user_logged_in", user_id=ctx.author.id
