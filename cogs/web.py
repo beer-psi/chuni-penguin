@@ -3,6 +3,7 @@ import sys
 from datetime import UTC, datetime
 from html import escape
 from io import BytesIO
+from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 import aiohttp
@@ -123,7 +124,7 @@ async def kamaitachi_user_image(request: web.Request) -> web.Response:
     session: ClientSession = request.config_dict["session"]
 
     kamai_cdn_url = (
-        f"https://cdn-kamai.tachi.ac/users/{user_id}/{image_type}-{filename}"
+        f"https://cdn-kamai.tachi.ac/users/{user_id}/{image_type}-{Path(filename).stem}"
     )
 
     # Kamaitachi profile pictures and banners are named using the image's
