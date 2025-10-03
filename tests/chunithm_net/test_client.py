@@ -817,3 +817,43 @@ async def test_client_can_rename(
 
     async with ChuniNet(jar) as client:
         assert await client.change_player_name("new name") is True
+
+
+@pytest.mark.asyncio
+async def test_client_collections(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+    with (BASE_DIR / "assets" / "collection_customise.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/collection/customise",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChuniNet(jar) as client:
+        collections = await client.current_collections()
+
+        assert len(collections.titles) == 2
+
+        assert (
+            collections.titles[0].content
+            == "Phosphoribosylaminoimidazolesuccinocarboxamide"
+        )
+        assert collections.titles[0].rarity == "platina"
+
+        assert collections.titles[1].content == "Should be burning in hell."
+        assert collections.titles[1].rarity == "silver"
+
+        assert (
+            collections.nameplate
+            == "https://chunithm-net-eng.com/mobile/img/14c0bda1b8026041.png"
+        )
+
+        assert (
+            collections.map_icon
+            == "https://chunithm-net-eng.com/mobile/img/60df318292eae46b.png"
+        )
+
+        assert (
+            collections.system_voice
+            == "https://chunithm-net-eng.com/mobile/img/b54ab119af308f73.png"
+        )
