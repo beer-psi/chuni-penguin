@@ -1,4 +1,4 @@
-# pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false
+# pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false, reportArgumentType=false
 import logging
 import re
 from pathlib import Path
@@ -20,6 +20,7 @@ from .models.enums import (
 from .models.player_data import (
     Currency,
     Overpower,
+    PlayerCollections,
     PlayerData,
     Team,
     Title,
@@ -60,6 +61,25 @@ class SpecialTitle(msgspec.Struct):
 
 with (Path(__file__).parent / "assets" / "titles.json").open(encoding="utf-8") as f:
     SPECIAL_TITLES = msgspec.json.decode(f.read(), type=dict[str, SpecialTitle])
+
+
+def parse_avatar(avatar_group: Tag) -> UserAvatar:
+    return UserAvatar(
+        base="https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png",
+        back=avatar_group.select_one(".avatar_back img")["src"],
+        skinfoot_r=avatar_group.select_one(".avatar_skinfoot_r img")["src"],
+        skinfoot_l=avatar_group.select_one(".avatar_skinfoot_l img")["src"],
+        skin=avatar_group.select_one(".avatar_skin img")["src"],
+        wear=avatar_group.select_one(".avatar_wear img")["src"],
+        face=avatar_group.select_one(".avatar_face img")["src"],
+        face_cover=avatar_group.select_one(".avatar_faceCover img")["src"],
+        head=avatar_group.select_one(".avatar_head img")["src"],
+        hand_r=avatar_group.select_one(".avatar_hand_r img")["src"],
+        hand_l=avatar_group.select_one(".avatar_hand_l img")["src"],
+        item_r=avatar_group.select_one(".avatar_item_r img")["src"],
+        item_l=avatar_group.select_one(".avatar_item_l img")["src"],
+        front=avatar_group.select_one(".avatar_front img")["src"],
+    )
 
 
 def parse_player_card_and_avatar(soup: BeautifulSoup):
@@ -157,21 +177,7 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     )
 
     avatar_group = soup.select_one(".avatar_group")
-    avatar = UserAvatar(
-        base="https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png",
-        back=cast(str, avatar_group.select_one(".avatar_back img")["src"]),
-        skinfoot_r=cast(str, avatar_group.select_one(".avatar_skinfoot_r img")["src"]),
-        skinfoot_l=cast(str, avatar_group.select_one(".avatar_skinfoot_l img")["src"]),
-        skin=cast(str, avatar_group.select_one(".avatar_skin img")["src"]),
-        wear=cast(str, avatar_group.select_one(".avatar_wear img")["src"]),
-        face=cast(str, avatar_group.select_one(".avatar_face img")["src"]),
-        face_cover=cast(str, avatar_group.select_one(".avatar_faceCover img")["src"]),
-        head=cast(str, avatar_group.select_one(".avatar_head img")["src"]),
-        hand_r=cast(str, avatar_group.select_one(".avatar_hand_r img")["src"]),
-        hand_l=cast(str, avatar_group.select_one(".avatar_hand_l img")["src"]),
-        item_r=cast(str, avatar_group.select_one(".avatar_item_r img")["src"]),
-        item_l=cast(str, avatar_group.select_one(".avatar_item_l img")["src"]),
-    )
+    avatar = parse_avatar(avatar_group)
 
     return PlayerData(
         character=character,
@@ -450,3 +456,13 @@ def parse_course_list(soup: BeautifulSoup):
         courses.append(course)
 
     return courses
+
+
+def parse_collection_customize(soup: BeautifulSoup) -> PlayerCollections:
+    return PlayerCollections(
+        avatar=parse_avatar(soup.select_one(".avatar_customise_group")),
+        titles=[],
+        nameplate=soup.select_one(".nameplate_now img")["src"],
+        map_icon=soup.select_one(".mapicon_now img")["src"],
+        system_voice=soup.select_one(".systemvoice_now img")["src"],
+    )
