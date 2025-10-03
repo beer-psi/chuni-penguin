@@ -93,6 +93,17 @@ class LoginBonusView(PaginationView):
         self.remove_item(self.to_next_page)
         self.remove_item(self.to_last_page)
 
+    @override
+    async def on_timeout(self) -> None:
+        self.monthly_login_bonus.disabled = True
+        self.login_bonus.disabled = True
+        self.daily_bonus.disabled = True
+
+        self._remove_pagination_buttons()
+
+        if self.message is not None:
+            await self.message.edit(view=self)
+
     @discord.ui.button(
         label="Monthly Login Bonus", row=2, style=discord.ButtonStyle.green
     )
