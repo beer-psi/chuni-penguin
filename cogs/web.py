@@ -1,5 +1,4 @@
 import asyncio
-import string
 import sys
 from datetime import UTC, datetime
 from html import escape
@@ -15,6 +14,7 @@ from discord.utils import oauth_url
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from chunithm_net.utils import is_valid_clal
 from database.models import Chart, Cookie, Song
 from utils import get_jacket_url, json_dumps, json_loads, sdvxin_link
 from utils.config import config
@@ -23,8 +23,6 @@ from utils.logging import logger
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-
-COOKIE_CHARACTERS = f"{string.ascii_lowercase}{string.digits}"
 
 router = web.RouteTableDef()
 
@@ -155,7 +153,7 @@ async def login(request: web.Request) -> web.Response:
     if clal.startswith("clal="):
         clal = clal[5:]
 
-    if len(clal) != 64 or any(c not in COOKIE_CHARACTERS for c in clal):
+    if not is_valid_clal(clal):
         raise web.HTTPBadRequest(reason="Invalid cookie provided")
 
     if not otp.isdigit() and len(otp) != 6:

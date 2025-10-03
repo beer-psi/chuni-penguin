@@ -1,3 +1,4 @@
+import contextlib
 from collections.abc import Generator
 from http.client import SERVICE_UNAVAILABLE
 
@@ -8,7 +9,10 @@ from ._bs4 import BS4_FEATURE
 from .exceptions import ChuniNetError, InvalidTokenException, MaintenanceException
 
 _AUTHENTICATION_URL = httpx.URL(
-    "https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=chuniex&redirect_url=https://chunithm-net-eng.com/mobile/&back_url=https://chunithm.sega.com/"
+    "https://lng-tgk-aime-gw.am-all.net/common_auth/login"
+    "?site_id=chuniex"
+    "&redirect_url=https://chunithm-net-eng.com/mobile/"
+    "&back_url=https://chunithm.sega.com/"
 )
 
 
@@ -41,14 +45,12 @@ class ChunithmNetAuth(httpx.Auth):
         if str(auth_response.url) == str(request.url):
             return
 
-        # Build a new request so that cookies are refreshed
-        yield self.client.build_request(
-            request.method,
-            request.url,
-            content=request.content,
-            headers=request.headers,
-            extensions=request.extensions,
-        )
+        # refresh cookies on the request
+        with contextlib.suppress(KeyError):
+            del request.headers["cookie"]
+            del request.headers["cookie2"]
+        self.client.cookies.set_cookie_header(request)
+        yield request
 
 
 async def raise_on_chunithm_net_error(response: httpx.Response):

@@ -1,10 +1,12 @@
 import importlib.util
+import random
+import string
 
 import pytest
 from bs4 import BeautifulSoup
 
 from chunithm_net.models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
-from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps
+from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps, is_valid_clal
 
 
 @pytest.mark.parametrize(
@@ -153,3 +155,24 @@ def test_difficulty_from_imgurl(value, expected):
 def test_difficulty_from_imgurl_raises_on_unknown_difficulty(value):
     with pytest.raises(ValueError):
         difficulty_from_imgurl(value)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("".join(random.choices(string.ascii_lowercase + string.digits, k=64)), True),
+        (
+            "clal="
+            + "".join(random.choices(string.ascii_lowercase + string.digits, k=64)),
+            True,
+        ),
+        # AI autocomplete generated this one, but it's funny, so I'll keep it.
+        (
+            "thembululwa",
+            False,
+        ),
+        ("Ｈｕｃ　Ｔｏｕｒ" * 8, False),  # noqa: RUF001
+    ],
+)
+def test_is_valid_clal(value: str, expected: bool):  # noqa: FBT001
+    assert is_valid_clal(value) is expected
