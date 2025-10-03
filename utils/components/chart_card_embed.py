@@ -11,7 +11,7 @@ from utils.calculation.border import (
 )
 from utils.calculation.rating import calculate_rating
 from utils.config import config
-from utils.ranks import rank_icon
+from utils.icons import rank_icon
 
 if TYPE_CHECKING:
     from database.models import Chart

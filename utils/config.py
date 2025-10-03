@@ -105,6 +105,10 @@ class IconsConfig:
         "b",
         "c",
         "d",
+        "bonus_icon_chance",
+        "bonus_icon_map",
+        "bonus_icon_gamepoint",
+        "bonus_icon_exp",
     )
 
     def __init__(self, section: "SectionProxy") -> None:

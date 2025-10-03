@@ -16,8 +16,10 @@ from chunithm_net.exceptions import ChuniNetError
 from chunithm_net.models.enums import SkillClass
 from database.models import UserConfig
 from utils import flags, json_loads
+from utils.context import PenguinContext
 from utils.converters import MemberOrUserConverter
 from utils.logging import logged_app_command, logged_prefix_command
+from utils.views.login_bonus import LoginBonusView
 from utils.views.profile import (
     PersistentHideFriendCodeButton,
     PersistentSendFriendRequestButton,
@@ -540,6 +542,17 @@ class ProfileCog(commands.Cog, name="Profile"):
             content=f"Set your config for `{key}` to `{value}`.",
             mention_author=False,
         )
+
+    @commands.hybrid_command("loginbonus")
+    @logged_prefix_command
+    async def loginbonus(self, ctx: PenguinContext):
+        """View your current login bonus progress."""
+
+        async with ctx.typing(), self.utils.chuninet(ctx) as client:
+            login_bonus = await client.login_bonus()
+
+        view = LoginBonusView(ctx, login_bonus)
+        await view.start()
 
 
 async def setup(bot: "ChuniBot"):
