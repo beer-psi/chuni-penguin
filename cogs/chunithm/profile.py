@@ -6,6 +6,8 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Literal, override
 
 import discord
+import httpx
+import magic
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -132,6 +134,35 @@ def render_avatar(items: dict[str, bytes]) -> BytesIO:
     return buffer
 
 
+async def guess_mime_type(response: httpx.Response) -> str:
+    data = BytesIO()
+
+    async for chunk in response.aiter_bytes():
+        if data.tell() == 0:
+            # some simple and common formats can be checked first without
+            # calling into libmagic
+            fourcc = chunk[:4]
+
+            if fourcc == b"GIF8":
+                return "image/gif"
+
+            if fourcc == b"\x89PNG":
+                return "image/png"
+
+            if fourcc[:3] == b"\xff\xd8\xff" and fourcc[3] in (0xDB, 0xE0, 0xE1, 0xEE):
+                return "image/jpeg"
+
+            if fourcc == b"RIFF" and fourcc[8:12] == b"WEBP":
+                return "image/webp"
+
+        data.write(chunk)
+
+        if data.tell() >= 2048:
+            break
+
+    return magic.from_buffer(data.getvalue(), mime=True)
+
+
 class ProfileCog(commands.Cog, name="Profile"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
@@ -198,6 +229,24 @@ class ProfileCog(commands.Cog, name="Profile"):
             username = data["body"]["username"]
             custom_banner_location = data["body"]["customBannerLocation"]
             custom_pfp_location = data["body"]["customPfpLocation"]
+
+            # Discord really doesn't like image files without extensions, hence
+            # this stupid hack.
+            if custom_banner_location is not None:
+                async with client.stream_banner(
+                    user_id, custom_banner_location
+                ) as response:
+                    mime = await guess_mime_type(response)
+
+                    if mime.startswith("image/"):
+                        custom_banner_location += f".{mime[6:]}"
+
+            if custom_pfp_location is not None:
+                async with client.stream_pfp(user_id, custom_pfp_location) as response:
+                    mime = await guess_mime_type(response)
+
+                    if mime.startswith("image/"):
+                        custom_pfp_location += f".{mime[6:]}"
 
             resp = await client.get(
                 "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"

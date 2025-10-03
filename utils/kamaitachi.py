@@ -1,4 +1,5 @@
 import urllib.parse
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Generic, Literal, TypeVar
@@ -457,6 +458,34 @@ class KamaitachiClient:
 
     async def get(self, url: str) -> httpx.Response:
         return await self._client.get(url)
+
+    @asynccontextmanager
+    async def stream_pfp(self, user_id: int, custom_pfp_location: str):
+        request = self._client.build_request(
+            "GET",
+            f"https://cdn-kamai.tachi.ac/users/{user_id}/pfp-{custom_pfp_location}",
+        )
+        del request.headers["Authorization"]
+
+        response = await self._client.send(request=request, stream=True)
+        try:
+            yield response
+        finally:
+            await response.aclose()
+
+    @asynccontextmanager
+    async def stream_banner(self, user_id: int, custom_banner_location: str):
+        request = self._client.build_request(
+            "GET",
+            f"https://cdn-kamai.tachi.ac/users/{user_id}/banner-{custom_banner_location}",
+        )
+        del request.headers["Authorization"]
+
+        response = await self._client.send(request=request, stream=True)
+        try:
+            yield response
+        finally:
+            await response.aclose()
 
     async def chunithm_profile(self) -> httpx.Response:
         return await self._client.get(
