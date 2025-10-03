@@ -43,7 +43,7 @@ ARG GID=1000
 ARG GIT_SHA=unknown
 
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive mimalloc opus libssl3 libcrypto3 libgcc patch \
+    && apk add --no-interactive mimalloc opus libssl3 libcrypto3 libgcc libmagic patch \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
@@ -66,3 +66,4 @@ RUN mkdir -p /code/.cache
 
 WORKDIR /code
 ENTRYPOINT ["/code/.venv/bin/python3", "bot.pyc"]
+
