@@ -2,6 +2,7 @@ import asyncio
 import sys
 from datetime import UTC, datetime
 from html import escape
+from io import BytesIO
 from typing import TYPE_CHECKING, override
 
 import aiohttp
@@ -11,6 +12,7 @@ from aiohttp.web import Application
 from async_lru import alru_cache
 from discord.ext import commands
 from discord.utils import oauth_url
+from PIL import Image, UnidentifiedImageError
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -47,8 +49,9 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
             reason="Some options are not configured. Yell at the bot owner."
         )
 
-    session: ClientSession = request.config_dict["session"] or ClientSession()
+    session: ClientSession = request.config_dict["session"]
     params = request.query
+
     if "code" not in params or "context" not in params:
         raise web.HTTPBadRequest(reason="Missing parameters")
 
@@ -109,6 +112,57 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
                 )
 
     return web.Response(text=message, content_type="text/plain")
+
+
+@router.get(r"/kamaitachi/users/{user_id:\d+}/{image_type:(pfp|banner)}/{filename}")
+async def kamaitachi_user_image(request: web.Request) -> web.Response:
+    user_id = int(request.match_info["user_id"])
+    image_type = request.match_info["image_type"]
+    filename = request.match_info["filename"]
+
+    session: ClientSession = request.config_dict["session"]
+
+    kamai_cdn_url = (
+        f"https://cdn-kamai.tachi.ac/users/{user_id}/{image_type}-{filename}"
+    )
+
+    # Kamaitachi profile pictures and banners are named using the image's
+    # SHA256 hash, so an image link should be as good as permanent (until the
+    # user switches to another profile picture).
+    # This also means that they can be used as ETag identifiers. If anyone
+    # sends an If-None-Match header, they should already have the image
+    # cached in their system.
+    # Though we send a HEAD just to be sure.
+    if "If-None-Match" in request.headers:
+        async with session.head(kamai_cdn_url) as resp:
+            if resp.ok:
+                return web.Response(status=304)
+
+    async with session.get(kamai_cdn_url) as resp:
+        body = await resp.read()
+        web_resp = web.Response(
+            body=body,
+            status=resp.status,
+            headers=resp.headers,
+        )
+
+        if not resp.ok:
+            return web_resp
+
+    web_resp.headers["Cache-Control"] = "public, max-age=315360000"
+    web_resp.headers["ETag"] = f'"{filename}"'
+
+    try:
+        image = await asyncio.to_thread(Image.open, BytesIO(body))
+    except UnidentifiedImageError:
+        return web_resp
+
+    if image.format is None:
+        return web_resp
+
+    web_resp.content_type = Image.MIME[image.format]
+
+    return web_resp
 
 
 @router.get("/invite")
