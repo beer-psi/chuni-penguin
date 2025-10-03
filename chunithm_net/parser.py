@@ -1,4 +1,4 @@
-# pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false
+# pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false, reportArgumentType=false
 import logging
 import re
 from pathlib import Path
@@ -20,6 +20,7 @@ from .models.enums import (
 from .models.player_data import (
     Currency,
     Overpower,
+    PlayerCollections,
     PlayerData,
     Team,
     Title,
@@ -62,6 +63,66 @@ with (Path(__file__).parent / "assets" / "titles.json").open(encoding="utf-8") a
     SPECIAL_TITLES = msgspec.json.decode(f.read(), type=dict[str, SpecialTitle])
 
 
+def parse_avatar(avatar_group: Tag) -> UserAvatar:
+    return UserAvatar(
+        base="https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png",
+        back=avatar_group.select_one(".avatar_back img")["src"],
+        skinfoot_r=avatar_group.select_one(".avatar_skinfoot_r img")["src"],
+        skinfoot_l=avatar_group.select_one(".avatar_skinfoot_l img")["src"],
+        skin=avatar_group.select_one(".avatar_skin img")["src"],
+        wear=avatar_group.select_one(".avatar_wear img")["src"],
+        face=avatar_group.select_one(".avatar_face img")["src"],
+        face_cover=avatar_group.select_one(".avatar_faceCover img")["src"],
+        head=avatar_group.select_one(".avatar_head img")["src"],
+        hand_r=avatar_group.select_one(".avatar_hand_r img")["src"],
+        hand_l=avatar_group.select_one(".avatar_hand_l img")["src"],
+        item_r=avatar_group.select_one(".avatar_item_r img")["src"],
+        item_l=avatar_group.select_one(".avatar_item_l img")["src"],
+        front=avatar_group.select_one(".avatar_front img")["src"],
+    )
+
+
+def parse_title(element: Tag) -> Title | None:
+    title_style = element.get("style")
+
+    if title_style is None:
+        return None
+
+    title_background_url_match = RE_CSS_BACKGROUND_IMAGE.search(str(title_style))
+
+    if title_background_url_match is None:
+        return None
+
+    title_background_url: str = title_background_url_match.group("url")
+    title_background_filename = title_background_url.split("/")[-1]
+
+    if title_background_filename.startswith("honor_bg_"):
+        title_rarity = extract_last_part(title_background_filename)
+
+        if title_rarity == "noSet":
+            return None
+
+        title_content_elem = element.select_one(
+            ".player_honor_text span, .honor_now_text span"
+        )
+
+        if title_content_elem is None:
+            msg = "Invalid title (missing title content on normal titles)"
+            raise ValueError(msg)
+
+        title_content = title_content_elem.get_text()
+    elif special_title := SPECIAL_TITLES.get(title_background_filename):
+        title_content = special_title.content
+        title_rarity = special_title.rarity
+    else:
+        _logger.warning(
+            "Ignoring unknown special title with URL %s", title_background_url
+        )
+        return None
+
+    return Title(title_content, title_rarity)
+
+
 def parse_player_card_and_avatar(soup: BeautifulSoup):
     if (e := soup.select_one(".player_chara")) is not None:
         img = e.select_one("img")
@@ -81,41 +142,9 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     team_name = team_name_elem.get_text() if team_name_elem else None
 
     title_elements = soup.select(".player_honor_short")
-    titles: list[Title] = []
-
-    for element in title_elements:
-        title_style = element.get("style")
-
-        if title_style is None:
-            continue
-
-        title_background_url_match = RE_CSS_BACKGROUND_IMAGE.search(str(title_style))
-
-        if title_background_url_match is None:
-            continue
-
-        title_background_url: str = title_background_url_match.group("url")
-        title_background_filename = title_background_url.split("/")[-1]
-
-        if title_background_filename.startswith("honor_bg_"):
-            title_content_elem = element.select_one(".player_honor_text span")
-
-            if title_content_elem is None:
-                msg = "Invalid title (missing title content on normal titles)"
-                raise ValueError(msg)
-
-            title_content = title_content_elem.get_text()
-            title_rarity = extract_last_part(title_background_filename)
-        elif special_title := SPECIAL_TITLES.get(title_background_filename):
-            title_content = special_title.content
-            title_rarity = special_title.rarity
-        else:
-            _logger.warning(
-                "Ignoring unknown special title with URL %s", title_background_url
-            )
-            continue
-
-        titles.append(Title(title_content, title_rarity))
+    titles: list[Title] = [
+        title for elem in title_elements if (title := parse_title(elem)) is not None
+    ]
 
     rating = parse_player_rating(soup.select(".player_rating_num_block img"))
 
@@ -157,21 +186,7 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     )
 
     avatar_group = soup.select_one(".avatar_group")
-    avatar = UserAvatar(
-        base="https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png",
-        back=cast(str, avatar_group.select_one(".avatar_back img")["src"]),
-        skinfoot_r=cast(str, avatar_group.select_one(".avatar_skinfoot_r img")["src"]),
-        skinfoot_l=cast(str, avatar_group.select_one(".avatar_skinfoot_l img")["src"]),
-        skin=cast(str, avatar_group.select_one(".avatar_skin img")["src"]),
-        wear=cast(str, avatar_group.select_one(".avatar_wear img")["src"]),
-        face=cast(str, avatar_group.select_one(".avatar_face img")["src"]),
-        face_cover=cast(str, avatar_group.select_one(".avatar_faceCover img")["src"]),
-        head=cast(str, avatar_group.select_one(".avatar_head img")["src"]),
-        hand_r=cast(str, avatar_group.select_one(".avatar_hand_r img")["src"]),
-        hand_l=cast(str, avatar_group.select_one(".avatar_hand_l img")["src"]),
-        item_r=cast(str, avatar_group.select_one(".avatar_item_r img")["src"]),
-        item_l=cast(str, avatar_group.select_one(".avatar_item_l img")["src"]),
-    )
+    avatar = parse_avatar(avatar_group)
 
     return PlayerData(
         character=character,
@@ -450,3 +465,19 @@ def parse_course_list(soup: BeautifulSoup):
         courses.append(course)
 
     return courses
+
+
+def parse_collection_customize(soup: BeautifulSoup) -> PlayerCollections:
+    titles: list[Title] = [
+        title
+        for elem in soup.select(".honor_now")
+        if (title := parse_title(elem)) is not None
+    ]
+
+    return PlayerCollections(
+        avatar=parse_avatar(soup.select_one(".avatar_customise_group")),
+        titles=titles,
+        nameplate=soup.select_one(".nameplate_now img")["src"],
+        map_icon=soup.select_one(".mapicon_now img")["src"],
+        system_voice=soup.select_one(".systemvoice_now img")["src"],
+    )

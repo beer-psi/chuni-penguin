@@ -38,6 +38,7 @@ class UserAvatar:
     hand_l: str
     item_r: str
     item_l: str
+    front: str
 
 
 @dataclass(kw_only=True)
@@ -72,3 +73,12 @@ class PlayerData:
 
     emblem: Optional[SkillClass] = None
     medal: Optional[SkillClass] = None
+
+
+@dataclass(kw_only=True)
+class PlayerCollections:
+    avatar: UserAvatar
+    titles: list[Title]
+    nameplate: str
+    map_icon: str
+    system_voice: str

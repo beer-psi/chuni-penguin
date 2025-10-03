@@ -92,10 +92,11 @@ AVATAR_COORDS = {
         dx_offset=184,
         dy=158,
     ),
-    "item_r": DrawCoordinates(width=100, height=272, dx_offset=9, dy=30, rotate=-5),
+    "item_r": DrawCoordinates(width=100, height=272, dx_offset=-3, dy=26, rotate=5),
     "item_l": DrawCoordinates(
-        sx=100, width=100, height=272, dx_offset=163, dy=30, rotate=5
+        sx=100, width=100, height=272, dx_offset=151, dy=26, rotate=-5
     ),
+    "front": DrawCoordinates(dy=10, width=272, height=294),
 }
 
 
@@ -108,7 +109,7 @@ def render_avatar(items: dict[str, bytes]) -> BytesIO:
     back = Image.open(BytesIO(items["back"]))
 
     base_x = int((avatar.width - back.width) / 2)
-    avatar.paste(back, (base_x, 25), back)
+    avatar.paste(back, (base_x, 5), back)
 
     for name, coords in AVATAR_COORDS.items():
         image = Image.open(BytesIO(items[name]))
@@ -250,6 +251,7 @@ class ProfileCog(commands.Cog, name="Profile"):
     async def _chunithm_net_profile_card(self, ctx: Context, user_id: int):
         async with self.utils.chuninet(ctx, user_id) as client:
             player_data = await client.player_data()
+            collections = await client.current_collections()
 
             optional_data: list[str] = []
 
@@ -287,6 +289,7 @@ class ProfileCog(commands.Cog, name="Profile"):
                 description=description,
                 color=player_data.possession.color(),
             )
+            embed.set_image(url=collections.nameplate)
 
             if player_data.character_frame is None:
                 files = []
