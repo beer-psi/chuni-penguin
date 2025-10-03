@@ -1,4 +1,5 @@
 # pyright: reportOptionalMemberAccess=false, reportOptionalSubscript=false, reportArgumentType=false
+import calendar
 import logging
 import re
 from pathlib import Path
@@ -19,6 +20,10 @@ from .models.enums import (
 )
 from .models.player_data import (
     Currency,
+    DailyBonus,
+    LoginBonus,
+    LoginBonusItem,
+    MonthlyLoginBonus,
     Overpower,
     PlayerCollections,
     PlayerData,
@@ -480,4 +485,97 @@ def parse_collection_customize(soup: BeautifulSoup) -> PlayerCollections:
         nameplate=soup.select_one(".nameplate_now img")["src"],
         map_icon=soup.select_one(".mapicon_now img")["src"],
         system_voice=soup.select_one(".systemvoice_now img")["src"],
+    )
+
+
+WEEKDAY_MAP = {
+    "Mon.": calendar.MONDAY,
+    "Tue.": calendar.TUESDAY,
+    "Wed.": calendar.WEDNESDAY,
+    "Thu.": calendar.THURSDAY,
+    "Fri.": calendar.FRIDAY,
+    "Sat.": calendar.SATURDAY,
+    "Sun.": calendar.SUNDAY,
+}
+
+
+def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
+    login_bonus_status = soup.select_one(
+        r':-soup-contains("Today\'s Login Bonus")'
+    ).get_text()
+    received_bonus_today = "Not achieved" not in login_bonus_status
+
+    monthly_login_bonus_name = soup.select(".box01_title")[0].get_text().strip()
+
+    monthly_days_logged_in: int = 0
+
+    for e in soup.select(".monthly_cumulative_login_bonus_days_count_num img"):
+        digit = extract_last_part(e["src"])
+        monthly_days_logged_in = monthly_days_logged_in * 10 + int(digit)
+
+    monthly_login_bonus_rewards: list[LoginBonusItem] = []
+
+    for e in soup.select(".monthly_cumulative_login_bonus_reward"):
+        day = chuni_int(
+            e.select_one(".bonus_days_block").get_text().removeprefix("Day ")
+        )
+        icon_url = e.select_one(".monthly_cumulative_login_bonus_reward_img img")["src"]
+        name = e.select_one(".bonus_reward_honor_text").get_text().strip()
+        obtained = e.select_one(".bonus_reward_get") is not None
+
+        monthly_login_bonus_rewards.append(
+            LoginBonusItem(
+                day=day,
+                icon_url=icon_url,
+                name=name,
+                obtained=obtained,
+            )
+        )
+
+    login_bonus: list[LoginBonusItem] = []
+
+    for e in soup.select(".bonus_block_on, .bonus_block_off"):
+        day = chuni_int(
+            e.select_one(".bonus_days_block").get_text().removeprefix("Day ")
+        )
+        icon_url = e.select_one(".bonus_reward_block img")["src"]
+        name = e.select_one(".bonus_reward_honor_text").get_text().strip()
+        obtained = e.select_one(".bonus_reward_get") is not None
+
+        login_bonus.append(
+            LoginBonusItem(
+                day=day,
+                icon_url=icon_url,
+                name=name,
+                obtained=obtained,
+            )
+        )
+
+    daily_bonus: list[DailyBonus] = []
+
+    for e in soup.select(".weekday_bonus_block, .weekday_bonus_today"):
+        weekday_name = e.select_one(".weekday_bonus_week").get_text()
+        weekday = WEEKDAY_MAP[weekday_name]
+        icon_url = e.select_one(".weekday_bonus_info_icon img")["src"]
+        bonus = e.select_one(".weekday_bonus_info_text").get_text().strip()
+        is_today = "weekday_bonus_today" in e["class"]
+
+        daily_bonus.append(
+            DailyBonus(
+                weekday=weekday,
+                icon_url=icon_url,
+                bonus=bonus,
+                is_today=is_today,
+            )
+        )
+
+    return LoginBonus(
+        received_bonus_today=received_bonus_today,
+        monthly_login_bonus=MonthlyLoginBonus(
+            name=monthly_login_bonus_name,
+            days_logged_in=monthly_days_logged_in,
+            rewards=monthly_login_bonus_rewards,
+        ),
+        login_bonus=login_bonus,
+        daily_bonus=daily_bonus,
     )

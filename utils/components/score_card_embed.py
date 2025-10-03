@@ -19,7 +19,7 @@ from chunithm_net.models.record import (
 )
 from utils import floor_to_ndp
 from utils.config import config
-from utils.ranks import rank_icon
+from utils.icons import rank_icon
 
 
 class ScoreCardEmbed(discord.Embed):

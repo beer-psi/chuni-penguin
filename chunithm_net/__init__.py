@@ -6,20 +6,20 @@ import httpx
 from bs4 import BeautifulSoup
 from httpx_aiohttp import AIOHTTPTransport
 
-from chunithm_net.models.leaderboard import Leaderboard, LeaderboardEntry
-from chunithm_net.models.player_data import PlayerCollections
-
 from ._bs4 import BS4_FEATURE
 from ._hooks import ChunithmNetAuth, raise_on_chunithm_net_error, raise_on_maintenance
 from .consts import _KEY_DETAILED_PARAMS
 from .exceptions import AlreadyAddedAsFriend, InvalidFriendCode
 from .models.enums import Difficulty, Genres, Rank
+from .models.leaderboard import Leaderboard, LeaderboardEntry
+from .models.player_data import LoginBonus, PlayerCollections
 from .models.record import MusicRecord, RecentRecord, Record
 from .parser import (
     parse_basic_recent_record,
     parse_collection_customize,
     parse_course_list,
     parse_detailed_recent_record,
+    parse_login_bonus,
     parse_music_for_rating,
     parse_music_record,
     parse_player_card_and_avatar,
@@ -377,6 +377,11 @@ class ChuniNet:
         soup = await self._request_soup("GET", "mobile/collection/customise")
 
         return parse_collection_customize(soup)
+
+    async def login_bonus(self) -> LoginBonus:
+        soup = await self._request_soup("GET", "mobile/loginBonus/")
+
+        return parse_login_bonus(soup)
 
     @property
     def _token(self):

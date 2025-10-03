@@ -10,7 +10,7 @@ from database.models import Chart, Song
 from utils import get_jacket_url
 from utils.components.chart_card_embed import ChartCardEmbed
 from utils.config import config
-from utils.ranks import rank_icon
+from utils.icons import rank_icon
 
 from ._pagination import ListPageSource, PaginationView
 
