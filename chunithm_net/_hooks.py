@@ -48,7 +48,7 @@ class ChunithmNetAuth(httpx.Auth):
         # refresh cookies on the request
         with contextlib.suppress(KeyError):
             del request.headers["cookie"]
-            del request.headers["cookie2"]
+            del request.headers["cookie2"]  # pragma: no cover
         self.client.cookies.set_cookie_header(request)
         yield request
 
