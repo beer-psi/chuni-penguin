@@ -13,7 +13,7 @@ from utils.oggopus import OggStream, crop_audio, get_audio_duration
 audio_files = list(Path("assets/audio").glob("*.ogg"))
 
 if len(audio_files) == 0:
-    pytest.skip(reason="No test files", allow_module_level=True)
+    pytest.skip(reason="No test files", allow_module_level=True)  # pragma: no cover
 
 
 @pytest.mark.parametrize("input", random.choices(audio_files, k=20))

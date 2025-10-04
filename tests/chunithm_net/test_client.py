@@ -1,3 +1,4 @@
+import datetime
 import string
 from datetime import timedelta
 from http.cookiejar import Cookie, LWPCookieJar
@@ -13,13 +14,16 @@ from pytest_httpx import HTTPXMock
 from chunithm_net import ChuniNet
 from chunithm_net.consts import _KEY_DETAILED_PARAMS, KEY_SONG_ID
 from chunithm_net.exceptions import (
+    AlreadyAddedAsFriend,
     ChuniNetError,
+    InvalidFriendCode,
     InvalidTokenException,
     MaintenanceException,
 )
 from chunithm_net.models.enums import (
     ClearType,
     ComboType,
+    CourseClass,
     Difficulty,
     Possession,
     Rank,
@@ -34,8 +38,8 @@ def clal():
 
 
 @pytest.fixture
-def jar(clal: str) -> LWPCookieJar:
-    cookie = Cookie(
+def jar(clal: str, token: str) -> LWPCookieJar:
+    clal_cookie = Cookie(
         version=0,
         name="clal",
         value=clal,
@@ -53,8 +57,32 @@ def jar(clal: str) -> LWPCookieJar:
         comment_url=None,
         rest={},
     )
+    token_cookie = Cookie(
+        version=0,
+        name="_t",
+        value=token,
+        port=None,
+        port_specified=False,
+        domain="chunithm-net-eng.com",
+        domain_specified=True,
+        domain_initial_dot=False,
+        path="/",
+        path_specified=True,
+        secure=False,
+        expires=int(
+            (
+                datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=30)
+            ).timestamp()
+        ),
+        discard=False,
+        comment=None,
+        comment_url=None,
+        rest={},
+    )
+
     jar = LWPCookieJar()
-    jar.set_cookie(cookie)
+    jar.set_cookie(clal_cookie)
+    jar.set_cookie(token_cookie)
     return jar
 
 
@@ -271,6 +299,70 @@ async def test_client_handles_failed_reauthentication(
     with pytest.raises(InvalidTokenException):
         async with ChuniNet(jar) as client:
             await client.authenticate()
+
+
+@pytest.mark.asyncio
+async def test_client_authenticates_implicitly(
+    httpx_mock: HTTPXMock, jar: LWPCookieJar, clal: str, user_id: str, token: str
+):
+    httpx_mock.add_response(
+        method="GET",
+        url="https://chunithm-net-eng.com/mobile/home/playerData",
+        status_code=302,
+        headers={"Location": "https://chunithm-net-eng.com/mobile/error/"},
+    )
+
+    with (BASE_DIR / "assets" / "200004.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/error/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    httpx_mock.add_response(
+        method="GET",
+        url="https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=chuniex&redirect_url=https://chunithm-net-eng.com/mobile/&back_url=https://chunithm.sega.com/",
+        status_code=302,
+        headers={"Location": f"https://chunithm-net-eng.com/mobile/?ssid={clal}"},
+    )
+
+    httpx_mock.add_response(
+        method="GET",
+        url=f"https://chunithm-net-eng.com/mobile/?ssid={clal}",
+        status_code=302,
+        headers=[
+            ("Location", "https://chunithm-net-eng.com/mobile/home/"),
+            (
+                "Set-Cookie",
+                f"_t={token}; expires=Thu, 11-Aug-2033 13:09:40 GMT; Max-Age=315360000; path=/; SameSite=Strict",
+            ),
+            (
+                "Set-Cookie",
+                f"userId={user_id}; path=/; secure; HttpOnly; SameSite=Lax",
+            ),
+        ],
+    )
+
+    with (BASE_DIR / "assets" / "logged_in_homepage.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/home/",
+            status_code=200,
+            content=f.read(),
+            headers={"Content-Type": "text/html; charset=UTF-8"},
+        )
+
+    with (BASE_DIR / "assets" / "player_data.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/home/playerData",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChuniNet(jar) as client:
+        await client.player_data()
 
 
 @pytest.mark.asyncio
@@ -554,12 +646,13 @@ async def test_client_parses_playlog(
 
 @pytest.mark.asyncio
 async def test_client_parses_detailed_playlog(
-    httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
 ):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/record/playlog/sendPlaylogDetail/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"idx=40&token={token}".encode("utf-8"),
         status_code=302,
         headers={
             "Location": "https://chunithm-net-eng.com/mobile/record/playlogDetail/"
@@ -627,12 +720,13 @@ async def test_client_parses_detailed_playlog(
 
 @pytest.mark.asyncio
 async def test_client_parses_music_record(
-    httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
 ):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/record/musicGenre/sendMusicDetail/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"idx=428&token={token}".encode("utf-8"),
         status_code=302,
         headers={"Location": "https://chunithm-net-eng.com/mobile/record/musicDetail/"},
     )
@@ -681,12 +775,13 @@ async def test_client_parses_music_record(
 
 @pytest.mark.asyncio
 async def test_clients_parses_we_music_record(
-    httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
 ):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/record/worldsEndList/sendWorldsEndDetail/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"idx=8218&token={token}".encode("utf-8"),
         status_code=302,
         headers={
             "Location": "https://chunithm-net-eng.com/mobile/record/worldsEndDetail/"
@@ -770,13 +865,14 @@ async def test_client_parses_music_for_rating(
 
 @pytest.mark.asyncio
 async def test_client_parses_music_record_by_folder(
-    httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
 ):
     with (BASE_DIR / "assets" / "music_record_by_level_folder.html").open("rb") as f:
         httpx_mock.add_response(
             method="POST",
             url="https://chunithm-net-eng.com/mobile/record/musicLevel/sendSearch/",
+            match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+            match_content=f"level=20&token={token}".encode("utf-8"),
             status_code=200,
             content=f.read(),
         )
@@ -798,13 +894,12 @@ async def test_client_parses_music_record_by_folder(
 
 
 @pytest.mark.asyncio
-async def test_client_can_rename(
-    httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
-):
+async def test_client_can_rename(httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/home/userOption/updateUserName/update/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"userName=new+name&token={token}".encode("utf-8"),
         status_code=302,
         headers={"Location": "https://chunithm-net-eng.com/mobile/home/userOption/"},
     )
@@ -815,8 +910,258 @@ async def test_client_can_rename(
         status_code=200,
     )
 
+    with (BASE_DIR / "assets" / "invalid_user_name.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="POST",
+            url="https://chunithm-net-eng.com/mobile/home/userOption/updateUserName/update/",
+            match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+            match_content=f"userName=%E5%BE%8C%E6%82%94&token={token}".encode("utf-8"),
+            status_code=200,
+            content=f.read(),
+        )
+
     async with ChuniNet(jar) as client:
         assert await client.change_player_name("new name") is True
+
+        with pytest.raises(
+            ValueError,
+            match=r"The name may contains characters that cannot be displayed\.",
+        ):
+            await client.change_player_name("後悔")
+
+
+@pytest.mark.asyncio
+async def test_client_logout(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+    httpx_mock.add_response(
+        method="GET",
+        url="https://chunithm-net-eng.com/mobile/home/userOption/logout/",
+        status_code=302,
+        headers={
+            "Location": "https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=chuniex&redirect_url=https://chunithm-net-eng.com/mobile/&back_url=https://chunithm.sega.com/"
+        },
+    )
+
+    httpx_mock.add_response(
+        method="GET",
+        url="https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=chuniex&redirect_url=https://chunithm-net-eng.com/mobile/&back_url=https://chunithm.sega.com/",
+        status_code=200,
+        content=b"",
+    )
+
+    async with ChuniNet(jar) as client:
+        assert await client.logout()
+
+
+@pytest.mark.asyncio
+async def test_client_send_friend_request(
+    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
+):
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/friend/search/sendSearchUser/",
+        match_headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": "https://chunithm-net-eng.com/mobile/friend/search/",
+        },
+        match_content=f"friendCode=1234567890123&token={token}".encode("utf-8"),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/friend/search/searchUser/",
+        },
+    )
+
+    with (BASE_DIR / "assets" / "search_user.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/friend/search/searchUser/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/friend/search/sendInvite/",
+        match_headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": "https://chunithm-net-eng.com/mobile/friend/search/searchUser/",
+        },
+        match_content=f"idx=1234567890123&token={token}".encode("utf-8"),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/friend/invite/",
+        },
+    )
+    httpx_mock.add_response(
+        method="GET",
+        url="https://chunithm-net-eng.com/mobile/friend/invite/",
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/index.php/friend/invite/",
+        },
+    )
+    httpx_mock.add_response(
+        method="GET",
+        url="https://chunithm-net-eng.com/mobile/index.php/friend/invite/",
+        status_code=200,
+    )
+
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/friend/search/sendSearchUser/",
+        match_headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": "https://chunithm-net-eng.com/mobile/friend/search/",
+        },
+        match_content=f"friendCode=1234567890123&token={token}".encode("utf-8"),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/friend/search/searchUser/",
+        },
+    )
+
+    with (BASE_DIR / "assets" / "search_user_no_send_request_button.html").open(
+        "rb"
+    ) as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/friend/search/searchUser/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/friend/search/sendSearchUser/",
+        match_headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Referer": "https://chunithm-net-eng.com/mobile/friend/search/",
+        },
+        match_content=f"friendCode=1234567890123&token={token}".encode("utf-8"),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/friend/search/searchUser/",
+        },
+    )
+
+    with (BASE_DIR / "assets" / "search_user_invalid_friend_code.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/friend/search/searchUser/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChuniNet(jar) as client:
+        await client.send_friend_request("1234567890123")
+
+        with pytest.raises(AlreadyAddedAsFriend):
+            await client.send_friend_request("1234567890123")
+
+        with pytest.raises(InvalidFriendCode):
+            await client.send_friend_request("1234567890123")
+
+
+@pytest.mark.asyncio
+async def test_client_course_record(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+    with (BASE_DIR / "assets" / "course_list.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/record/courseList/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChuniNet(jar) as client:
+        courses = await client.course_record()
+
+        assert len(courses) == 7
+
+        assert courses[0].id == 40015
+        assert courses[0].cls == CourseClass.IV
+        assert courses[0].name == "TAP TAP PARADISE Set"
+        assert courses[0].score == 3_015_447
+        assert courses[0].rank == Rank.SSp
+        assert courses[0].clear_lamp == ClearType.CLEAR
+        assert courses[0].combo_lamp == ComboType.NONE
+
+        assert courses[4].id == 40021
+        assert courses[4].cls == CourseClass.V
+        assert courses[4].name == "CRITICAL EX CHALLENGE"
+        assert courses[4].score == 3_029_908
+        assert courses[4].rank == Rank.SSSp
+        assert courses[4].clear_lamp == ClearType.CLEAR
+        assert courses[4].combo_lamp == ComboType.ALL_JUSTICE
+
+        assert courses[6].id == 40025
+        assert courses[6].cls == CourseClass.INFINITE
+        assert courses[6].name == "INNOVATION Set"
+        assert courses[6].score == 0
+        assert courses[6].rank == Rank.D
+        assert courses[6].clear_lamp == ClearType.FAILED
+        assert courses[6].combo_lamp == ComboType.NONE
+
+
+@pytest.mark.asyncio
+async def test_client_music_leaderboard(
+    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
+):
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/ranking/sendRankingDetail/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"diff=3&idx=2768&genre=99&token={token}".encode("utf-8"),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/ranking/musicRankingDetail/"
+        },
+    )
+
+    with (BASE_DIR / "assets" / "music_ranking_detail.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/ranking/musicRankingDetail/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/ranking/worldsEnd/sendWorldsEndRankingDetail/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"idx=8141&token={token}".encode("utf-8"),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/ranking/worldsEndRankingDetail/"
+        },
+    )
+
+    with (BASE_DIR / "assets" / "worlds_end_ranking_detail.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/ranking/worldsEndRankingDetail/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChuniNet(jar) as client:
+        leaderboard = await client.music_leaderboard(2768, Difficulty.MASTER)
+        assert leaderboard.updated_at == datetime.datetime(
+            2025, 10, 4, 6, 15, tzinfo=datetime.UTC
+        )
+        assert len(leaderboard.ranking) == 100
+        assert leaderboard.ranking[0].position == 1
+        assert leaderboard.ranking[0].score == 1_010_000
+        assert leaderboard.ranking[0].player_name == "ＩＮＦД"
+        assert leaderboard.ranking[0].ajc_count == 1
+        assert leaderboard.ranking[0].last_raised == datetime.datetime(
+            2024, 11, 28, 11, 41, tzinfo=datetime.UTC
+        )
+
+        leaderboard = await client.music_leaderboard(8141, Difficulty.WORLDS_END)
+        assert leaderboard.updated_at == datetime.datetime(
+            2025, 10, 4, 6, 19, tzinfo=datetime.UTC
+        )
+        assert len(leaderboard.ranking) == 100
 
 
 @pytest.mark.asyncio

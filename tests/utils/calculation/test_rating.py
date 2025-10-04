@@ -1,6 +1,6 @@
 import pytest
 
-from utils.calculation.rating import calculate_rating
+from utils.calculation.rating import calculate_rating, calculate_score_for_rating
 
 
 @pytest.mark.parametrize(
@@ -37,3 +37,28 @@ def test_calculate_rating(score, chart_constant, expected):
     assert (
         pytest.approx(float(calculate_rating(score, chart_constant)), 0.001) == expected
     )
+
+
+@pytest.mark.parametrize(
+    ("rating", "chart_constant", "expected"),
+    [
+        # Test all the cutoffs are where they should be.
+        (14.7, 12.5, None),
+        (14.65, 12.5, 1_009_000),
+        (14.5, 12.5, 1_007_500),
+        (14.0, 12.5, 1_005_000),
+        (13.5, 12.5, 1_000_000),
+        (12.5, 12.5, 975_000),
+        (7.5, 12.5, None),
+        # Test some random values in between.
+        (12.98, 12.5, 987_000),
+        (14.55, 12.5, 1_008_000),
+        (13.8, 12.5, 1_003_000),
+        (13.46, 12.5, 999_000),
+        (12.7, 12.5, 980_000),
+    ],
+)
+def test_calculate_score_for_rating(
+    rating: float, chart_constant: float, expected: int | None
+):
+    assert calculate_score_for_rating(rating, chart_constant) == expected

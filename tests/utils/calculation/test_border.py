@@ -1,6 +1,9 @@
 import pytest
 
-from utils.calculation.border import calculate_border
+from utils.calculation.border import (
+    calculate_border,
+    calculate_score_deduction_per_judgement,
+)
 
 
 @pytest.mark.parametrize(
@@ -49,3 +52,36 @@ def test_calculate_border(notecount: int):
             )
             >= min_score
         )
+
+
+@pytest.mark.parametrize(
+    ("notecount"),
+    [
+        1223,
+        4000,
+        2470,
+        1653,
+        2171,
+        1322,
+        2226,
+        1483,
+        3000,
+        1883,
+        1587,
+        2100,
+        1106,
+        1567,
+        1733,
+        2323,
+        1213,
+        2060,
+        1927,
+        2393,
+    ],
+)
+def test_calculate_score_deduction_per_judgement(notecount: int):
+    deductions = calculate_score_deduction_per_judgement(notecount)
+
+    assert pytest.approx(deductions["justice"] * notecount, abs=30) == 10_000
+    assert pytest.approx(deductions["attack"] * notecount, abs=30) == 510_000
+    assert pytest.approx(deductions["miss"] * notecount, abs=30) == 1_010_000
