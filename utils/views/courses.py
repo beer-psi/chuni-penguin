@@ -357,7 +357,7 @@ class CourseListView(discord.ui.LayoutView):
             self.courses = list((await session.execute(query)).scalars().unique())
 
         heading = discord.ui.TextDisplay(
-            f"## Course List\nCHUNITHM {version} - CLASS {cls.name}"
+            f"## Course List\nCHUNITHM {version} - CLASS {cls}"
         )
         self.container.clear_items()
         self.container.add_item(heading)
