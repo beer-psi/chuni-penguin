@@ -7,12 +7,13 @@ from discord import ButtonStyle, Interaction
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from chuni_penguin.ui._base import PenguinView
 from chunithm_net.exceptions import (
     AlreadyAddedAsFriend,
     ChuniNetError,
     InvalidFriendCode,
 )
+
+from ._base import PenguinView
 
 if TYPE_CHECKING:
     from bot import ChuniBot

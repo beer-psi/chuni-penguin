@@ -4,7 +4,7 @@ import discord.ui
 from discord import Interaction
 from discord.ext.commands import Context
 
-from chuni_penguin.ui._base import PenguinView
+from ._base import PenguinView
 
 PageT = TypeVar("PageT")
 PageItemT = TypeVar("PageItemT")
