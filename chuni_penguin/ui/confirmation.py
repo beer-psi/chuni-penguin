@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from chuni_penguin.views._base import PenguinView
+from chuni_penguin.ui._base import PenguinView
 
 
 class ConfirmationYesView(PenguinView):

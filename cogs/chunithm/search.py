@@ -10,10 +10,10 @@ from discord.utils import escape_markdown as emd
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
-from chuni_penguin.views.confirmation import ConfirmationYesView
-from chuni_penguin.views.courses import CourseListView
-from chuni_penguin.views.song_info import SongInfoPaginationView
-from chuni_penguin.views.songlist import SonglistView
+from chuni_penguin.uinfirmation import ConfirmationYesView
+from chuni_penguin.uiurses import CourseListView
+from chuni_penguin.uing_info import SongInfoPaginationView
+from chuni_penguin.uinglist import SonglistView
 from chunithm_net.exceptions import ChuniNetException
 from chunithm_net.models.record import CourseRecord
 from database.models import Alias, Chart, Course, Song

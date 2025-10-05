@@ -11,7 +11,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import update
 
-from chuni_penguin.views.login import LoginFlowView
+from chuni_penguin.uigin import LoginFlowView
 from chunithm_net import ChuniNet
 from chunithm_net.exceptions import ChuniNetException, InvalidTokenException
 from chunithm_net.utils import is_valid_clal

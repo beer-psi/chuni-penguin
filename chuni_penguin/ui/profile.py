@@ -7,7 +7,7 @@ from discord import ButtonStyle, Interaction
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from chuni_penguin.views._base import PenguinView
+from chuni_penguin.ui._base import PenguinView
 from chunithm_net.exceptions import (
     AlreadyAddedAsFriend,
     ChuniNetError,

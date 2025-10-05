@@ -5,7 +5,7 @@ from discord.ext.commands import Context
 from discord.interactions import Interaction
 from discord.ui import Select, select
 
-from chuni_penguin.views._base import PenguinView
+from chuni_penguin.ui._base import PenguinView
 
 
 class SelectToCompareView(PenguinView):
