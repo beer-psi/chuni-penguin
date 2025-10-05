@@ -326,6 +326,9 @@ class CourseListView(discord.ui.LayoutView):
         if not interaction.response.is_done():
             await interaction.response.defer()
 
+        if len(self.class_select.values) <= 0:
+            return
+
         version = (
             self.version_select.values[0]  # pyright: ignore[reportAttributeAccessIssue]
             if len(self.version_select.values) > 0  # pyright: ignore[reportAttributeAccessIssue]
