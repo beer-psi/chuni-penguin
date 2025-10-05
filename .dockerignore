@@ -1,5 +1,6 @@
 *
 
+!/chuni_penguin
 !/chunithm_net
 !/cogs
 !/database
@@ -23,3 +24,4 @@ packages/penguin-native/target
 
 # C extensions
 *.so
+
