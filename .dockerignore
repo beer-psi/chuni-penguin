@@ -1,6 +1,7 @@
 *
 
 !/chuni_penguin
+!/dbutils
 !/packages
 !/patches
 !/.python-version
