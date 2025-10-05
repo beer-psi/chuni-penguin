@@ -144,6 +144,13 @@ class ChuniBot(commands.AutoShardedBot):
                     extension=cog,
                     exc_info=e,
                 )
+            except ModuleNotFoundError as e:
+                await logger.aexception(
+                    "Extension module not found",
+                    tag="extension_not_found",
+                    extension=cog,
+                    exc_info=e,
+                )
 
         # Load guild prefixes
         async with self.begin_db_session() as session:
