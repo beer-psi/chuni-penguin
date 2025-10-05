@@ -11,6 +11,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import update
 
+from chuni_penguin.ui.login import LoginFlowView
 from chunithm_net import ChuniNet
 from chunithm_net.exceptions import ChuniNetException, InvalidTokenException
 from chunithm_net.utils import is_valid_clal
@@ -18,7 +19,6 @@ from database.models import Cookie
 from utils.config import config
 from utils.context import PenguinContext
 from utils.logging import logged_app_command, logged_prefix_command, logger
-from utils.views.login import LoginFlowView
 
 if TYPE_CHECKING:
     from bot import ChuniBot

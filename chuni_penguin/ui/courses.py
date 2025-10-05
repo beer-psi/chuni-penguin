@@ -13,6 +13,8 @@ from utils import get_jacket_url, sdvxin_link, yt_search_link
 from utils.constants import CURRENT_CHUNITHM_VERSION
 from utils.icons import rank_icon
 
+from ._base import PenguinLayoutView
+
 if TYPE_CHECKING:
     from bot import ChuniBot
     from utils.context import PenguinContext
@@ -132,8 +134,19 @@ def format_course_record(record: CourseRecord):
     return f"▸ {rank_icon(record.rank)} ▸ {' / '.join(lamps)} ▸ {record.score}"
 
 
-def format_course_heading(course: Course, record: CourseRecord | None, level: int = 3):
-    course_heading = f"{'#' * level} {course.name}\n{format_conditions(course)}"
+def format_course_heading(
+    course: Course,
+    record: CourseRecord | None,
+    level: int = 3,
+    *,
+    show_version: bool = False,
+):
+    course_heading = f"{'#' * level} {course.name}"
+
+    if show_version:
+        course_heading += f"\nCHUNITHM {course.version} - CLASS {course.cls}"
+
+    course_heading += f"\n{format_conditions(course)}"
 
     if not course.is_duplicate_track_allowed:
         course_heading += "\nRandom tracks are guaranteed to not repeat."
@@ -163,6 +176,7 @@ class CourseViewSongsButton(discord.ui.Button):
                     self.course,
                     self.view.course_records_by_id.get(self.course.id),
                     level=2,
+                    show_version=True,
                 )
             )
         )
@@ -221,10 +235,10 @@ class CourseViewSongsButton(discord.ui.Button):
             )
         )
 
-        await self.view._edit_message(interaction)
+        await self.view.edit_message(interaction)
 
 
-class CourseListView(discord.ui.LayoutView):
+class CourseListView(PenguinLayoutView):
     container = discord.ui.Container(
         discord.ui.TextDisplay("## Course List"),
         discord.ui.TextDisplay("Select a course class to view courses."),
@@ -243,7 +257,7 @@ class CourseListView(discord.ui.LayoutView):
         *,
         timeout: float | None = 300.0,
     ):
-        super().__init__(timeout=timeout)
+        super().__init__(ctx, timeout=timeout)
 
         self.course_records_by_id = (
             {r.id: r for r in course_records} if course_records is not MISSING else {}
@@ -255,7 +269,6 @@ class CourseListView(discord.ui.LayoutView):
         )
 
         self.ctx = ctx
-        self.message: discord.Message = MISSING
         self.version_select.options = [
             discord.SelectOption(
                 label=version,
@@ -274,32 +287,6 @@ class CourseListView(discord.ui.LayoutView):
         ]
         self.courses: list[Course] = []
 
-    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if interaction.user.id == self.ctx.author.id or await self.ctx.bot.is_owner(
-            interaction.user
-        ):
-            return True
-
-        await interaction.response.send_message(
-            "This menu cannot be controlled by you, sorry!",
-            ephemeral=True,
-        )
-        return False
-
-    async def on_timeout(self) -> None:
-        self.version_select.disabled = True
-        self.class_select.disabled = True
-
-        for item in self.walk_children():
-            if isinstance(item, discord.ui.Button):
-                item.disabled = True
-
-        if self.message is not MISSING:
-            await self.message.edit(
-                view=self,
-                allowed_mentions=discord.AllowedMentions.none(),
-            )
-
     @version_action_row.select(placeholder="Select a version...")
     async def version_select(
         self, interaction: discord.Interaction, select: discord.ui.Select
@@ -311,16 +298,6 @@ class CourseListView(discord.ui.LayoutView):
         self, interaction: discord.Interaction, select: discord.ui.Select
     ):
         await self._update_course_list(interaction)
-
-    async def _edit_message(self, interaction: discord.Interaction):
-        if interaction.response.is_done():
-            if self.message is not MISSING:
-                await self.message.edit(
-                    view=self,
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
-        else:
-            await interaction.response.edit_message(view=self)
 
     async def _update_course_list(self, interaction: discord.Interaction):
         if not interaction.response.is_done():
@@ -365,7 +342,7 @@ class CourseListView(discord.ui.LayoutView):
         if len(self.courses) == 0:
             heading.content += "\nNo courses found."
 
-            await self._edit_message(interaction)
+            await self.edit_message(interaction)
             return
 
         for course in self.courses:
@@ -381,4 +358,4 @@ class CourseListView(discord.ui.LayoutView):
                 )
             )
 
-        await self._edit_message(interaction)
+        await self.edit_message(interaction)

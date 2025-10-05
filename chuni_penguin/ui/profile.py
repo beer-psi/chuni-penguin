@@ -12,7 +12,8 @@ from chunithm_net.exceptions import (
     ChuniNetError,
     InvalidFriendCode,
 )
-from utils.views._base import PenguinView
+
+from ._base import PenguinView
 
 if TYPE_CHECKING:
     from bot import ChuniBot

@@ -16,6 +16,15 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from chuni_penguin.ui import (
+    B30N20View,
+    B30View,
+    RecentRecordsView,
+    SelectToCompareView,
+)
+from chuni_penguin.ui.confirmation import ConfirmationYesView
+from chuni_penguin.ui.embeds import EmbedPaginationView
+from chuni_penguin.ui.leaderboard import LeaderboardView
 from chunithm_net.consts import (
     INTERNATIONAL_JACKET_BASE,
     JACKET_BASE,
@@ -58,15 +67,6 @@ from utils.kamaitachi import (
     convert_kt_to_record,
 )
 from utils.logging import logged_app_command, logged_prefix_command
-from utils.views import (
-    B30N20View,
-    B30View,
-    RecentRecordsView,
-    SelectToCompareView,
-)
-from utils.views.confirmation import ConfirmationYesView
-from utils.views.embeds import EmbedPaginationView
-from utils.views.leaderboard import LeaderboardView
 
 if TYPE_CHECKING:
     from bot import ChuniBot

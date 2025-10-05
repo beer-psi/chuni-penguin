@@ -4,7 +4,7 @@ import discord.ui
 from discord import Interaction
 from discord.ext.commands import Context
 
-from utils.views._base import PenguinView
+from ._base import PenguinView
 
 PageT = TypeVar("PageT")
 PageItemT = TypeVar("PageItemT")
@@ -131,11 +131,7 @@ class PaginationView(PenguinView, Generic[PageT]):
         if not kwargs:
             return
 
-        if interaction.response.is_done():
-            if self.message:
-                await self.message.edit(**kwargs, view=self)
-        else:
-            await interaction.response.edit_message(**kwargs, view=self)
+        await self.edit_message(interaction, **kwargs)
 
     @override
     async def _before_start(self, *, content: str | None = None):

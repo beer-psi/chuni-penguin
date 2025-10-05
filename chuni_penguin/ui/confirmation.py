@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from utils.views._base import PenguinView
+from ._base import PenguinView
 
 
 class ConfirmationYesView(PenguinView):

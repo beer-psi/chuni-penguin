@@ -10,12 +10,12 @@ from discord.webhook.async_ import WebhookMessage
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from chuni_penguin.ui.confirmation import ConfirmationYesView
+from chuni_penguin.ui.select_to_compare import SelectToCompareView
 from chunithm_net.models.enums import Difficulty
 from database.models import Chart, UserConfig
 from utils import did_you_mean_text
 from utils.constants import SIMILARITY_THRESHOLD
-from utils.views.confirmation import ConfirmationYesView
-from utils.views.select_to_compare import SelectToCompareView
 
 if TYPE_CHECKING:
     # it's literally used i don't know why ruff tripped on this one

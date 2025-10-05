@@ -10,6 +10,7 @@ from discord.ext.commands import Context, Range
 from discord.utils import MISSING
 from sqlalchemy import delete
 
+from chuni_penguin.ui.gaming import GuessLeaderboardView, RetryGameButton
 from chunithm_net.models.enums import Difficulty, Genres
 from database.models import GuessScore
 from utils import shlex_split
@@ -17,7 +18,6 @@ from utils.context import PenguinGuildContext
 from utils.converters import DifficultyConverter, GenreConverter
 from utils.flags import DiscordArguments
 from utils.logging import logged_prefix_command, logger
-from utils.views.gaming import GuessLeaderboardView, RetryGameButton
 
 from ._session import GuessingGameSession, GuessingGameType
 from .states.base import GuessingGameSkippableState, GuessingGameState
