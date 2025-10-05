@@ -884,7 +884,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     raise commands.CommandError(msg)
 
                 if all(chart.tachi_chart_id is None for chart in song.charts):
-                    msg = "This song is not available on Kamaitachi."
+                    msg = f"The song **{escape_markdown(song.title)}** is not available on Kamaitachi."
                     raise commands.CommandError(msg)
 
                 async with self.utils.kamaitachi_client(ctx, target_id) as client:
@@ -1119,7 +1119,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if kamaitachi:
                 if all(chart.tachi_chart_id is None for chart in song.charts):
-                    msg = "This song is not available on Kamaitachi."
+                    msg = f"The song **{escape_markdown(song.title)}** is not available on Kamaitachi."
                     raise commands.CommandError(msg)
 
                 async with self.utils.kamaitachi_client(ctx, target_id) as client:
