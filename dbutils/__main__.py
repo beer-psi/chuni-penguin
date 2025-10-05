@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
 from chuni_penguin.config import config
 from chuni_penguin.database.models import Base
 from chuni_penguin.logging import logger
-from chuni_penguin.utils import get_event_loop
+from chuni_penguin.utils import get_loop_factory
 
 from .aliases import update_aliases
 from .chunirec import update_db
@@ -105,14 +105,6 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
-    import sys
 
-    event_loop_impl, loop_factory = get_event_loop()
-
-    if sys.version_info >= (3, 11):
-        with asyncio.Runner(loop_factory=loop_factory) as runner:
-            runner.run(main())
-    else:
-        if event_loop_impl is not None:
-            event_loop_impl.install()
-        asyncio.run(main())
+    with asyncio.Runner(loop_factory=get_loop_factory()) as runner:
+        runner.run(main())

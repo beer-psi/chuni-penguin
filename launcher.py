@@ -14,7 +14,7 @@ import discord
 from chuni_penguin.bot import ChuniBot
 from chuni_penguin.config import config
 from chuni_penguin.logging import logger
-from chuni_penguin.utils import get_event_loop
+from chuni_penguin.utils import get_loop_factory
 
 
 class KeyboardInterruptHandler:
@@ -69,18 +69,9 @@ async def startup():
         sys.exit(1)
 
 
-def sync_startup():
-    event_loop_impl, loop_factory = get_event_loop()
-
-    if sys.version_info >= (3, 11):
-        with asyncio.Runner(loop_factory=loop_factory) as runner:
-            runner.run(startup())
-    else:
-        if event_loop_impl is not None:
-            event_loop_impl.install()
-        asyncio.run(startup())
-
-
 if __name__ == "__main__":
-    with contextlib.suppress(KeyboardInterrupt):
-        sync_startup()
+    with (
+        contextlib.suppress(KeyboardInterrupt),
+        asyncio.Runner(loop_factory=get_loop_factory()) as runner,
+    ):
+        runner.run(startup())
