@@ -215,6 +215,18 @@
         "content": "LEGEND of LUMINOUS PLUS",
         "rarity": "version3"
     },
+    "04e162a759b61b99.png": {
+        "content": "SPIRIT of VERSE",
+        "rarity": "version1"
+    },
+    "6d77a2b14d8231bf.png": {
+        "content": "TRIBUTE of VERSE",
+        "rarity": "version2"
+    },
+    "73f259028f413af0.png": {
+        "content": "LEGEND of VERSE",
+        "rarity": "version3"
+    },
     "9a17b52448b6e580.png": {
         "content": "KING of Performai 4th International ver. BEST 8",
         "rarity": "kop"
@@ -225,6 +237,10 @@
     },
     "f0bec13d274ba04f.png": {
         "content": "KING of Performai 6th International ver. BEST 8",
+        "rarity": "kop"
+    },
+    "37e8f26eeb9fe7c8.png": {
+        "content": "KING of Performai 6th International ver. 優勝",
         "rarity": "kop"
     }
 }
