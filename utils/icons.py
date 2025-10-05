@@ -15,7 +15,7 @@ def get_icon(named: str, fallback: str) -> str: ...
 
 
 def get_icon(named: str, fallback: str | None = None) -> str | None:
-    return getattr(config.icons, named, fallback)
+    return getattr(config.icons, named, fallback) or fallback
 
 
 def rank_icon(rank: "str | Rank") -> str:

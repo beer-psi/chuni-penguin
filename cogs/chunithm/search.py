@@ -10,7 +10,9 @@ from discord.utils import escape_markdown as emd
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
-from database.models import Alias, Chart, Song
+from chunithm_net.exceptions import ChuniNetException
+from chunithm_net.models.record import CourseRecord
+from database.models import Alias, Chart, Course, Song
 from utils import (
     did_you_mean_text,
     shlex_split,
@@ -21,6 +23,7 @@ from utils.context import PenguinContext
 from utils.converters import AliasNameConverter, AliasNameTransformer
 from utils.logging import logged_app_command, logged_prefix_command
 from utils.views.confirmation import ConfirmationYesView
+from utils.views.courses import CourseListView
 from utils.views.song_info import SongInfoPaginationView
 from utils.views.songlist import SonglistView
 
@@ -510,6 +513,31 @@ class SearchCog(commands.Cog, name="Search"):
                 await ctx.send(
                     content="https://cdn.discordapp.com/attachments/1348088922055512197/1358215134937612338/vlc-record-2025-04-05-19h01m28s-2025-04-05_18-57-05.mkv-.mp4"
                 )
+
+    @commands.hybrid_command("courses")
+    @logged_prefix_command
+    async def courses(self, ctx: PenguinContext):
+        async with ctx.typing():
+            # This is mainly an informative command, so we don't wanna stress too hard
+            # that the user isn't logged in.
+            try:
+                async with self.utils.chuninet(ctx) as client:
+                    course_records: list[CourseRecord] = await client.course_record()
+            except (commands.CommandError, ChuniNetException):
+                course_records = []
+
+            async with self.bot.begin_db_session() as session:
+                # course IDs are prefixed by version, so 25xxx is sun plus, 30xxx is luminous,
+                # and so on. really convenient
+                query = select(Course.version).distinct().order_by(Course.id)
+                versions = (await session.execute(query)).scalars().all()
+
+        if len(versions) == 0:
+            msg = "No course data."
+            raise commands.CommandError(msg)
+
+        view = CourseListView(ctx, versions, course_records)
+        view.message = await ctx.reply(view=view)
 
 
 async def setup(bot: "ChuniBot"):

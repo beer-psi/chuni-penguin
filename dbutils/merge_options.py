@@ -10,13 +10,13 @@ from xml.etree import ElementTree
 import httpx
 import httpx_aiohttp
 from PIL import Image
-from sqlalchemy import func
+from sqlalchemy import delete, func
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from chunithm_net.models.enums import Difficulty
-from database.models import Chart, Song
+from chunithm_net.models.enums import CourseClass, Difficulty
+from database.models import Chart, Course, CourseTrack, Song, course_track_charts
 from utils.constants import ASSETS_DIR
 
 VERSIONS = [
@@ -57,6 +57,15 @@ B30_BASE_IMAGES = {
     Difficulty.EXPERT: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
     Difficulty.MASTER: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
     Difficulty.ULTIMA: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
+}
+COURSE_CLASS_MAP = {
+    10: CourseClass.I,
+    11: CourseClass.II,
+    12: CourseClass.III,
+    13: CourseClass.IV,
+    14: CourseClass.V,
+    20: CourseClass.INFINITE,
+    22: CourseClass.EXTRA,
 }
 
 
@@ -159,23 +168,31 @@ async def merge_options(
     if extract_audios:
         (ASSETS_DIR / "audio").mkdir(exist_ok=True, parents=True)
 
-    xml_paths = data_dir.glob("**/music/**/Music.xml")
+    music_xml_paths = data_dir.glob("**/music/**/Music.xml")
     cue_file_paths = data_dir.glob("**/cueFile/**/CueFile.xml")
+    course_rule_paths = data_dir.glob("**/courseRule/**/CourseRule.xml")
+    course_paths = data_dir.glob("**/course/**/Course.xml")
 
     if option_dir is not None:
-        xml_paths = itertools.chain(
-            xml_paths,
+        music_xml_paths = itertools.chain(
+            music_xml_paths,
             option_dir.glob("**/music/**/Music.xml"),
         )
         cue_file_paths = itertools.chain(
             cue_file_paths, option_dir.glob("**/cueFile/**/CueFile.xml")
+        )
+        course_rule_paths = itertools.chain(
+            course_rule_paths, option_dir.glob("**/courseRule/**/CourseRule.xml")
+        )
+        course_paths = itertools.chain(
+            course_paths, option_dir.glob("**/course/**/Course.xml")
         )
 
     inserted_songs = []
     inserted_charts = []
 
     with concurrent.futures.ProcessPoolExecutor() as pool:
-        for xml_path in xml_paths:
+        for xml_path in music_xml_paths:
             tree = ElementTree.parse(xml_path)
             root = tree.getroot()
 
@@ -400,11 +417,217 @@ async def merge_options(
 
         pool.shutdown(wait=True)
 
+    inserted_courses = []
+    inserted_course_tracks = []
+    inserted_course_track_charts = []
+    course_rules = {}
+
+    for course_rule_path in course_rule_paths:
+        tree = ElementTree.parse(course_rule_path)
+        root = tree.getroot()
+
+        if root.tag != "CourseRuleData":
+            logger.warning(
+                "%s: Invalid XML (missing CourseRuleData root)", course_rule_path
+            )
+            continue
+
+        course_rule_id = gettext(root, "./name/id")
+        life = gettext(root, "./life")
+        recovery_life = gettext(root, "./recovery_life")
+        clear_life = gettext(root, "./clear_life")
+        damage_miss = gettext(root, "./damage_miss")
+        damage_attack = gettext(root, "./damage_attack")
+        damage_justice = gettext(root, "./damage_justice")
+        damage_jcrit = gettext(root, "./damage_justice_c")
+
+        if (
+            course_rule_id is None
+            or life is None
+            or recovery_life is None
+            or clear_life is None
+            or damage_miss is None
+            or damage_attack is None
+            or damage_justice is None
+            or damage_jcrit is None
+        ):
+            logger.warning("%s: Invalid XML (missing required tags)", course_rule_path)
+            continue
+
+        logger.debug("Reading course rule %s", course_rule_id)
+
+        course_rules[int(course_rule_id)] = {
+            "life": int(life),
+            "recovery_life": int(recovery_life),
+            "clear_life": int(clear_life),
+            "damage_miss": int(damage_miss),
+            "damage_attack": int(damage_attack),
+            "damage_justice": int(damage_justice),
+            "damage_jcrit": int(damage_jcrit),
+        }
+
+    for course_path in course_paths:
+        tree = ElementTree.parse(course_path)
+        root = tree.getroot()
+
+        if root.tag != "CourseData":
+            logger.warning("%s: Invalid XML (missing CourseData root)", course_path)
+            continue
+
+        release_tag_id = gettext(root, path="./releaseTagName/id")
+        course_id = gettext(root, "./name/id")
+        name = gettext(root, "./name/str")
+        cls_id = gettext(root, "./difficulty/id")
+        rule_id = gettext(root, "./rule/id")
+        is_music_duplicate_allowed = gettext(root, "./isMusicDuplicateAllowed")
+        team_only = gettext(root, "./teamOnly")
+
+        if team_only == "true":
+            logger.debug("Skipping team-only course %s", course_path)
+            continue
+
+        if (
+            course_id is None
+            or name is None
+            or cls_id is None
+            or rule_id is None
+            or release_tag_id is None
+        ):
+            logger.warning("%s: Invalid XML (missing required tags)", course_path)
+            continue
+
+        course_id = int(course_id)
+
+        if course_id >= 300000:
+            logger.debug('Skipping unlock challenge "course" %s', course_path)
+            continue
+
+        try:
+            cls = COURSE_CLASS_MAP[int(cls_id)]
+        except KeyError:
+            logger.warning(
+                "%s: Course references unknown course class %s", course_path, cls_id
+            )
+            continue
+
+        try:
+            rule = course_rules[int(rule_id)]
+        except KeyError:
+            logger.warning(
+                "%s: Course references unknown course rule %s", course_path, rule_id
+            )
+            continue
+
+        try:
+            version = VERSIONS[int(release_tag_id)]
+        except KeyError:
+            logger.warning(
+                "%s: Course references unknown version %s", course_path, release_tag_id
+            )
+            continue
+
+        logger.debug("Reading course %s", course_id)
+
+        inserted_courses.append(
+            {
+                "id": course_id,
+                "cls": cls.value,
+                "name": name,
+                "version": version,
+                "is_duplicate_track_allowed": is_music_duplicate_allowed == "true",
+                **rule,
+            }
+        )
+
+        for i, info in enumerate(root.findall("./infos/CourseMusicDataInfo")):
+            ty = gettext(info, "./type")
+
+            if ty is None:
+                logger.warning(
+                    "CourseMusicDataInfo %s of course %s does not explicitly specify a type, assuming 0",
+                    i,
+                    course_path,
+                )
+                ty = "0"
+
+            ty = int(ty)
+
+            if ty == 0:
+                song_id = gettext(info, "./selectMusic/musicName/id")
+                difficulty = gettext(info, "./selectMusic/musicDiff/data")
+
+                if song_id is None or song_id == "-1" or not difficulty:
+                    msg = f"CourseMusicDataInfo of type {ty} (from {course_path}) does not have a selectMusic set"
+                    raise ValueError(msg)
+
+                inserted_course_tracks.append(
+                    {"course_id": course_id, "track": i + 1, "level": None}
+                )
+                inserted_course_track_charts.append(
+                    {
+                        "course_id": course_id,
+                        "track": i + 1,
+                        "song_id": int(song_id),
+                        "difficulty": "WE"
+                        if difficulty == "WORLD'S END"
+                        else difficulty[:3],
+                    }
+                )
+            elif ty == 1:
+                level = gettext(info, "./selectLevel/fromLevel/data")
+
+                if not level:
+                    msg = f"CourseMusicDataInfo of type {ty} (from {course_path}) does not have a level set"
+                    raise ValueError(msg)
+
+                inserted_course_tracks.append(
+                    {
+                        "course_id": course_id,
+                        "track": i + 1,
+                        "level": level[2:],  # Chop off the "Lv" prefix
+                    }
+                )
+            elif ty == 2:
+                inserted_course_tracks.append(
+                    {"course_id": course_id, "track": i + 1, "level": None}
+                )
+
+                for music in info.findall(
+                    "./selectMusicList/musicList/list/CourseMusicListSubData"
+                ):
+                    sub_ty = gettext(music, "./type")
+
+                    if sub_ty != "0":
+                        msg = f"Invalid type {sub_ty} for CourseMusicListSubData"
+                        raise ValueError(msg)
+
+                    song_id = gettext(music, "./courseMusicData/name/id")
+                    difficulty = gettext(music, "./courseMusicData/diff/data")
+
+                    if song_id is None or song_id == "-1" or not difficulty:
+                        msg = f"CourseMusicListSubData of type {sub_ty} (from {course_path}) does not have a courseMusicData set"
+                        raise ValueError(msg)
+
+                    inserted_course_track_charts.append(
+                        {
+                            "course_id": course_id,
+                            "track": i + 1,
+                            "song_id": int(song_id),
+                            "difficulty": "WE"
+                            if difficulty == "WORLD'S END"
+                            else difficulty[:3],
+                        }
+                    )
+            else:
+                msg = f"Invalid type {ty} for CourseMusicDataInfo"
+                raise ValueError(msg)
+
     async with async_session() as session, session.begin():
         logger.info(
-            "Upserting %d songs and %d charts",
+            "Upserting %d songs, %d charts, %d courses",
             len(inserted_songs),
             len(inserted_charts),
+            len(inserted_courses),
         )
 
         insert_stmt = insert(Song)
@@ -445,3 +668,45 @@ async def merge_options(
         )
 
         await session.execute(upsert_stmt, inserted_charts)
+
+        insert_stmt = insert(Course)
+        upsert_stmt = insert_stmt.on_conflict_do_update(
+            index_elements=[Course.id],
+            set_={
+                k: getattr(insert_stmt.excluded, k)
+                for k in (
+                    "cls",
+                    "name",
+                    "version",
+                    "is_duplicate_track_allowed",
+                    "life",
+                    "recovery_life",
+                    "clear_life",
+                    "damage_miss",
+                    "damage_attack",
+                    "damage_justice",
+                    "damage_jcrit",
+                )
+            },
+        )
+
+        await session.execute(upsert_stmt, inserted_courses)
+
+        insert_stmt = insert(CourseTrack)
+        upsert_stmt = insert_stmt.on_conflict_do_update(
+            index_elements=[CourseTrack.course_id, CourseTrack.track],
+            set_={
+                "level": insert_stmt.excluded.level,
+            },
+        )
+
+        await session.execute(upsert_stmt, inserted_course_tracks)
+
+        await session.execute(
+            delete(course_track_charts).where(
+                (course_track_charts.c.course_id + course_track_charts.c.track).in_(
+                    {c["course_id"] + c["track"] for c in inserted_course_tracks}
+                )
+            )
+        )
+        await session.execute(insert(course_track_charts), inserted_course_track_charts)
