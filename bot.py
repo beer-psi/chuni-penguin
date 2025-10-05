@@ -32,7 +32,7 @@ from utils.logging import logger
 if TYPE_CHECKING:
     from cogs.botutils import UtilsCog
     from cogs.database import DatabaseCog
-    from cogs.gaming import GamingCog
+    from cogs.gaming.cog import GamingCog
     from cogs.web import WebCog
 
 
