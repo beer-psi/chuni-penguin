@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import structlog
 from structlog.stdlib import BoundLogger
 
-from utils.config import config
+from chuni_penguin.config import config
 
 if TYPE_CHECKING:
     from discord import Interaction

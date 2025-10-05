@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from chunithm_net.models.enums import ComboType
-from utils import floor_to_ndp
+from chuni_penguin.networks.chunithm_net import ComboType
+from chuni_penguin.utils import floor_to_ndp
 
 
 def calculate_overpower_base(score: int, internal_level: float) -> Decimal:

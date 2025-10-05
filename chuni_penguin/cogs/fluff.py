@@ -9,10 +9,10 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 from chuni_penguin.context import PenguinContext
-from utils.logging import logged_prefix_command
+from chuni_penguin.logging import logged_prefix_command
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 EIGHT_BALL_RESPONSES = [
     "Most definitely yes.",

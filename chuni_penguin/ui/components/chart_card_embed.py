@@ -3,18 +3,22 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord.utils import escape_markdown
 
-from chunithm_net.models.enums import Difficulty
-from utils import floor_to_ndp, get_jacket_url, sdvxin_link, yt_search_link
-from utils.calculation.border import (
+from chuni_penguin.calculation import (
     calculate_border,
+    calculate_rating,
     calculate_score_deduction_per_judgement,
 )
-from utils.calculation.rating import calculate_rating
-from utils.config import config
-from utils.icons import rank_icon
+from chuni_penguin.config import config
+from chuni_penguin.networks.chunithm_net import Difficulty
+from chuni_penguin.utils import (
+    floor_to_ndp,
+    get_jacket_url,
+    sdvxin_link,
+    yt_search_link,
+)
 
 if TYPE_CHECKING:
-    from database.models import Chart
+    from chuni_penguin.database import Chart
 
 
 class ChartCardEmbed(discord.Embed):
@@ -85,7 +89,7 @@ class ChartCardEmbed(discord.Embed):
             field_value = ""
 
             for rank, judgements in borders.items():
-                field_value += f"▸ {rank_icon(rank)} ▸ {judgements.justice}-{judgements.attack}-{judgements.miss}\n"
+                field_value += f"▸ {config.icons.rank_icon(rank)} ▸ {judgements.justice}-{judgements.attack}-{judgements.miss}\n"
 
             self.add_field(
                 name="Borders (JUSTICE-ATTACK-MISS)",

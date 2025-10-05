@@ -1,9 +1,11 @@
 from configparser import ConfigParser
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, overload
 
 if TYPE_CHECKING:
     from configparser import SectionProxy
+
+    from chuni_penguin.networks.chunithm_net import Rank
 
 
 class BotConfig:
@@ -121,6 +123,21 @@ class IconsConfig:
             if k.startswith("__"):
                 continue
             setattr(self, k, self.__section.get(k))
+
+    @overload
+    def icon(self, named: str) -> str | None: ...
+
+    @overload
+    def icon(self, named: str, fallback: str) -> str: ...
+
+    def icon(self, named: str, fallback: str | None = None) -> str | None:
+        try:
+            return getattr(self, named) or fallback
+        except AttributeError:
+            return fallback
+
+    def rank_icon(self, rank: "str | Rank") -> str:
+        return self.icon(str(rank).lower().replace("+", "p"), str(rank))
 
 
 class LegalConfig:

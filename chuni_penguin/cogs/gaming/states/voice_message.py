@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord.http import handle_message_parameters
 
-from utils import json_dumps, json_loads
-from utils.oggopus import generate_waveform
+from chuni_penguin.oggopus import generate_waveform
+from chuni_penguin.utils import json_dumps, json_loads
 
 from .base import GuessingGameState
 from .wait_for_answer import WaitForAnswerState

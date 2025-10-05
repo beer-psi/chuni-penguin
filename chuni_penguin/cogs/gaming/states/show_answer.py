@@ -7,7 +7,7 @@ from discord.utils import escape_markdown
 from rapidfuzz import fuzz
 
 from chuni_penguin.cogs.botutils import CachedAlias
-from chuni_penguin.database.models import Song
+from chuni_penguin.database import Song
 
 from .base import GuessingGameState
 from .end_game import (

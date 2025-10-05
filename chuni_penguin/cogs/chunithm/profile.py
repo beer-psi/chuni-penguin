@@ -14,22 +14,23 @@ from discord.ext.commands import Context
 from PIL import Image
 from sqlalchemy import select
 
+from chuni_penguin import flags
+from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.database.models import UserConfig
+from chuni_penguin.converters import MemberOrUserConverter
+from chuni_penguin.database import UserConfig
+from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.chunithm_net import ChuniNetError, SkillClass
-from chuni_penguin.ui.login_bonus import LoginBonusView
-from chuni_penguin.ui.profile import (
+from chuni_penguin.ui import (
+    LoginBonusView,
     PersistentHideFriendCodeButton,
     PersistentSendFriendRequestButton,
     ProfileView,
 )
-from utils import flags, json_loads
-from utils.config import config
-from utils.converters import MemberOrUserConverter
-from utils.logging import logged_app_command, logged_prefix_command
+from chuni_penguin.utils import json_loads
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 @dataclass

@@ -4,7 +4,7 @@ from typing import override
 from discord import Interaction, Member, User, app_commands
 from discord.ext import commands
 
-from chunithm_net.models.enums import Difficulty, Genres, Rank
+from chuni_penguin.networks.chunithm_net import Difficulty, Genres, Rank
 
 
 class DifficultyConverter(commands.Converter[Difficulty]):

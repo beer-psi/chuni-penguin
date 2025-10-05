@@ -11,20 +11,20 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import update
 
+from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.database.models import Cookie
+from chuni_penguin.database import Cookie
+from chuni_penguin.logging import logged_app_command, logged_prefix_command, logger
 from chuni_penguin.networks.chunithm_net import (
     ChuniNet,
     ChuniNetException,
     InvalidTokenException,
     is_valid_clal,
 )
-from chuni_penguin.ui.login import LoginFlowView
-from utils.config import config
-from utils.logging import logged_app_command, logged_prefix_command, logger
+from chuni_penguin.ui import LoginFlowView
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class AuthCog(commands.Cog, name="Auth"):

@@ -1,6 +1,9 @@
 import pytest
 
-from utils.calculation.rating import calculate_rating, calculate_score_for_rating
+from chuni_penguin.calculation import (
+    calculate_rating,
+    calculate_score_for_rating,
+)
 
 
 @pytest.mark.parametrize(

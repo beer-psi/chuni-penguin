@@ -17,12 +17,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from chuni_penguin.database.models import Chart, EasterEggFound, Song
+from chuni_penguin.config import config
+from chuni_penguin.database import Chart, EasterEggFound, Song
 from chuni_penguin.networks.chunithm_net import Difficulty
-from utils.config import config
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 @sqlalchemy.event.listens_for(Engine, "connect")

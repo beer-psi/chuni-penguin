@@ -2,12 +2,12 @@ from decimal import Decimal
 
 import pytest
 
-from chunithm_net.models.enums import ComboType
-from utils.calculation.overpower import (
+from chuni_penguin.calculation import (
     calculate_overpower_base,
     calculate_overpower_max,
     calculate_play_overpower,
 )
+from chuni_penguin.networks.chunithm_net import ComboType
 
 
 @pytest.mark.parametrize(

@@ -8,10 +8,10 @@ from discord.utils import escape_markdown
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from chuni_penguin.database.models import Chart, Song
+from chuni_penguin.config import config
+from chuni_penguin.database import Chart, Song
 from chuni_penguin.networks.chunithm_net import Difficulty
-from utils import get_jacket_url, yt_search_link
-from utils.config import config
+from chuni_penguin.utils import get_jacket_url, yt_search_link
 
 from ._pagination import ListPageSource, PaginationView
 

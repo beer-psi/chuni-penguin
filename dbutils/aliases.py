@@ -5,7 +5,7 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from database.models import Alias, Song
+from chuni_penguin.database import Alias, Song
 
 
 class TachiChunithmSongData(msgspec.Struct, rename="camel"):

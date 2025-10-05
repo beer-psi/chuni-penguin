@@ -5,10 +5,10 @@ from discord import app_commands
 from discord.ext import commands
 from rapidfuzz import fuzz, process
 
-from utils.constants import SIMILARITY_THRESHOLD
+from chuni_penguin.constants import SIMILARITY_THRESHOLD
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class AutocompletersCog(commands.Cog, name="Autocompleters"):

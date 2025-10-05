@@ -10,11 +10,11 @@ from discord.utils import MISSING
 from fluent.runtime import FluentBundle, FluentLocalization, FluentResourceLoader
 from fluent.runtime.resolver import Message
 
+from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
-from utils.config import config
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 TRANSLATIONS_DIR = Path(__file__).parent.parent / "i18n"
 TRANSLATION_RESOURCES = ["main.ftl", "help.ftl"]

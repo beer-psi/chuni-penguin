@@ -13,14 +13,14 @@ from discord.ext.commands import Context
 from discord.utils import oauth_url
 from sqlalchemy import delete, func, select
 
+from chuni_penguin.config import config
+from chuni_penguin.constants import VERSION_NAMES
 from chuni_penguin.context import PenguinContext, PenguinGuildContext
-from chuni_penguin.database.models import Cookie, Prefix, Song
-from utils.config import config
-from utils.constants import VERSION_NAMES
-from utils.logging import logged_prefix_command
+from chuni_penguin.database import Cookie, Prefix, Song
+from chuni_penguin.logging import logged_prefix_command
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class MiscCog(commands.Cog, name="Miscellaneous"):

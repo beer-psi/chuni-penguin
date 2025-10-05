@@ -4,7 +4,7 @@ from sqlalchemy import bindparam, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from database.models import Chart
+from chuni_penguin.database import Chart
 
 
 async def update_tachi(

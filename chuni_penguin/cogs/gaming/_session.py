@@ -20,11 +20,11 @@ from sqlalchemy.sql import update
 
 from chuni_penguin.cogs.botutils import CachedAlias
 from chuni_penguin.cogs.events import EventsCog
-from chuni_penguin.database.models import Alias, GuessScore, Song
+from chuni_penguin.constants import ASSETS_DIR
+from chuni_penguin.database import Alias, GuessScore, Song
+from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import Difficulty, Genres
-from utils.constants import ASSETS_DIR
-from utils.logging import logger
-from utils.oggopus import crop_audio, get_audio_duration
+from chuni_penguin.oggopus import crop_audio, get_audio_duration
 
 from .states.base import GuessingGameSkippableState, GuessingGameState
 from .states.image import AskImageQuestionState
@@ -33,7 +33,7 @@ from .states.voice_call import AskVoiceCallQuestionState
 from .states.voice_message import AskVoiceMessageQuestionState
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class GuessingGameType(Enum):

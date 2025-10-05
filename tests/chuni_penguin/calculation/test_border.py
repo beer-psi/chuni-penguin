@@ -1,6 +1,6 @@
 import pytest
 
-from utils.calculation.border import (
+from chuni_penguin.calculation import (
     calculate_border,
     calculate_score_deduction_per_judgement,
 )

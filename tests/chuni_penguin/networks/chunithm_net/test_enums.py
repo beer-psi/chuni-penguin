@@ -1,6 +1,6 @@
 import pytest
 
-from chunithm_net.models.enums import (
+from chuni_penguin.networks.chunithm_net import (
     ClearType,
     Difficulty,
     Possession,

@@ -10,24 +10,23 @@ from discord.utils import escape_markdown as emd
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
+from chuni_penguin.config import config
+from chuni_penguin.constants import SIMILARITY_THRESHOLD
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.database.models import Alias, Chart, Course, Song
+from chuni_penguin.converters import AliasNameConverter, AliasNameTransformer
+from chuni_penguin.database import Alias, Chart, Course, Song
+from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.chunithm_net import ChuniNetException, CourseRecord
-from chuni_penguin.ui.confirmation import ConfirmationYesView
-from chuni_penguin.ui.courses import CourseListView
-from chuni_penguin.ui.song_info import SongInfoPaginationView
-from chuni_penguin.ui.songlist import SonglistView
-from utils import (
-    did_you_mean_text,
-    shlex_split,
+from chuni_penguin.ui import (
+    ConfirmationYesView,
+    CourseListView,
+    SongInfoPaginationView,
+    SonglistView,
 )
-from utils.config import config
-from utils.constants import SIMILARITY_THRESHOLD
-from utils.converters import AliasNameConverter, AliasNameTransformer
-from utils.logging import logged_app_command, logged_prefix_command
+from chuni_penguin.utils import did_you_mean_text, shlex_split
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
     from chuni_penguin.cogs.autocompleters import AutocompletersCog
     from chuni_penguin.cogs.botutils import UtilsCog
 

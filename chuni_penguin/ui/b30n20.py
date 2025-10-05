@@ -5,7 +5,7 @@ import discord
 from discord.ext.commands import Context
 
 from chuni_penguin.networks.chunithm_net import KEY_PLAY_RATING
-from utils import floor_to_ndp
+from chuni_penguin.utils import floor_to_ndp
 
 from ._pagination import PaginationView
 from .b30 import B30PageSource

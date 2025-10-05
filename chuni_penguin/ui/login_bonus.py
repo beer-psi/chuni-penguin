@@ -4,18 +4,18 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.utils import MISSING, escape_markdown
 
+from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.networks.chunithm_net import (
     LoginBonus,
     LoginBonusItem,
 )
-from utils.icons import get_icon
 
 from ._pagination import ListPageSource, PaginationView
 from .embeds import EmbedPageSource
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class LoginBonusItemPaginationSource(ListPageSource[LoginBonusItem]):
@@ -155,7 +155,9 @@ class LoginBonusView(PaginationView):
             elif daily_bonus.weekday == calendar.SUNDAY:
                 weekday_emote = ":red_square:"
 
-            bonus_emote = get_icon(daily_bonus.icon_url.split("/")[-1].split(".")[0])
+            bonus_emote = config.icons.icon(
+                daily_bonus.icon_url.split("/")[-1].split(".")[0]
+            )
             weekday_description = f"{weekday_emote} `{daily_bonus.weekday_name[:3]}.`"
 
             if bonus_emote is not None:

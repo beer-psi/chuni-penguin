@@ -9,10 +9,10 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from database.models import Base
-from utils.config import config
-from utils.event_loop import get_event_loop
-from utils.logging import logger
+from chuni_penguin.config import config
+from chuni_penguin.database.models import Base
+from chuni_penguin.logging import logger
+from chuni_penguin.utils import get_event_loop
 
 from .aliases import update_aliases
 from .chunirec import update_db

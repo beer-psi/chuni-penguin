@@ -12,7 +12,9 @@ from discord.app_commands import AppCommandError
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
+from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import (
     ChuniNetError,
     ChuniNetException,
@@ -20,11 +22,9 @@ from chuni_penguin.networks.chunithm_net import (
     InvalidTokenException,
     MaintenanceException,
 )
-from utils.config import config
-from utils.logging import logger
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class EventsCog(commands.Cog, name="Events"):

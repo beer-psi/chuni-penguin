@@ -5,10 +5,10 @@ from discord.ext import commands
 from sqlalchemy import delete
 
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.database.models import Denylist
+from chuni_penguin.database import Denylist
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):

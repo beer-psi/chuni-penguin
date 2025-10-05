@@ -5,10 +5,10 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, Command, Group
 
-from utils.config import config
+from chuni_penguin.config import config
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 MENTION_PREFIX_RE = re.compile(r"<@[!&]?\d+>")
 

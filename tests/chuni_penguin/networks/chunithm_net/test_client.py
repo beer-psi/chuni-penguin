@@ -11,23 +11,22 @@ import pytest
 from pytest import MonkeyPatch
 from pytest_httpx import HTTPXMock
 
-from chunithm_net import ChuniNet
-from chunithm_net.consts import _KEY_DETAILED_PARAMS, KEY_SONG_ID
-from chunithm_net.exceptions import (
+from chuni_penguin.networks.chunithm_net import (
+    KEY_SONG_ID,
     AlreadyAddedAsFriend,
+    ChuniNet,
     ChuniNetError,
-    InvalidFriendCode,
-    InvalidTokenException,
-    MaintenanceException,
-)
-from chunithm_net.models.enums import (
     ClearType,
     ComboType,
     CourseClass,
     Difficulty,
+    InvalidFriendCode,
+    InvalidTokenException,
+    MaintenanceException,
     Possession,
     Rank,
 )
+from chuni_penguin.networks.chunithm_net.consts import _KEY_DETAILED_PARAMS
 
 BASE_DIR = Path(__file__).parent
 

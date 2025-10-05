@@ -10,10 +10,10 @@ from discord.webhook.async_ import WebhookMessage
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from chuni_penguin.database.models import Chart, UserConfig
+from chuni_penguin.constants import SIMILARITY_THRESHOLD
+from chuni_penguin.database import Chart, UserConfig
 from chuni_penguin.networks.chunithm_net import Difficulty
-from utils import did_you_mean_text
-from utils.constants import SIMILARITY_THRESHOLD
+from chuni_penguin.utils import did_you_mean_text
 
 if TYPE_CHECKING:
     from .bot import ChuniBot

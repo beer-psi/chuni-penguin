@@ -17,15 +17,15 @@ from PIL import Image, UnidentifiedImageError
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from chuni_penguin.database.models import Chart, Cookie, Song
+from chuni_penguin.config import config
+from chuni_penguin.constants import ASSETS_DIR
+from chuni_penguin.database import Chart, Cookie, Song
+from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import is_valid_clal
-from utils import get_jacket_url, json_dumps, json_loads, sdvxin_link
-from utils.config import config
-from utils.constants import ASSETS_DIR
-from utils.logging import logger
+from chuni_penguin.utils import get_jacket_url, json_dumps, json_loads, sdvxin_link
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 router = web.RouteTableDef()
 

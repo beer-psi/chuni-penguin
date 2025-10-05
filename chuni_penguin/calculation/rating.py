@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional
 
-from utils import round_to_nearest
+from chuni_penguin.utils import round_to_nearest
 
 
 def calculate_rating(score: int, internal_level: Optional[float]) -> Decimal:

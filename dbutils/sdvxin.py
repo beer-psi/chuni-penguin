@@ -12,7 +12,7 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from database.models import Chart, SdvxinChartView, Song
+from chuni_penguin.database import Chart, SdvxinChartView, Song
 
 WORLD_END_SDVXIN_REGEX = re.compile(
     r"document\.title\s*=\s*['\"](?P<title>.+?) \[WORLD'S END(?:\])?\s*(?P<difficulty>.+?)(?:\]\s*)?['\"]"

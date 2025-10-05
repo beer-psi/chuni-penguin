@@ -8,7 +8,7 @@ import msgspec
 from discord.app_commands import CommandTree
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from .bot import ChuniBot
 
 
 class PenguinCommandTree(CommandTree["ChuniBot"]):

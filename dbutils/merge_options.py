@@ -15,9 +15,15 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from chunithm_net.models.enums import CourseClass, Difficulty
-from database.models import Chart, Course, CourseTrack, Song, course_track_charts
-from utils.constants import ASSETS_DIR
+from chuni_penguin.constants import ASSETS_DIR
+from chuni_penguin.database import (
+    Chart,
+    Course,
+    CourseTrack,
+    Song,
+    course_track_charts,
+)
+from chuni_penguin.networks.chunithm_net import CourseClass, Difficulty
 
 VERSIONS = [
     "CHUNITHM",

@@ -1,7 +1,6 @@
 from math import floor
 
-from chunithm_net.models.enums import Rank
-from chunithm_net.models.record import Judgements
+from chuni_penguin.networks.chunithm_net import Judgements, Rank
 
 ONE_ATTACK_IN_JUSTICE = 51
 ONE_MISS_IN_JUSTICE = 101

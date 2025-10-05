@@ -8,11 +8,14 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
-from database.models import Chart, Song, SongJacket
-from utils import TOKYO_TZ, release_to_chunithm_version
-from utils.config import config
-from utils.types.errors import MissingConfiguration
+from chuni_penguin.config import config
+from chuni_penguin.database import Chart, Song, SongJacket
+from chuni_penguin.errors import MissingConfiguration
+from chuni_penguin.networks.chunithm_net import (
+    INTERNATIONAL_JACKET_BASE,
+    JACKET_BASE,
+)
+from chuni_penguin.utils import TOKYO_TZ, release_to_chunithm_version
 
 
 class ChunirecMeta(msgspec.Struct):

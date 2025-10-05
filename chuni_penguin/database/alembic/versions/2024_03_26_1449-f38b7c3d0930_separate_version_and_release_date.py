@@ -12,7 +12,7 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-from utils import TOKYO_TZ, release_to_chunithm_version
+from chuni_penguin.utils import TOKYO_TZ, release_to_chunithm_version
 
 # revision identifiers, used by Alembic.
 revision: str = "f38b7c3d0930"

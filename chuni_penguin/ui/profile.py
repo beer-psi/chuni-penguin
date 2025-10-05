@@ -16,7 +16,7 @@ from chuni_penguin.networks.chunithm_net import (
 from ._base import PenguinView
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
     from chuni_penguin.cogs.botutils import UtilsCog
     from chuni_penguin.networks.chunithm_net import PlayerData
 

@@ -5,9 +5,9 @@ import discord.ui
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
-from chuni_penguin.database.models import Chart
+from chuni_penguin.database import Chart
 from chuni_penguin.networks.chunithm_net import Difficulty
-from utils import yt_search_link
+from chuni_penguin.utils import yt_search_link
 
 from ._pagination import ListPageSource, PaginationView
 

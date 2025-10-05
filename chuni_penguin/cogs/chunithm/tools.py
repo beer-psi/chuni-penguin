@@ -15,34 +15,33 @@ from PIL import Image
 from sqlalchemy import select, text
 from sqlalchemy.orm import joinedload
 
+from chuni_penguin.calculation import (
+    calculate_border,
+    calculate_overpower_base,
+    calculate_overpower_max,
+    calculate_rating,
+    calculate_score_deduction_per_judgement,
+    calculate_score_for_rating,
+)
+from chuni_penguin.config import config
+from chuni_penguin.constants import MAX_DIFFICULTY
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.database.models import Chart, Song
+from chuni_penguin.converters import AliasNameConverter, DifficultyConverter
+from chuni_penguin.database import Chart, Song
+from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.networks.chunithm_net import KEY_PLAY_RATING, Difficulty, Rank
 from chuni_penguin.networks.kamaitachi import convert_kt_pbs_to_records
-from utils import (
+from chuni_penguin.ui import ChartCardEmbed
+from chuni_penguin.utils import (
     floor_to_ndp,
     json_loads,
     round_to_nearest,
     sdvxin_link,
     yt_search_link,
 )
-from utils.calculation.border import (
-    calculate_border,
-    calculate_score_deduction_per_judgement,
-)
-from utils.calculation.overpower import (
-    calculate_overpower_base,
-    calculate_overpower_max,
-)
-from utils.calculation.rating import calculate_rating, calculate_score_for_rating
-from utils.components import ChartCardEmbed
-from utils.constants import MAX_DIFFICULTY
-from utils.converters import AliasNameConverter, DifficultyConverter
-from utils.icons import rank_icon
-from utils.logging import logged_prefix_command
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
     from chuni_penguin.cogs.autocompleters import AutocompletersCog
 
 
@@ -861,7 +860,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 borders_field_value = ""
 
                 for rank, judgements in borders.items():
-                    borders_field_value += f"▸ {rank_icon(rank)} ▸ {judgements.justice}-{judgements.attack}-{judgements.miss}\n"
+                    borders_field_value += f"▸ {config.icons.rank_icon(rank)} ▸ {judgements.justice}-{judgements.attack}-{judgements.miss}\n"
 
                 embed.add_field(
                     name="Borders (JUSTICE-ATTACK-MISS)",

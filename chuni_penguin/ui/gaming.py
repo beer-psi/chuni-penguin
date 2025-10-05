@@ -8,15 +8,15 @@ from discord.utils import escape_markdown
 from sqlalchemy import Row, desc, func, select
 
 from chuni_penguin.cogs.gaming._session import GuessingGameSession, GuessingGameType
+from chuni_penguin.config import config
 from chuni_penguin.context import PenguinGuildContext
-from chuni_penguin.database.models import GuessScore
+from chuni_penguin.database import GuessScore
 from chuni_penguin.networks.chunithm_net import Difficulty, Genres
-from utils.config import config
 
 from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
     from chuni_penguin.cogs.gaming import GamingCog
 
 

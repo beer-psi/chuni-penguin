@@ -25,7 +25,7 @@ from chuni_penguin.networks.chunithm_net import (
     Skill,
     SkillClass,
 )
-from utils import floor_to_ndp
+from chuni_penguin.utils import floor_to_ndp
 
 T = TypeVar("T", bound=msgspec.Struct)
 

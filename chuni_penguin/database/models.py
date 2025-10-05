@@ -26,7 +26,7 @@ from sqlalchemy.orm import (
 )
 
 from chuni_penguin.networks.chunithm_net import CourseClass
-from utils import sdvxin_link
+from chuni_penguin.utils import sdvxin_link
 
 
 class Base(DeclarativeBase, AsyncAttrs):

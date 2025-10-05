@@ -1,7 +1,8 @@
 import discord
 from discord.utils import escape_markdown
 
-from chunithm_net.consts import (
+from chuni_penguin.config import config
+from chuni_penguin.networks.chunithm_net import (
     KEY_INTERNAL_LEVEL,
     KEY_LEVEL,
     KEY_OVERPOWER,
@@ -9,17 +10,16 @@ from chunithm_net.consts import (
     KEY_PLAY_RATING,
     KEY_SONG_ID,
     KEY_TOTAL_COMBO,
-)
-from chunithm_net.models.enums import ChainType, ClearType, ComboType, Difficulty
-from chunithm_net.models.record import (
+    ChainType,
+    ClearType,
+    ComboType,
     DetailedRecentRecord,
+    Difficulty,
     MusicRecord,
     RecentRecord,
     Record,
 )
-from utils import floor_to_ndp
-from utils.config import config
-from utils.icons import rank_icon
+from chuni_penguin.utils import floor_to_ndp
 
 
 class ScoreCardEmbed(discord.Embed):
@@ -64,11 +64,9 @@ class ScoreCardEmbed(discord.Embed):
             else:
                 lamps_str = [str(x) for x in lamps]
 
-            score_data = (
-                f"▸ {rank_icon(record.rank)} ▸ {' / '.join(lamps_str)} ▸ {record.score}"
-            )
+            score_data = f"▸ {config.icons.rank_icon(record.rank)} ▸ {' / '.join(lamps_str)} ▸ {record.score}"
         else:
-            score_data = f"▸ {rank_icon(record.rank)} ▸ {record.score}"
+            score_data = f"▸ {config.icons.rank_icon(record.rank)} ▸ {record.score}"
 
         footer_sections = []
         if play_rating := record.extras.get(KEY_PLAY_RATING):

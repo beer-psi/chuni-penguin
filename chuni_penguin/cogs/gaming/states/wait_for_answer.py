@@ -4,7 +4,7 @@ import time
 from typing import TYPE_CHECKING, override
 
 from chuni_penguin.cogs.botutils import CachedAlias
-from chuni_penguin.database.models import Song
+from chuni_penguin.database import Song
 
 from .base import GuessingGameSkippableState, GuessingGameState
 from .show_answer import ShowAnswerState

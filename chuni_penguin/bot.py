@@ -17,14 +17,13 @@ from discord.ext.track_edits import EditTrackerCog
 from sqlalchemy import select, text
 
 from chuni_penguin.context import PenguinContext
-from utils import json_dumps, json_loads
-from utils.command_tree import PenguinCommandTree
-from utils.config import config
-from utils.hishel import HishelMsgspecSerializer
-from utils.logging import logger
+from chuni_penguin.logging import logger
 
 from .cogs import COG_LIST
+from .command_tree import PenguinCommandTree
+from .config import config
 from .database.models import Denylist, Prefix
+from .utils import HishelMsgspecSerializer, json_dumps, json_loads
 
 if TYPE_CHECKING:
     from .cogs.botutils import UtilsCog

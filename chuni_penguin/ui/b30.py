@@ -8,10 +8,10 @@ from chuni_penguin.networks.chunithm_net import (
     KEY_INTERNAL_LEVEL,
     KEY_PLAY_RATING,
 )
-from utils import floor_to_ndp
-from utils.components import ScoreCardEmbed
+from chuni_penguin.utils import floor_to_ndp
 
 from ._pagination import ListPageSource, PaginationView
+from .components.score_card_embed import ScoreCardEmbed
 
 if TYPE_CHECKING:
     from chuni_penguin.networks.chunithm_net import Record

@@ -5,8 +5,18 @@ import string
 import pytest
 from bs4 import BeautifulSoup
 
-from chunithm_net.models.enums import ChainType, ClearType, ComboType, Difficulty, Rank
-from chunithm_net.utils import difficulty_from_imgurl, get_rank_and_lamps, is_valid_clal
+from chuni_penguin.networks.chunithm_net import (
+    ChainType,
+    ClearType,
+    ComboType,
+    Difficulty,
+    Rank,
+)
+from chuni_penguin.networks.chunithm_net.utils import (
+    difficulty_from_imgurl,
+    get_rank_and_lamps,
+    is_valid_clal,
+)
 
 
 @pytest.mark.parametrize(

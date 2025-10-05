@@ -9,10 +9,13 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from chunithm_net.consts import INTERNATIONAL_JACKET_BASE, JACKET_BASE
-from database.models import Song, SongJacket
-from utils.config import config
-from utils.constants import ASSETS_DIR
+from chuni_penguin.config import config
+from chuni_penguin.constants import ASSETS_DIR
+from chuni_penguin.database import Song, SongJacket
+from chuni_penguin.networks.chunithm_net import (
+    INTERNATIONAL_JACKET_BASE,
+    JACKET_BASE,
+)
 
 from .chunirec import ChunithmOfficialSong, MaimaiOfficialSong
 

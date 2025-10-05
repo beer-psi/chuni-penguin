@@ -8,7 +8,7 @@ from pathlib import Path
 import msgspec
 import pytest
 
-from utils.oggopus import OggStream, crop_audio, get_audio_duration
+from chuni_penguin.oggopus import OggStream, crop_audio, get_audio_duration
 
 audio_files = list(Path("assets/audio").glob("*.ogg"))
 
