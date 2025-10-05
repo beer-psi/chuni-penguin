@@ -21,7 +21,9 @@ class PenguinViewMixin(Generic[ContextT]):
     async def _before_start(self, *, content: str | None = None) -> dict[str, Any]:
         return {"content": content}
 
-    async def start(self, *, content: str | None = None, ephemeral: bool = False):
+    async def start(
+        self, *, content: str | None = None, ephemeral: bool = False
+    ) -> discord.Message:
         kwargs = await self._before_start(content=content)
 
         # This will either be a discord.ui.View or discord.ui.LayoutView
@@ -31,7 +33,7 @@ class PenguinViewMixin(Generic[ContextT]):
             view=self,  # pyright: ignore[reportArgumentType]
             ephemeral=ephemeral,
         )
-        return self.message
+        return self.message  # pyright: ignore[reportReturnType]
 
     async def start_from(self, message: discord.Message, *, content: str | None = None):
         kwargs = await self._before_start(content=content)
@@ -46,12 +48,12 @@ class PenguinViewMixin(Generic[ContextT]):
 
     async def start_in(
         self, messageable: discord.abc.Messageable, *, content: str | None = None
-    ):
+    ) -> discord.Message:
         kwargs = await self._before_start(content=content)
 
         # Same reason as above.
         self.message = await messageable.send(**kwargs, view=self)  # pyright: ignore[reportCallIssue, reportArgumentType]
-        return self.message
+        return self.message  # pyright: ignore[reportReturnType]
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
         if interaction.user.id == self.ctx.author.id or await self.ctx.bot.is_owner(
