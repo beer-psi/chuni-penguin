@@ -1,5 +1,6 @@
 from utils.views.b30 import B30View
 from utils.views.b30n20 import B30N20View
+from utils.views.courses import CourseListView
 from utils.views.embeds import EmbedPaginationView
 from utils.views.login import LoginFlowView
 from utils.views.profile import ProfileView
