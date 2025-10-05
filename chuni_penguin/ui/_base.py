@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
 import discord
 
-from utils.config import config
-from utils.logging import logger
+from chuni_penguin.config import config
+from chuni_penguin.logging import logger
 
 if TYPE_CHECKING:
-    from utils.context import PenguinContext
+    from chuni_penguin.context import PenguinContext
 
 ContextT = TypeVar("ContextT", bound="PenguinContext", covariant=True)
 

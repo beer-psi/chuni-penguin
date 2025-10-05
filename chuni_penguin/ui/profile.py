@@ -7,7 +7,7 @@ from discord import ButtonStyle, Interaction
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from chunithm_net.exceptions import (
+from chuni_penguin.networks.chunithm_net import (
     AlreadyAddedAsFriend,
     ChuniNetError,
     InvalidFriendCode,
@@ -16,9 +16,9 @@ from chunithm_net.exceptions import (
 from ._base import PenguinView
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
-    from chunithm_net.models.player_data import PlayerData
-    from cogs.botutils import UtilsCog
+    from chuni_penguin.bot import ChuniBot
+    from chuni_penguin.cogs.botutils import UtilsCog
+    from chuni_penguin.networks.chunithm_net import PlayerData
 
 
 async def handle_add_friend_interaction(

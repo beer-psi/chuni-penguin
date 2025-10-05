@@ -3,16 +3,14 @@ from typing import TYPE_CHECKING, Any, AsyncContextManager, override
 import discord.ui
 from discord.ext.commands import Context
 
-from utils.components import ScoreCardEmbed
+from chuni_penguin.ui import ScoreCardEmbed
 
 from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
-    from chunithm_net import ChuniNet
-    from chunithm_net.models.player_data import PlayerData
-    from chunithm_net.models.record import RecentRecord
-    from cogs.botutils import UtilsCog
+    from chuni_penguin.bot import ChuniBot
+    from chuni_penguin.cogs.botutils import UtilsCog
+    from chuni_penguin.networks.chunithm_net import ChuniNet, PlayerData, RecentRecord
 
 
 def split_scores_into_credits(

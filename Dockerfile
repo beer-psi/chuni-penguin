@@ -65,5 +65,4 @@ USER bot
 RUN mkdir -p /code/.cache
 
 WORKDIR /code
-ENTRYPOINT ["/code/.venv/bin/python3", "bot.pyc"]
-
+ENTRYPOINT ["/code/.venv/bin/python3", "launcher.pyc"]

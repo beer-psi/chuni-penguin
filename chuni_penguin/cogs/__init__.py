@@ -1,0 +1,18 @@
+COG_LIST: list[str] = [
+    "chuni_penguin.cogs.help",
+    "chuni_penguin.cogs.database",
+    "chuni_penguin.cogs.web",
+    "chuni_penguin.cogs.botutils",
+    "chuni_penguin.cogs.admin",
+    "chuni_penguin.cogs.autocompleters",
+    "chuni_penguin.cogs.events",
+    "chuni_penguin.cogs.fluff",
+    "chuni_penguin.cogs.gaming",
+    "chuni_penguin.cogs.misc",
+    "chuni_penguin.cogs.chunithm.auth",
+    "chuni_penguin.cogs.chunithm.kamaitachi",
+    "chuni_penguin.cogs.chunithm.profile",
+    "chuni_penguin.cogs.chunithm.records",
+    "chuni_penguin.cogs.chunithm.search",
+    "chuni_penguin.cogs.chunithm.tools",
+]

@@ -7,19 +7,16 @@ on:
       - "trunk"
     paths: &filelist
       - ".github/workflows/ci.yaml"
-      - "chunithm_net/**"
-      - "assets/**"
-      - "cogs/**"
-      - "database/**"
+      - "chuni_penguin/**"
       - "dbutils/**"
       - "packages/**"
+      - "patches/**"
       - "tests/**"
-      - "utils/**"
-      - "bot.py"
+      - "launcher.py"
       - "pyproject.toml"
       - "uv.lock"
-      - "web.py"
       - "Dockerfile"
+      - ".dockerignore"
   pull_request:
     branches:
       - "develop"
@@ -80,8 +77,8 @@ jobs:
 
       - name: "(unfortunately) closed source components"
         run: |
-          curl -L "$CR_COG_LINK" -o "$CR_COG_PATH"
-          echo "COG_LIST += ['$CR_COG_NAME']" >> cogs/__init__.py
+          curl -L "$CR_COG_LINK" -o "chuni_penguin/$CR_COG_PATH"
+          echo "COG_LIST += ['$CR_COG_NAME']" >> chuni_penguin/cogs/__init__.py
         env:
           CR_COG_LINK: "${{ secrets.CR_COG_LINK }}"
           CR_COG_PATH: "${{ secrets.CR_COG_PATH }}"

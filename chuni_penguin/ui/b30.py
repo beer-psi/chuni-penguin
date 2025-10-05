@@ -4,14 +4,17 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext.commands import Context
 
-from chunithm_net.consts import KEY_INTERNAL_LEVEL, KEY_PLAY_RATING
-from utils import floor_to_ndp
-from utils.components import ScoreCardEmbed
+from chuni_penguin.networks.chunithm_net import (
+    KEY_INTERNAL_LEVEL,
+    KEY_PLAY_RATING,
+)
+from chuni_penguin.utils import floor_to_ndp
 
 from ._pagination import ListPageSource, PaginationView
+from .components.score_card_embed import ScoreCardEmbed
 
 if TYPE_CHECKING:
-    from chunithm_net.models.record import Record
+    from chuni_penguin.networks.chunithm_net import Record
 
 
 class B30PageSource(ListPageSource["Record"]):

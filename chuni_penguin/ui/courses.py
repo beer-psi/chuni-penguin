@@ -6,18 +6,23 @@ from discord.utils import MISSING, escape_markdown
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import select
 
-from chunithm_net.models.enums import ClearType, ComboType, CourseClass, Difficulty
-from chunithm_net.models.record import CourseRecord
-from database.models import Chart, Course, CourseTrack
-from utils import get_jacket_url, sdvxin_link, yt_search_link
-from utils.constants import CURRENT_CHUNITHM_VERSION
-from utils.icons import rank_icon
+from chuni_penguin.config import config
+from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION
+from chuni_penguin.database import Chart, Course, CourseTrack
+from chuni_penguin.networks.chunithm_net import (
+    ClearType,
+    ComboType,
+    CourseClass,
+    CourseRecord,
+    Difficulty,
+)
+from chuni_penguin.utils import get_jacket_url, sdvxin_link, yt_search_link
 
 from ._base import PenguinLayoutView
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
-    from utils.context import PenguinContext
+    from chuni_penguin.bot import ChuniBot
+    from chuni_penguin.context import PenguinContext
 
 
 def format_life_deduction(num: int):
@@ -131,7 +136,7 @@ def format_course_record(record: CourseRecord):
     if len(lamps) == 0:
         lamps = ["CLEAR"]
 
-    return f"▸ {rank_icon(record.rank)} ▸ {' / '.join(lamps)} ▸ {record.score}"
+    return f"▸ {config.icons.rank_icon(record.rank)} ▸ {' / '.join(lamps)} ▸ {record.score}"
 
 
 def format_course_heading(

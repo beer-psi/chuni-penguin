@@ -9,13 +9,13 @@ from discord.abc import MISSING
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
-from chunithm_net import _AUTHENTICATION_URL
-from utils.logging import logger
+from chuni_penguin.logging import logger
+from chuni_penguin.networks.chunithm_net.client import _AUTHENTICATION_URL
 
 from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
-    from bot import ChuniBot
+    from chuni_penguin.bot import ChuniBot
 
 
 class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):

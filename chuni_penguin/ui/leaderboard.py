@@ -4,13 +4,16 @@ import discord
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
-from chunithm_net.models.enums import Difficulty, Rank
-from chunithm_net.models.leaderboard import Leaderboard, LeaderboardEntry
-from database.models import Chart, Song
-from utils import get_jacket_url
-from utils.components.chart_card_embed import ChartCardEmbed
-from utils.config import config
-from utils.icons import rank_icon
+from chuni_penguin.config import config
+from chuni_penguin.database import Chart, Song
+from chuni_penguin.networks.chunithm_net import (
+    Difficulty,
+    Leaderboard,
+    LeaderboardEntry,
+    Rank,
+)
+from chuni_penguin.ui import ChartCardEmbed
+from chuni_penguin.utils import get_jacket_url
 
 from ._pagination import ListPageSource, PaginationView
 
@@ -58,7 +61,7 @@ class LeaderboardPageSource(ListPageSource):
         description = ""
 
         for record in page:
-            description += f"`{record.position: >3}` {record.player_name:　<8} ▸ {rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+            description += f"`{record.position: >3}` {record.player_name:　<8} ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
 
             if record.ajc_count is not None:
                 description += f" (AJC: {record.ajc_count})"
