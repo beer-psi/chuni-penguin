@@ -4,19 +4,19 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
 import discord
+from database.models import GuessScore
 from discord.ext import commands, songbird
 from discord.ext.commands import Context, Range
 from discord.utils import MISSING
 from sqlalchemy import delete
 
-from chuni_penguin.ui.gaming import GuessLeaderboardView
-from chunithm_net.models.enums import Difficulty, Genres
-from database.models import GuessScore
-from utils import shlex_split
-from utils.context import PenguinGuildContext
-from utils.converters import DifficultyConverter, GenreConverter
-from utils.flags import DiscordArguments
-from utils.logging import logged_prefix_command
+from chuni_penguin.context import PenguinGuildContext
+from chuni_penguin.converters import DifficultyConverter, GenreConverter
+from chuni_penguin.flags import DiscordArguments
+from chuni_penguin.logging import logged_prefix_command
+from chuni_penguin.networks.chunithm_net import Difficulty, Genres
+from chuni_penguin.ui import GuessLeaderboardView
+from chuni_penguin.utils import shlex_split
 
 from ._session import GuessingGameSession, GuessingGameType
 
