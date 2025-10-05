@@ -1,16 +1,11 @@
 *
 
 !/chuni_penguin
-!/chunithm_net
-!/cogs
-!/database
-!/dbutils
 !/packages
 !/patches
-!/utils
 !/.python-version
 !/alembic.ini
-!/bot.py
+!/launcher.py
 !/LICENSE
 !/pyproject.toml
 !/README.md
@@ -24,4 +19,3 @@ packages/penguin-native/target
 
 # C extensions
 *.so
-
