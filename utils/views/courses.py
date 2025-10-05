@@ -275,8 +275,8 @@ class CourseListView(discord.ui.LayoutView):
         self.courses: list[Course] = []
 
     async def on_timeout(self) -> None:
-        self.remove_item(self.version_action_row)
-        self.remove_item(self.class_action_row)
+        self.version_select.disabled = True
+        self.class_select.disabled = True
 
         for item in self.walk_children():
             if isinstance(item, discord.ui.Button):
