@@ -12,7 +12,7 @@ def patch_json():
 
 def patch_parse_timestamp():
     with contextlib.suppress(ImportError):
-        import ciso8601
+        import ciso8601  # pyright: ignore[reportMissingImports]
         import discord.utils
 
         discord.utils.parse_time = (
