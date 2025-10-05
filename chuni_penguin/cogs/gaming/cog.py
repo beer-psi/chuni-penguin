@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
 import discord
-from database.models import GuessScore
 from discord.ext import commands, songbird
 from discord.ext.commands import Context, Range
 from discord.utils import MISSING
@@ -12,6 +11,7 @@ from sqlalchemy import delete
 
 from chuni_penguin.context import PenguinGuildContext
 from chuni_penguin.converters import DifficultyConverter, GenreConverter
+from chuni_penguin.database.models import GuessScore
 from chuni_penguin.flags import DiscordArguments
 from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.networks.chunithm_net import Difficulty, Genres
