@@ -4,9 +4,13 @@ import discord
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
-from chunithm_net.models.enums import Difficulty, Rank
-from chunithm_net.models.leaderboard import Leaderboard, LeaderboardEntry
-from database.models import Chart, Song
+from chuni_penguin.database.models import Chart, Song
+from chuni_penguin.networks.chunithm_net import (
+    Difficulty,
+    Leaderboard,
+    LeaderboardEntry,
+    Rank,
+)
 from utils import get_jacket_url
 from utils.components.chart_card_embed import ChartCardEmbed
 from utils.config import config

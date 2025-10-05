@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord.ext.commands import Context
 
-from chunithm_net.consts import KEY_PLAY_RATING
+from chuni_penguin.networks.chunithm_net import KEY_PLAY_RATING
 from utils import floor_to_ndp
 
 from ._pagination import PaginationView
 from .b30 import B30PageSource
 
 if TYPE_CHECKING:
-    from chunithm_net.models.record import Record
+    from chuni_penguin.networks.chunithm_net import Record
 
 
 class B30N20View(PaginationView):

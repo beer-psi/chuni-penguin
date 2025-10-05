@@ -8,8 +8,8 @@ from discord.utils import escape_markdown
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from chunithm_net.models.enums import Difficulty
-from database.models import Chart, Song
+from chuni_penguin.database.models import Chart, Song
+from chuni_penguin.networks.chunithm_net import Difficulty
 from utils import get_jacket_url, yt_search_link
 from utils.config import config
 

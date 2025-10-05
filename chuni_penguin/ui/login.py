@@ -9,7 +9,7 @@ from discord.abc import MISSING
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
-from chunithm_net import _AUTHENTICATION_URL
+from chuni_penguin.networks.chunithm_net.client import _AUTHENTICATION_URL
 from utils.logging import logger
 
 from ._pagination import ListPageSource, PaginationView

@@ -9,10 +9,8 @@ from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-    from chunithm_net import ChuniNet
-    from chunithm_net.models.player_data import PlayerData
-    from chunithm_net.models.record import RecentRecord
-    from cogs.botutils import UtilsCog
+    from chuni_penguin.cogs.botutils import UtilsCog
+    from chuni_penguin.networks.chunithm_net import ChuniNet, PlayerData, RecentRecord
 
 
 def split_scores_into_credits(

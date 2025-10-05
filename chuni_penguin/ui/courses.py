@@ -6,9 +6,14 @@ from discord.utils import MISSING, escape_markdown
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import select
 
-from chunithm_net.models.enums import ClearType, ComboType, CourseClass, Difficulty
-from chunithm_net.models.record import CourseRecord
-from database.models import Chart, Course, CourseTrack
+from chuni_penguin.database.models import Chart, Course, CourseTrack
+from chuni_penguin.networks.chunithm_net import (
+    ClearType,
+    ComboType,
+    CourseClass,
+    CourseRecord,
+    Difficulty,
+)
 from utils import get_jacket_url, sdvxin_link, yt_search_link
 from utils.constants import CURRENT_CHUNITHM_VERSION
 from utils.icons import rank_icon
@@ -17,7 +22,7 @@ from ._base import PenguinLayoutView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-    from utils.context import PenguinContext
+    from chuni_penguin.context import PenguinContext
 
 
 def format_life_deduction(num: int):

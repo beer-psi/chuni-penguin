@@ -4,8 +4,11 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.utils import MISSING, escape_markdown
 
-from chunithm_net.models.player_data import LoginBonus, LoginBonusItem
-from utils.context import PenguinContext
+from chuni_penguin.context import PenguinContext
+from chuni_penguin.networks.chunithm_net import (
+    LoginBonus,
+    LoginBonusItem,
+)
 from utils.icons import get_icon
 
 from ._pagination import ListPageSource, PaginationView

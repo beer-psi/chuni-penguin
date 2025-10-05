@@ -8,7 +8,7 @@ from utils.config import config
 from utils.logging import logger
 
 if TYPE_CHECKING:
-    from utils.context import PenguinContext
+    from chuni_penguin.context import PenguinContext
 
 ContextT = TypeVar("ContextT", bound="PenguinContext", covariant=True)
 
