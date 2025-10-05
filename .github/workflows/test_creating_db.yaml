@@ -2,18 +2,8 @@ name: "Test DB generation"
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "develop"
-      - "trunk"
-    paths:
-      - ".github/workflows/test_creating_db.yaml"
-      - "database/**"
-      - "dbutils/**"
-      - "packages/**"
-      - "utils/**"
-      - "pyproject.toml"
-      - "uv.lock"
+  schedule:
+    - cron: "7 13 * * *"
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"

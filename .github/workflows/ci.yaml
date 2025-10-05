@@ -7,19 +7,16 @@ on:
       - "trunk"
     paths: &filelist
       - ".github/workflows/ci.yaml"
-      - "chunithm_net/**"
-      - "assets/**"
-      - "cogs/**"
-      - "database/**"
+      - "chuni_penguin/**"
       - "dbutils/**"
       - "packages/**"
+      - "patches/**"
       - "tests/**"
-      - "utils/**"
-      - "bot.py"
+      - "launcher.py"
       - "pyproject.toml"
       - "uv.lock"
-      - "web.py"
       - "Dockerfile"
+      - ".dockerignore"
   pull_request:
     branches:
       - "develop"
