@@ -10,6 +10,10 @@ from discord.utils import escape_markdown as emd
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
+from chuni_penguin.views.confirmation import ConfirmationYesView
+from chuni_penguin.views.courses import CourseListView
+from chuni_penguin.views.song_info import SongInfoPaginationView
+from chuni_penguin.views.songlist import SonglistView
 from chunithm_net.exceptions import ChuniNetException
 from chunithm_net.models.record import CourseRecord
 from database.models import Alias, Chart, Course, Song
@@ -22,10 +26,6 @@ from utils.constants import SIMILARITY_THRESHOLD
 from utils.context import PenguinContext
 from utils.converters import AliasNameConverter, AliasNameTransformer
 from utils.logging import logged_app_command, logged_prefix_command
-from utils.views.confirmation import ConfirmationYesView
-from utils.views.courses import CourseListView
-from utils.views.song_info import SongInfoPaginationView
-from utils.views.songlist import SonglistView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
@@ -537,7 +537,7 @@ class SearchCog(commands.Cog, name="Search"):
             raise commands.CommandError(msg)
 
         view = CourseListView(ctx, versions, course_records)
-        view.message = await ctx.reply(view=view)
+        await view.start()
 
 
 async def setup(bot: "ChuniBot"):
