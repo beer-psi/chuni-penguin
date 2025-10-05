@@ -14,8 +14,8 @@ from discord.ext.commands import Context
 from PIL import Image
 from sqlalchemy import select
 
-from chuni_penguin.uigin_bonus import LoginBonusView
-from chuni_penguin.uiofile import (
+from chuni_penguin.ui.login_bonus import LoginBonusView
+from chuni_penguin.ui.profile import (
     PersistentHideFriendCodeButton,
     PersistentSendFriendRequestButton,
     ProfileView,

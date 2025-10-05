@@ -16,15 +16,15 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from chuni_penguin.uiport (
+from chuni_penguin.ui import (
     B30N20View,
     B30View,
     RecentRecordsView,
     SelectToCompareView,
 )
-from chuni_penguin.uinfirmation import ConfirmationYesView
-from chuni_penguin.uibeds import EmbedPaginationView
-from chuni_penguin.uiaderboard import LeaderboardView
+from chuni_penguin.ui.confirmation import ConfirmationYesView
+from chuni_penguin.ui.embeds import EmbedPaginationView
+from chuni_penguin.ui.leaderboard import LeaderboardView
 from chunithm_net.consts import (
     INTERNATIONAL_JACKET_BASE,
     JACKET_BASE,

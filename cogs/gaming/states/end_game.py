@@ -53,7 +53,7 @@ async def end_game(
     footer: str | None = None,
     show_lives: bool = True,
 ):
-    from chuni_penguin.uiming import RetryGameButton
+    from chuni_penguin.ui.gaming import RetryGameButton
 
     embed = discord.Embed(
         color=color,

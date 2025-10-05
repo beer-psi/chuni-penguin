@@ -10,7 +10,7 @@ from discord.ext.commands import Context, Range
 from discord.utils import MISSING
 from sqlalchemy import delete
 
-from chuni_penguin.uiming import GuessLeaderboardView, RetryGameButton
+from chuni_penguin.ui.gaming import GuessLeaderboardView, RetryGameButton
 from chunithm_net.models.enums import Difficulty, Genres
 from database.models import GuessScore
 from utils import shlex_split

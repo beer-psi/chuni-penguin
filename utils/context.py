@@ -10,8 +10,8 @@ from discord.webhook.async_ import WebhookMessage
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from chuni_penguin.uinfirmation import ConfirmationYesView
-from chuni_penguin.uilect_to_compare import SelectToCompareView
+from chuni_penguin.ui.confirmation import ConfirmationYesView
+from chuni_penguin.ui.select_to_compare import SelectToCompareView
 from chunithm_net.models.enums import Difficulty
 from database.models import Chart, UserConfig
 from utils import did_you_mean_text
