@@ -1,8 +1,7 @@
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import discord
-from discord.ext.commands.hybrid import Any
 from discord.utils import MISSING, escape_markdown
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import select
