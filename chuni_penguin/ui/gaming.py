@@ -17,7 +17,7 @@ from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
     from bot import ChuniBot
-    from cogs.gaming import GamingCog
+    from cogs.gaming.cog import GamingCog
 
 
 class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
