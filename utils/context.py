@@ -10,8 +10,6 @@ from discord.webhook.async_ import WebhookMessage
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from chuni_penguin.ui.confirmation import ConfirmationYesView
-from chuni_penguin.ui.select_to_compare import SelectToCompareView
 from chunithm_net.models.enums import Difficulty
 from database.models import Chart, UserConfig
 from utils import did_you_mean_text
@@ -125,6 +123,9 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         Returns a 2-tuple, where the first item is the select message sent if the user was prompted, and
         the second item is the chart.
         """
+
+        from chuni_penguin.ui.confirmation import ConfirmationYesView
+        from chuni_penguin.ui.select_to_compare import SelectToCompareView
 
         guild_id = self.guild.id if self.guild else None
         result = await self.bot.utils.find_songs(query, guild_id=guild_id)
