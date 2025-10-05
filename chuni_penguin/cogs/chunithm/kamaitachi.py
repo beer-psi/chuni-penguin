@@ -16,6 +16,7 @@ from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_prefix_command, logger
 from chuni_penguin.networks.chunithm_net import (
+    KEY_SONG_ID,
     DetailedRecentRecord,
     Difficulty,
     Record,
@@ -263,6 +264,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                             f"Fetching recent scores from CHUNITHM-NET... {len(scores)}/{len(recents)}"
                         )
             elif sync == "pb":
+                charts: set[tuple[int, Difficulty]] = set()
+
                 for difficulty in Difficulty:
                     if difficulty == Difficulty.WORLDS_END:
                         # Kamaitachi does not accept WORLD'S END scores
@@ -274,7 +277,24 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                         difficulty=difficulty
                     )
 
-                    scores.extend(records)
+                    for record in records:
+                        scores.append(record)
+                        charts.add((record.extras[KEY_SONG_ID], difficulty))
+
+                hidden_songs = await ctx.bot.database.songs.get_hidden_on_chuninet()
+
+                if len(hidden_songs) > 0:
+                    await ctx.respond_or_edit("Fetching hidden songs...")
+
+                for hidden_song in hidden_songs:
+                    records = await chuni_client.music_record(hidden_song.id)
+
+                    for record in records:
+                        if (record.extras[KEY_SONG_ID], record.difficulty) in charts:
+                            continue
+
+                        scores.append(record)
+                        charts.add((record.extras[KEY_SONG_ID], record.difficulty))
 
             await ctx.respond_or_edit("Uploading scores to Kamaitachi...")
 
