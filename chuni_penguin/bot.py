@@ -16,14 +16,13 @@ from discord.ext import commands
 from discord.ext.track_edits import EditTrackerCog
 from sqlalchemy import select, text
 
-from chuni_penguin.context import PenguinContext
-from chuni_penguin.logging import logger
-
 from .cogs import COG_LIST
 from .command_tree import PenguinCommandTree
 from .config import config
+from .context import PenguinContext
 from .database.models import Denylist, Prefix
-from .utils import HishelMsgspecSerializer, json_dumps, json_loads
+from .logging import logger
+from .utils import HishelMsgspecSerializer
 
 if TYPE_CHECKING:
     from .cogs.botutils import UtilsCog
@@ -32,16 +31,21 @@ if TYPE_CHECKING:
     from .cogs.web import WebCog
 
 
-discord.utils._from_json = json_loads
-discord.utils._to_json = json_dumps
+def guild_specific_prefix(default: str):
+    async def inner(bot: ChuniBot, msg: discord.Message) -> list[str]:
+        prefixes = commands.when_mentioned(bot, msg)
 
-with contextlib.suppress(ImportError):
-    # type checkers need to be a lot smarter about optional dependencies
-    import ciso8601  # pyright: ignore[reportMissingImports]
+        if msg.guild is None:
+            prefixes.append(default)
+        else:
+            prefixes.append(bot.prefixes.get(msg.guild.id, default))
 
-    discord.utils.parse_time = (
-        lambda timestamp: ciso8601.parse_datetime(timestamp) if timestamp else None
-    )
+            if (role := msg.guild.self_role) is not None:
+                prefixes.append(f"{role.mention} ")
+
+        return prefixes
+
+    return inner
 
 
 def ensure_text_command_permissions():
@@ -328,20 +332,3 @@ class ChuniBot(commands.AutoShardedBot):
             await asyncio.wait(timeout_tasks)
 
         await super().close()
-
-
-def guild_specific_prefix(default: str):
-    async def inner(bot: ChuniBot, msg: discord.Message) -> list[str]:
-        prefixes = commands.when_mentioned(bot, msg)
-
-        if msg.guild is None:
-            prefixes.append(default)
-        else:
-            prefixes.append(bot.prefixes.get(msg.guild.id, default))
-
-            if (role := msg.guild.self_role) is not None:
-                prefixes.append(f"{role.mention} ")
-
-        return prefixes
-
-    return inner

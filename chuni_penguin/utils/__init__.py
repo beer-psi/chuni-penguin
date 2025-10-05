@@ -1,5 +1,5 @@
 from .async_rc import AsyncRcContextManager
-from .event_loop import get_event_loop
+from .event_loop import get_loop_factory
 from .formatting import did_you_mean_text, get_jacket_url, sdvxin_link, yt_search_link
 from .hishel import HishelMsgspecSerializer
 from .json import json_dumps, json_loads
@@ -12,8 +12,8 @@ __all__ = (
     "HishelMsgspecSerializer",
     "did_you_mean_text",
     "floor_to_ndp",
-    "get_event_loop",
     "get_jacket_url",
+    "get_loop_factory",
     "json_dumps",
     "json_loads",
     "release_to_chunithm_version",
