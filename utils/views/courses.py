@@ -274,6 +274,18 @@ class CourseListView(discord.ui.LayoutView):
         ]
         self.courses: list[Course] = []
 
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        if interaction.user.id == self.ctx.author.id or await self.ctx.bot.is_owner(
+            interaction.user
+        ):
+            return True
+
+        await interaction.response.send_message(
+            "This menu cannot be controlled by you, sorry!",
+            ephemeral=True,
+        )
+        return False
+
     async def on_timeout(self) -> None:
         self.version_select.disabled = True
         self.class_select.disabled = True
