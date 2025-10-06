@@ -1,11 +1,12 @@
 import argparse
 import asyncio
+import contextlib
 import itertools
 from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
 from math import ceil
-from typing import TYPE_CHECKING, Annotated, Literal, Optional, cast
+from typing import TYPE_CHECKING, Annotated, Literal, Optional
 
 import discord
 from discord import Interaction, app_commands
@@ -111,15 +112,76 @@ B30_JACKET_HEIGHT = 110
 INVITE_LINK = "https://chunithm.beerpsi.cc/invite"
 
 
-class reversor:
-    def __init__(self, obj):
-        self.obj = obj
+def _extract_images_from_component(
+    component: discord.components.Component, url_whitelist: list[str] | None = None
+):
+    image_urls: list[str] = []
 
-    def __eq__(self, other):
-        return other.obj == self.obj
+    if isinstance(component, discord.components.ThumbnailComponent) and (
+        url_whitelist is None
+        or any(url in component.media.url for url in url_whitelist)
+    ):
+        image_urls.append(component.media.url)
 
-    def __lt__(self, other):
-        return other.obj < self.obj
+    if isinstance(component, discord.components.MediaGalleryComponent):
+        image_urls.extend(
+            [
+                item.media.url
+                for item in component.items
+                if url_whitelist is None
+                or any(url in item.media.url for url in url_whitelist)
+            ]
+        )
+
+    if isinstance(component, discord.components.SectionComponent):
+        image_urls.extend(
+            _extract_images_from_component(component.accessory, url_whitelist)
+        )
+
+    if isinstance(component, discord.components.Container):
+        image_urls.extend(
+            itertools.chain.from_iterable(
+                [
+                    _extract_images_from_component(child, url_whitelist)
+                    for child in component.children
+                ]
+            )
+        )
+
+    return image_urls
+
+
+def _extract_images_from_message(
+    message: discord.Message, url_whitelist: list[str] | None = None
+):
+    image_urls: list[str] = []
+
+    embeds = message.embeds.copy()
+    components = message.components.copy()
+
+    for snapshot in message.message_snapshots:
+        embeds.extend(snapshot.embeds)
+        components.extend(snapshot.components)
+
+    image_urls.extend(
+        [
+            embed.thumbnail.url
+            for embed in embeds
+            if embed.thumbnail.url is not None
+            and (
+                url_whitelist is None
+                or any(url in embed.thumbnail.url for url in url_whitelist)
+            )
+        ]
+    )
+    image_urls.extend(
+        itertools.chain.from_iterable(
+            _extract_images_from_component(component, url_whitelist)
+            for component in components
+        )
+    )
+
+    return image_urls
 
 
 def _render_b30_entry(
@@ -765,6 +827,7 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
         url_whitelist = [JACKET_BASE, INTERNATIONAL_JACKET_BASE]
+        image_urls_by_message: dict[int, list[str]] = {}
 
         if config.web.serve_assets and config.web.base_url:
             url_whitelist.append(config.web.base_url)
@@ -772,29 +835,27 @@ class RecordsCog(commands.Cog, name="Records"):
         async with ctx.typing(), self.bot.begin_db_session() as session:
             message: discord.Message | discord.MessageSnapshot
 
-            if ctx.message.reference is not None:
+            if (
+                ctx.message.reference is not None
+                and ctx.message.reference.message_id is not None
+            ):
                 message = await ctx.channel.fetch_message(
-                    cast(int, ctx.message.reference.message_id)
+                    ctx.message.reference.message_id
                 )
             else:
                 try:
 
                     def check(m: discord.Message):
                         nonlocal url_whitelist
+                        nonlocal image_urls_by_message
 
                         if m.author != self.bot.user:
                             return False
 
-                        embeds = m.embeds.copy()
+                        image_urls = _extract_images_from_message(m, url_whitelist)
+                        image_urls_by_message[m.id] = image_urls
 
-                        for snapshot in m.message_snapshots:
-                            embeds.extend(snapshot.embeds)
-
-                        return any(
-                            e.thumbnail.url is not None
-                            and any(url in e.thumbnail.url for url in url_whitelist)
-                            for e in embeds
-                        )
+                        return len(image_urls) > 0
 
                     messages = [
                         x async for x in ctx.channel.history(limit=50) if check(x)
@@ -813,17 +874,27 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 message = messages[0]
 
-            thumbnail_urls = []
             embeds = message.embeds.copy()
+            containers = [
+                component
+                for component in message.components
+                if isinstance(component, discord.components.Container)
+            ]
 
             for snapshot in message.message_snapshots:
                 embeds.extend(snapshot.embeds)
+                containers.extend(
+                    [
+                        component
+                        for component in snapshot.components
+                        if isinstance(component, discord.components.Container)
+                    ]
+                )
 
-            for e in embeds:
-                if e.thumbnail.url is not None:
-                    thumbnail_urls.append(e.thumbnail.url)
-                elif e.image.url is not None:
-                    thumbnail_urls.append(e.image.url)
+            try:
+                thumbnail_urls: list[str] = image_urls_by_message[message.id]
+            except KeyError:
+                thumbnail_urls = _extract_images_from_message(message, url_whitelist)
 
             if len(thumbnail_urls) == 0:
                 msg = "The message replied to does not contain any charts/scores."
@@ -873,10 +944,6 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if not kamaitachi:
                 song.raise_if_not_available()
-
-            embed = next(
-                x for x in embeds if jacket.jacket_url in {x.thumbnail.url, x.image.url}
-            )
 
             if kamaitachi:
                 if song.genre == "WORLD'S END":
@@ -952,11 +1019,30 @@ class RecordsCog(commands.Cog, name="Records"):
                     records = await self.utils.hydrate_records(records)
 
             page = 0
+            embed_color = 0
+
             try:
-                # intentionally passing an invalid color so it throws and keep the page at 0
-                difficulty = Difficulty.from_embed_color(
-                    embed.color.value if embed.color else 0  # type: ignore[attr-defined]
+                selected_embed = next(
+                    x
+                    for x in embeds
+                    if jacket.jacket_url in {x.thumbnail.url, x.image.url}
                 )
+                embed_color = (
+                    selected_embed.color.value
+                    if selected_embed.color is not None
+                    else 0
+                )
+            except StopIteration:
+                for c in containers:
+                    if jacket.jacket_url in _extract_images_from_component(c):
+                        embed_color = (
+                            c.accent_color.value if c.accent_color is not None else 0
+                        )
+                        break
+
+            with contextlib.suppress(ValueError):
+                # embed_color may exist with invalid value
+                difficulty = Difficulty.from_embed_color(embed_color)
                 page = next(
                     (
                         i
@@ -965,26 +1051,24 @@ class RecordsCog(commands.Cog, name="Records"):
                     ),
                     0,
                 )
-            except ValueError:
-                pass
 
             view = EmbedPaginationView(
                 ctx,
                 [
                     ScoreCardEmbed(
-                        r, synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket
+                        r,
+                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
                     )
                     for r in records
                 ],
             )
             view.current_page = page
-
             content = f"Top play for {username}{network}:"
 
-            if ctx.response is not None:
-                await view.start_from(ctx.response, content=content)
-            else:
-                await view.start(content=content)
+        if ctx.response is not None:
+            await view.start_from(ctx.response, content=content)
+        else:
+            await view.start(content=content)
 
     @flags.command("compare", aliases=["c"])
     @flags.argument("-k", "--kamaitachi", action="store_true")
