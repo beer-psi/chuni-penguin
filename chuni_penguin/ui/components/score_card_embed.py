@@ -49,7 +49,10 @@ class ScoreCardEmbed(discord.Embed):
 
             if (
                 record.combo_lamp != ComboLamp.none
-                or record.chain_lamp != ChainLamp.none
+                or (
+                    record.chain_lamp is not None
+                    and record.chain_lamp != ChainLamp.none
+                )
             ) and record.clear_lamp == ClearLamp.clear:
                 lamps = []
 
