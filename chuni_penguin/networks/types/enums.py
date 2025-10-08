@@ -299,7 +299,7 @@ class CourseClass(StdlibEnum):
     extra = 7
 
     def __str__(self):
-        if self == SkillClass.infinite:
+        if self == CourseClass.infinite:
             return "∞"
 
         return self.name.upper()
