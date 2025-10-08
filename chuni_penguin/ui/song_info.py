@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload
 
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
-from chuni_penguin.networks.chunithm_net import Difficulty
+from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import get_jacket_url, yt_search_link
 
 from ._pagination import ListPageSource, PaginationView
@@ -91,7 +91,7 @@ class SongInfoPageSource(ListPageSource[Song]):
 
                 for chart in charts:
                     if chart.version is not None:
-                        difficulty = Difficulty.from_short_form(chart.difficulty)
+                        difficulty = Difficulty(chart.difficulty)
 
                         song_description += (
                             f"**Version ({difficulty})**: {chart.version}\n"
@@ -125,7 +125,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                     )
 
                     if self.detailed:
-                        difficulty = Difficulty.from_short_form(chart.difficulty)
+                        difficulty = Difficulty(chart.difficulty)
 
                         link_text = f"Lv.{chart.level}"
                         if chart.const is not None:

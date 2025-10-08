@@ -1,4 +1,5 @@
 import contextlib
+import io
 from asyncio import TimeoutError
 from http.cookiejar import Cookie as HTTPCookie
 from http.cookiejar import LWPCookieJar
@@ -15,12 +16,8 @@ from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_app_command, logged_prefix_command, logger
-from chuni_penguin.networks.chunithm_net import (
-    ChuniNet,
-    ChuniNetException,
-    InvalidTokenException,
-    is_valid_clal,
-)
+from chuni_penguin.networks.chunithm_net import ChunithmNet, is_valid_clal
+from chuni_penguin.networks.errors import AuthenticationError, NetworkError
 from chuni_penguin.ui import LoginFlowView
 
 if TYPE_CHECKING:
@@ -35,7 +32,7 @@ class AuthCog(commands.Cog, name="Auth"):
 
     @commands.hybrid_command(name="logout", extras={"invoke_on_edit": False})
     @logged_prefix_command
-    async def logout(self, ctx: Context, *, invalidate: bool = False):
+    async def logout(self, ctx: PenguinContext, *, invalidate: bool = False):
         """Logs you out of the bot.
 
         Parameters
@@ -48,9 +45,11 @@ class AuthCog(commands.Cog, name="Auth"):
         if invalidate:
             logged_out = False
 
-            with contextlib.suppress(InvalidTokenException):
-                async with self.utils.chuninet(ctx) as client:
-                    logged_out = await client.logout()
+            with contextlib.suppress(AuthenticationError):
+                async with ctx.bot.chunithm_networks.network(
+                    ctx, ctx.author.id, chunithm_net=True
+                ) as client:
+                    await client.logout()
 
             if not logged_out:
                 await logger.awarning(
@@ -98,17 +97,16 @@ class AuthCog(commands.Cog, name="Auth"):
         )
         jar = LWPCookieJar()
         jar.set_cookie(cookie)
+        raw_jar = f"#LWP-Cookies-2.0\n{jar.as_lwp_str()}"
 
-        async with ChuniNet(jar) as client:
+        async with ChunithmNet(raw_jar) as client:
             try:
-                await client.authenticate()
-            except ChuniNetException as e:
+                await client.get_minimal_profile()
+            except NetworkError as e:
                 return e
 
         async with self.bot.begin_db_session() as session, session.begin():
-            await session.merge(
-                Cookie(discord_id=id, cookie=f"#LWP-Cookies-2.0\n{jar.as_lwp_str()}")
-            )
+            await session.merge(Cookie(discord_id=id, cookie=client.authentication))
             return None
 
     @commands.hybrid_command("login")
@@ -289,7 +287,11 @@ class AuthCog(commands.Cog, name="Auth"):
         """
 
         async with ctx.typing():
-            jar = await self.utils.login_check(ctx.author.id)
+            raw_jar = await self.utils.login_check(ctx.author.id)
+            jar = LWPCookieJar()
+            jar._really_load(  # pyright: ignore[reportAttributeAccessIssue]
+                io.StringIO(raw_jar), "?", ignore_discard=False, ignore_expires=False
+            )
 
             for cookie in jar:
                 if (
@@ -310,7 +312,11 @@ class AuthCog(commands.Cog, name="Auth"):
     async def token_slash(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
 
-        jar = await self.utils.login_check(interaction.user.id)
+        raw_jar = await self.utils.login_check(interaction.user.id)
+        jar = LWPCookieJar()
+        jar._really_load(  # pyright: ignore[reportAttributeAccessIssue]
+            io.StringIO(raw_jar), "?", ignore_discard=False, ignore_expires=False
+        )
 
         for cookie in jar:
             if cookie.name == "clal" and cookie.domain == "lng-tgk-aime-gw.am-all.net":

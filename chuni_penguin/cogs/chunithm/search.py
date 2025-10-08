@@ -1,3 +1,4 @@
+import contextlib
 import hashlib
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Annotated, override
@@ -16,7 +17,8 @@ from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import AliasNameConverter, AliasNameTransformer
 from chuni_penguin.database import Alias, Chart, Course, Song
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
-from chuni_penguin.networks.chunithm_net import ChuniNetException, CourseRecord
+from chuni_penguin.networks.errors import NetworkError
+from chuni_penguin.networks.types import CourseRecord
 from chuni_penguin.ui import (
     ConfirmationYesView,
     CourseListView,
@@ -518,11 +520,12 @@ class SearchCog(commands.Cog, name="Search"):
         async with ctx.typing():
             # This is mainly an informative command, so we don't wanna stress too hard
             # that the user isn't logged in.
-            try:
-                async with self.utils.chuninet(ctx) as client:
-                    course_records: list[CourseRecord] = await client.course_record()
-            except (commands.CommandError, ChuniNetException):
-                course_records = []
+            course_records: list[CourseRecord] = []
+
+            async with ctx.bot.chunithm_networks.network(ctx) as client:
+                if client.SUPPORTS_COURSE_RECORDS:
+                    with contextlib.suppress(NetworkError):
+                        course_records = await client.get_course_records()
 
             async with self.bot.begin_db_session() as session:
                 # course IDs are prefixed by version, so 25xxx is sun plus, 30xxx is luminous,

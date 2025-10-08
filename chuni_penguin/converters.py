@@ -1,10 +1,12 @@
 import contextlib
-from typing import override
+from typing import NamedTuple, override
 
 from discord import Interaction, Member, User, app_commands
 from discord.ext import commands
+from discord.utils import escape_markdown
 
-from chuni_penguin.networks.chunithm_net import Difficulty, Genres, Rank
+from chuni_penguin.constants import MAX_DIFFICULTY
+from chuni_penguin.networks.types import Difficulty, Genre, Rank
 
 
 class DifficultyConverter(commands.Converter[Difficulty]):
@@ -16,11 +18,11 @@ class DifficultyConverter(commands.Converter[Difficulty]):
         # special case MST since I think sdvx.in uses that, might as
         # well support it
         if argument == "MST":
-            return Difficulty.MASTER
+            return Difficulty.master
 
         # special case this since it's bad
         if argument == "WORLD'S END":
-            return Difficulty.WORLDS_END
+            return Difficulty.worlds_end
 
         # this covers BASIC/ADVANCED/EXPERT/MASTER/ULTIMA full length
         if hasattr(Difficulty, argument):
@@ -29,32 +31,32 @@ class DifficultyConverter(commands.Converter[Difficulty]):
         # try to helpfully convert misspellings by using short form
         # e.g. BASI, ULTI, MAST
         with contextlib.suppress(ValueError):
-            return Difficulty.from_short_form(argument[:3])
+            return Difficulty(argument[:3])
 
         # give up
         msg = f'Could not infer difficulty name from "{argument}"'
         raise commands.BadArgument(msg)
 
 
-class GenreConverter(commands.Converter[Genres]):
+class GenreConverter(commands.Converter[Genre]):
     @override
-    async def convert(self, ctx: commands.Context, argument: str) -> Genres:
+    async def convert(self, ctx: commands.Context, argument: str) -> Genre:
         genre_lower = argument.lower()
 
         if genre_lower.startswith(("pops", "anime")):
-            return Genres.POPS_AND_ANIME
+            return Genre.pops_and_anime
         if genre_lower.startswith(("nico", "voca")):
-            return Genres.NICONICO
+            return Genre.niconico
         if genre_lower.startswith(("touhou", "toho", "東方")):
-            return Genres.TOUHOU_PROJECT
+            return Genre.touhou_project
         if genre_lower.startswith(("original", "chunithm")):
-            return Genres.ORIGINAL
+            return Genre.original
         if genre_lower.startswith("variety"):
-            return Genres.VARIETY
+            return Genre.variety
         if genre_lower.startswith("irodori"):
-            return Genres.IRODORIMIDORI
+            return Genre.irodorimidori
         if genre_lower.startswith(("geki", "ゲキ", "mai", "マイ")):
-            return Genres.GEKIMAI
+            return Genre.gekimai
 
         msg = f'Could not infer genre name from "{argument}".'
         raise commands.BadArgument(msg)
@@ -64,10 +66,62 @@ class RankConverter(commands.Converter[Rank]):
     @override
     async def convert(self, ctx: commands.Context, argument: str) -> Rank:
         try:
-            return Rank[argument.upper().replace("+", "p")]
+            return Rank[argument.lower().replace("+", "p")]
         except ValueError as e:
             msg = f'Could not infer rank from "{argument}".'
             raise commands.BadArgument(msg) from e
+
+
+class Level(NamedTuple):
+    level: str
+    const: float | None
+
+
+class LevelConverter(commands.Converter[Level]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> Level:
+        # covers regular levels (14)
+        with contextlib.suppress(ValueError):
+            whole = int(argument)
+
+            if whole < 1 or whole > MAX_DIFFICULTY:
+                msg = f'Invalid level "{escape_markdown(argument)}". Must be between 1 and {MAX_DIFFICULTY}.'
+                raise commands.BadArgument(msg)
+
+            return Level(argument, None)
+
+        # covers plus levels
+        if argument.endswith("+"):
+            with contextlib.suppress(ValueError):
+                whole = int(argument[:-1])
+
+                if whole < 7:
+                    msg = f'Invalid level "{escape_markdown(argument)}". Only level 7 and above have plus levels.'
+                    raise commands.BadArgument(msg)
+
+                const = (whole * 10 + 5) / 10
+
+                if const > MAX_DIFFICULTY:
+                    msg = f'Invalid level "{escape_markdown(argument)}". Must be between 1 and {MAX_DIFFICULTY}.'
+                    raise commands.BadArgument(msg)
+
+                return Level(argument, None)
+
+        # covers chart constants (14.9)
+        with contextlib.suppress(ValueError):
+            const = float(argument)
+
+            if const < 1 or const > MAX_DIFFICULTY:
+                msg = f'Invalid level "{escape_markdown(argument)}". Must be between 1 and {MAX_DIFFICULTY}.'
+                raise commands.BadArgument(msg)
+
+            whole = int(const)
+            decimal = round(const * 10) - whole * 10
+
+            return Level(f"{whole}{'+' if decimal >= 5 else ''}", const)
+
+        msg = f'Could not infer level or chart constant from "{escape_markdown(argument)}".'
+        raise commands.BadArgument(msg)
 
 
 # TODO: Consider inheriting from commands.clean_content instead so we

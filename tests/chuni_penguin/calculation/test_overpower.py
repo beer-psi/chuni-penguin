@@ -7,7 +7,7 @@ from chuni_penguin.calculation import (
     calculate_overpower_max,
     calculate_play_overpower,
 )
-from chuni_penguin.networks.chunithm_net import ComboType
+from chuni_penguin.networks.types import ComboLamp
 
 
 @pytest.mark.parametrize(
@@ -45,14 +45,14 @@ def test_calculate_overpower_max(chart_constant: float, expected: float):
 @pytest.mark.parametrize(
     ("overpower_base", "combo_type", "expected"),
     [
-        (Decimal("85.30"), ComboType.NONE, 85.30),
-        (Decimal("85.64"), ComboType.FULL_COMBO, 86.14),
-        (Decimal("85.96"), ComboType.ALL_JUSTICE, 86.96),
-        (Decimal("86.25"), ComboType.ALL_JUSTICE_CRITICAL, 87.50),
+        (Decimal("85.30"), ComboLamp.none, 85.30),
+        (Decimal("85.64"), ComboLamp.full_combo, 86.14),
+        (Decimal("85.96"), ComboLamp.all_justice, 86.96),
+        (Decimal("86.25"), ComboLamp.all_justice_critical, 87.50),
     ],
 )
 def test_calculate_play_overpower(
-    overpower_base: Decimal, combo_type: ComboType, expected: float
+    overpower_base: Decimal, combo_type: ComboLamp, expected: float
 ):
     assert (
         pytest.approx(

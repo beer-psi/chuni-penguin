@@ -11,7 +11,7 @@ from chuni_penguin.cogs.gaming._session import GuessingGameSession, GuessingGame
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinGuildContext
 from chuni_penguin.database import GuessScore
-from chuni_penguin.networks.chunithm_net import Difficulty, Genres
+from chuni_penguin.networks.types import Difficulty, Genre
 
 from ._pagination import ListPageSource, PaginationView
 
@@ -25,11 +25,11 @@ class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
         super().__init__(
             [
                 None,
-                Difficulty.BASIC,
-                Difficulty.ADVANCED,
-                Difficulty.EXPERT,
-                Difficulty.MASTER,
-                Difficulty.ULTIMA,
+                Difficulty.basic,
+                Difficulty.advanced,
+                Difficulty.expert,
+                Difficulty.master,
+                Difficulty.ultima,
             ],
             per_page=1,
         )
@@ -189,7 +189,7 @@ class RetryGameButton(
         time: int,
         wrong: int | None,
         hardcore: bool,
-        genres: list[Genres] | None,
+        genres: list[Genre] | None,
         volume: int,
         row: int | None = None,
     ) -> None:
@@ -247,7 +247,7 @@ class RetryGameButton(
         wrong = int(match["wrong"]) if match["wrong"] else None
         hardcore = match["hardcore"] == "1"
         genres = (
-            [Genres(int(x)) for x in match["genres"].split(",")]
+            [Genre(int(x)) for x in match["genres"].split(",")]
             if match["genres"]
             else None
         )

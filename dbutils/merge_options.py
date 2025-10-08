@@ -23,7 +23,7 @@ from chuni_penguin.database import (
     Song,
     course_track_charts,
 )
-from chuni_penguin.networks.chunithm_net import CourseClass, Difficulty
+from chuni_penguin.networks.types import CourseClass, Difficulty
 
 VERSIONS = [
     "CHUNITHM",
@@ -58,20 +58,20 @@ WE_LEVEL_OVERRIDES = {
 B30_JACKET_WIDTH = 110
 B30_JACKET_HEIGHT = 110
 B30_BASE_IMAGES = {
-    Difficulty.BASIC: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_0.png"),
-    Difficulty.ADVANCED: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_1.png"),
-    Difficulty.EXPERT: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
-    Difficulty.MASTER: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
-    Difficulty.ULTIMA: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
+    Difficulty.basic: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_0.png"),
+    Difficulty.advanced: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_1.png"),
+    Difficulty.expert: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
+    Difficulty.master: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
+    Difficulty.ultima: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
 }
 COURSE_CLASS_MAP = {
-    10: CourseClass.I,
-    11: CourseClass.II,
-    12: CourseClass.III,
-    13: CourseClass.IV,
-    14: CourseClass.V,
-    20: CourseClass.INFINITE,
-    22: CourseClass.EXTRA,
+    10: CourseClass.i,
+    11: CourseClass.ii,
+    12: CourseClass.iii,
+    13: CourseClass.iv,
+    14: CourseClass.v,
+    20: CourseClass.infinite,
+    22: CourseClass.extra,
 }
 
 
@@ -111,7 +111,7 @@ def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
 
             # pregenerate jacket art merged with b50 base
             for difficulty in Difficulty:
-                if difficulty == Difficulty.WORLDS_END:
+                if difficulty == Difficulty.worlds_end:
                     continue
 
                 with B30_BASE_IMAGES[difficulty]() as b30_base_image:

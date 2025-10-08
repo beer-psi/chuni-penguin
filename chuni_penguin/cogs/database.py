@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import (
 
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, EasterEggFound, Song
-from chuni_penguin.networks.chunithm_net import Difficulty
+from chuni_penguin.networks.types import Difficulty
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -87,7 +87,7 @@ class ChartQueries:
             query = query.where(Chart.level == level)
 
         if difficulty is not None:
-            query = query.where(Chart.difficulty == difficulty.short_form())
+            query = query.where(Chart.difficulty == difficulty.short())
 
         async with self._sessionmaker() as session:
             return (await session.execute(query)).scalars().all()

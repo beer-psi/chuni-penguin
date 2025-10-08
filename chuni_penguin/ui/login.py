@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from http.cookiejar import CookieJar
 from typing import TYPE_CHECKING, Any, override
 
@@ -10,7 +11,7 @@ from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.chunithm_net.client import _AUTHENTICATION_URL
+from chuni_penguin.networks.chunithm_net._hooks import _AUTHENTICATION_URL
 
 from ._pagination import ListPageSource, PaginationView
 
@@ -199,7 +200,7 @@ class LoginFlowPageSource(ListPageSource):
 
     @override
     async def format_page(
-        self, menu: "PaginationView", page: list[str]
+        self, menu: "PaginationView", page: Sequence[str]
     ) -> dict[str, Any]:
         embed = discord.Embed(
             color=discord.Color.yellow(),

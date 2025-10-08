@@ -1,3 +1,4 @@
+import itertools
 from typing import TYPE_CHECKING, Any, AsyncContextManager, override
 
 import discord.ui
@@ -10,22 +11,29 @@ from ._pagination import ListPageSource, PaginationView
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
     from chuni_penguin.cogs.botutils import UtilsCog
-    from chuni_penguin.networks.chunithm_net import ChuniNet, PlayerData, RecentRecord
+    from chuni_penguin.networks.base import Network
+    from chuni_penguin.networks.types import Profile, RecentScore
 
 
 def split_scores_into_credits(
-    scores: list["RecentRecord"],
-) -> list[list["RecentRecord"]]:
+    scores: list["RecentScore"],
+) -> list[list["RecentScore"]]:
+    if any(s.track_no is None for s in scores):
+        return [list(c) for c in itertools.batched(scores, 3)]
+
     credits = []
     current_credit = [scores[0]]
-    last_track = scores[0].track
+    last_track = scores[0].track_no
 
     for score in scores[1:]:
-        if score.track >= last_track:
+        assert score.track_no is not None
+        assert last_track is not None
+
+        if score.track_no >= last_track:
             credits.append(current_credit)
             current_credit = []
         current_credit.append(score)
-        last_track = score.track
+        last_track = score.track_no
 
     if len(current_credit) > 0:
         credits.append(current_credit)
@@ -33,10 +41,10 @@ def split_scores_into_credits(
     return credits
 
 
-class RecentRecordsPageSource(ListPageSource[list["RecentRecord"]]):
+class RecentRecordsPageSource(ListPageSource[list["RecentScore"]]):
     def __init__(
         self,
-        records: list["RecentRecord"],
+        records: list["RecentScore"],
         *,
         synthesis_alt_jacket: str | None = None,
     ) -> None:
@@ -45,8 +53,8 @@ class RecentRecordsPageSource(ListPageSource[list["RecentRecord"]]):
         self.synthesis_alt_jacket = synthesis_alt_jacket
 
     @override
-    async def format_page(
-        self, menu: "PaginationView", page: list[list["RecentRecord"]]
+    async def format_page(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self, menu: "PaginationView", page: list[list["RecentScore"]]
     ) -> dict[str, Any]:
         scores = page[0]
         embeds: list[discord.Embed] = [
@@ -67,10 +75,10 @@ class RecentRecordsView(PaginationView):
         self,
         ctx: Context,
         bot: "ChuniBot",
-        scores: list["RecentRecord"],
-        chuni_client: "ChuniNet",
-        chuni_client_manager: AsyncContextManager["ChuniNet"],
-        userinfo: "PlayerData",
+        scores: list["RecentScore"],
+        network_client: "Network",
+        network_client_manager: AsyncContextManager["Network"],
+        userinfo: "Profile",
         synthesis_alt_jacket: str | None = None,
     ):
         super().__init__(
@@ -83,8 +91,10 @@ class RecentRecordsView(PaginationView):
         self.add_item(self.dropdown)
 
         self.scores = scores
-        self.chuni_client = chuni_client
-        self.chuni_client_manager = chuni_client_manager
+        self.network_client = network_client
+        self.network_client_manager: AsyncContextManager["Network"] | None = (
+            network_client_manager
+        )
         self.userinfo = userinfo
         self.synthesis_alt_jacket = synthesis_alt_jacket
 
@@ -99,8 +109,21 @@ class RecentRecordsView(PaginationView):
         ]
         self.dropdown.options = self._dropdown_options[:25]
 
+    async def _before_start(self, *, content: str | None = None):
+        if not self.network_client.SUPPORTS_DETAILED_RECENT_SCORE:
+            self.clear_items()
+
+            if self.network_client_manager is not None:
+                await self.network_client_manager.__aexit__(None, None, None)
+
+            self.network_client_manager = None
+
+        return await super()._before_start(content=content)
+
     async def on_timeout(self):
-        await self.chuni_client_manager.__aexit__(None, None, None)
+        if self.network_client_manager is not None:
+            await self.network_client_manager.__aexit__(None, None, None)
+
         return await super().on_timeout()
 
     @discord.ui.button(label="26-50")
@@ -129,7 +152,7 @@ class RecentRecordsView(PaginationView):
             await interaction.response.defer()
 
             idx = int(select.values[0])
-            score = await self.chuni_client.detailed_recent_record(self.scores[idx])
+            score = await self.network_client.detailed_recent_record(self.scores[idx])
             score = await self.utils.hydrate_record(score)
 
             if interaction.message is not None:

@@ -6,7 +6,7 @@ from discord.utils import escape_markdown
 
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
-from chuni_penguin.networks.chunithm_net import (
+from chuni_penguin.networks.types import (
     Difficulty,
     Leaderboard,
     LeaderboardEntry,
@@ -28,6 +28,7 @@ class LeaderboardPageSource(ListPageSource):
         *,
         per_page: int,
         synthesis_alt_jacket: str | None = None,
+        network: str | None = None,
     ) -> None:
         super().__init__(leaderboard.ranking, per_page=per_page)
 
@@ -36,9 +37,10 @@ class LeaderboardPageSource(ListPageSource):
         self.difficulty: Difficulty = difficulty
         self.chart: Chart | None = chart
         self.synthesis_alt_jacket: str | None = synthesis_alt_jacket
+        self.network: str | None = network
 
     @override
-    async def format_page(
+    async def format_page(  # pyright: ignore[reportIncompatibleMethodOverride]
         self, menu: "PaginationView", page: list[LeaderboardEntry]
     ) -> dict[str, Any]:
         if self.chart is not None:
@@ -61,12 +63,18 @@ class LeaderboardPageSource(ListPageSource):
         description = ""
 
         for record in page:
-            description += f"`{record.position: >3}` {record.player_name:　<8} ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+            description += f"`{record.position: >3}` {record.player_name} ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+
+            if record.judgements is not None:
+                description += f" ({record.judgements.justice_critical} / {record.judgements.justice} / {record.judgements.attack} / {record.judgements.miss})"
 
             if record.ajc_count is not None:
                 description += f" (AJC: {record.ajc_count})"
 
-            description += f" ▸ <t:{int(record.last_raised.timestamp())}:f>\n"
+            if record.achieved_at is not None:
+                description += f" ▸ <t:{int(record.achieved_at.timestamp())}:f>\n"
+            else:
+                description += "\n"
 
         if description == "":
             description = "No scores."
@@ -76,9 +84,13 @@ class LeaderboardPageSource(ListPageSource):
             description=description,
             timestamp=self.leaderboard.updated_at,
         )
-        leaderboard_embed.set_footer(
-            text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-        )
+
+        footer = f"Page {menu.current_page + 1}/{self.get_max_pages()}"
+
+        if self.network is not None:
+            footer = f"{self.network}  •  {footer}"
+
+        leaderboard_embed.set_footer(text=footer)
 
         return {"embeds": [info_embed, leaderboard_embed]}
 
@@ -93,6 +105,7 @@ class LeaderboardView(PaginationView):
         chart: Chart | None = None,
         per_page: int = 10,
         synthesis_alt_jacket: str | None = None,
+        network: str | None = None,
     ):
         super().__init__(
             ctx,
@@ -103,5 +116,6 @@ class LeaderboardView(PaginationView):
                 chart,
                 per_page=per_page,
                 synthesis_alt_jacket=synthesis_alt_jacket,
+                network=network,
             ),
         )

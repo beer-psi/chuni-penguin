@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, Generic, Protocol, TypeVar, override
 
 import discord.ui
@@ -30,8 +31,8 @@ class PageSourceProtocol(Protocol, Generic[PageT]):
     ) -> FormatPageReturn: ...
 
 
-class ListPageSource(PageSourceProtocol[list[PageItemT]], Generic[PageItemT]):
-    def __init__(self, entries: list[PageItemT], *, per_page: int) -> None:
+class ListPageSource(PageSourceProtocol[Sequence[PageItemT]], Generic[PageItemT]):
+    def __init__(self, entries: Sequence[PageItemT], *, per_page: int) -> None:
         self.entries = entries
         self.per_page = per_page
 
@@ -50,7 +51,7 @@ class ListPageSource(PageSourceProtocol[list[PageItemT]], Generic[PageItemT]):
         return self._max_pages
 
     @override
-    async def get_page(self, page_number: int) -> list[PageItemT]:
+    async def get_page(self, page_number: int) -> Sequence[PageItemT]:
         start = page_number * self.per_page
         end = start + self.per_page
 

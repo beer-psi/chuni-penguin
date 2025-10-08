@@ -15,12 +15,7 @@ from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_prefix_command, logger
-from chuni_penguin.networks.chunithm_net import (
-    KEY_SONG_ID,
-    DetailedRecentRecord,
-    Difficulty,
-    Record,
-)
+from chuni_penguin.networks.consts import KEY_SONG_ID
 from chuni_penguin.networks.kamaitachi import (
     KTBatchManualResponse,
     KTImportPollStatusCompleted,
@@ -29,6 +24,7 @@ from chuni_penguin.networks.kamaitachi import (
     KTStatusResponse,
     convert_to_kt_batch_manual,
 )
+from chuni_penguin.networks.types import Difficulty, PersonalBest, RecentScore
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -238,25 +234,26 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         await ctx.respond_or_edit("Fetching scores from CHUNITHM-NET...")
 
         async with (
-            self.utils.chuninet(ctx) as chuni_client,
-            httpx.AsyncClient(
-                transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
+            ctx.bot.chunithm_networks.chunithm_net(
+                ctx.author.id, cookie.cookie
+            ) as chuni_client,
+            ctx.bot.chunithm_networks.kamaitachi(
+                cookie.kamaitachi_token
             ) as tachi_client,
         ):
-            tachi_client.headers["User-Agent"] = self.user_agent
-            tachi_client.headers["Authorization"] = f"Bearer {cookie.kamaitachi_token}"
-
-            profile = await chuni_client.player_data()
-            scores: list[DetailedRecentRecord | Record] = []
+            profile = await chuni_client.get_profile()
+            scores: list[RecentScore | PersonalBest] = []
 
             if sync == "recent":
-                recents = await chuni_client.recent_record()
+                recents = await chuni_client.get_recent_scores()
 
                 for recent in recents:
-                    if recent.difficulty == Difficulty.WORLDS_END:
+                    if recent.difficulty == Difficulty.worlds_end:
                         continue
 
-                    detailed_recent = await chuni_client.detailed_recent_record(recent)
+                    detailed_recent = await chuni_client.get_detailed_recent_score(
+                        recent
+                    )
                     scores.append(detailed_recent)
 
                     if len(scores) % 10 == 0 or len(scores) == len(recents):
@@ -267,14 +264,14 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                 charts: set[tuple[int, Difficulty]] = set()
 
                 for difficulty in Difficulty:
-                    if difficulty == Difficulty.WORLDS_END:
+                    if difficulty == Difficulty.worlds_end:
                         # Kamaitachi does not accept WORLD'S END scores
                         continue
 
                     await ctx.respond_or_edit(f"Fetching {difficulty} scores...")
 
-                    records = await chuni_client.music_record_by_folder(
-                        difficulty=difficulty
+                    records = await chuni_client.get_personal_bests_by_difficulty(
+                        difficulty
                     )
 
                     for record in records:
@@ -287,7 +284,9 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     await ctx.respond_or_edit("Fetching hidden songs...")
 
                 for hidden_song in hidden_songs:
-                    records = await chuni_client.music_record(hidden_song.id)
+                    records = await chuni_client.get_personal_bests_on_song(
+                        hidden_song.id
+                    )
 
                     for record in records:
                         if (record.extras[KEY_SONG_ID], record.difficulty) in charts:
@@ -300,7 +299,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
 
             batch_manual = convert_to_kt_batch_manual(profile, scores)
 
-            resp = await tachi_client.post(
+            resp = await tachi_client._client.post(
                 "https://kamai.tachi.ac/ir/direct-manual/import",
                 content=msgspec.json.encode(batch_manual),
                 headers={
@@ -320,7 +319,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
             poll_url = data.body.url
 
             while True:
-                resp = await tachi_client.get(poll_url)
+                resp = await tachi_client._client.get(poll_url)
                 data = msgspec.json.decode(
                     resp.content, type=KTImportPollStatusResponse
                 )

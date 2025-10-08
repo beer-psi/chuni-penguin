@@ -1,25 +1,26 @@
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext.commands import Context
 
-from chuni_penguin.networks.chunithm_net import KEY_PLAY_RATING
+from chuni_penguin.networks.consts import KEY_PLAY_RATING
 from chuni_penguin.utils import floor_to_ndp
 
 from ._pagination import PaginationView
 from .b30 import B30PageSource
 
 if TYPE_CHECKING:
-    from chuni_penguin.networks.chunithm_net import Record
+    from chuni_penguin.networks.types import Score
 
 
 class B30N20View(PaginationView):
     def __init__(
         self,
         ctx: Context,
-        b30: list["Record"],
-        n20: list["Record"],
+        b30: Sequence["Score"],
+        n20: Sequence["Score"],
         *,
         synthesis_alt_jacket: str | None = None,
     ):
@@ -61,7 +62,7 @@ class B30N20View(PaginationView):
         self.rating = floor_to_ndp((self.best30_total + self.new20_total) / 50, 2)
 
     @override
-    async def get_kwargs_from_page(self, page: list["Record"]):
+    async def get_kwargs_from_page(self, page: list["Score"]):
         kwargs = await super().get_kwargs_from_page(page)
         kwargs["content"] = (
             f"**Best 30 average**: {self.best30_average}\n"

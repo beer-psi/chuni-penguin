@@ -2,7 +2,7 @@ import discord
 from discord.utils import escape_markdown
 
 from chuni_penguin.config import config
-from chuni_penguin.networks.chunithm_net import (
+from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
     KEY_LEVEL,
     KEY_OVERPOWER,
@@ -10,14 +10,15 @@ from chuni_penguin.networks.chunithm_net import (
     KEY_PLAY_RATING,
     KEY_SONG_ID,
     KEY_TOTAL_COMBO,
-    ChainType,
-    ClearType,
-    ComboType,
-    DetailedRecentRecord,
+)
+from chuni_penguin.networks.types import (
+    ChainLamp,
+    ClearLamp,
+    ComboLamp,
     Difficulty,
-    MusicRecord,
-    RecentRecord,
-    Record,
+    PersonalBest,
+    RecentScore,
+    Score,
 )
 from chuni_penguin.utils import floor_to_ndp
 
@@ -25,17 +26,15 @@ from chuni_penguin.utils import floor_to_ndp
 class ScoreCardEmbed(discord.Embed):
     def __init__(
         self,
-        record: Record,
+        record: Score,
         *,
         show_lamps: bool = True,
         index: int | None = None,
         synthesis_alt_jacket: str | None = None,
     ):
-        super().__init__(
-            color=record.difficulty.color(),
-        )
+        super().__init__(color=record.difficulty.color())
 
-        self.set_thumbnail(url=record.jacket)
+        self.set_thumbnail(url=record.jacket_url)
 
         if record.extras.get(KEY_SONG_ID) == 2698:
             if synthesis_alt_jacket == "none":
@@ -46,21 +45,21 @@ class ScoreCardEmbed(discord.Embed):
                 )
 
         if show_lamps:
-            lamps: list[ChainType | ClearType | ComboType] = [record.clear_lamp]
+            lamps: list[ChainLamp | ClearLamp | ComboLamp] = [record.clear_lamp]
 
             if (
-                record.combo_lamp != ComboType.NONE
-                or record.chain_lamp != ChainType.NONE
-            ) and record.clear_lamp == ClearType.CLEAR:
+                record.combo_lamp != ComboLamp.none
+                or record.chain_lamp != ChainLamp.none
+            ) and record.clear_lamp == ClearLamp.clear:
                 lamps = []
 
-            if record.combo_lamp != ComboType.NONE:
+            if record.combo_lamp != ComboLamp.none:
                 lamps.append(record.combo_lamp)
-            if record.chain_lamp != ChainType.NONE:
+            if record.chain_lamp is not None and record.chain_lamp != ChainLamp.none:
                 lamps.append(record.chain_lamp)
 
             if len(lamps) > 2:
-                lamps_str = [x.short_form() for x in lamps]
+                lamps_str = [x.short() for x in lamps]
             else:
                 lamps_str = [str(x) for x in lamps]
 
@@ -75,81 +74,85 @@ class ScoreCardEmbed(discord.Embed):
             play_op_display = f"{floor_to_ndp(play_overpower, 2)} ({floor_to_ndp(play_overpower / overpower_max * 100, 2)}%)"
 
             footer_sections = []
-            if record.difficulty != Difficulty.WORLDS_END:
+            if record.difficulty != Difficulty.worlds_end:
                 if show_lamps:
                     footer_sections.append(f"Rating: {floor_to_ndp(play_rating, 2)}")
                 else:
                     score_data += f" ▸ **{floor_to_ndp(play_rating, 2)}**"
 
-            if record.difficulty != Difficulty.WORLDS_END:
+            if record.difficulty != Difficulty.worlds_end:
                 footer_sections.append(f"OP: {play_op_display}")
 
-        if isinstance(record, MusicRecord) and record.play_count is not None:
+        if isinstance(record, PersonalBest) and record.play_count is not None:
             footer_sections.append(
                 f"{record.play_count} attempt{'s' if record.play_count > 1 else ''}"
             )
 
         self.set_footer(text="  •  ".join(footer_sections))
 
-        if isinstance(record, MusicRecord) and record.ajc_count is not None:
+        if isinstance(record, PersonalBest) and record.ajc_count is not None:
             score_data += f"\n▸ AJC count: {record.ajc_count}"
 
-        if isinstance(record, DetailedRecentRecord):
-            total_combo = record.extras.get(KEY_TOTAL_COMBO)
+        total_combo = record.extras.get(KEY_TOTAL_COMBO)
 
-            if record.max_combo >= 0:
-                score_data += (
-                    f" ▸ x{record.max_combo}{f'/{total_combo}' if total_combo else ''}"
-                )
-
-            has_judgements = (
-                record.judgements.jcrit >= 0
-                and record.judgements.justice >= 0
-                and record.judgements.attack >= 0
-                and record.judgements.miss >= 0
+        if record.max_combo is not None and record.max_combo >= 0:
+            score_data += (
+                f" ▸ x{record.max_combo}{f'/{total_combo}' if total_combo else ''}"
             )
 
-            has_note_percentages = (
-                record.note_type.tap >= 0
-                and record.note_type.hold >= 0
-                and record.note_type.slide >= 0
-                and record.note_type.air >= 0
-                and record.note_type.flick >= 0
+        has_judgements = record.judgements is not None and (
+            record.judgements.justice_critical >= 0
+            and record.judgements.justice >= 0
+            and record.judgements.attack >= 0
+            and record.judgements.miss >= 0
+        )
+
+        has_note_percentages = record.note_percentage is not None and (
+            record.note_percentage.tap >= 0
+            and record.note_percentage.hold >= 0
+            and record.note_percentage.slide >= 0
+            and record.note_percentage.air >= 0
+            and record.note_percentage.flick >= 0
+        )
+
+        if has_judgements and has_note_percentages:
+            assert record.judgements is not None
+            assert record.note_percentage is not None
+
+            self.add_field(
+                name="\u200b",
+                value=(
+                    f"CRITICAL {record.judgements.justice_critical}\n"
+                    f"JUSTICE {record.judgements.justice}\n"
+                    f"ATTACK {record.judgements.attack}\n"
+                    f"MISS {record.judgements.miss}"
+                ),
+                inline=True,
             )
 
-            if has_judgements and has_note_percentages:
-                self.add_field(
-                    name="\u200b",
-                    value=(
-                        f"CRITICAL {record.judgements.jcrit}\n"
-                        f"JUSTICE {record.judgements.justice}\n"
-                        f"ATTACK {record.judgements.attack}\n"
-                        f"MISS {record.judgements.miss}"
-                    ),
-                    inline=True,
-                )
+            self.add_field(
+                name="\u200b",
+                value=(
+                    f"TAP {record.note_percentage.tap:.2f}%\n"
+                    f"HOLD {record.note_percentage.hold:.2f}%\n"
+                    f"SLIDE {record.note_percentage.slide:.2f}%\n"
+                    f"AIR {record.note_percentage.air:.2f}%\n"
+                    f"FLICK {record.note_percentage.flick:.2f}%"
+                ),
+                inline=True,
+            )
+        elif has_judgements:
+            assert record.judgements is not None
 
-                self.add_field(
-                    name="\u200b",
-                    value=(
-                        f"TAP {record.note_type.tap * 100:.2f}%\n"
-                        f"HOLD {record.note_type.hold * 100:.2f}%\n"
-                        f"SLIDE {record.note_type.slide * 100:.2f}%\n"
-                        f"AIR {record.note_type.air * 100:.2f}%\n"
-                        f"FLICK {record.note_type.flick * 100:.2f}%"
-                    ),
-                    inline=True,
-                )
-            elif has_judgements:
-                score_data += "\n"
-                score_data += f"▸ {record.judgements.jcrit} / {record.judgements.justice} / {record.judgements.attack} / {record.judgements.miss}"
+            score_data += "\n"
+            score_data += f"▸ {record.judgements.justice_critical} / {record.judgements.justice} / {record.judgements.attack} / {record.judgements.miss}"
 
-        if isinstance(record, RecentRecord):
-            if record.date.timestamp() > 0:
-                self._timestamp = record.date
+        if record.achieved_at is not None and record.achieved_at.timestamp() > 0:
+            self._timestamp = record.achieved_at
 
-            if record.track > 0:
-                self.set_author(name=f"TRACK {record.track}")
+        if isinstance(record, RecentScore):
+            if record.track_no is not None and record.track_no > 0:
+                self.set_author(name=f"TRACK {record.track_no}")
 
             self.description = (
                 f"**{escape_markdown(record.title)} [{_displayed_difficulty(record)}]**\n"
@@ -165,7 +168,7 @@ class ScoreCardEmbed(discord.Embed):
             self.description = score_data
 
 
-def _displayed_difficulty(record: Record) -> str:
+def _displayed_difficulty(record: Score) -> str:
     difficulty = record.difficulty
     level = record.extras.get(KEY_LEVEL)
     internal_level = record.extras.get(KEY_INTERNAL_LEVEL)

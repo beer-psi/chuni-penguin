@@ -15,12 +15,12 @@ from discord.ext.commands import Context
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.chunithm_net import (
-    ChuniNetError,
-    ChuniNetException,
+from chuni_penguin.networks.chunithm_net import ChuniNetError
+from chuni_penguin.networks.errors import (
+    AuthenticationError,
     InvalidFriendCode,
-    InvalidTokenException,
-    MaintenanceException,
+    MaintenanceError,
+    NetworkError,
 )
 
 if TYPE_CHECKING:
@@ -169,11 +169,11 @@ class EventsCog(commands.Cog, name="Events"):
         )
         delete_after: float | None = None
 
-        if isinstance(exc, MaintenanceException):
+        if isinstance(exc, MaintenanceError):
             embed.description = "CHUNITHM-NET is currently undergoing maintenance. Please try again later."
         elif isinstance(exc, ChuniNetError):
             embed.description = f"CHUNITHM-NET error {exc.code}: {exc.description}"
-        elif isinstance(exc, InvalidTokenException):
+        elif isinstance(exc, AuthenticationError):
             embed.description = (
                 f"The token has expired. Please log in again with `{prefix}login` in my DMs.\n"
                 "\n"
@@ -184,9 +184,9 @@ class EventsCog(commands.Cog, name="Events"):
             )
         elif isinstance(exc, InvalidFriendCode):
             embed.description = "Could not find anyone with this friend code. Please double-check and try again."
-        elif isinstance(exc, ChuniNetException):
+        elif isinstance(exc, NetworkError):
             embed.description = (
-                "An error occurred while communicating with CHUNITHM-NET. Please try again later (or re-login).\n"
+                "An error occurred while communicating with the network. Please try again later (or re-login).\n"
                 "\n"
                 "Detailed error:\n"
                 "```python\n"

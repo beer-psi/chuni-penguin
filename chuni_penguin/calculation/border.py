@@ -1,6 +1,6 @@
 from math import floor
 
-from chuni_penguin.networks.chunithm_net import Judgements, Rank
+from chuni_penguin.networks.types import Judgements, Rank
 
 ONE_ATTACK_IN_JUSTICE = 51
 ONE_MISS_IN_JUSTICE = 101
@@ -91,23 +91,48 @@ def calculate_border(notecount: int) -> dict[str | Rank, Judgements]:
     border_jcrit_s = notecount - border_jus_s - border_atk_s - border_miss_s
 
     return {
-        "99AJ": Judgements(border_jcrit_99aj, border_jus_99aj, 0, 0),
-        Rank.SSSp: Judgements(
-            border_jcrit_sssp, border_jus_sssp, border_atk_sssp, border_miss_sssp
+        "99AJ": Judgements(
+            justice_critical=border_jcrit_99aj,
+            justice=border_jus_99aj,
+            attack=0,
+            miss=0,
         ),
-        Rank.SSS: Judgements(
-            border_jcrit_sss, border_jus_sss, border_atk_sss, border_miss_sss
+        Rank.sssp: Judgements(
+            justice_critical=border_jcrit_sssp,
+            justice=border_jus_sssp,
+            attack=border_atk_sssp,
+            miss=border_miss_sssp,
         ),
-        Rank.SSp: Judgements(
-            border_jcrit_ssp, border_jus_ssp, border_atk_ssp, border_miss_ssp
+        Rank.sss: Judgements(
+            justice_critical=border_jcrit_sss,
+            justice=border_jus_sss,
+            attack=border_atk_sss,
+            miss=border_miss_sss,
         ),
-        Rank.SS: Judgements(
-            border_jcrit_ss, border_jus_ss, border_atk_ss, border_miss_ss
+        Rank.ssp: Judgements(
+            justice_critical=border_jcrit_ssp,
+            justice=border_jus_ssp,
+            attack=border_atk_ssp,
+            miss=border_miss_ssp,
         ),
-        Rank.Sp: Judgements(
-            border_jcrit_sp, border_jus_sp, border_atk_sp, border_miss_sp
+        Rank.ss: Judgements(
+            justice_critical=border_jcrit_ss,
+            justice=border_jus_ss,
+            attack=border_atk_ss,
+            miss=border_miss_ss,
         ),
-        Rank.S: Judgements(border_jcrit_s, border_jus_s, border_atk_s, border_miss_s),
+        Rank.sp: Judgements(
+            justice_critical=border_jcrit_sp,
+            justice=border_jus_sp,
+            attack=border_atk_sp,
+            miss=border_miss_sp,
+        ),
+        Rank.s: Judgements(
+            justice_critical=border_jcrit_s,
+            justice=border_jus_s,
+            attack=border_atk_s,
+            miss=border_miss_s,
+        ),
     }
 
 

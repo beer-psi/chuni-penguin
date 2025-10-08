@@ -9,7 +9,7 @@ from chuni_penguin.calculation import (
     calculate_score_deduction_per_judgement,
 )
 from chuni_penguin.config import config
-from chuni_penguin.networks.chunithm_net import Difficulty
+from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import (
     floor_to_ndp,
     get_jacket_url,
@@ -30,7 +30,7 @@ class ChartCardEmbed(discord.Embed):
         border: bool = False,
         synthesis_alt_jacket: str | None = None,
     ) -> None:
-        difficulty = Difficulty.from_short_form(chart.difficulty)
+        difficulty = Difficulty(chart.difficulty)
 
         super().__init__(
             title=chart.song.title,

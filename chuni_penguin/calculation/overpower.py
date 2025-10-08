@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from chuni_penguin.networks.chunithm_net import ComboType
+from chuni_penguin.networks.types import ComboLamp
 from chuni_penguin.utils import floor_to_ndp
 
 
@@ -41,20 +41,20 @@ def calculate_overpower_max(internal_level: float) -> Decimal:
     return Decimal(str(internal_level)) * 5 + 15
 
 
-def calculate_play_overpower(overpower_base: Decimal, combo_lamp: ComboType) -> Decimal:
+def calculate_play_overpower(overpower_base: Decimal, combo_lamp: ComboLamp) -> Decimal:
     play_overpower = overpower_base
 
     if combo_lamp in (
-        ComboType.FULL_COMBO,
-        ComboType.ALL_JUSTICE,
-        ComboType.ALL_JUSTICE_CRITICAL,
+        ComboLamp.full_combo,
+        ComboLamp.all_justice,
+        ComboLamp.all_justice_critical,
     ):
         play_overpower += Decimal("0.5")
 
-    if combo_lamp in (ComboType.ALL_JUSTICE, ComboType.ALL_JUSTICE_CRITICAL):
+    if combo_lamp in (ComboLamp.all_justice, ComboLamp.all_justice_critical):
         play_overpower += Decimal("0.5")
 
-    if combo_lamp == ComboType.ALL_JUSTICE_CRITICAL:
+    if combo_lamp == ComboLamp.all_justice_critical:
         play_overpower += Decimal("0.25")
 
     return play_overpower

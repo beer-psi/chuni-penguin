@@ -23,7 +23,7 @@ from chuni_penguin.cogs.events import EventsCog
 from chuni_penguin.constants import ASSETS_DIR
 from chuni_penguin.database import Alias, GuessScore, Song
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.chunithm_net import Difficulty, Genres
+from chuni_penguin.networks.types import Difficulty, Genre
 from chuni_penguin.oggopus import crop_audio, get_audio_duration
 
 from .states.base import GuessingGameSkippableState, GuessingGameState
@@ -60,14 +60,14 @@ class GuessingGameSession:
         self,
         ctx: Context["ChuniBot"],
         *,
-        difficulty: Difficulty = Difficulty.BASIC,
+        difficulty: Difficulty = Difficulty.basic,
         game_type: GuessingGameType = GuessingGameType.IMAGE,
         question_count: int | None = None,
         score_limit: int | None = None,
         time_per_question: int = 20,
         wrong_answers_limit: int | None = None,
         hardcore_mode: bool = False,
-        genres: list[Genres] | None = None,
+        genres: list[Genre] | None = None,
         volume: int = 15,
     ) -> None:
         self.ctx: Context = ctx
@@ -96,7 +96,7 @@ class GuessingGameSession:
         self.hardcore_mode: bool = hardcore_mode
         self._hardcore_mode_ignores: set[int] = set()
 
-        self.genres: list[Genres] | None = genres
+        self.genres: list[Genre] | None = genres
 
         # If stopped by the bot itself, it means that we're restarting.
         self.stopped_by: discord.User | discord.Member | discord.ClientUser | None = (
@@ -212,21 +212,21 @@ class GuessingGameSession:
                 await self._current_state.skip()
 
     def get_crop_dimensions(self):
-        if self.difficulty == Difficulty.BASIC:
+        if self.difficulty == Difficulty.basic:
             return (90, 90)
-        if self.difficulty in {Difficulty.ADVANCED, Difficulty.EXPERT}:
+        if self.difficulty in {Difficulty.advanced, Difficulty.expert}:
             return (75, 75)
 
         return (60, 60)
 
     def get_audio_length(self):
-        if self.difficulty == Difficulty.BASIC:
+        if self.difficulty == Difficulty.basic:
             return 15
-        if self.difficulty == Difficulty.ADVANCED:
+        if self.difficulty == Difficulty.advanced:
             return 10
-        if self.difficulty == Difficulty.EXPERT:
+        if self.difficulty == Difficulty.expert:
             return 7
-        if self.difficulty == Difficulty.MASTER:
+        if self.difficulty == Difficulty.master:
             return 4
 
         return 1
@@ -312,14 +312,14 @@ class GuessingGameSession:
             img = img.crop((x, y, x + crop_width, y + crop_height))
 
             if self.difficulty in {
-                Difficulty.EXPERT,
-                Difficulty.MASTER,
-                Difficulty.ULTIMA,
+                Difficulty.expert,
+                Difficulty.master,
+                Difficulty.ultima,
             }:
                 rotation = random.randrange(0, 4)
                 img = img.rotate(90 * rotation)
 
-            if self.difficulty == Difficulty.ULTIMA:
+            if self.difficulty == Difficulty.ultima:
                 should_invert = random.random() < 0.5
 
                 if should_invert:
