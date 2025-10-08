@@ -50,6 +50,7 @@ class AuthCog(commands.Cog, name="Auth"):
                     ctx, ctx.author.id, chunithm_net=True
                 ) as client:
                     await client.logout()
+                    logged_out = True
 
             if not logged_out:
                 await logger.awarning(
