@@ -80,6 +80,9 @@ class UtilsCog(commands.Cog, name="Utils"):
         # guild_id: list of aliases
         self.alias_cache: dict[int, list[CachedAlias]] = {}
 
+    async def cog_load(self) -> None:
+        await self._reload_alias_cache()
+
     async def _reload_alias_cache(self) -> None:
         async with self.bot.begin_db_session() as session:
             stmt = select(Song).options(joinedload(Song.aliases))
