@@ -243,12 +243,12 @@ class ProfileCog(commands.Cog, name="Profile"):
     @logged_app_command
     async def chunithm_slash(
         self,
-        interaction: discord.Interaction,
+        interaction: discord.Interaction["ChuniBot"],
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
     ):
-        ctx = await Context.from_interaction(interaction)
+        ctx = await PenguinContext.from_interaction(interaction)
 
         await self._chunithm_inner(ctx, user, kamaitachi=kamaitachi)
 
