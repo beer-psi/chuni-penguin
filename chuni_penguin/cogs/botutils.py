@@ -1,13 +1,9 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, Optional, Sequence, TypeVar
 
-import httpx
-import httpx_aiohttp
 import msgspec
-from discord import Interaction
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord.ext.commands import Context
-from discord.utils import MISSING
 from rapidfuzz import fuzz, process
 from sqlalchemy import select, update
 from sqlalchemy.orm import contains_eager, joinedload
@@ -22,7 +18,6 @@ from chuni_penguin.config import config
 from chuni_penguin.database import Alias, Cookie, Song, UserConfig
 from chuni_penguin.errors import MissingDetailedParams
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.chunithm_net import ChunithmNet
 from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
     KEY_LEVEL,
@@ -35,7 +30,7 @@ from chuni_penguin.networks.consts import (
     KEY_TOTAL_COMBO,
 )
 from chuni_penguin.networks.types import Genre, Score
-from chuni_penguin.utils import AsyncRcContextManager, get_jacket_url
+from chuni_penguin.utils import get_jacket_url
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -84,61 +79,6 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         # guild_id: list of aliases
         self.alias_cache: dict[int, list[CachedAlias]] = {}
-        self.user_agents: KeiyoushiUserAgents = MISSING
-
-        # user_id: (refcount, ChuniNet)
-        self._chuni_net_sessions: dict[int, AsyncRcContextManager[ChunithmNet]] = {}
-
-    async def cog_load(self) -> None:
-        self._update_user_agents.start()
-        await self._reload_alias_cache()
-
-    async def cog_unload(self) -> None:
-        self._update_user_agents.stop()
-
-    @tasks.loop(hours=24)
-    async def _update_user_agents(self):
-        async with httpx.AsyncClient(
-            transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
-        ) as client:
-            resp = await client.get(
-                "https://keiyoushi.github.io/user-agents/user-agents.min.json"
-            )
-
-            if resp.status_code != 200:
-                logger.warning(
-                    "could not update user agents",
-                    tag="update_user_agent_failed",
-                    status_code=resp.status_code,
-                )
-                return
-
-            try:
-                self.user_agents = msgspec.json.decode(
-                    resp.content, type=KeiyoushiUserAgents
-                )
-                logger.debug(
-                    "updated user agents",
-                    tag="update_user_agent_success",
-                    count=len(self.user_agents.desktop)
-                    + len(self.user_agents.mobile)
-                    + 1,  # for recommended UA
-                )
-            except msgspec.DecodeError as e:
-                logger.exception(
-                    "could not parse user agents",
-                    tag="update_user_agent_failed",
-                    exc_info=e,
-                )
-                return
-
-    @_update_user_agents.error
-    async def _update_user_agents_error(self, exc: BaseException):
-        logger.exception(
-            "unhandled exception updating user agents",
-            tag="update_useragent_failed",
-            exc_info=exc,
-        )
 
     async def _reload_alias_cache(self) -> None:
         async with self.bot.begin_db_session() as session:
@@ -251,51 +191,6 @@ class UtilsCog(commands.Cog, name="Utils"):
             return None
 
         return cookie.cookie
-
-    async def choose_preferred_network(
-        self,
-        ctx: Context | Interaction,
-        id: int | None = None,
-        *,
-        kamaitachi: bool = False,
-    ):
-        author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
-        target_id = id or author_id
-        is_interaction = isinstance(ctx, Interaction) or ctx.interaction is not None
-        user_config = await self.fetch_user_config(target_id)
-
-        async with self.bot.begin_db_session() as session:
-            stmt = select(Cookie).where(Cookie.discord_id == target_id)
-            cookie = (await session.execute(stmt)).scalar_one_or_none()
-
-            if cookie is None or (user_config.privacy_mode and author_id != target_id):
-                msg = self._get_not_logged_in_message(
-                    None, author_id, target_id, is_interaction=is_interaction
-                )
-                raise commands.CommandError(msg)
-
-            if kamaitachi:
-                if cookie.kamaitachi_token is None:
-                    msg = self._get_not_logged_in_message(
-                        "kamaitachi",
-                        author_id,
-                        target_id,
-                        is_interaction=is_interaction,
-                    )
-                    raise commands.CommandError(msg)
-
-                return "kamaitachi"
-
-            if cookie.cookie.startswith("#LWP-Cookies-2.0"):
-                return "chuninet"
-
-            if cookie.kamaitachi_token is not None:
-                return "kamaitachi"
-
-            msg = self._get_not_logged_in_message(
-                None, author_id, target_id, is_interaction=is_interaction
-            )
-            raise commands.CommandError(msg)
 
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
         song_ids = set()

@@ -77,6 +77,14 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                 )
                 return
 
+    @_update_user_agents.error
+    async def _update_user_agents_error(self, exc: BaseException):
+        logger.exception(
+            "unhandled exception updating user agents",
+            tag="update_useragent_failed",
+            exc_info=exc,
+        )
+
     async def _get_kt_chart_id(self, song_id: int, difficulty: Difficulty):
         async with self.bot.begin_db_session() as session:
             query = select(Chart).where(
