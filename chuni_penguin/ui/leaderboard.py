@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, override
 
 import discord
@@ -40,8 +41,8 @@ class LeaderboardPageSource(ListPageSource):
         self.network: str | None = network
 
     @override
-    async def format_page(  # pyright: ignore[reportIncompatibleMethodOverride]
-        self, menu: "PaginationView", page: list[LeaderboardEntry]
+    async def format_page(
+        self, menu: "PaginationView", page: Sequence[LeaderboardEntry]
     ) -> dict[str, Any]:
         if self.chart is not None:
             info_embed = ChartCardEmbed(

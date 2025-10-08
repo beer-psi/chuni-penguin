@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, override
 
 import discord
@@ -18,7 +19,7 @@ class SonglistPageSource(ListPageSource[Chart]):
 
     @override
     async def format_page(
-        self, menu: "PaginationView", page: list[Chart]
+        self, menu: "PaginationView", page: Sequence[Chart]
     ) -> dict[str, Any]:
         start = menu.current_page * self.per_page
         songlist = ""

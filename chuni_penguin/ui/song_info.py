@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, override
 from urllib.parse import quote
 
@@ -30,7 +31,7 @@ class SongInfoPageSource(ListPageSource[Song]):
 
     @override
     async def format_page(
-        self, menu: "PaginationView", page: list[Song]
+        self, menu: "PaginationView", page: Sequence[Song]
     ) -> dict[str, Any]:
         embeds: list[discord.Embed] = []
 
