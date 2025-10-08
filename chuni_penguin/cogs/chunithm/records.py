@@ -1400,7 +1400,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 )
 
                 records = records[:record_slots]
-                new_records = records[:new_record_slots]
+                new_records = new_records[:new_record_slots]
                 current_rating = float(
                     floor_to_ndp(
                         sum(
