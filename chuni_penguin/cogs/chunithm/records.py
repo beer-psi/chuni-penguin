@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
 from math import ceil
-from typing import TYPE_CHECKING, Annotated, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord import Interaction, app_commands
@@ -1666,8 +1666,23 @@ class RecordsCog(commands.Cog, name="Records"):
             elif client.SUPPORTS_PERSONAL_BESTS:
                 records = await client.get_personal_bests()
             else:
-                msg = f"Network {client.NAME} does not support fetching personal bests."
-                raise commands.CommandError(msg)
+                if (
+                    client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL
+                    and client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
+                ):
+                    msg = "At least one of `level` or `difficulty` must be specified."
+                    exc = commands.BadArgument
+                elif client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL:
+                    msg = "Level must be specified."
+                    exc = commands.BadArgument
+                elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
+                    msg = "Difficulty must be specified."
+                    exc = commands.BadArgument
+                else:
+                    msg = f"Network {client.NAME} does not support fetching personal bests."
+                    exc = commands.CommandError
+
+                raise exc(msg)
 
             if isinstance(client, ChunithmNet):
                 # hidden chart shenanigans
@@ -1856,8 +1871,23 @@ class RecordsCog(commands.Cog, name="Records"):
             elif client.SUPPORTS_PERSONAL_BESTS:
                 records = await client.get_personal_bests()
             else:
-                msg = f"Network {client.NAME} does not support fetching personal bests."
-                raise commands.CommandError(msg)
+                if (
+                    client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL
+                    and client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
+                ):
+                    msg = "At least one of `level` or `difficulty` must be specified."
+                    exc = commands.BadArgument
+                elif client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL:
+                    msg = "Level must be specified."
+                    exc = commands.BadArgument
+                elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
+                    msg = "Difficulty must be specified."
+                    exc = commands.BadArgument
+                else:
+                    msg = f"Network {client.NAME} does not support fetching personal bests."
+                    exc = commands.CommandError
+
+                raise exc(msg)
 
             if isinstance(client, ChunithmNet):
                 # hidden chart shenanigans
@@ -1954,45 +1984,39 @@ class RecordsCog(commands.Cog, name="Records"):
         )
         await view.start()
 
-    @commands.hybrid_command("leaderboard", aliases=["lb"])
-    @app_commands.choices(
-        difficulty=[
-            app_commands.Choice(name="BASIC", value="BASIC"),
-            app_commands.Choice(name="ADVANCED", value="ADVANCED"),
-            app_commands.Choice(name="EXPERT", value="EXPERT"),
-            app_commands.Choice(name="MASTER", value="MASTER"),
-            app_commands.Choice(name="ULTIMA", value="ULTIMA"),
-            app_commands.Choice(name="WORLD'S END", value="WORLD'S END"),
-        ]
-    )
-    @app_commands.autocomplete(query=song_title_autocomplete)
+    @flags.command("leaderboard", aliases=["lb"])
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("difficulty", type=DifficultyConverter)
+    @flags.argument("query", nargs="+")
     @logged_prefix_command
     async def leaderboard(
         self,
         ctx: PenguinContext,
-        difficulty: Annotated[Difficulty, DifficultyConverter],
         *,
-        query: Annotated[str, AliasNameConverter(lower=True)],
+        difficulty: Difficulty,
+        query: list[str],
+        kamaitachi: bool = False,
     ):
-        """View the international leaderboard for a specific song and difficulty.
+        """View the leaderboard for a specific song and difficulty.
 
-        Currently requires logging in to CHUNITHM-NET, though this might be changed.
-
-        Parameters
-        ----------
-        difficulty: str
-            Chart difficulty to search for (BAS/ADV/EXP/MAS/ULT).
-        query: str
-            Song title to search for. You don't have to be exact; try things out!
+        **Parameters**:
+        `difificulty`: Chart difficulty to view the leaderboard for (BAS/ADV/EXP/MAS/ULT).
+        `query`: Song title to search for. You don't have to be exact; try things out!
+        `-k`, `--kamaitachi`: View the Kamaitachi leaderboard for the song.
         """
 
-        async with ctx.typing(), ctx.bot.chunithm_networks.network(ctx) as client:
+        query_str = " ".join(query)
+
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.network(ctx, kamaitachi=kamaitachi) as client,
+        ):
             if not client.SUPPORTS_CHART_LEADERBOARD:
                 msg = f"Network {client.NAME} does not support viewing chart leaderboards."
                 raise commands.CommandError(msg)
 
             chart = await ctx.find_chart(
-                difficulty, query, "Select a chart to see leaderboard for:"
+                difficulty, query_str, "Select a chart to see leaderboard for:"
             )
 
             if chart is None:
@@ -2023,6 +2047,36 @@ class RecordsCog(commands.Cog, name="Records"):
             await view.start_from(ctx.response, content="")
         else:
             await view.start()
+
+    @app_commands.command(
+        name="leaderboard", description="View the leaderboard for the given chart."
+    )
+    @app_commands.choices(
+        difficulty=[
+            app_commands.Choice(name=str(x), value=x.value)
+            for x in Difficulty.__members__.values()
+        ],  # type: ignore[reportGeneralTypeIssues]
+    )
+    @app_commands.describe(
+        difficulty="Chart difficulty to view the leaderboard for.",
+        query="Song title to search for. You don't have to be exact; try things out!",
+        kamaitachi="View the Kamaitachi leaderboard for the song.",
+    )
+    @app_commands.autocomplete(query=song_title_autocomplete)
+    @logged_app_command
+    async def leaderboard_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        difficulty: Difficulty,
+        query: app_commands.Transform[str, AliasNameTransformer(lower=True)],
+        *,
+        kamaitachi: bool = False,
+    ):
+        ctx = await PenguinContext.from_interaction(interaction)
+
+        await self.leaderboard(
+            ctx, difficulty=difficulty, query=query.split(" "), kamaitachi=kamaitachi
+        )
 
 
 async def setup(bot: "ChuniBot"):
