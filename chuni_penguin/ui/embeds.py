@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, override
 
 import discord
@@ -20,9 +21,9 @@ class EmbedPageSource(ListPageSource[discord.Embed]):
 
     @override
     async def format_page(
-        self, menu: "PaginationView", page: list[discord.Embed]
+        self, menu: "PaginationView", page: Sequence[discord.Embed]
     ) -> dict[str, Any]:
-        embeds = page.copy()
+        embeds = [*page]
 
         if self.with_page_marker:
             embeds.append(

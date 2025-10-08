@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, override
 
 import discord
@@ -6,7 +7,7 @@ from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
 from chuni_penguin.database import Chart
-from chuni_penguin.networks.chunithm_net import Difficulty
+from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import yt_search_link
 
 from ._pagination import ListPageSource, PaginationView
@@ -18,7 +19,7 @@ class SonglistPageSource(ListPageSource[Chart]):
 
     @override
     async def format_page(
-        self, menu: "PaginationView", page: list[Chart]
+        self, menu: "PaginationView", page: Sequence[Chart]
     ) -> dict[str, Any]:
         start = menu.current_page * self.per_page
         songlist = ""
@@ -29,7 +30,7 @@ class SonglistPageSource(ListPageSource[Chart]):
                 if chart.sdvxin_chart_view is not None
                 else yt_search_link(chart.song.title, chart.difficulty, chart.level)
             )
-            songlist += f"{idx + start + 1}. {escape_markdown(chart.song.title)} [[{Difficulty.from_short_form(chart.difficulty)} {chart.const}]]({url})\n"
+            songlist += f"{idx + start + 1}. {escape_markdown(chart.song.title)} [[{Difficulty(chart.difficulty)} {chart.const}]]({url})\n"
 
         return {
             "embed": discord.Embed(

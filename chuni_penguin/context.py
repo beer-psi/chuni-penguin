@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload
 
 from chuni_penguin.constants import SIMILARITY_THRESHOLD
 from chuni_penguin.database import Chart, UserConfig
-from chuni_penguin.networks.chunithm_net import Difficulty
+from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import did_you_mean_text
 
 if TYPE_CHECKING:
@@ -145,7 +145,7 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
                 select(Chart)
                 .where(
                     (Chart.song_id.in_(song_ids))
-                    & (Chart.difficulty == difficulty.short_form())
+                    & (Chart.difficulty == difficulty.short())
                 )
                 .options(joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view))
             )
@@ -162,7 +162,7 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
             self,
             [
                 (
-                    f"{x.song.title} [{Difficulty.from_short_form(x.difficulty)} {x.const or x.level}]",
+                    f"{x.song.title} [{Difficulty(x.difficulty)} {x.const or x.level}]",
                     i,
                 )
                 for i, x in enumerate(charts)

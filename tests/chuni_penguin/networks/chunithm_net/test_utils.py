@@ -5,17 +5,17 @@ import string
 import pytest
 from bs4 import BeautifulSoup
 
-from chuni_penguin.networks.chunithm_net import (
-    ChainType,
-    ClearType,
-    ComboType,
-    Difficulty,
-    Rank,
-)
 from chuni_penguin.networks.chunithm_net.utils import (
     difficulty_from_imgurl,
     get_rank_and_lamps,
     is_valid_clal,
+)
+from chuni_penguin.networks.types import (
+    ChainLamp,
+    ClearLamp,
+    ComboLamp,
+    Difficulty,
+    Rank,
 )
 
 
@@ -31,7 +31,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_9.png">
             </div>
             """,
-            (Rank.Sp, ClearType.CLEAR, ComboType.NONE, ChainType.NONE),
+            (Rank.sp, ClearLamp.clear, ComboLamp.none, ChainLamp.none),
         ),
         (
             """
@@ -40,7 +40,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_9.png">
             </div>
             """,
-            (Rank.Sp, ClearType.FAILED, ComboType.NONE, ChainType.NONE),
+            (Rank.sp, ClearLamp.failed, ComboLamp.none, ChainLamp.none),
         ),
         (
             """
@@ -49,7 +49,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_clear.png">
             </div>
             """,
-            (Rank.D, ClearType.CLEAR, ComboType.NONE, ChainType.NONE),
+            (Rank.d, ClearLamp.clear, ComboLamp.none, ChainLamp.none),
         ),
         (
             """
@@ -57,7 +57,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <!-- ◆クリア -->
             </div>
             """,
-            (Rank.D, ClearType.FAILED, ComboType.NONE, ChainType.NONE),
+            (Rank.d, ClearLamp.failed, ComboLamp.none, ChainLamp.none),
         ),
         (
             """
@@ -69,7 +69,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_alljustice.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.CLEAR, ComboType.ALL_JUSTICE, ChainType.NONE),
+            (Rank.sssp, ClearLamp.clear, ComboLamp.all_justice, ChainLamp.none),
         ),
         (
             """
@@ -81,7 +81,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_fullcombo.png">
             </div>
             """,
-            (Rank.SSS, ClearType.CLEAR, ComboType.FULL_COMBO, ChainType.NONE),
+            (Rank.sss, ClearLamp.clear, ComboLamp.full_combo, ChainLamp.none),
         ),
         (
             """
@@ -92,7 +92,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.ABSOLUTE, ComboType.NONE, ChainType.NONE),
+            (Rank.sssp, ClearLamp.absolute, ComboLamp.none, ChainLamp.none),
         ),
         (
             """
@@ -103,7 +103,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.BRAVE, ComboType.NONE, ChainType.NONE),
+            (Rank.sssp, ClearLamp.brave, ComboLamp.none, ChainLamp.none),
         ),
         (
             """
@@ -114,7 +114,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.HARD, ComboType.NONE, ChainType.NONE),
+            (Rank.sssp, ClearLamp.hard, ComboLamp.none, ChainLamp.none),
         ),
         (
             """
@@ -125,7 +125,7 @@ from chuni_penguin.networks.chunithm_net.utils import (
                 <img src="https://chunithm-net-eng.com/mobile/images/icon_rank_13.png">
             </div>
             """,
-            (Rank.SSSp, ClearType.CATASTROPHY, ComboType.NONE, ChainType.NONE),
+            (Rank.sssp, ClearLamp.catastrophy, ComboLamp.none, ChainLamp.none),
         ),
     ],
 )
@@ -138,13 +138,13 @@ def test_get_rank_and_cleartype(html, expected):
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        ("basic", Difficulty.BASIC),
-        ("advanced", Difficulty.ADVANCED),
-        ("expert", Difficulty.EXPERT),
-        ("master", Difficulty.MASTER),
-        ("worldsend", Difficulty.WORLDS_END),
-        ("ultima", Difficulty.ULTIMA),
-        ("ultimate", Difficulty.ULTIMA),
+        ("basic", Difficulty.basic),
+        ("advanced", Difficulty.advanced),
+        ("expert", Difficulty.expert),
+        ("master", Difficulty.master),
+        ("worldsend", Difficulty.worlds_end),
+        ("ultima", Difficulty.ultima),
+        ("ultimate", Difficulty.ultima),
     ],
 )
 def test_difficulty_from_imgurl(value, expected):

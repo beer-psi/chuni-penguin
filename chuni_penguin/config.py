@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, overload
 if TYPE_CHECKING:
     from configparser import SectionProxy
 
-    from chuni_penguin.networks.chunithm_net import Rank
+    from chuni_penguin.networks.types import Rank
 
 
 class BotConfig:
@@ -71,6 +71,15 @@ class WebConfig:
     @property
     def serve_assets(self) -> bool:
         return self.__section.getboolean("serve_assets", fallback=False)
+
+    @property
+    def is_accessible(self):
+        return (
+            self.enable
+            and self.base_url is not None
+            and "127.0.0.1" not in self.base_url
+            and "localhost" not in self.base_url
+        )
 
 
 class CredentialsConfig:

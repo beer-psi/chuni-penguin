@@ -9,6 +9,7 @@ COG_LIST: list[str] = [
     "chuni_penguin.cogs.fluff",
     "chuni_penguin.cogs.gaming",
     "chuni_penguin.cogs.misc",
+    "chuni_penguin.cogs.chunithm.networks",
     "chuni_penguin.cogs.chunithm.auth",
     "chuni_penguin.cogs.chunithm.kamaitachi",
     "chuni_penguin.cogs.chunithm.profile",

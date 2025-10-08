@@ -14,8 +14,7 @@ from chuni_penguin.converters import DifficultyConverter, GenreConverter
 from chuni_penguin.database.models import GuessScore
 from chuni_penguin.flags import DiscordArguments
 from chuni_penguin.logging import logged_prefix_command
-from chuni_penguin.networks.chunithm_net import Difficulty, Genres
-from chuni_penguin.ui import GuessLeaderboardView
+from chuni_penguin.networks.types import Difficulty, Genre
 from chuni_penguin.utils import shlex_split
 
 from ._session import GuessingGameSession, GuessingGameType
@@ -32,7 +31,7 @@ class GuessArguments:
     time: int
     wrong: int | None
     hardcore: bool
-    genres: list[Genres] | None
+    genres: list[Genre] | None
     volume: int
 
 
@@ -55,7 +54,7 @@ class GamingCog(commands.Cog, name="Games"):
             "--difficulty",
             required=False,
             type=lambda s: DifficultyConverter().convert(ctx, s),
-            default=Difficulty.BASIC,
+            default=Difficulty.basic,
         )
         parser.add_argument("-q", "--questions", type=int, required=False, default=20)
         parser.add_argument("-s", "--score", type=int, required=False, default=None)
@@ -249,7 +248,7 @@ class GamingCog(commands.Cog, name="Games"):
 
         args = await self._parse_guess_arguments(ctx, arguments)
 
-        if args.difficulty == Difficulty.WORLDS_END:
+        if args.difficulty == Difficulty.worlds_end:
             msg = "WORLD'S END isn't supported yet. I don't think you're supposed to know what it has in store for you..."
             raise commands.BadArgument(msg)
 
@@ -390,6 +389,8 @@ class GamingCog(commands.Cog, name="Games"):
     @logged_prefix_command
     async def guess_leaderboard(self, ctx: PenguinGuildContext):
         """View the score leaderboard for the current server."""
+
+        from chuni_penguin.ui import GuessLeaderboardView
 
         async with ctx.typing():
             view = GuessLeaderboardView(ctx)

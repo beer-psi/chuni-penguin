@@ -1,10 +1,11 @@
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord.ext.commands import Context
 
-from chuni_penguin.networks.chunithm_net import (
+from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
     KEY_PLAY_RATING,
 )
@@ -14,14 +15,14 @@ from ._pagination import ListPageSource, PaginationView
 from .components.score_card_embed import ScoreCardEmbed
 
 if TYPE_CHECKING:
-    from chuni_penguin.networks.chunithm_net import Record
+    from chuni_penguin.networks.types import Score
 
 
-class B30PageSource(ListPageSource["Record"]):
+class B30PageSource(ListPageSource["Score"]):
     def __init__(
         self,
         *,
-        records: list["Record"],
+        records: Sequence["Score"],
         rating_slots: int = 30,
         per_page: int = 3,
         show_average: bool = True,
@@ -50,7 +51,7 @@ class B30PageSource(ListPageSource["Record"]):
         self.synthesis_alt_jacket = synthesis_alt_jacket
 
     @override
-    async def format_page(self, menu: "PaginationView", page: list["Record"]):
+    async def format_page(self, menu: "PaginationView", page: Sequence["Score"]):
         start = menu.current_page * self.per_page
         embeds: list[discord.Embed] = [
             ScoreCardEmbed(
@@ -86,7 +87,7 @@ class B30View(PaginationView):
     def __init__(
         self,
         ctx: Context,
-        items: list["Record"],
+        items: Sequence["Score"],
         rating_slots: int = 30,
         per_page: int = 3,
         *,

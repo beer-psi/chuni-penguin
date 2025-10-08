@@ -1,28 +1,28 @@
+import asyncio
 import functools
+import io
 import re
-from typing import TYPE_CHECKING, Optional, cast, override
+from typing import TYPE_CHECKING, Any, override
 
 import discord.ui
 from discord import ButtonStyle, Interaction
 from discord.ext import commands
 from discord.ext.commands import Context
+from discord.utils import MISSING, escape_markdown
+from PIL import Image
 
-from chuni_penguin.networks.chunithm_net import (
-    AlreadyAddedAsFriend,
-    ChuniNetError,
-    InvalidFriendCode,
-)
+from chuni_penguin.networks.chunithm_net.exceptions import ChuniNetError
+from chuni_penguin.networks.errors import AlreadyFriends, InvalidFriendCode
 
 from ._base import PenguinView
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
-    from chuni_penguin.cogs.botutils import UtilsCog
-    from chuni_penguin.networks.chunithm_net import PlayerData
+    from chuni_penguin.networks.types import Profile
 
 
 async def handle_add_friend_interaction(
-    interaction: Interaction,
+    interaction: Interaction["ChuniBot"],
     user_id: int,
     name: str,
     friend_code: str | None,
@@ -46,11 +46,9 @@ async def handle_add_friend_interaction(
         await interaction.followup.send(embed=embed, ephemeral=True)
         return
 
-    utils: "UtilsCog" = cast(
-        "UtilsCog", cast("ChuniBot", interaction.client).get_cog("Utils")
+    ctx = interaction.client.chunithm_networks.network(
+        interaction, interaction.user.id, chunithm_net=True
     )
-
-    ctx = utils.chuninet(interaction, interaction.user.id)
 
     try:
         client = await ctx.__aenter__()
@@ -60,7 +58,7 @@ async def handle_add_friend_interaction(
         embed.title = "Success"
         embed.description = f"Sent a friend request to {name}."
         embed.color = discord.Color.green()
-    except AlreadyAddedAsFriend:
+    except AlreadyFriends:
         embed.description = "You've already sent this player a friend request, or you're already friends with this player."
     except InvalidFriendCode:
         embed.description = "Could not send a friend request because the friend code was invalid, or you're trying to send a friend request to yourself."
@@ -148,7 +146,7 @@ class PersistentSendFriendRequestButton(
         return cls(user_id, friend_code, name)
 
     @override
-    async def callback(self, interaction: Interaction):
+    async def callback(self, interaction: Interaction["ChuniBot"]):  # pyright: ignore[reportIncompatibleMethodOverride]
         await handle_add_friend_interaction(
             interaction,
             self.user_id,
@@ -159,16 +157,135 @@ class PersistentSendFriendRequestButton(
 
 class ProfileView(PenguinView):
     def __init__(
-        self, ctx: Context, profile: "PlayerData", *, timeout: Optional[float] = 120
+        self,
+        ctx: Context,
+        profile: "Profile",
+        no_possession_color: int | discord.Color,
+        *,
+        timeout: float | None = 120,
     ):
         super().__init__(ctx, timeout=timeout)
 
         self.profile = profile
+        self.no_possession_color = no_possession_color
         self.friend_code_visible = False
         self.send_friend_request_button = None
 
         if not self.profile.friend_code:
             self.clear_items()
+
+    async def _before_start(self, *, content: str | None = None) -> dict[str, Any]:
+        embed = discord.Embed(
+            color=(
+                self.profile.possession.color
+                if self.profile.possession is not None
+                else self.no_possession_color
+            )
+        )
+        description_lines: list[str] = []
+
+        if len(self.profile.titles) > 0:
+            titles = "\n".join(
+                [f"**{escape_markdown(t.content)}**" for t in self.profile.titles]
+            )
+            description_lines.append(titles)
+
+            if self.profile.url is not None:
+                description_lines.append(
+                    f"### [{escape_markdown(self.profile.username)}]({self.profile.url})"
+                )
+            else:
+                description_lines.append(
+                    f"### {escape_markdown(self.profile.username)}"
+                )
+        else:
+            embed.title = self.profile.username
+            embed.url = self.profile.url
+
+        if self.profile.team is not None:
+            description_lines.append(f"Team {escape_markdown(self.profile.team.name)}")
+
+        if self.profile.medal is not None:
+            content = f"Class {self.profile.medal}"
+            if self.profile.emblem is not None:
+                content += f", cleared all of class {self.profile.emblem}"
+            content += "."
+            description_lines.append(content)
+
+        if self.profile.level is not None:
+            if (
+                self.profile.reincarnation_stars is not None
+                and self.profile.reincarnation_stars > 0
+            ):
+                level = f"{self.profile.reincarnation_stars}⭐ + {self.profile.level}"
+            else:
+                level = f"{self.profile.level}"
+
+            description_lines.append(f"▸ **Level**: {level}")
+
+        for rating_system in self.profile.rating_systems:
+            content = (
+                f"▸ **{escape_markdown(rating_system.name)}**: {rating_system.value}"
+            )
+
+            if rating_system.max_value is not None:
+                content += f" (MAX {rating_system.max_value})"
+
+            description_lines.append(content)
+
+        if self.profile.over_power is not None:
+            description_lines.append(
+                f"▸ **OVER POWER**: {self.profile.over_power.value:.2f} ({self.profile.over_power.percentage:.2f}%)"
+            )
+
+        if self.profile.total_credits is not None:
+            description_lines.append(f"▸ **Credits**: {self.profile.total_credits}")
+
+        if self.profile.total_scores is not None:
+            description_lines.append(f"▸ **Scores**: {self.profile.total_scores}")
+
+        for k, v in self.profile.extras.items():
+            description_lines.append(f"▸ **{escape_markdown(k)}**: {v}")
+
+        if self.profile.last_played is not None:
+            description_lines.append(
+                f"▸ **Last played**: <t:{int(self.profile.last_played.timestamp())}:f>"
+            )
+
+        embed.description = "\n".join(description_lines)
+
+        if self.profile.banner is not None:
+            embed.set_image(url=self.profile.banner)
+
+        files: list[discord.File] = MISSING
+
+        if self.profile.profile_picture is not None:
+            if self.profile.profile_picture_frame is None:
+                embed.set_image(url=self.profile.profile_picture)
+            else:
+                character_resp, charaframe_resp = await asyncio.gather(
+                    self.ctx.bot.caching_http_client.get(self.profile.profile_picture),
+                    self.ctx.bot.caching_http_client.get(
+                        self.profile.profile_picture_frame
+                    ),
+                )
+
+                character = Image.open(io.BytesIO(character_resp.content))
+                charaframe = Image.open(io.BytesIO(charaframe_resp.content))
+
+                character = character.resize((87, 87), Image.Resampling.LANCZOS)
+                charaframe = charaframe.resize((98, 98), Image.Resampling.LANCZOS)
+
+                charaframe.paste(character, (6, 6), character)
+
+                avatar = io.BytesIO()
+                charaframe.save(avatar, "PNG", optimize=True)
+                avatar.seek(0)
+
+                files = [discord.File(avatar, filename="avatar.png")]
+                embed.set_thumbnail(url="attachment://avatar.png")
+
+        return {"embed": embed, "files": files}
 
     @override
     async def on_timeout(self) -> None:
@@ -180,7 +297,7 @@ class ProfileView(PenguinView):
             persistent_view.add_item(PersistentHideFriendCodeButton(self.ctx.author.id))
             persistent_view.add_item(
                 PersistentSendFriendRequestButton(
-                    self.ctx.author.id, self.profile.friend_code, self.profile.name
+                    self.ctx.author.id, self.profile.friend_code, self.profile.username
                 )
             )
             await self.message.edit(view=persistent_view)
@@ -222,11 +339,11 @@ class ProfileView(PenguinView):
             await interaction.response.edit_message(content="_ _", view=self)
 
     async def send_friend_request(
-        self, interaction: Interaction, button: discord.ui.Button
+        self, interaction: Interaction["ChuniBot"], button: discord.ui.Button
     ):
         return await handle_add_friend_interaction(
             interaction,
             self.ctx.author.id,
-            self.profile.name,
+            self.profile.username,
             self.profile.friend_code,
         )

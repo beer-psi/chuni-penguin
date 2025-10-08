@@ -9,9 +9,9 @@ from sqlalchemy.sql import select
 from chuni_penguin.config import config
 from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION
 from chuni_penguin.database import Chart, Course, CourseTrack
-from chuni_penguin.networks.chunithm_net import (
-    ClearType,
-    ComboType,
+from chuni_penguin.networks.types import (
+    ClearLamp,
+    ComboLamp,
     CourseClass,
     CourseRecord,
     Difficulty,
@@ -92,7 +92,7 @@ def format_conditions(course: Course):
 
 
 def format_chart(chart: Chart):
-    content = f"### {escape_markdown(chart.song.title)} [{Difficulty.from_short_form(chart.difficulty)} {chart.const or chart.level}]"
+    content = f"### {escape_markdown(chart.song.title)} [{Difficulty(chart.difficulty)} {chart.const or chart.level}]"
 
     if chart.song.bpm is not None:
         content += f"\nBPM: {chart.song.bpm}"
@@ -127,10 +127,10 @@ def format_chart(chart: Chart):
 def format_course_record(record: CourseRecord):
     lamps: list[str] = []
 
-    if record.clear_lamp != ClearType.CLEAR:
+    if record.clear_lamp != ClearLamp.clear:
         lamps.append(str(record.clear_lamp))
 
-    if record.combo_lamp != ComboType.NONE:
+    if record.combo_lamp != ComboLamp.none:
         lamps.append(str(record.combo_lamp))
 
     if len(lamps) == 0:
@@ -210,7 +210,7 @@ class CourseViewSongsButton(discord.ui.Button):
                 chart_list: list[str] = []
 
                 for chart in track.charts:
-                    difficulty = Difficulty.from_short_form(chart.difficulty)
+                    difficulty = Difficulty(chart.difficulty)
                     displayed_difficulty = (
                         f"[{difficulty} {chart.const or chart.level}]"
                     )

@@ -1,16 +1,7 @@
-class ChuniNetException(Exception):
-    pass
+from chuni_penguin.networks.errors import NetworkError
 
 
-class InvalidTokenException(ChuniNetException):
-    pass
-
-
-class MaintenanceException(ChuniNetException):
-    pass
-
-
-class ChuniNetError(ChuniNetException):
+class ChuniNetError(NetworkError):
     GENERIC_ERROR = 100001
     LOGIN_FAILURE = 100101
     OLD_GAME_PROFILE = 100106
@@ -24,11 +15,3 @@ class ChuniNetError(ChuniNetException):
         super().__init__(f"Error code {code}: {description}")
         self.code = code
         self.description = description
-
-
-class InvalidFriendCode(ChuniNetException):
-    pass
-
-
-class AlreadyAddedAsFriend(ChuniNetException):
-    pass

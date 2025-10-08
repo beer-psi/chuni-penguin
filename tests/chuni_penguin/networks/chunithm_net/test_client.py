@@ -4,29 +4,36 @@ from datetime import timedelta
 from http.cookiejar import Cookie, LWPCookieJar
 from pathlib import Path
 from random import choices
+from types import SimpleNamespace
 
 import httpx
 import httpx_aiohttp
 import pytest
+from bs4 import BeautifulSoup
 from pytest import MonkeyPatch
 from pytest_httpx import HTTPXMock
 
-from chuni_penguin.networks.chunithm_net import (
-    KEY_SONG_ID,
-    AlreadyAddedAsFriend,
-    ChuniNet,
-    ChuniNetError,
-    ClearType,
-    ComboType,
+from chuni_penguin.networks.chunithm_net import ChuniNetError, ChunithmNet
+from chuni_penguin.networks.chunithm_net._bs4 import BS4_FEATURE
+from chuni_penguin.networks.chunithm_net.consts import _KEY_DETAILED_PARAMS_IDX
+from chuni_penguin.networks.chunithm_net.parser import parse_collection_customize
+from chuni_penguin.networks.consts import KEY_SONG_ID
+from chuni_penguin.networks.errors import (
+    AlreadyFriends,
+    AuthenticationError,
+    InvalidFriendCode,
+    MaintenanceError,
+)
+from chuni_penguin.networks.types import (
+    ClearLamp,
+    ComboLamp,
     CourseClass,
     Difficulty,
-    InvalidFriendCode,
-    InvalidTokenException,
-    MaintenanceException,
     Possession,
     Rank,
+    Rarity,
 )
-from chuni_penguin.networks.chunithm_net.consts import _KEY_DETAILED_PARAMS
+from chuni_penguin.networks.types.typeddict import TypePairedDict
 
 BASE_DIR = Path(__file__).parent
 
@@ -37,7 +44,7 @@ def clal():
 
 
 @pytest.fixture
-def jar(clal: str, token: str) -> LWPCookieJar:
+def jar(clal: str, token: str) -> str:
     clal_cookie = Cookie(
         version=0,
         name="clal",
@@ -82,7 +89,8 @@ def jar(clal: str, token: str) -> LWPCookieJar:
     jar = LWPCookieJar()
     jar.set_cookie(clal_cookie)
     jar.set_cookie(token_cookie)
-    return jar
+
+    return f"#LWP-Cookies-2.0\n{jar.as_lwp_str()}"
 
 
 @pytest.fixture
@@ -112,7 +120,7 @@ def patch_aiohttp_transport(monkeypatch: MonkeyPatch, httpx_mock: HTTPXMock):
 @pytest.mark.asyncio
 async def test_client_throws_chuninet_errors(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
 ):
     httpx_mock.add_response(
         method="GET",
@@ -131,12 +139,12 @@ async def test_client_throws_chuninet_errors(
         )
 
     with pytest.raises(ChuniNetError, match=r"Error code 100001: An error coccured."):
-        async with ChuniNet(jar) as client:
-            await client.authenticate()
+        async with ChunithmNet(jar) as client:
+            await client.get_minimal_profile()
 
 
 @pytest.mark.asyncio
-async def test_client_throws_token_errors(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+async def test_client_throws_token_errors(httpx_mock: HTTPXMock, jar: str):
     httpx_mock.add_response(
         method="GET",
         url="https://chunithm-net-eng.com/mobile/home/",
@@ -158,15 +166,13 @@ async def test_client_throws_token_errors(httpx_mock: HTTPXMock, jar: LWPCookieJ
         status_code=200,
     )
 
-    with pytest.raises(InvalidTokenException):
-        async with ChuniNet(jar) as client:
-            await client.authenticate()
+    with pytest.raises(AuthenticationError):
+        async with ChunithmNet(jar) as client:
+            await client.get_minimal_profile()
 
 
 @pytest.mark.asyncio
-async def test_client_authenticates(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, clal: str
-):
+async def test_client_authenticates(httpx_mock: HTTPXMock, jar: str, clal: str):
     httpx_mock.add_response(
         method="GET",
         url="https://chunithm-net-eng.com/mobile/home/",
@@ -204,14 +210,14 @@ async def test_client_authenticates(
             headers={"Content-Type": "text/html; charset=UTF-8"},
         )
 
-    async with ChuniNet(jar) as client:
-        await client.authenticate()
+    async with ChunithmNet(jar) as client:
+        await client.get_minimal_profile()
 
 
 @pytest.mark.asyncio
 async def test_client_reauthenticates_on_error(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
     clal: str,
     user_id: str,
     token: str,
@@ -265,14 +271,14 @@ async def test_client_reauthenticates_on_error(
             headers={"Content-Type": "text/html; charset=UTF-8"},
         )
 
-    async with ChuniNet(jar) as client:
-        await client.authenticate()
+    async with ChunithmNet(jar) as client:
+        await client.get_minimal_profile()
 
 
 @pytest.mark.asyncio
 async def test_client_handles_failed_reauthentication(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
 ):
     httpx_mock.add_response(
         method="GET",
@@ -295,14 +301,14 @@ async def test_client_handles_failed_reauthentication(
         status_code=200,
     )
 
-    with pytest.raises(InvalidTokenException):
-        async with ChuniNet(jar) as client:
-            await client.authenticate()
+    with pytest.raises(AuthenticationError):
+        async with ChunithmNet(jar) as client:
+            await client.get_minimal_profile()
 
 
 @pytest.mark.asyncio
 async def test_client_authenticates_implicitly(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, clal: str, user_id: str, token: str
+    httpx_mock: HTTPXMock, jar: str, clal: str, user_id: str, token: str
 ):
     httpx_mock.add_response(
         method="GET",
@@ -360,14 +366,22 @@ async def test_client_authenticates_implicitly(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        await client.player_data()
+    with (BASE_DIR / "assets" / "collection_customise.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/collection/customise",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChunithmNet(jar) as client:
+        await client.get_profile()
 
 
 @pytest.mark.asyncio
 async def test_client_throws_when_on_maintenance(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
 ):
     httpx_mock.add_response(
         method="GET",
@@ -375,15 +389,15 @@ async def test_client_throws_when_on_maintenance(
         status_code=503,
     )
 
-    with pytest.raises(MaintenanceException):
-        async with ChuniNet(jar) as client:
-            await client.authenticate()
+    with pytest.raises(MaintenanceError):
+        async with ChunithmNet(jar) as client:
+            await client.get_minimal_profile()
 
 
 @pytest.mark.asyncio
 async def test_client_parses_homepage(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
 ):
     with (BASE_DIR / "assets" / "logged_in_homepage.html").open("rb") as f:
         httpx_mock.add_response(
@@ -393,87 +407,91 @@ async def test_client_parses_homepage(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        user_data = await client.authenticate()
+    async with ChunithmNet(jar) as client:
+        user_data = await client.get_minimal_profile()
 
-    assert user_data.possession == Possession.NONE
+    assert user_data.possession == Possession.none
 
     assert (
-        user_data.character
+        user_data.profile_picture
         == "https://chunithm-net-eng.com/mobile/img/2c20c7ac326c1a9d.png"
     )
-    assert user_data.name == "ＢｏＡｎｈＤＬＢ"  # noqa: RUF001
+    assert user_data.username == "ＢｏＡｎｈＤＬＢ"  # noqa: RUF001
 
+    assert user_data.user_avatar is not None
     assert (
-        user_data.avatar.base
+        user_data.user_avatar.base
         == "https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png"
     )
     assert (
-        user_data.avatar.back
+        user_data.user_avatar.back
         == "https://chunithm-net-eng.com/mobile/img/5a278974114ddee5.png"
     )
     assert (
-        user_data.avatar.skinfoot_r
+        user_data.user_avatar.skinfoot_r
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Skin.png"
     )
     assert (
-        user_data.avatar.skinfoot_l
+        user_data.user_avatar.skinfoot_l
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Skin.png"
     )
     assert (
-        user_data.avatar.skin
+        user_data.user_avatar.skin
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Skin.png"
     )
     assert (
-        user_data.avatar.wear
+        user_data.user_avatar.wear
         == "https://chunithm-net-eng.com/mobile/img/db379cd92224154d.png"
     )
     assert (
-        user_data.avatar.face
+        user_data.user_avatar.face
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Face.png"
     )
     assert (
-        user_data.avatar.face_cover
+        user_data.user_avatar.face_cover
         == "https://chunithm-net-eng.com/mobile/img/be8557845eead739.png"
     )
     assert (
-        user_data.avatar.head
+        user_data.user_avatar.head
         == "https://chunithm-net-eng.com/mobile/img/e037354ed1e270d5.png"
     )
     assert (
-        user_data.avatar.hand_r
+        user_data.user_avatar.hand_r
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_RightHand.png"
     )
     assert (
-        user_data.avatar.hand_l
+        user_data.user_avatar.hand_l
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_LeftHand.png"
     )
     assert (
-        user_data.avatar.item_r
+        user_data.user_avatar.item_r
         == "https://chunithm-net-eng.com/mobile/img/7beb8b81b2077bb9.png"
     )
     assert (
-        user_data.avatar.item_l
+        user_data.user_avatar.item_l
         == "https://chunithm-net-eng.com/mobile/img/7beb8b81b2077bb9.png"
     )
 
-    assert user_data.reborn == 0
-    assert user_data.lv == 11
+    assert user_data.reincarnation_stars == 0
+    assert user_data.level == 11
 
-    assert user_data.last_play_date.year == 2023
-    assert user_data.last_play_date.month == 8
-    assert user_data.last_play_date.day == 4
-    assert user_data.last_play_date.hour == 18
-    assert user_data.last_play_date.minute == 34
-    assert user_data.last_play_date.tzinfo is not None
-    assert user_data.last_play_date.tzinfo.utcoffset(
-        user_data.last_play_date
-    ) == timedelta(seconds=32400)
+    assert user_data.last_played is not None
+    assert user_data.last_played.year == 2023
+    assert user_data.last_played.month == 8
+    assert user_data.last_played.day == 4
+    assert user_data.last_played.hour == 18
+    assert user_data.last_played.minute == 34
+    assert user_data.last_played.tzinfo is not None
+    assert user_data.last_played.tzinfo.utcoffset(user_data.last_played) == timedelta(
+        seconds=32400
+    )
 
-    assert user_data.overpower.value == pytest.approx(4878.18)
-    assert user_data.overpower.progress == pytest.approx(0.0568)
+    assert user_data.over_power is not None
+    assert user_data.over_power.value == pytest.approx(4878.18)
+    assert user_data.over_power.percentage == pytest.approx(5.68)
 
-    assert user_data.rating == pytest.approx(15.10)
+    assert user_data.rating_systems[0].name == "Rating"
+    assert user_data.rating_systems[0].value == pytest.approx(15.10)
 
     assert user_data.emblem is None
     assert user_data.medal is None
@@ -482,7 +500,7 @@ async def test_client_parses_homepage(
 @pytest.mark.asyncio
 async def test_client_parses_playerdata(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
 ):
     with (BASE_DIR / "assets" / "player_data.html").open("rb") as f:
         httpx_mock.add_response(
@@ -492,97 +510,109 @@ async def test_client_parses_playerdata(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        user_data = await client.player_data()
+    with (BASE_DIR / "assets" / "collection_customise.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/collection/customise",
+            status_code=200,
+            content=f.read(),
+        )
 
-    assert user_data.possession == Possession.NONE
+    async with ChunithmNet(jar) as client:
+        user_data = await client.get_profile()
+
+    assert user_data.possession == Possession.none
 
     assert user_data.team is not None
     assert user_data.team.name == "ＣＨＵＮＩＴＨＭ　Ｆｌｅｘｉｂｌｅ"  # noqa: RUF001
     assert (
-        user_data.character
+        user_data.profile_picture
         == "https://chunithm-net-eng.com/mobile/img/2c20c7ac326c1a9d.png"
     )
-    assert user_data.name == "ＢｏＡｎｈＤＬＢ"  # noqa: RUF001
+    assert user_data.username == "ＢｏＡｎｈＤＬＢ"  # noqa: RUF001
 
     assert len(user_data.titles) == 2
     assert user_data.titles[0].content == "ネコぱら"
-    assert user_data.titles[0].rarity == "silver"
+    assert user_data.titles[0].rarity == Rarity.silver
     assert user_data.titles[1].content == "SPIRIT of PARADISE LOST"
-    assert user_data.titles[1].rarity == "version1"
+    assert user_data.titles[1].rarity == Rarity.version1
 
+    assert user_data.user_avatar is not None
     assert (
-        user_data.avatar.base
+        user_data.user_avatar.base
         == "https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png"
     )
     assert (
-        user_data.avatar.back
+        user_data.user_avatar.back
         == "https://chunithm-net-eng.com/mobile/img/5a278974114ddee5.png"
     )
     assert (
-        user_data.avatar.skinfoot_r
+        user_data.user_avatar.skinfoot_r
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Skin.png"
     )
     assert (
-        user_data.avatar.skinfoot_l
+        user_data.user_avatar.skinfoot_l
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Skin.png"
     )
     assert (
-        user_data.avatar.skin
+        user_data.user_avatar.skin
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Skin.png"
     )
     assert (
-        user_data.avatar.wear
+        user_data.user_avatar.wear
         == "https://chunithm-net-eng.com/mobile/img/db379cd92224154d.png"
     )
     assert (
-        user_data.avatar.face
+        user_data.user_avatar.face
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_Face.png"
     )
     assert (
-        user_data.avatar.face_cover
+        user_data.user_avatar.face_cover
         == "https://chunithm-net-eng.com/mobile/img/be8557845eead739.png"
     )
     assert (
-        user_data.avatar.head
+        user_data.user_avatar.head
         == "https://chunithm-net-eng.com/mobile/img/e037354ed1e270d5.png"
     )
     assert (
-        user_data.avatar.hand_r
+        user_data.user_avatar.hand_r
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_RightHand.png"
     )
     assert (
-        user_data.avatar.hand_l
+        user_data.user_avatar.hand_l
         == "https://chunithm-net-eng.com/mobile/images/avatar/CHU_UI_Avatar_Tex_LeftHand.png"
     )
     assert (
-        user_data.avatar.item_r
+        user_data.user_avatar.item_r
         == "https://chunithm-net-eng.com/mobile/img/7beb8b81b2077bb9.png"
     )
     assert (
-        user_data.avatar.item_l
+        user_data.user_avatar.item_l
         == "https://chunithm-net-eng.com/mobile/img/7beb8b81b2077bb9.png"
     )
 
-    assert user_data.reborn == 0
-    assert user_data.lv == 11
+    assert user_data.reincarnation_stars == 0
+    assert user_data.level == 11
 
-    assert user_data.last_play_date.year == 2023
-    assert user_data.last_play_date.month == 8
-    assert user_data.last_play_date.day == 4
-    assert user_data.last_play_date.hour == 18
-    assert user_data.last_play_date.minute == 34
-    assert user_data.last_play_date.tzinfo is not None
-    assert user_data.last_play_date.tzinfo.utcoffset(
-        user_data.last_play_date
-    ) == timedelta(seconds=32400)
+    assert user_data.last_played is not None
+    assert user_data.last_played.year == 2023
+    assert user_data.last_played.month == 8
+    assert user_data.last_played.day == 4
+    assert user_data.last_played.hour == 18
+    assert user_data.last_played.minute == 34
+    assert user_data.last_played.tzinfo is not None
+    assert user_data.last_played.tzinfo.utcoffset(user_data.last_played) == timedelta(
+        seconds=32400
+    )
 
-    assert user_data.playcount == 70
+    assert user_data.total_credits == 70
 
-    assert user_data.overpower.value == pytest.approx(4878.18)
-    assert user_data.overpower.progress == pytest.approx(0.0568)
+    assert user_data.over_power is not None
+    assert user_data.over_power.value == pytest.approx(4878.18)
+    assert user_data.over_power.percentage == pytest.approx(5.68)
 
-    assert user_data.rating == pytest.approx(15.10)
+    assert user_data.rating_systems[0].name == "Rating"
+    assert user_data.rating_systems[0].value == pytest.approx(15.10)
 
     assert user_data.currency is not None
     assert user_data.currency.owned == 133500
@@ -597,7 +627,7 @@ async def test_client_parses_playerdata(
 @pytest.mark.asyncio
 async def test_client_parses_playlog(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
 ):
     with (BASE_DIR / "assets" / "playlog.html").open("rb") as f:
         httpx_mock.add_response(
@@ -607,45 +637,47 @@ async def test_client_parses_playlog(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        records = await client.recent_record()
+    async with ChunithmNet(jar) as client:
+        records = await client.get_recent_scores()
 
     assert len(records) == 50
 
     record = records[0]
 
-    assert record.extras.get(_KEY_DETAILED_PARAMS) is not None
+    assert record.extras.get(_KEY_DETAILED_PARAMS_IDX) is not None
 
     assert record.title == "Air"
-    assert record.difficulty == Difficulty.MASTER
+    assert record.difficulty == Difficulty.master
     assert record.score == 950592
 
-    assert record.rank == Rank.AAA
-    assert record.clear_lamp == ClearType.FAILED
-    assert record.combo_lamp == ComboType.NONE
+    assert record.rank == Rank.aaa
+    assert record.clear_lamp == ClearLamp.failed
+    assert record.combo_lamp == ComboLamp.none
 
     assert (
-        record.jacket == "https://chunithm-net-eng.com/mobile/img/db15d5b7aefaa672.jpg"
+        record.jacket_url
+        == "https://chunithm-net-eng.com/mobile/img/db15d5b7aefaa672.jpg"
     )
 
-    assert record.play_count is None
+    assert record.track_no == 4
 
-    assert record.track == 4
+    assert record.achieved_at is not None
+    assert record.achieved_at.year == 2023
+    assert record.achieved_at.month == 8
+    assert record.achieved_at.day == 4
+    assert record.achieved_at.hour == 18
+    assert record.achieved_at.minute == 33
+    assert record.achieved_at.tzinfo is not None
+    assert record.achieved_at.tzinfo.utcoffset(record.achieved_at) == timedelta(
+        seconds=32400
+    )
 
-    assert record.date.year == 2023
-    assert record.date.month == 8
-    assert record.date.day == 4
-    assert record.date.hour == 18
-    assert record.date.minute == 33
-    assert record.date.tzinfo is not None
-    assert record.date.tzinfo.utcoffset(record.date) == timedelta(seconds=32400)
-
-    assert record.new_record is True
+    assert record.is_new_record is True
 
 
 @pytest.mark.asyncio
 async def test_client_parses_detailed_playlog(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
+    httpx_mock: HTTPXMock, jar: str, token: str
 ):
     httpx_mock.add_response(
         method="POST",
@@ -666,61 +698,68 @@ async def test_client_parses_detailed_playlog(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        record = await client.detailed_recent_record(40)
+    dummy_score = SimpleNamespace()
+    dummy_score.extras = TypePairedDict()
+    dummy_score.extras[_KEY_DETAILED_PARAMS_IDX] = 40
+
+    async with ChunithmNet(jar) as client:
+        record = await client.get_detailed_recent_score(dummy_score)  # pyright: ignore[reportArgumentType]
 
     assert record.extras.get(KEY_SONG_ID) == 317
 
     assert record.title == "Air"
-    assert record.difficulty == Difficulty.MASTER
+    assert record.difficulty == Difficulty.master
     assert record.score == 950592
 
-    assert record.rank == Rank.AAA
-    assert record.clear_lamp == ClearType.FAILED
-    assert record.combo_lamp == ComboType.NONE
+    assert record.rank == Rank.aaa
+    assert record.clear_lamp == ClearLamp.failed
+    assert record.combo_lamp == ComboLamp.none
 
     assert (
-        record.jacket == "https://chunithm-net-eng.com/mobile/img/db15d5b7aefaa672.jpg"
+        record.jacket_url
+        == "https://chunithm-net-eng.com/mobile/img/db15d5b7aefaa672.jpg"
     )
 
-    assert record.play_count is None
+    assert record.track_no == 4
 
-    assert record.track == 4
+    assert record.achieved_at is not None
+    assert record.achieved_at.year == 2023
+    assert record.achieved_at.month == 8
+    assert record.achieved_at.day == 4
+    assert record.achieved_at.hour == 18
+    assert record.achieved_at.minute == 33
+    assert record.achieved_at.tzinfo is not None
+    assert record.achieved_at.tzinfo.utcoffset(record.achieved_at) == timedelta(
+        seconds=32400
+    )
 
-    assert record.date.year == 2023
-    assert record.date.month == 8
-    assert record.date.day == 4
-    assert record.date.hour == 18
-    assert record.date.minute == 33
-    assert record.date.tzinfo is not None
-    assert record.date.tzinfo.utcoffset(record.date) == timedelta(seconds=32400)
-
-    assert record.new_record is True
+    assert record.is_new_record is True
 
     assert record.character == "光"
 
+    assert record.skill is not None
     assert record.skill.name == "キャンペーンブースト"
     assert record.skill.grade == 1
     assert record.skill_result == 0
 
     assert record.max_combo == 292
 
-    assert record.judgements.jcrit == 1430
+    assert record.judgements is not None
+    assert record.judgements.justice_critical == 1430
     assert record.judgements.justice == 282
     assert record.judgements.attack == 76
     assert record.judgements.miss == 68
 
-    assert record.note_type.tap == pytest.approx(0.9344)
-    assert record.note_type.hold == pytest.approx(0.9911)
-    assert record.note_type.slide == pytest.approx(0.9821)
-    assert record.note_type.air == pytest.approx(0.9873)
-    assert record.note_type.flick == pytest.approx(0.9957)
+    assert record.note_percentage is not None
+    assert record.note_percentage.tap == pytest.approx(93.44)
+    assert record.note_percentage.hold == pytest.approx(99.11)
+    assert record.note_percentage.slide == pytest.approx(98.21)
+    assert record.note_percentage.air == pytest.approx(98.73)
+    assert record.note_percentage.flick == pytest.approx(99.57)
 
 
 @pytest.mark.asyncio
-async def test_client_parses_music_record(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
-):
+async def test_client_parses_music_record(httpx_mock: HTTPXMock, jar: str, token: str):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/record/musicGenre/sendMusicDetail/",
@@ -738,8 +777,8 @@ async def test_client_parses_music_record(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        records = await client.music_record(428)
+    async with ChunithmNet(jar) as client:
+        records = await client.get_personal_bests_on_song(428)
 
     assert len(records) == 2
 
@@ -749,23 +788,23 @@ async def test_client_parses_music_record(
 
     assert records[0].title == records[1].title == "Aleph-0"
 
-    assert records[0].difficulty == Difficulty.EXPERT
-    assert records[1].difficulty == Difficulty.MASTER
+    assert records[0].difficulty == Difficulty.expert
+    assert records[1].difficulty == Difficulty.master
 
     assert records[0].score == 1005037
     assert records[1].score == 988818
 
-    assert records[0].rank == Rank.SSp
-    assert records[1].rank == Rank.S
+    assert records[0].rank == Rank.ssp
+    assert records[1].rank == Rank.s
 
-    assert records[0].clear_lamp == ClearType.CLEAR
-    assert records[1].clear_lamp == ClearType.CLEAR
-    assert records[0].combo_lamp == ComboType.NONE
-    assert records[1].combo_lamp == ComboType.NONE
+    assert records[0].clear_lamp == ClearLamp.clear
+    assert records[1].clear_lamp == ClearLamp.clear
+    assert records[0].combo_lamp == ComboLamp.none
+    assert records[1].combo_lamp == ComboLamp.none
 
     assert (
-        records[0].jacket
-        == records[1].jacket
+        records[0].jacket_url
+        == records[1].jacket_url
         == "https://chunithm-net-eng.com/mobile/img/986a1c6047f3033e.jpg"
     )
 
@@ -774,7 +813,7 @@ async def test_client_parses_music_record(
 
 @pytest.mark.asyncio
 async def test_clients_parses_we_music_record(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
+    httpx_mock: HTTPXMock, jar: str, token: str
 ):
     httpx_mock.add_response(
         method="POST",
@@ -795,8 +834,8 @@ async def test_clients_parses_we_music_record(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        records = await client.music_record(8218)
+    async with ChunithmNet(jar) as client:
+        records = await client.get_personal_bests_on_song(8218)
 
     assert len(records) == 1
 
@@ -805,18 +844,19 @@ async def test_clients_parses_we_music_record(
 
     assert record.title == "BLUE ZONE"
 
-    assert record.difficulty == Difficulty.WORLDS_END
+    assert record.difficulty == Difficulty.worlds_end
 
     assert record.score == 953506
 
-    assert record.rank == Rank.AAA
+    assert record.rank == Rank.aaa
 
-    assert record.clear_lamp == ClearType.CLEAR
+    assert record.clear_lamp == ClearLamp.clear
 
-    assert record.combo_lamp == ComboType.NONE
+    assert record.combo_lamp == ComboLamp.none
 
     assert (
-        record.jacket == "https://chunithm-net-eng.com/mobile/img/2640e526c59188fc.jpg"
+        record.jacket_url
+        == "https://chunithm-net-eng.com/mobile/img/2640e526c59188fc.jpg"
     )
 
     assert record.play_count == 1
@@ -825,7 +865,7 @@ async def test_clients_parses_we_music_record(
 @pytest.mark.asyncio
 async def test_client_parses_music_for_rating(
     httpx_mock: HTTPXMock,
-    jar: LWPCookieJar,
+    jar: str,
 ):
     with (BASE_DIR / "assets" / "best30.html").open("rb") as f:
         httpx_mock.add_response(
@@ -843,28 +883,28 @@ async def test_client_parses_music_for_rating(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        best30 = await client.best30()
-        new20 = await client.new20()
+    async with ChunithmNet(jar) as client:
+        best30 = await client.get_best30()
+        new20 = await client.get_new20()
 
     assert len(best30) == 30
 
     assert best30[0].extras.get(KEY_SONG_ID) == 428
     assert best30[0].title == "Aleph-0"
     assert best30[0].score == 1005037
-    assert best30[0].difficulty == Difficulty.EXPERT
+    assert best30[0].difficulty == Difficulty.expert
 
     assert len(new20) == 10
 
     assert new20[0].extras.get(KEY_SONG_ID) == 2340
     assert new20[0].title == "To：Be Continued"  # noqa: RUF001
     assert new20[0].score == 1000449
-    assert new20[0].difficulty == Difficulty.EXPERT
+    assert new20[0].difficulty == Difficulty.expert
 
 
 @pytest.mark.asyncio
 async def test_client_parses_music_record_by_folder(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
+    httpx_mock: HTTPXMock, jar: str, token: str
 ):
     with (BASE_DIR / "assets" / "music_record_by_level_folder.html").open("rb") as f:
         httpx_mock.add_response(
@@ -876,8 +916,8 @@ async def test_client_parses_music_record_by_folder(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        records = await client.music_record_by_folder(level="14")
+    async with ChunithmNet(jar) as client:
+        records = await client.get_personal_bests_by_level("14")
 
     assert records is not None
     assert len(records) == 34
@@ -885,15 +925,15 @@ async def test_client_parses_music_record_by_folder(
     assert records[0].extras.get(KEY_SONG_ID) == 2184
     assert records[0].title == "ENDYMION"
     assert records[0].score == 992633
-    assert records[0].difficulty == Difficulty.EXPERT
+    assert records[0].difficulty == Difficulty.expert
 
-    assert records[0].rank == Rank.Sp
-    assert records[0].clear_lamp == ClearType.CLEAR
-    assert records[0].combo_lamp == ComboType.NONE
+    assert records[0].rank == Rank.sp
+    assert records[0].clear_lamp == ClearLamp.clear
+    assert records[0].combo_lamp == ComboLamp.none
 
 
 @pytest.mark.asyncio
-async def test_client_can_rename(httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str):
+async def test_client_can_rename(httpx_mock: HTTPXMock, jar: str, token: str):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/home/userOption/updateUserName/update/",
@@ -919,18 +959,18 @@ async def test_client_can_rename(httpx_mock: HTTPXMock, jar: LWPCookieJar, token
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        assert await client.change_player_name("new name") is True
+    async with ChunithmNet(jar) as client:
+        await client.update_username("new name")
 
         with pytest.raises(
             ValueError,
             match=r"The name may contains characters that cannot be displayed\.",
         ):
-            await client.change_player_name("後悔")
+            await client.update_username("後悔")
 
 
 @pytest.mark.asyncio
-async def test_client_logout(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+async def test_client_logout(httpx_mock: HTTPXMock, jar: str):
     httpx_mock.add_response(
         method="GET",
         url="https://chunithm-net-eng.com/mobile/home/userOption/logout/",
@@ -947,14 +987,12 @@ async def test_client_logout(httpx_mock: HTTPXMock, jar: LWPCookieJar):
         content=b"",
     )
 
-    async with ChuniNet(jar) as client:
-        assert await client.logout()
+    async with ChunithmNet(jar) as client:
+        await client.logout()
 
 
 @pytest.mark.asyncio
-async def test_client_send_friend_request(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
-):
+async def test_client_send_friend_request(httpx_mock: HTTPXMock, jar: str, token: str):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/friend/search/sendSearchUser/",
@@ -1050,10 +1088,10 @@ async def test_client_send_friend_request(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
+    async with ChunithmNet(jar) as client:
         await client.send_friend_request("1234567890123")
 
-        with pytest.raises(AlreadyAddedAsFriend):
+        with pytest.raises(AlreadyFriends):
             await client.send_friend_request("1234567890123")
 
         with pytest.raises(InvalidFriendCode):
@@ -1061,7 +1099,7 @@ async def test_client_send_friend_request(
 
 
 @pytest.mark.asyncio
-async def test_client_course_record(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+async def test_client_course_record(httpx_mock: HTTPXMock, jar: str):
     with (BASE_DIR / "assets" / "course_list.html").open("rb") as f:
         httpx_mock.add_response(
             method="GET",
@@ -1070,40 +1108,38 @@ async def test_client_course_record(httpx_mock: HTTPXMock, jar: LWPCookieJar):
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        courses = await client.course_record()
+    async with ChunithmNet(jar) as client:
+        courses = await client.get_course_records()
 
         assert len(courses) == 7
 
         assert courses[0].id == 40015
-        assert courses[0].cls == CourseClass.IV
+        assert courses[0].cls == CourseClass.iv
         assert courses[0].name == "TAP TAP PARADISE Set"
         assert courses[0].score == 3_015_447
-        assert courses[0].rank == Rank.SSp
-        assert courses[0].clear_lamp == ClearType.CLEAR
-        assert courses[0].combo_lamp == ComboType.NONE
+        assert courses[0].rank == Rank.ssp
+        assert courses[0].clear_lamp == ClearLamp.clear
+        assert courses[0].combo_lamp == ComboLamp.none
 
         assert courses[4].id == 40021
-        assert courses[4].cls == CourseClass.V
+        assert courses[4].cls == CourseClass.v
         assert courses[4].name == "CRITICAL EX CHALLENGE"
         assert courses[4].score == 3_029_908
-        assert courses[4].rank == Rank.SSSp
-        assert courses[4].clear_lamp == ClearType.CLEAR
-        assert courses[4].combo_lamp == ComboType.ALL_JUSTICE
+        assert courses[4].rank == Rank.sssp
+        assert courses[4].clear_lamp == ClearLamp.clear
+        assert courses[4].combo_lamp == ComboLamp.all_justice
 
         assert courses[6].id == 40025
-        assert courses[6].cls == CourseClass.INFINITE
+        assert courses[6].cls == CourseClass.infinite
         assert courses[6].name == "INNOVATION Set"
         assert courses[6].score == 0
-        assert courses[6].rank == Rank.D
-        assert courses[6].clear_lamp == ClearType.FAILED
-        assert courses[6].combo_lamp == ComboType.NONE
+        assert courses[6].rank == Rank.d
+        assert courses[6].clear_lamp == ClearLamp.failed
+        assert courses[6].combo_lamp == ComboLamp.none
 
 
 @pytest.mark.asyncio
-async def test_client_music_leaderboard(
-    httpx_mock: HTTPXMock, jar: LWPCookieJar, token: str
-):
+async def test_client_music_leaderboard(httpx_mock: HTTPXMock, jar: str, token: str):
     httpx_mock.add_response(
         method="POST",
         url="https://chunithm-net-eng.com/mobile/ranking/sendRankingDetail/",
@@ -1142,8 +1178,8 @@ async def test_client_music_leaderboard(
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        leaderboard = await client.music_leaderboard(2768, Difficulty.MASTER)
+    async with ChunithmNet(jar) as client:
+        leaderboard = await client.get_chart_leaderboard(2768, Difficulty.master)
         assert leaderboard.updated_at == datetime.datetime(
             2025, 10, 4, 6, 15, tzinfo=datetime.UTC
         )
@@ -1152,59 +1188,52 @@ async def test_client_music_leaderboard(
         assert leaderboard.ranking[0].score == 1_010_000
         assert leaderboard.ranking[0].player_name == "ＩＮＦД"
         assert leaderboard.ranking[0].ajc_count == 1
-        assert leaderboard.ranking[0].last_raised == datetime.datetime(
+        assert leaderboard.ranking[0].achieved_at == datetime.datetime(
             2024, 11, 28, 11, 41, tzinfo=datetime.UTC
         )
 
-        leaderboard = await client.music_leaderboard(8141, Difficulty.WORLDS_END)
+        leaderboard = await client.get_chart_leaderboard(8141, Difficulty.worlds_end)
         assert leaderboard.updated_at == datetime.datetime(
             2025, 10, 4, 6, 19, tzinfo=datetime.UTC
         )
         assert len(leaderboard.ranking) == 100
 
 
-@pytest.mark.asyncio
-async def test_client_collections(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+def test_client_collections():
     with (BASE_DIR / "assets" / "collection_customise.html").open("rb") as f:
-        httpx_mock.add_response(
-            method="GET",
-            url="https://chunithm-net-eng.com/mobile/collection/customise",
-            status_code=200,
-            content=f.read(),
-        )
+        soup = BeautifulSoup(f.read(), BS4_FEATURE)
 
-    async with ChuniNet(jar) as client:
-        collections = await client.current_collections()
+    collections = parse_collection_customize(soup)
 
-        assert len(collections.titles) == 2
+    assert len(collections.titles) == 2
 
-        assert (
-            collections.titles[0].content
-            == "Phosphoribosylaminoimidazolesuccinocarboxamide"
-        )
-        assert collections.titles[0].rarity == "platina"
+    assert (
+        collections.titles[0].content
+        == "Phosphoribosylaminoimidazolesuccinocarboxamide"
+    )
+    assert collections.titles[0].rarity == Rarity.platinum
 
-        assert collections.titles[1].content == "Should be burning in hell."
-        assert collections.titles[1].rarity == "silver"
+    assert collections.titles[1].content == "Should be burning in hell."
+    assert collections.titles[1].rarity == Rarity.silver
 
-        assert (
-            collections.nameplate
-            == "https://chunithm-net-eng.com/mobile/img/14c0bda1b8026041.png"
-        )
+    assert (
+        collections.nameplate
+        == "https://chunithm-net-eng.com/mobile/img/14c0bda1b8026041.png"
+    )
 
-        assert (
-            collections.map_icon
-            == "https://chunithm-net-eng.com/mobile/img/60df318292eae46b.png"
-        )
+    assert (
+        collections.map_icon
+        == "https://chunithm-net-eng.com/mobile/img/60df318292eae46b.png"
+    )
 
-        assert (
-            collections.system_voice
-            == "https://chunithm-net-eng.com/mobile/img/b54ab119af308f73.png"
-        )
+    assert (
+        collections.system_voice
+        == "https://chunithm-net-eng.com/mobile/img/b54ab119af308f73.png"
+    )
 
 
 @pytest.mark.asyncio
-async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: LWPCookieJar):
+async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: str):
     with (BASE_DIR / "assets" / "login_bonus.html").open("rb") as f:
         httpx_mock.add_response(
             method="GET",
@@ -1213,8 +1242,8 @@ async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: LWPCookieJar):
             content=f.read(),
         )
 
-    async with ChuniNet(jar) as client:
-        login_bonus = await client.login_bonus()
+    async with ChunithmNet(jar) as client:
+        login_bonus = await client.get_login_bonus_progress()
 
         assert login_bonus.monthly_login_bonus.name == "Oct 2025 Login Bonus"
         assert login_bonus.monthly_login_bonus.days_logged_in == 0

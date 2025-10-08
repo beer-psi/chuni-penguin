@@ -1,13 +1,10 @@
 import asyncio
 import contextlib
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from io import BytesIO
 from typing import TYPE_CHECKING, Literal, override
 
 import discord
-import httpx
-import magic
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -15,19 +12,17 @@ from PIL import Image
 from sqlalchemy import select
 
 from chuni_penguin import flags
-from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import MemberOrUserConverter
 from chuni_penguin.database import UserConfig
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
-from chuni_penguin.networks.chunithm_net import ChuniNetError, SkillClass
+from chuni_penguin.networks.chunithm_net import ChuniNetError
 from chuni_penguin.ui import (
     LoginBonusView,
     PersistentHideFriendCodeButton,
     PersistentSendFriendRequestButton,
     ProfileView,
 )
-from chuni_penguin.utils import json_loads
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -134,35 +129,6 @@ def render_avatar(items: dict[str, bytes]) -> BytesIO:
     return buffer
 
 
-async def guess_mime_type(response: httpx.Response) -> str:
-    data = BytesIO()
-
-    async for chunk in response.aiter_bytes():
-        if data.tell() == 0:
-            # some simple and common formats can be checked first without
-            # calling into libmagic
-            fourcc = chunk[:4]
-
-            if fourcc == b"GIF8":
-                return "image/gif"
-
-            if fourcc == b"\x89PNG":
-                return "image/png"
-
-            if fourcc[:3] == b"\xff\xd8\xff" and fourcc[3] in (0xDB, 0xE0, 0xE1, 0xEE):
-                return "image/jpeg"
-
-            if fourcc == b"RIFF" and fourcc[8:12] == b"WEBP":
-                return "image/webp"
-
-        data.write(chunk)
-
-        if data.tell() >= 2048:
-            break
-
-    return magic.from_buffer(data.getvalue(), mime=True)
-
-
 class ProfileCog(commands.Cog, name="Profile"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
@@ -178,17 +144,25 @@ class ProfileCog(commands.Cog, name="Profile"):
     @logged_prefix_command
     async def avatar(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         *,
         user: discord.User | discord.Member = commands.Author,
     ):
         """View your CHUNITHM avatar."""
         async with (
             ctx.typing(),
-            self.utils.chuninet(ctx, user.id) as client,
+            ctx.bot.chunithm_networks.network(
+                ctx, user.id, chunithm_net=True
+            ) as client,
         ):
-            basic_data = await client.authenticate()
-            avatar_urls = basic_data.avatar
+            if not client.SUPPORTS_USER_AVATAR_IN_PROFILE:
+                msg = f"Network {client.NAME} does not support penguin avatars."
+                raise commands.CommandError(msg)
+
+            basic_data = await client.get_minimal_profile()
+            avatar_urls = basic_data.user_avatar
+
+            assert avatar_urls is not None
 
             async def task(url):
                 resp = await self.bot.caching_http_client.get(url)
@@ -211,183 +185,10 @@ class ProfileCog(commands.Cog, name="Profile"):
 
         buffer = await asyncio.to_thread(render_avatar, items)
         await ctx.reply(
-            content=f"Avatar of {basic_data.name}",
+            content=f"Avatar of {basic_data.username}",
             file=discord.File(buffer, filename="avatar.png"),
             mention_author=False,
         )
-
-    async def _kamaitachi_profile_card(self, ctx: Context, user_id: int):
-        async with self.utils.kamaitachi_client(ctx, user_id) as client:
-            resp = await client.get("https://kamai.tachi.ac/api/v1/users/me")
-            data = json_loads(resp.content)
-
-            if not data["success"]:
-                msg = f"Could not get Kamaitachi profile: {data['description']}"
-                raise commands.CommandError(msg)
-
-            user_id = data["body"]["id"]
-            username = data["body"]["username"]
-            custom_banner_location = data["body"]["customBannerLocation"]
-            custom_pfp_location = data["body"]["customPfpLocation"]
-
-            # Discord really doesn't like image files without extensions, hence
-            # this stupid hack.
-            if custom_banner_location is not None:
-                async with client.stream_banner(
-                    user_id, custom_banner_location
-                ) as response:
-                    mime = await guess_mime_type(response)
-
-                    if mime.startswith("image/"):
-                        custom_banner_location += f".{mime[6:]}"
-
-            if custom_pfp_location is not None:
-                async with client.stream_pfp(user_id, custom_pfp_location) as response:
-                    mime = await guess_mime_type(response)
-
-                    if mime.startswith("image/"):
-                        custom_pfp_location += f".{mime[6:]}"
-
-            resp = await client.get(
-                "https://kamai.tachi.ac/api/v1/users/me/games/chunithm/Single"
-            )
-            data = json_loads(resp.content)
-
-            if not data["success"]:
-                msg = f"Could not get Kamaitachi game stats: {data['description']}"
-                raise commands.CommandError(msg)
-
-            stats = data["body"]
-
-        embed = discord.Embed(
-            title=username,
-            color=0xCA1961,
-            url=f"https://kamai.tachi.ac/u/{username}/games/chunithm/Single",
-        )
-
-        if (
-            config.web.enable
-            and config.web.base_url is not None
-            and "localhost" not in config.web.base_url
-            and "127.0.0.1" not in config.web.base_url
-        ):
-            if custom_banner_location is not None:
-                embed.set_image(
-                    url=f"{config.web.base_url}/kamaitachi/users/{user_id}/banner/{custom_banner_location}"
-                )
-            if custom_pfp_location is not None:
-                embed.set_thumbnail(
-                    url=f"{config.web.base_url}/kamaitachi/users/{user_id}/pfp/{custom_pfp_location}"
-                )
-
-        description = ""
-
-        if "dan" in stats["gameStats"]["classes"]:
-            medal = getattr(
-                SkillClass, stats["gameStats"]["classes"]["dan"].replace("DAN_", "")
-            )
-            description = f"Class {medal}"
-
-            if "emblem" in stats["gameStats"]["classes"]:
-                emblem = getattr(
-                    SkillClass,
-                    stats["gameStats"]["classes"]["emblem"].replace("DAN_", ""),
-                )
-                description += f", cleared all of class {emblem}"
-
-            description += "."
-
-        description = (
-            f"{description}\n"
-            f"▸ **NaiveRating**: {round(stats['gameStats']['ratings']['naiveRating'] * 100) / 100:.2f}\n"
-            f"▸ **Scores**: {stats['totalScores']}\n"
-            f"▸ **Session Playtime**: {stats['playtime'] // (60 * 60 * 1000)} hours\n"
-        )
-
-        if (
-            stats["mostRecentScore"] is not None
-            and stats["mostRecentScore"]["timeAchieved"] is not None
-        ):
-            ts = datetime.fromtimestamp(
-                stats["mostRecentScore"]["timeAchieved"] / 1000, tz=UTC
-            )
-            last_played = f"<t:{int(ts.timestamp())}:f>"
-            description += f"▸ **Last played**: {last_played}\n"
-
-        embed.description = description
-
-        return embed
-
-    async def _chunithm_net_profile_card(self, ctx: Context, user_id: int):
-        async with self.utils.chuninet(ctx, user_id) as client:
-            player_data = await client.player_data()
-            collections = await client.current_collections()
-
-            optional_data: list[str] = []
-
-            if player_data.team is not None:
-                optional_data.append(f"Team {player_data.team.name}")
-            if player_data.medal is not None:
-                content = f"Class {player_data.medal}"
-                if player_data.emblem is not None:
-                    content += f", cleared all of class {player_data.emblem}"
-                content += "."
-                optional_data.append(content)
-            optional_data_joined = "\n".join(optional_data)
-
-            level = str(player_data.lv)
-
-            if player_data.reborn > 0:
-                level = f"{player_data.reborn}⭐ + {level}"
-
-            titles = "\n".join([f"**{t.content}**" for t in player_data.titles])
-
-            description = (
-                f"{titles}\n"
-                f"### {player_data.name}\n"
-                f"{optional_data_joined}\n"
-                f"▸ **Level**: {level}\n"
-                f"▸ **Rating**: {player_data.rating:.2f}\n"
-                f"▸ **OVER POWER**: {player_data.overpower.value:.2f} ({player_data.overpower.progress * 100:.2f}%)\n"
-                f"▸ **Plays**: {player_data.playcount}\n"
-            )
-
-            if player_data.last_play_date:
-                description += f"▸ **Last played**: <t:{int(player_data.last_play_date.timestamp())}:f>\n"
-
-            embed = discord.Embed(
-                description=description,
-                color=player_data.possession.color(),
-            )
-            embed.set_image(url=collections.nameplate)
-
-            if player_data.character_frame is None:
-                files = []
-                embed = embed.set_thumbnail(url=player_data.character)
-            elif player_data.character is not None:
-                character_resp, charaframe_resp = await asyncio.gather(
-                    self.bot.caching_http_client.get(player_data.character),
-                    self.bot.caching_http_client.get(player_data.character_frame),
-                )
-
-                character = Image.open(BytesIO(character_resp.content))
-                charaframe = Image.open(BytesIO(charaframe_resp.content))
-
-                character = character.resize((87, 87), Image.Resampling.LANCZOS)
-                charaframe = charaframe.resize((98, 98), Image.Resampling.LANCZOS)
-
-                charaframe.paste(character, (6, 6), character)
-
-                avatar = BytesIO()
-                charaframe.save(avatar, "PNG", optimize=True)
-                avatar.seek(0)
-
-                files = [discord.File(avatar, filename="avatar.png")]
-                embed = embed.set_thumbnail(url="attachment://avatar.png")
-            else:
-                files = []
-
-            return player_data, embed, files
 
     async def _chunithm_inner(
         self,
@@ -398,29 +199,20 @@ class ProfileCog(commands.Cog, name="Profile"):
     ):
         target_id = ctx.author.id if user is None else user.id
 
-        kamaitachi = (
-            await self.utils.choose_preferred_network(
+        async with (
+            ctx.typing(),
+            self.bot.chunithm_networks.network(
                 ctx, target_id, kamaitachi=kamaitachi
-            )
-            == "kamaitachi"
-        )
+            ) as client,
+        ):
+            if not client.SUPPORTS_PROFILE:
+                msg = f"The network {client.NAME} does not support player profiles."
+                raise commands.CommandError(msg)
 
-        async with ctx.typing():
-            if kamaitachi:
-                embed = await self._kamaitachi_profile_card(ctx, target_id)
+            profile = await client.get_profile()
+            view = ProfileView(ctx, profile, client.ACCENT_COLOR)
 
-                await ctx.reply(embed=embed, mention_author=False)
-            else:
-                profile_data, embed, files = await self._chunithm_net_profile_card(
-                    ctx, target_id
-                )
-                view = ProfileView(ctx, profile_data)
-                view.message = await ctx.reply(
-                    embed=embed,
-                    files=files,
-                    view=view if user is None else None,  # pyright: ignore[reportArgumentType]
-                    mention_author=False,
-                )
+        await view.start()
 
     @flags.command(name="chunithm", aliases=["chuni", "profile"])
     @flags.argument("-k", "--kamaitachi", action="store_true")
@@ -475,9 +267,12 @@ class ProfileCog(commands.Cog, name="Profile"):
             ． ・ ： ； ？ ！ ～ ／ ＋ － × ÷ ＝ ♂ ♀ ∀ ＃ ＆ ＊ ＠ ☆ ○ ◎ ◇ □ △ ▽ ♪ † ‡ Σ α β γ θ φ ψ ω Д ё
         """  # noqa: RUF002
 
-        async with ctx.typing(), self.utils.chuninet(ctx) as client:
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.network(ctx, chunithm_net=True) as client,
+        ):
             try:
-                await client.change_player_name(new_name)
+                await client.update_username(new_name)
                 await ctx.reply("Your username has been changed.", mention_author=False)
             except ValueError as e:
                 msg = str(e)
@@ -616,8 +411,11 @@ class ProfileCog(commands.Cog, name="Profile"):
     async def loginbonus(self, ctx: PenguinContext):
         """View your current login bonus progress."""
 
-        async with ctx.typing(), self.utils.chuninet(ctx) as client:
-            login_bonus = await client.login_bonus()
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.network(ctx, chunithm_net=True) as client,
+        ):
+            login_bonus = await client.get_login_bonus_progress()
 
         view = LoginBonusView(ctx, login_bonus)
         await view.start()

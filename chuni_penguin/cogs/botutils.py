@@ -1,17 +1,9 @@
-import contextlib
-import io
-import sys
 from dataclasses import dataclass
-from http.cookiejar import LWPCookieJar
 from typing import TYPE_CHECKING, Literal, Optional, Sequence, TypeVar
 
-import httpx
-import httpx_aiohttp
 import msgspec
-from discord import Interaction
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord.ext.commands import Context
-from discord.utils import MISSING
 from rapidfuzz import fuzz, process
 from sqlalchemy import select, update
 from sqlalchemy.orm import contains_eager, joinedload
@@ -26,7 +18,7 @@ from chuni_penguin.config import config
 from chuni_penguin.database import Alias, Cookie, Song, UserConfig
 from chuni_penguin.errors import MissingDetailedParams
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.chunithm_net import (
+from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
     KEY_LEVEL,
     KEY_OVERPOWER,
@@ -36,18 +28,14 @@ from chuni_penguin.networks.chunithm_net import (
     KEY_SONG_ID,
     KEY_SONG_VERSION,
     KEY_TOTAL_COMBO,
-    ChuniNet,
-    Genres,
-    Rank,
-    Record,
 )
-from chuni_penguin.networks.kamaitachi import KamaitachiClient
-from chuni_penguin.utils import AsyncRcContextManager, get_jacket_url
+from chuni_penguin.networks.types import Genre, Score
+from chuni_penguin.utils import get_jacket_url
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
 
-T = TypeVar("T", bound=Record)
+T = TypeVar("T", bound=Score)
 
 
 class CachedAlias:
@@ -91,61 +79,9 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         # guild_id: list of aliases
         self.alias_cache: dict[int, list[CachedAlias]] = {}
-        self.user_agents: KeiyoushiUserAgents = MISSING
-
-        # user_id: (refcount, ChuniNet)
-        self._chuni_net_sessions: dict[int, AsyncRcContextManager[ChuniNet]] = {}
 
     async def cog_load(self) -> None:
-        self._update_user_agents.start()
         await self._reload_alias_cache()
-
-    async def cog_unload(self) -> None:
-        self._update_user_agents.stop()
-
-    @tasks.loop(hours=24)
-    async def _update_user_agents(self):
-        async with httpx.AsyncClient(
-            transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
-        ) as client:
-            resp = await client.get(
-                "https://keiyoushi.github.io/user-agents/user-agents.min.json"
-            )
-
-            if resp.status_code != 200:
-                logger.warning(
-                    "could not update user agents",
-                    tag="update_user_agent_failed",
-                    status_code=resp.status_code,
-                )
-                return
-
-            try:
-                self.user_agents = msgspec.json.decode(
-                    resp.content, type=KeiyoushiUserAgents
-                )
-                logger.debug(
-                    "updated user agents",
-                    tag="update_user_agent_success",
-                    count=len(self.user_agents.desktop)
-                    + len(self.user_agents.mobile)
-                    + 1,  # for recommended UA
-                )
-            except msgspec.DecodeError as e:
-                logger.exception(
-                    "could not parse user agents",
-                    tag="update_user_agent_failed",
-                    exc_info=e,
-                )
-                return
-
-    @_update_user_agents.error
-    async def _update_user_agents_error(self, exc: BaseException):
-        logger.exception(
-            "unhandled exception updating user agents",
-            tag="update_useragent_failed",
-            exc_info=exc,
-        )
 
     async def _reload_alias_cache(self) -> None:
         async with self.bot.begin_db_session() as session:
@@ -229,7 +165,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         target_id: int | None = None,
         *,
         is_interaction: bool = False,
-    ) -> LWPCookieJar:
+    ) -> str:
         target_id = target_id or author_id
         clal = await self.fetch_cookie(target_id)
         user_config = await self.fetch_user_config(target_id)
@@ -249,7 +185,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 discord_id=id, synthesis_alt_jacket="default", privacy_mode=False
             )
 
-    async def fetch_cookie(self, id: int) -> LWPCookieJar | None:
+    async def fetch_cookie(self, id: int) -> str | None:
         async with self.bot.begin_db_session() as session:
             stmt = select(Cookie).where(Cookie.discord_id == id)
             cookie = (await session.execute(stmt)).scalar_one_or_none()
@@ -257,153 +193,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         if cookie is None or not cookie.cookie.startswith("#LWP-Cookies-2.0"):
             return None
 
-        jar = LWPCookieJar()
-        jar._really_load(  # type: ignore[reportAttributeAccessIssue]
-            io.StringIO(cookie.cookie), "?", ignore_discard=False, ignore_expires=False
-        )
-
-        return jar
-
-    @contextlib.asynccontextmanager
-    async def chuninet(self, ctx: Context | Interaction, id: int | None = None):
-        author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
-        target_id = id or author_id
-        is_interaction = isinstance(ctx, Interaction) or ctx.interaction is not None
-        user_config = await self.fetch_user_config(target_id)
-
-        if user_config.privacy_mode and author_id != target_id:
-            msg = self._get_not_logged_in_message(
-                "chuninet", author_id, target_id, is_interaction=is_interaction
-            )
-            raise commands.CommandError(msg)
-
-        if (rc := self._chuni_net_sessions.get(target_id)) and rc.refcount > 0:
-            logger.debug(
-                "using cached chunithm-net session",
-                tag="cached_chunithm_net_session",
-                user_id=target_id,
-                refcount=rc.refcount,
-            )
-
-            async with rc as session:
-                yield session
-
-            return
-
-        jar = await self.fetch_cookie(target_id)
-
-        if jar is None:
-            msg = self._get_not_logged_in_message(
-                "chuninet", author_id, target_id, is_interaction=is_interaction
-            )
-            raise commands.CommandError(msg)
-
-        session = ChuniNet(jar)
-        session.session.headers["user-agent"] = self.user_agents.desktop[
-            (target_id >> 22) % len(self.user_agents.desktop)
-        ]
-
-        async def on_exit(session):
-            async with self.bot.begin_db_session() as db_session:
-                await db_session.execute(
-                    update(Cookie)
-                    .where(Cookie.discord_id == target_id)
-                    .values(
-                        cookie=f"#LWP-Cookies-2.0\n{session.session._cookies.jar.as_lwp_str()}"  # pyright: ignore[reportAttributeAccessIssue]
-                    )
-                )
-                await db_session.commit()
-
-            del self._chuni_net_sessions[target_id]
-
-        self._chuni_net_sessions[target_id] = AsyncRcContextManager(
-            session, on_exit=[on_exit]
-        )
-
-        async with self._chuni_net_sessions[target_id] as session:
-            yield session
-
-    @contextlib.asynccontextmanager
-    async def kamaitachi_client(
-        self, ctx: Context | Interaction, id: int | None = None
-    ):
-        author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
-        target_id = id or author_id
-        is_interaction = isinstance(ctx, Interaction) or ctx.interaction is not None
-        user_config = await self.fetch_user_config(target_id)
-
-        async with self.bot.begin_db_session() as session:
-            cookie = await session.scalar(
-                select(Cookie).where(Cookie.discord_id == target_id)
-            )
-
-            if (
-                cookie is None
-                or cookie.kamaitachi_token is None
-                or (user_config.privacy_mode and author_id != target_id)
-            ):
-                msg = msg = self._get_not_logged_in_message(
-                    "kamaitachi", author_id, target_id, is_interaction=is_interaction
-                )
-                raise commands.CommandError(msg)
-
-        client = httpx.AsyncClient(
-            timeout=httpx.Timeout(60.0),
-            follow_redirects=True,
-            transport=httpx_aiohttp.AIOHTTPTransport(retries=5),
-        )
-        client.headers["Authorization"] = f"Bearer {cookie.kamaitachi_token}"
-        client.headers["User-Agent"] = (
-            f"chuni-penguin (+https://github.com/beer-psi/chuni-penguin) Python/{sys.version_info[0]}.{sys.version_info[1]} httpx/{httpx.__version__}"
-        )
-
-        async with client:
-            yield KamaitachiClient(client)
-
-    async def choose_preferred_network(
-        self,
-        ctx: Context | Interaction,
-        id: int | None = None,
-        *,
-        kamaitachi: bool = False,
-    ):
-        author_id = ctx.author.id if isinstance(ctx, Context) else ctx.user.id
-        target_id = id or author_id
-        is_interaction = isinstance(ctx, Interaction) or ctx.interaction is not None
-        user_config = await self.fetch_user_config(target_id)
-
-        async with self.bot.begin_db_session() as session:
-            stmt = select(Cookie).where(Cookie.discord_id == target_id)
-            cookie = (await session.execute(stmt)).scalar_one_or_none()
-
-            if cookie is None or (user_config.privacy_mode and author_id != target_id):
-                msg = self._get_not_logged_in_message(
-                    None, author_id, target_id, is_interaction=is_interaction
-                )
-                raise commands.CommandError(msg)
-
-            if kamaitachi:
-                if cookie.kamaitachi_token is None:
-                    msg = self._get_not_logged_in_message(
-                        "kamaitachi",
-                        author_id,
-                        target_id,
-                        is_interaction=is_interaction,
-                    )
-                    raise commands.CommandError(msg)
-
-                return "kamaitachi"
-
-            if cookie.cookie.startswith("#LWP-Cookies-2.0"):
-                return "chuninet"
-
-            if cookie.kamaitachi_token is not None:
-                return "kamaitachi"
-
-            msg = self._get_not_logged_in_message(
-                None, author_id, target_id, is_interaction=is_interaction
-            )
-            raise commands.CommandError(msg)
+        return cookie.cookie
 
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
         song_ids = set()
@@ -420,8 +210,8 @@ class UtilsCog(commands.Cog, name="Utils"):
                     record.extras[KEY_SONG_ID] = 808
 
                 song_ids.add(song_id)
-            elif record.jacket is not None:
-                jackets.add(record.jacket.split("/")[-1])
+            elif record.jacket_url is not None:
+                jackets.add(record.jacket_url.split("/")[-1])
             else:
                 raise MissingDetailedParams
 
@@ -446,8 +236,8 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             if song_id is not None:
                 song = song_lookup.get(song_id)
-            elif record.jacket is not None:
-                song = song_lookup.get(record.jacket.split("/")[-1])
+            elif record.jacket_url is not None:
+                song = song_lookup.get(record.jacket_url.split("/")[-1])
             else:
                 raise MissingDetailedParams
 
@@ -466,15 +256,14 @@ class UtilsCog(commands.Cog, name="Utils"):
             if KEY_SONG_VERSION not in record.extras:
                 record.extras[KEY_SONG_VERSION] = song.version
 
-            if record.jacket is None:
-                record.jacket = get_jacket_url(song)
+            if not record.title:
+                record.title = song.title
+
+            if record.jacket_url is None:
+                record.jacket_url = get_jacket_url(song)
 
             chart = next(
-                (
-                    c
-                    for c in song.charts
-                    if c.difficulty == record.difficulty.short_form()
-                ),
+                (c for c in song.charts if c.difficulty == record.difficulty.short()),
                 None,
             )
 
@@ -521,11 +310,8 @@ class UtilsCog(commands.Cog, name="Utils"):
             if KEY_TOTAL_COMBO not in record.extras and chart.maxcombo is not None:
                 record.extras[KEY_TOTAL_COMBO] = chart.maxcombo
 
-            if record.rank == Rank.D:
-                record.rank = Rank.from_score(record.score)
-
             if KEY_SONG_GENRE not in record.extras:
-                record.extras[KEY_SONG_GENRE] = Genres(song.chunithm_catcode)
+                record.extras[KEY_SONG_GENRE] = Genre(song.chunithm_catcode)
 
             hydrated_records.append(record)
 

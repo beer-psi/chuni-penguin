@@ -1,4 +1,5 @@
 import calendar
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, override
 
 import discord
@@ -6,10 +7,7 @@ from discord.utils import MISSING, escape_markdown
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.networks.chunithm_net import (
-    LoginBonus,
-    LoginBonusItem,
-)
+from chuni_penguin.networks.types import LoginBonus, LoginBonusItem
 
 from ._pagination import ListPageSource, PaginationView
 from .embeds import EmbedPageSource
@@ -34,7 +32,7 @@ class LoginBonusItemPaginationSource(ListPageSource[LoginBonusItem]):
 
     @override
     async def format_page(
-        self, menu: "PaginationView", page: list[LoginBonusItem]
+        self, menu: "PaginationView", page: Sequence[LoginBonusItem]
     ) -> dict[str, Any]:
         embeds: list[discord.Embed] = []
 

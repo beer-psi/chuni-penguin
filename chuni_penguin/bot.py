@@ -26,6 +26,7 @@ from .utils import HishelMsgspecSerializer
 
 if TYPE_CHECKING:
     from .cogs.botutils import UtilsCog
+    from .cogs.chunithm.networks import NetworksCog
     from .cogs.database import DatabaseCog
     from .cogs.gaming import GamingCog
     from .cogs.web import WebCog
@@ -276,6 +277,10 @@ class ChuniBot(commands.AutoShardedBot):
     @property
     def app(self):
         return cast("WebCog", self.get_cog("Web")).web_app
+
+    @property
+    def chunithm_networks(self) -> "NetworksCog":
+        return self.get_cog("NetworksCog")  # pyright: ignore[reportReturnType]
 
     async def _close_games(self):
         gaming = cast("GamingCog | None", self.get_cog("Games"))

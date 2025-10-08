@@ -46,7 +46,7 @@ def test_calculate_border(notecount: int):
 
         assert (
             round(
-                judgements.jcrit * score_per_jcrit
+                judgements.justice_critical * score_per_jcrit
                 + judgements.justice * score_per_justice
                 + judgements.attack * score_per_attack
             )

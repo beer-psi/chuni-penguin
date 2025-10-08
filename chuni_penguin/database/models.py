@@ -25,7 +25,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from chuni_penguin.networks.chunithm_net import CourseClass
+from chuni_penguin.networks.types import CourseClass
 from chuni_penguin.utils import sdvxin_link
 
 
