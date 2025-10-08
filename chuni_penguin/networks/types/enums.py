@@ -26,7 +26,7 @@ class Rarity(Enum):
 class DifficultyEnumMeta(EnumMeta):  # pyright: ignore[reportGeneralTypeIssues]
     def __call__(cls, value: str | int) -> "Difficulty":  # pyright: ignore[reportSelfClsParameterName]
         if isinstance(value, int):
-            return super().__call__(cls, value)
+            return super().__call__(value)
 
         upper = value.upper()
 
