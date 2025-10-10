@@ -909,17 +909,17 @@ class RecordsCog(commands.Cog, name="Records"):
                 jacket = jackets[0]
                 song = jacket.song
 
-            displayed_song = escape_markdown(song.title)
-
-            if song.id >= 8000 and len(song.charts) > 0:
-                displayed_song += f" [{escape_markdown(song.charts[0].level)}]"
-
             if isinstance(client, ChunithmNet):
                 song.raise_if_not_available()
 
             if isinstance(client, Kamaitachi) and song.genre == "WORLD'S END":
                 msg = "Kamaitachi does not support WORLD'S END charts."
                 raise commands.CommandError(msg)
+
+            displayed_song = escape_markdown(song.title)
+
+            if song.id >= 8000 and len(song.charts) > 0:
+                displayed_song += f" [{escape_markdown(song.charts[0].level)}]"
 
             if not client.SUPPORTS_PERSONAL_BESTS_ON_SONG:
                 msg = f"Network {client.NAME} does not support fetching scores for a specific song."
