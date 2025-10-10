@@ -53,6 +53,7 @@ from chuni_penguin.networks.consts import (
     KEY_SONG_VERSION,
 )
 from chuni_penguin.networks.errors import ChartNotFound, SongNotFound
+from chuni_penguin.networks.kamaitachi import Kamaitachi
 from chuni_penguin.networks.types import (
     ComboLamp,
     Difficulty,
@@ -790,7 +791,15 @@ class RecordsCog(commands.Cog, name="Records"):
         if config.web.serve_assets and config.web.base_url:
             url_whitelist.append(config.web.base_url)
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
+        target_id = ctx.author.id if user is None else user.id
+
+        async with (
+            ctx.typing(),
+            self.bot.begin_db_session() as session,
+            ctx.bot.chunithm_networks.network(
+                ctx, target_id, kamaitachi=kamaitachi
+            ) as client,
+        ):
             message: discord.Message | discord.MessageSnapshot
 
             if (
@@ -900,42 +909,40 @@ class RecordsCog(commands.Cog, name="Records"):
                 jacket = jackets[0]
                 song = jacket.song
 
-            if not kamaitachi:
+            if isinstance(client, ChunithmNet):
                 song.raise_if_not_available()
 
-            if kamaitachi and song.genre == "WORLD'S END":
+            if isinstance(client, Kamaitachi) and song.genre == "WORLD'S END":
                 msg = "Kamaitachi does not support WORLD'S END charts."
                 raise commands.CommandError(msg)
 
-            target_id = ctx.author.id if user is None else user.id
             displayed_song = escape_markdown(song.title)
 
             if song.id >= 8000 and len(song.charts) > 0:
                 displayed_song += f" [{escape_markdown(song.charts[0].level)}]"
 
-            async with ctx.bot.chunithm_networks.network(
-                ctx, target_id, kamaitachi=kamaitachi
-            ) as client:
-                if not client.SUPPORTS_PERSONAL_BESTS_ON_SONG:
-                    msg = f"Network {client.NAME} does not support fetching scores for a specific song."
-                    raise commands.CommandError(msg)
+            if not client.SUPPORTS_PERSONAL_BESTS_ON_SONG:
+                msg = f"Network {client.NAME} does not support fetching scores for a specific song."
+                raise commands.CommandError(msg)
 
-                profile = await client.get_minimal_profile()
+            profile = await client.get_minimal_profile()
 
-                try:
-                    records = await client.get_personal_bests_on_song(song.id)
-                except (SongNotFound, ChartNotFound):
-                    msg = f"The song **{displayed_song}** is not available on {client.NAME}."
-                    raise commands.CommandError(msg) from None
+            try:
+                records = await client.get_personal_bests_on_song(song.id)
+            except (SongNotFound, ChartNotFound):
+                msg = (
+                    f"The song **{displayed_song}** is not available on {client.NAME}."
+                )
+                raise commands.CommandError(msg) from None
 
-                if len(records) == 0:
-                    await ctx.respond_or_edit(
-                        f"No records found for {profile.username} on **{displayed_song}**."
-                    )
-                    return
+            if len(records) == 0:
+                await ctx.respond_or_edit(
+                    f"No records found for {profile.username} on **{displayed_song}**."
+                )
+                return
 
-                records = await self.utils.hydrate_records(records)
-                records.sort(key=lambda r: r.difficulty.value)
+            records = await self.utils.hydrate_records(records)
+            records.sort(key=lambda r: r.difficulty.value)
 
             page = 0
             embed_color = 0
@@ -1049,7 +1056,14 @@ class RecordsCog(commands.Cog, name="Records"):
         *,
         kamaitachi: bool = False,
     ):
-        async with ctx.typing():
+        target_id = ctx.author.id if user is None else user.id
+
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.network(
+                ctx, target_id, kamaitachi=kamaitachi
+            ) as client,
+        ):
             guild_id = ctx.guild.id if ctx.guild else None
             result = await self.utils.find_songs(
                 query, guild_id=guild_id, load_charts=True
@@ -1075,8 +1089,8 @@ class RecordsCog(commands.Cog, name="Records"):
             songs = [
                 x
                 for x in result.songs
-                if (kamaitachi and x.genre != "WORLD'S END")
-                or (not kamaitachi and x.available)
+                if (isinstance(client, Kamaitachi) and x.genre != "WORLD'S END")
+                or (isinstance(client, ChunithmNet) and x.available)
             ]
 
             if len(songs) > 1:
@@ -1111,31 +1125,27 @@ class RecordsCog(commands.Cog, name="Records"):
                 msg = f"No songs currently available in CHUNITHM International matches the query. Closest match was **{escape_markdown(result.songs[0].title)}**."
                 raise commands.BadArgument(msg)
 
-            target_id = ctx.author.id if user is None else user.id
             displayed_song = escape_markdown(song.title)
 
             if song.id >= 8000 and len(song.charts) > 0:
                 displayed_song += f" [{escape_markdown(song.charts[0].level)}]"
 
-            async with ctx.bot.chunithm_networks.network(
-                ctx, target_id, kamaitachi=kamaitachi
-            ) as client:
-                profile = await client.get_minimal_profile()
+            profile = await client.get_minimal_profile()
 
-                try:
-                    records = await client.get_personal_bests_on_song(song.id)
-                except (SongNotFound, ChartNotFound):
-                    msg = f"The song **{escape_markdown(song.title)}** is not available on {client.NAME}."
-                    raise commands.CommandError(msg) from None
+            try:
+                records = await client.get_personal_bests_on_song(song.id)
+            except (SongNotFound, ChartNotFound):
+                msg = f"The song **{escape_markdown(song.title)}** is not available on {client.NAME}."
+                raise commands.CommandError(msg) from None
 
-                if len(records) == 0:
-                    msg = f"No records found for {profile.username} on **{displayed_song}** on {client.NAME}."
+            if len(records) == 0:
+                msg = f"No records found for {profile.username} on **{displayed_song}** on {client.NAME}."
 
-                    await ctx.respond_or_edit(msg)
-                    return
+                await ctx.respond_or_edit(msg)
+                return
 
-                records = await self.utils.hydrate_records(records)
-                records.sort(key=lambda r: r.difficulty.value)
+            records = await self.utils.hydrate_records(records)
+            records.sort(key=lambda r: r.difficulty.value)
 
             view = EmbedPaginationView(
                 ctx,
