@@ -159,6 +159,7 @@ class ProfileView(PenguinView):
     def __init__(
         self,
         ctx: Context,
+        target: discord.abc.Snowflake,
         profile: "Profile",
         no_possession_color: int | discord.Color,
         *,
@@ -171,7 +172,7 @@ class ProfileView(PenguinView):
         self.friend_code_visible = False
         self.send_friend_request_button = None
 
-        if not self.profile.friend_code:
+        if not self.profile.friend_code or ctx.author != target:
             self.clear_items()
 
     async def _before_start(self, *, content: str | None = None) -> dict[str, Any]:

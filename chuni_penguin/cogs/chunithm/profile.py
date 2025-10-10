@@ -210,7 +210,7 @@ class ProfileCog(commands.Cog, name="Profile"):
                 raise commands.CommandError(msg)
 
             profile = await client.get_profile()
-            view = ProfileView(ctx, profile, client.ACCENT_COLOR)
+            view = ProfileView(ctx, ctx.author or user, profile, client.ACCENT_COLOR)
 
         await view.start()
 
