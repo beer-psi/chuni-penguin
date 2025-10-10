@@ -197,12 +197,12 @@ class ProfileCog(commands.Cog, name="Profile"):
         *,
         kamaitachi: bool = False,
     ):
-        target_id = ctx.author.id if user is None else user.id
+        target = user or ctx.author
 
         async with (
             ctx.typing(),
             self.bot.chunithm_networks.network(
-                ctx, target_id, kamaitachi=kamaitachi
+                ctx, target.id, kamaitachi=kamaitachi
             ) as client,
         ):
             if not client.SUPPORTS_PROFILE:
@@ -210,7 +210,7 @@ class ProfileCog(commands.Cog, name="Profile"):
                 raise commands.CommandError(msg)
 
             profile = await client.get_profile()
-            view = ProfileView(ctx, ctx.author or user, profile, client.ACCENT_COLOR)
+            view = ProfileView(ctx, target, profile, client.ACCENT_COLOR)
 
         await view.start()
 
