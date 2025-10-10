@@ -225,9 +225,7 @@ class ProfileView(PenguinView):
             description_lines.append(f"▸ **Level**: {level}")
 
         for rating_system in self.profile.rating_systems:
-            content = (
-                f"▸ **{escape_markdown(rating_system.name)}**: {rating_system.value}"
-            )
+            content = f"▸ **{escape_markdown(rating_system.name)}**: {round(rating_system.value, 2):.2f}"
 
             if rating_system.max_value is not None:
                 content += f" (MAX {rating_system.max_value})"
