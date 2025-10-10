@@ -51,7 +51,11 @@ class ChunithmNetAuth(httpx.Auth):
         with contextlib.suppress(KeyError):
             del request.headers["cookie"]
             del request.headers["cookie2"]  # pragma: no cover
+
+        request.extensions["chunithm_net_reauth"] = True
+
         self.client.cookies.set_cookie_header(request)
+
         yield request
 
 
@@ -66,10 +70,10 @@ async def raise_on_chunithm_net_error(response: httpx.Response):
 
     error = response.extensions["chunithm_net_error"] = ChuniNetError(code, description)
 
-    if code not in {
-        ChuniNetError.CONNECTION_EXPIRED,
-        ChuniNetError.INVALID_SESSION,
-    }:
+    if (
+        code not in {ChuniNetError.CONNECTION_EXPIRED, ChuniNetError.INVALID_SESSION}
+        or "chunithm_net_reauth" in response.request.extensions
+    ):
         raise error
 
 
