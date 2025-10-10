@@ -261,7 +261,7 @@ class ProfileView(PenguinView):
 
         if self.profile.profile_picture is not None:
             if self.profile.profile_picture_frame is None:
-                embed.set_image(url=self.profile.profile_picture)
+                embed.set_thumbnail(url=self.profile.profile_picture)
             else:
                 character_resp, charaframe_resp = await asyncio.gather(
                     self.ctx.bot.caching_http_client.get(self.profile.profile_picture),
