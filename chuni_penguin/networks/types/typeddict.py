@@ -17,6 +17,9 @@ class TypePairedDictKey(Generic[KT]):
     def __eq__(self, value: object, /) -> bool:
         return isinstance(value, TypePairedDictKey) and value.name == self.name
 
+    def __repr__(self) -> str:
+        return f"TypePairedDictKey({self.name!r})"
+
 
 class TypePairedDict(dict):
     """
