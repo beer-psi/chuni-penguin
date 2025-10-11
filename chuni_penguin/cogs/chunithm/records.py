@@ -68,10 +68,10 @@ from chuni_penguin.ui import (
     ConfirmationYesView,
     EmbedPaginationView,
     LeaderboardView,
+    RecentRecordsView,
     ScoreCardEmbed,
     SelectToCompareView,
 )
-from chuni_penguin.ui.recent import RecentRecordsView
 from chuni_penguin.utils import did_you_mean_text, floor_to_ndp
 
 if TYPE_CHECKING:
