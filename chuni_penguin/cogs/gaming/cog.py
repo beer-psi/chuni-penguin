@@ -15,7 +15,7 @@ from chuni_penguin.database.models import GuessScore
 from chuni_penguin.flags import DiscordArguments
 from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.networks.types import Difficulty, Genre
-from chuni_penguin.utils import shlex_split
+from chuni_penguin.utils import AsyncRWLockMapping, shlex_split
 
 from ._session import GuessingGameSession, GuessingGameType
 
@@ -42,8 +42,9 @@ class GamingCog(commands.Cog, name="Games"):
 
         self.game_tasks: set[asyncio.Task] = set()
 
-        self.game_sessions: dict[int, GuessingGameSession] = {}
-        self.game_sessions_lock = asyncio.Lock()
+        self.game_sessions: AsyncRWLockMapping[int, GuessingGameSession] = (
+            AsyncRWLockMapping()
+        )
 
         self.shutting_down = False
 
@@ -206,9 +207,10 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "I am currently pending a restart. No new games can be started."
             raise commands.CommandError(msg)
 
-        if ctx.channel.id in self.game_sessions:
-            msg = "There is already an ongoing session in this channel!"
-            raise commands.CommandError(msg)
+        async with self.game_sessions.read() as game_sessions:
+            if ctx.channel.id in game_sessions:
+                msg = "There is already an ongoing session in this channel!"
+                raise commands.CommandError(msg)
 
         if ctx.voice_client is not None:
             msg = "Another voice guessing game is already ongoing in this server. Only one voice guessing game can run at a time for each server."
@@ -231,9 +233,12 @@ class GamingCog(commands.Cog, name="Games"):
 
         await voice_channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
 
-        self.game_sessions[voice_channel.id] = await self._guess_without_voice_channel(
+        session = await self._guess_without_voice_channel(
             ctx, GuessingGameType.VOICE_CHANNEL, arguments
         )
+
+        async with self.game_sessions.write() as game_sessions:
+            game_sessions[voice_channel.id] = session
 
     async def _guess_without_voice_channel(
         self, ctx: Context, game_type: GuessingGameType, arguments: str
@@ -242,9 +247,10 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "I am currently pending a restart. No new games can be started. Please wait a few minutes."
             raise commands.CommandError(msg)
 
-        if ctx.channel.id in self.game_sessions:
-            msg = "There is already an ongoing session in this channel!"
-            raise commands.CommandError(msg)
+        async with self.game_sessions.read() as game_sessions:
+            if ctx.channel.id in game_sessions:
+                msg = "There is already an ongoing session in this channel!"
+                raise commands.CommandError(msg)
 
         args = await self._parse_guess_arguments(ctx, arguments)
 
@@ -252,8 +258,8 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "WORLD'S END isn't supported yet. I don't think you're supposed to know what it has in store for you..."
             raise commands.BadArgument(msg)
 
-        async with self.game_sessions_lock:
-            session = self.game_sessions[ctx.channel.id] = GuessingGameSession(
+        async with self.game_sessions.write() as game_sessions:
+            session = game_sessions[ctx.channel.id] = GuessingGameSession(
                 ctx,
                 difficulty=args.difficulty,
                 game_type=game_type,
@@ -266,14 +272,14 @@ class GamingCog(commands.Cog, name="Games"):
                 volume=args.volume,
             )
 
-            if session.time_per_question is MISSING:
-                if session.game_type == GuessingGameType.IMAGE:
-                    session.time_per_question = 20
-                elif session.game_type in (
-                    GuessingGameType.VOICE_MESSAGE,
-                    GuessingGameType.VOICE_CHANNEL,
-                ):
-                    session.time_per_question = session.get_audio_length() + 5
+        if session.time_per_question is MISSING:
+            if session.game_type == GuessingGameType.IMAGE:
+                session.time_per_question = 20
+            elif session.game_type in (
+                GuessingGameType.VOICE_MESSAGE,
+                GuessingGameType.VOICE_CHANNEL,
+            ):
+                session.time_per_question = session.get_audio_length() + 5
 
         voice_channel_id = (
             session.voice_client.channel.id
@@ -316,12 +322,12 @@ class GamingCog(commands.Cog, name="Games"):
             msg = "You are not in the current voice guessing game."
             raise commands.CommandError(msg)
 
-        async with self.game_sessions_lock:
-            if ctx.channel.id not in self.game_sessions:
+        async with self.game_sessions.read() as game_sessions:
+            if ctx.channel.id not in game_sessions:
                 msg = "There are no ongoing games in this channel."
                 raise commands.CommandError(msg)
 
-            self.game_sessions[ctx.channel.id].volume = volume
+            game_sessions[ctx.channel.id].volume = volume
 
         cast(songbird.SongbirdClient, ctx.voice_client).set_volume(volume / 100)
 
@@ -339,12 +345,12 @@ class GamingCog(commands.Cog, name="Games"):
         You can use this to skip a question, but also skip any waiting times,
         such as the starting 5-second wait.
         """
-        async with self.game_sessions_lock:
-            if ctx.channel.id not in self.game_sessions:
+        async with self.game_sessions.read() as game_sessions:
+            if ctx.channel.id not in game_sessions:
                 msg = "There are no ongoing games in this channel."
                 raise commands.CommandError(msg)
 
-            await self.game_sessions[ctx.channel.id].skip()
+            await game_sessions[ctx.channel.id].skip()
 
         if ctx.interaction is not None:
             await ctx.reply("Skipped!", mention_author=False)
@@ -357,27 +363,28 @@ class GamingCog(commands.Cog, name="Games"):
     async def stop(self, ctx: Context):
         """Stops the currently running guessing game."""
 
-        async with self.game_sessions_lock:
-            if ctx.channel.id not in self.game_sessions:
+        async with self.game_sessions.read() as game_sessions:
+            if ctx.channel.id not in game_sessions:
                 msg = "There are no ongoing games in this channel."
                 raise commands.CommandError(msg)
 
-            session = self.game_sessions[ctx.channel.id]
+            session = game_sessions[ctx.channel.id]
 
-        if (
-            ctx.author != session.ctx.author
-            and ctx.guild is not None
-            and not ctx.author.guild_permissions.manage_guild  # pyright: ignore[reportAttributeAccessIssue]
-        ):
-            msg = "You cannot stop a game unless you started it or have the Manage Server permission."
-            raise commands.CommandError(msg)
+            if (
+                ctx.author != session.ctx.author
+                and ctx.guild is not None
+                and not ctx.author.guild_permissions.manage_guild  # pyright: ignore[reportAttributeAccessIssue]
+            ):
+                msg = "You cannot stop a game unless you started it or have the Manage Server permission."
+                raise commands.CommandError(msg)
 
-        async with self.game_sessions_lock:
-            if ctx.channel.id not in self.game_sessions:
+        async with self.game_sessions.read() as game_sessions:
+            # The game may have already been stopped between reads.
+            if ctx.channel.id not in game_sessions:
                 msg = "The game has already stopped."
                 raise commands.CommandError(msg)
 
-            await self.game_sessions[ctx.channel.id].stop(ctx.author)
+            await game_sessions[ctx.channel.id].stop(ctx.author)
 
         if ctx.interaction is not None:
             await ctx.reply("Stopped!", mention_author=False)
@@ -416,9 +423,9 @@ class GamingCog(commands.Cog, name="Games"):
         await ctx.message.add_reaction("✅")
 
     async def _clear_state(self, channel_id: int):
-        async with self.game_sessions_lock:
-            if channel_id in self.game_sessions:
-                del self.game_sessions[channel_id]
+        async with self.game_sessions.write() as game_sessions:
+            if channel_id in game_sessions:
+                del game_sessions[channel_id]
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -441,8 +448,8 @@ class GamingCog(commands.Cog, name="Games"):
 
         # We clear game states before disconnecting from the call, so this should be
         # safe if the game ended normally.
-        async with self.game_sessions_lock:
-            if before.channel.id not in self.game_sessions:
+        async with self.game_sessions.read() as game_sessions:
+            if before.channel.id not in game_sessions:
                 return
 
-            await self.game_sessions[before.channel.id].skip()
+            await game_sessions[before.channel.id].skip()

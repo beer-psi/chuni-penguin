@@ -293,11 +293,13 @@ class RetryGameButton(
             )
             return
 
-        if interaction.channel_id in gaming.game_sessions:
-            await interaction.response.send_message(
-                "There is already an ongoing session in this channel.", ephemeral=True
-            )
-            return
+        async with gaming.game_sessions.read() as game_sessions:
+            if interaction.channel_id in game_sessions:
+                await interaction.response.send_message(
+                    "There is already an ongoing session in this channel.",
+                    ephemeral=True,
+                )
+                return
 
         if self.mode == GuessingGameType.VOICE_CHANNEL:
             if interaction.guild is None or not isinstance(
@@ -337,20 +339,18 @@ class RetryGameButton(
             else config.bot.default_prefix
         )
 
-        async with gaming.game_sessions_lock:
-            session = gaming.game_sessions[interaction.channel_id] = (
-                GuessingGameSession(
-                    ctx,
-                    difficulty=self.difficulty,
-                    game_type=self.mode,
-                    question_count=self.questions,
-                    score_limit=self.score,
-                    time_per_question=self.time,
-                    wrong_answers_limit=self.wrong,
-                    hardcore_mode=self.hardcore,
-                    genres=self.genres,
-                    volume=self.volume,
-                )
+        async with gaming.game_sessions.write() as game_sessions:
+            session = game_sessions[interaction.channel_id] = GuessingGameSession(
+                ctx,
+                difficulty=self.difficulty,
+                game_type=self.mode,
+                question_count=self.questions,
+                score_limit=self.score,
+                time_per_question=self.time,
+                wrong_answers_limit=self.wrong,
+                hardcore_mode=self.hardcore,
+                genres=self.genres,
+                volume=self.volume,
             )
 
         voice_channel_id = (
