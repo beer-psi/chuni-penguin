@@ -68,6 +68,7 @@ from chuni_penguin.ui import (
     ConfirmationYesView,
     EmbedPaginationView,
     LeaderboardView,
+    RecentRecordsView,
     ScoreCardEmbed,
     SelectToCompareView,
 )
@@ -712,13 +713,12 @@ class RecordsCog(commands.Cog, name="Records"):
         kamaitachi: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
+        client_manager = ctx.bot.chunithm_networks.network(
+            ctx, target_id, kamaitachi=kamaitachi
+        )
+        client = await client_manager.__aenter__()
 
-        async with (
-            ctx.typing(),
-            ctx.bot.chunithm_networks.network(
-                ctx, target_id, kamaitachi=kamaitachi
-            ) as client,
-        ):
+        async with ctx.typing():
             if not client.SUPPORTS_RECENT_SCORES:
                 msg = f"Network {client.NAME} does not support getting recent scores."
                 raise commands.CommandError(msg)
@@ -728,13 +728,13 @@ class RecordsCog(commands.Cog, name="Records"):
             recents = await client.get_recent_scores()
             recents = await self.utils.hydrate_records(recents)
 
-        view = B30View(
+        view = RecentRecordsView(
             ctx,
             recents,
-            show_average=False,
-            show_reachable=False,
-            show_lamps=True,
-            synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+            client,
+            client_manager,
+            profile,
+            ctx.user_config.synthesis_alt_jacket,
         )
         await view.start(
             content=f"Most recent scores for {profile.username} on {client.NAME}:"

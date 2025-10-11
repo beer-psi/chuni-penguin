@@ -9,7 +9,6 @@ from chuni_penguin.ui import ScoreCardEmbed
 from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
-    from chuni_penguin.bot import ChuniBot
     from chuni_penguin.cogs.botutils import UtilsCog
     from chuni_penguin.networks.base import Network
     from chuni_penguin.networks.types import Profile, RecentScore
@@ -74,7 +73,6 @@ class RecentRecordsView(PaginationView):
     def __init__(
         self,
         ctx: Context,
-        bot: "ChuniBot",
         scores: list["RecentScore"],
         network_client: "Network",
         network_client_manager: AsyncContextManager["Network"],
@@ -98,7 +96,7 @@ class RecentRecordsView(PaginationView):
         self.userinfo = userinfo
         self.synthesis_alt_jacket = synthesis_alt_jacket
 
-        self.utils: "UtilsCog" = bot.utils
+        self.utils: "UtilsCog" = ctx.bot.utils
 
         self._dropdown_options = [
             discord.SelectOption(
@@ -111,7 +109,8 @@ class RecentRecordsView(PaginationView):
 
     async def _before_start(self, *, content: str | None = None):
         if not self.network_client.SUPPORTS_DETAILED_RECENT_SCORE:
-            self.clear_items()
+            self.remove_item(self.dropdown)
+            self.remove_item(self.switch_to_26_50)
 
             if self.network_client_manager is not None:
                 await self.network_client_manager.__aexit__(None, None, None)
@@ -152,12 +151,14 @@ class RecentRecordsView(PaginationView):
             await interaction.response.defer()
 
             idx = int(select.values[0])
-            score = await self.network_client.detailed_recent_record(self.scores[idx])
+            score = await self.network_client.get_detailed_recent_score(
+                self.scores[idx]
+            )
             score = await self.utils.hydrate_record(score)
 
             if interaction.message is not None:
                 await interaction.message.edit(
-                    content=f"Score of {self.userinfo.name}",
+                    content=f"Score of {self.userinfo.username}",
                     embed=ScoreCardEmbed(
                         score, synthesis_alt_jacket=self.synthesis_alt_jacket
                     ),
@@ -165,7 +166,7 @@ class RecentRecordsView(PaginationView):
                 )
             else:
                 await interaction.channel.send(
-                    content=f"Score of {self.userinfo.name}",
+                    content=f"Score of {self.userinfo.username}",
                     embed=ScoreCardEmbed(
                         score, synthesis_alt_jacket=self.synthesis_alt_jacket
                     ),
