@@ -16,6 +16,10 @@ class Rarity(Enum):
     platinum = "platina"
     rainbow = "rainbow"
 
+    ongeki = "ongeki"
+    staff = "staff"
+    maimai = "maimai"
+
     version1 = "version1"
     version2 = "version2"
     version3 = "version3"
