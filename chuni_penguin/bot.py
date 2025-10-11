@@ -297,11 +297,11 @@ class ChuniBot(commands.AutoShardedBot):
                     description="I'll be going down for an update soon. Please finish your game in five minutes.",
                 )
 
-                async with gaming.game_sessions_lock:
+                async with gaming.game_sessions.read() as game_sessions:
                     await asyncio.gather(
                         *[
                             s.channel.send(embed=warning_embed)
-                            for s in set(gaming.game_sessions.values())
+                            for s in set(game_sessions.values())
                         ]
                     )
 
@@ -310,8 +310,8 @@ class ChuniBot(commands.AutoShardedBot):
             else:
                 pending = gaming.game_tasks
 
-            async with gaming.game_sessions_lock:
-                for session in gaming.game_sessions.values():
+            async with gaming.game_sessions.read() as game_sessions:
+                for session in game_sessions.values():
                     await session.stop(self.user)  # pyright: ignore[reportArgumentType]
 
             if len(pending) > 0:
