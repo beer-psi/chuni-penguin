@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any, AsyncContextManager, override
 import discord.ui
 from discord.ext.commands import Context
 
-from chuni_penguin.logging import logger
 from chuni_penguin.ui import ScoreCardEmbed
 
 from ._pagination import ListPageSource, PaginationView
@@ -109,12 +108,6 @@ class RecentRecordsView(PaginationView):
         self.dropdown.options = self._dropdown_options[:25]
 
     async def _before_start(self, *, content: str | None = None):
-        logger.debug(
-            "recent view before start",
-            network_client=self.network_client,
-            supports_detailed=self.network_client.SUPPORTS_DETAILED_RECENT_SCORE,
-        )
-
         if not self.network_client.SUPPORTS_DETAILED_RECENT_SCORE:
             self.remove_item(self.dropdown)
             self.remove_item(self.switch_to_26_50)
