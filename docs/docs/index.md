@@ -33,7 +33,7 @@ Many other useful tools are included:
 
 ![Anmitsu checker output](assets/images/anmitsu-checker.png)
 /// caption
-Anmitsu checker
+[Anmitsu](https://chunithm.org/intermediate/tech/#anmitsu) checker
 ///
 
 <figure markdown="span">
