@@ -123,7 +123,7 @@ class FluffCog(commands.Cog, name="Fluff"):
     async def check(
         self, ctx: PenguinContext, *, target: discord.Member | discord.User
     ):
-        """They need to check them pc and game....."""
+        """They need to check them cab and game....."""
 
         name = escape_markdown(target.display_name)
 
