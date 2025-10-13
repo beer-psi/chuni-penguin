@@ -102,6 +102,9 @@ nav:
       - Games: "commands/games.md"
       - Fluff: "commands/fluff.md"
       - Miscellaneous: "commands/miscellaneous.md"
+  - Developer:
+      - "developer/index.md"
+      - API Reference: "developer/api.md"
   - Legal:
       - Terms of Service: "legal/terms-of-service.md"
       - Privacy Policy: "legal/privacy-policy.md"
