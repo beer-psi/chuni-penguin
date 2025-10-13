@@ -155,13 +155,7 @@ class LoginFlowPageSource(ListPageSource):
     def __init__(self, code: str, server: str | None) -> None:
         self.code = code
 
-        if server is not None:
-            self.script = "javascript:void(function(d){var s=d.createElement('script');s.src='https://gistcdn.githack.com/beer-psi/0eb8d3e50ae753388a6d4a4af5678a2e/raw/ede9859c40741d4dad49a035857b30a3e21c5dce/login.js' ;d.body.append(s)}(document))\n"
-            fragment = f"#otp={code}&server={server}"
-        else:
-            self.script = "javascript:void(function(d){var s=d.createElement('script');s.src='https://gistcdn.githack.com/beer-psi/0eb8d3e50ae753388a6d4a4af5678a2e/raw/c096f619a3a207b99a0cbb63e1d214a7b1af4f28/login2.js' ;d.body.append(s)}(document))\n"
-            fragment = ""
-
+        fragment = f"#otp={code}&server={server}" if server is not None else ""
         items = [
             (
                 "**Step 1:**\n"
@@ -170,17 +164,13 @@ class LoginFlowPageSource(ListPageSource):
             ),
             (
                 "**Step 2**:\n"
-                f"Copy [this link](https://lng-tgk-aime-gw.am-all.net/common_auth/{fragment}) and paste it in the current incognito window.\n"
-                'The website should display "Not Found".'
+                f"Copy [this link](https://lng-tgk-aime-gw.am-all.net/common_auth/{fragment}) and paste it in the incognito window.\n"
+                'The website should display "Not found".'
             ),
             (
-                "**Step 3**:\n\n"
-                "**Desktop users:**\n"
-                "Copy the script above and paste it in your browser's developer console (Ctrl + Shift + I or F12).\n\n"
-                "**Mobile users:**\n"
-                '1. Long press the message above and select "Copy Text".\n'
-                "2. Create a bookmark in your browser and paste the copied text in the URL field.\n"
-                "3. Run the bookmark.\n\n"
+                "**Step 3**:\n"
+                "(Save the [login bookmarklet](https://chuni-penguin.beerpsi.cc/bookmarklet/) if you haven't already.)\n\n"
+                'Run the login bookmarklet on the "Not found" page opened previously.\n\n'
                 "This script cannot access your Aime account! It can only access CHUNITHM-NET.\n"
                 "\n"
             ),
@@ -209,8 +199,8 @@ class LoginFlowPageSource(ListPageSource):
         )
         kwargs: dict[str, Any] = {"embed": embed}
 
-        if menu.current_page == 2:
-            kwargs["content"] = self.script
+        if menu.current_page != 0:
+            kwargs["content"] = ""
 
         return kwargs
 
