@@ -48,7 +48,7 @@ dev = [
     { include-group = "test" },
 ]
 docs = [
-    "mkdocs-material>=9.6.21",
+    "mkdocs-material==9.6.21",
 ]
 test = [
     "pytest>=8.3.3",
