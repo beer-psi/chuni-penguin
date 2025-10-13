@@ -120,7 +120,9 @@ class FluffCog(commands.Cog, name="Fluff"):
 
     @commands.hybrid_command("heck", aliases=["check"])
     @logged_prefix_command
-    async def check(self, ctx: PenguinContext, *, target: discord.User):
+    async def check(
+        self, ctx: PenguinContext, *, target: discord.Member | discord.User
+    ):
         """They need to check them pc and game....."""
 
         name = escape_markdown(target.display_name)
