@@ -1,3 +1,4 @@
+# pyright: reportMissingImports=false
 from bs4 import BeautifulSoup
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.structure.pages import Page
