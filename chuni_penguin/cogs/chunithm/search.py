@@ -517,6 +517,11 @@ class SearchCog(commands.Cog, name="Search"):
     @commands.hybrid_command("courses")
     @logged_prefix_command
     async def courses(self, ctx: PenguinContext):
+        """Get a list of all courses.
+
+        If you are logged in to CHUNITHM-NET, this also displays your course records.
+        """
+
         async with ctx.typing():
             # This is mainly an informative command, so we don't wanna stress too hard
             # that the user isn't logged in.

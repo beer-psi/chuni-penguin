@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+
+site_name: "chuni penguin"
+site_url: "https://chunithm.beerpsi.cc"
+copyright: "Copyright &copy; 2023-present beerpsi"
+
+repo_url: "https://chunithm.beerpsi.cc/invite"
+repo_name: "Invite the bot!"
+
+theme:
+  name: "material"
+  custom_dir: "overrides"
+  features:
+    - "search.suggest"
+    - "search.highlight"
+    - "search.share"
+    - "header.autohide"
+    - "navigation.tabs"
+    - "navigation.sections"
+    - "navigation.expand"
+    - "navigation.prune"
+    - "navigation.indexes"
+    - "navigation.top"
+    - "toc.follow"
+    - "content.tabs.link"
+  icon:
+    repo: "fontawesome/brands/discord"
+  logo: "assets/images/favicon.png"
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: "material/brightness-auto"
+        name: "Switch to light mode"
+
+    - media: "(prefers-color-scheme: light)"
+      scheme: "default"
+      primary: "custom"
+      accent: "custom"
+      toggle:
+        icon: "material/brightness-7"
+        name: "Switch to dark mode"
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: "slate"
+      primary: "custom"
+      accent: "custom"
+      toggle:
+        icon: "material/brightness-4"
+        name: "Switch to system preference"
+
+markdown_extensions:
+  - "admonition"
+  - "attr_list"
+  - "md_in_html"
+  - toc:
+      permalink: true
+  - "pymdownx.blocks.caption"
+  - "pymdownx.superfences"
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+hooks:
+  - "overrides/hooks/external_links.py"
+
+extra_css:
+  - "stylesheets/extra.css"
+
+extra:
+  analytics:
+    provider: "custom"
+    property: "https://camisole-chasing-ferret.goatcounter.com/count"
+  social:
+    - icon: "fontawesome/brands/discord"
+      link: "https://discord.gg/DyYrrzQQ9W"
+      name: "Discord"
+    - icon: "fontawesome/brands/github"
+      link: "https://github.com/beer-psi/chuni-penguin"
+      name: "GitHub"
+    - icon: "fontawesome/solid/mug-hot"
+      link: "https://ko-fi.com/beerpsi_"
+      name: "Ko-fi"
+
+nav:
+  - Home:
+      - "index.md"
+      - Bookmarklet: "bookmarklet.md"
+      - "CHUNITHM Resources": "resources.md"
+  - Commands:
+      - "commands/index.md"
+      - Authentication: "commands/authentication.md"
+      - Profile: "commands/profile.md"
+      - Records: "commands/records.md"
+      - Search: "commands/search.md"
+      - Tools: "commands/tools.md"
+      - Games: "commands/games.md"
+      - Fluff: "commands/fluff.md"
+      - Miscellaneous: "commands/miscellaneous.md"
+  - Legal:
+      - Terms of Service: "legal/terms-of-service.md"
+      - Privacy Policy: "legal/privacy-policy.md"
+  - Support server: "https://discord.gg/DyYrrzQQ9W"
+  - Ko-fi: "https://ko-fi.com/beerpsi_"
