@@ -81,6 +81,10 @@ class WebConfig:
             and "localhost" not in self.base_url
         )
 
+    @property
+    def fallback_url(self) -> str | None:
+        return self.__section.get("fallback_url")
+
 
 class CredentialsConfig:
     def __init__(self, section: "SectionProxy") -> None:

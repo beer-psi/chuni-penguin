@@ -1,5 +1,6 @@
 import asyncio
 import sys
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from html import escape
 from io import BytesIO
@@ -343,6 +344,20 @@ async def on_shutdown(app: web.Application):
     await app["session"].close()
 
 
+def create_fallback_middleware(fallback_url: str):
+    @web.middleware
+    async def fallback_middleware(
+        request: web.Request,
+        handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
+    ):
+        try:
+            return await handler(request)
+        except web.HTTPNotFound:
+            raise web.HTTPFound(f"{fallback_url}{request.url.path}") from None  # noqa: EM102
+
+    return fallback_middleware
+
+
 class WebCog(commands.Cog, name="Web"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
@@ -380,6 +395,9 @@ class WebCog(commands.Cog, name="Web"):
         app["goatcounter"] = config.web.goatcounter
         app["kamaitachi_client_id"] = config.credentials.kamaitachi_client_id
         app["kamaitachi_client_secret"] = config.credentials.kamaitachi_client_secret
+
+        if config.web.fallback_url is not None:
+            app.middlewares.append(create_fallback_middleware(config.web.fallback_url))
 
         self._web_app = app
         self._web_task = asyncio.create_task(
