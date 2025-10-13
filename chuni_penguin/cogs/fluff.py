@@ -1,12 +1,14 @@
 import random
 from typing import TYPE_CHECKING
 
+import discord
 from discord import (
     DeletedReferencedMessage,
     app_commands,
 )
 from discord.ext import commands
 from discord.ext.commands import Context
+from discord.utils import escape_markdown
 
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.logging import logged_prefix_command
@@ -113,6 +115,23 @@ class FluffCog(commands.Cog, name="Fluff"):
 
         await ctx.reply(
             content=f"You've found {count}/7 easter eggs!",
+            mention_author=False,
+        )
+
+    @commands.hybrid_command("heck", aliases=["check"])
+    @logged_prefix_command
+    async def check(self, ctx: PenguinContext, *, target: discord.User):
+        """They need to check them pc and game....."""
+
+        name = escape_markdown(target.display_name)
+
+        if ctx.guild is not None:
+            server_name = escape_markdown(ctx.guild.name)
+        else:
+            server_name = "PRO"
+
+        await ctx.reply(
+            content=f"{name} skilled player but that is not normally, This very very insane....They need to check them cab and game.....Maybe they not cheating but maybe they using the game deficit ...and this cant seem on game screen..They need to check-up...{name} using game deficit on {server_name} scene ,ON BIG scoreposting. Maybe everyone dont knows them trick.They incredible....I want to ask their where is the comming of your skill's ?",
             mention_author=False,
         )
 
