@@ -34,7 +34,8 @@ allows us to restrict and prohibit access to our services, in line with our
 - Discord message identifiers are temporarily collected for the purpose of command processing
 and operating minigames. They are never permanently stored. Message author identifiers
 are used as described above.
--
+- Access tokens for third-party services are collected as they provide one of the core
+functionalities of the bot: score viewing and sharing.
 
 None of the information we store is shared, sold to, or given away to any third parties
 without your informed and explicit consent.
