@@ -30,14 +30,6 @@ if TYPE_CHECKING:
 router = web.RouteTableDef()
 
 
-@router.get("/")
-async def index(request: web.Request) -> web.Response:
-    return web.Response(
-        body="https://github.com/beer-psi/chuni-penguin",
-        content_type="text/plain",
-    )
-
-
 @router.get("/kamaitachi/oauth")
 async def kamaitachi_oauth(request: web.Request) -> web.Response:
     if (
