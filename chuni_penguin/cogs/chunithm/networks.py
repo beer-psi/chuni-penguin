@@ -168,10 +168,10 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             else "login"
         )
         prefix = "/" if is_interaction else config.bot.default_prefix
-        dm_cta = "" if is_interaction else " in my DMs to log in."
+        cta = " to log in." if is_interaction else " in my DMs to log in."
 
         if author_id == target_id:
-            return f"You are not logged in{network_name}. Please send `{prefix}{command_name}`{dm_cta}"
+            return f"You are not logged in{network_name}. Please send `{prefix}{command_name}`{cta}"
 
         return f"<@{target_id}> is not logged in{network_name}."
 
