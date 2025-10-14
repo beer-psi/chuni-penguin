@@ -33,7 +33,7 @@ View the rating breakdown of a player.
 
 ## compare
 
-<small>(aliases: `c`)</small>
+<small>(aliases: `c`, `mog`, `gap`)</small>
 
 Compare a user's score to a recent chart or score card.
 

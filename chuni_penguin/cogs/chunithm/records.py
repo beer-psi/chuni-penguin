@@ -996,7 +996,7 @@ class RecordsCog(commands.Cog, name="Records"):
         else:
             await view.start(content=content)
 
-    @flags.command("compare", aliases=["c"])
+    @flags.command("compare", aliases=["c", "mog", "gap"])
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
     @logged_prefix_command
