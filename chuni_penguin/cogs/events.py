@@ -52,7 +52,7 @@ class EventsCog(commands.Cog, name="Events"):
             return
 
         embed, _ = await self._construct_error_embed(
-            "/",
+            interaction,
             interaction.command.qualified_name if interaction.command else None,
             exc,
         )
@@ -106,7 +106,7 @@ class EventsCog(commands.Cog, name="Events"):
             return
 
         embed, delete_after = await self._construct_error_embed(
-            ctx.clean_prefix or "c>",
+            ctx,
             ctx.command.qualified_name if ctx.command else None,
             exc,
         )
@@ -164,13 +164,32 @@ class EventsCog(commands.Cog, name="Events"):
         await self._submit_error_to_webhook(ctx, exc)
 
     async def _construct_error_embed(
-        self, prefix: str, command_name: str | None, exc: Exception
+        self,
+        context_or_interaction: PenguinContext | discord.Interaction["ChuniBot"],
+        command_name: str | None,
+        exc: Exception,
     ):
         embed = discord.Embed(
             color=discord.Color.red(),
             title="Error",
         )
         delete_after: float | None = None
+
+        # text_prefix is for the help command, since we don't have a slash help
+        # command (yet)
+        if isinstance(context_or_interaction, discord.Interaction):
+            if (guild_id := context_or_interaction.guild_id) is not None:
+                text_prefix = context_or_interaction.client.prefixes.get(
+                    guild_id, config.bot.default_prefix
+                )
+            else:
+                text_prefix = config.bot.default_prefix
+
+            prefix = "/"
+        else:
+            prefix = text_prefix = (
+                context_or_interaction.clean_prefix or config.bot.default_prefix
+            )
 
         if isinstance(exc, MaintenanceError):
             embed.description = "CHUNITHM-NET is currently undergoing maintenance. Please try again later."
@@ -232,12 +251,12 @@ class EventsCog(commands.Cog, name="Events"):
         elif isinstance(exc, commands.BadArgument):
             embed.description = (
                 f"Bad argument: {exc!s}\n"
-                f"View help for this command with `{prefix}help {command_name}`."
+                f"View help for this command with `{text_prefix}help {command_name}`."
             )
         elif isinstance(exc, commands.MissingRequiredArgument):
             embed.description = (
                 f"Missing required argument: `{exc.param.displayed_name or exc.param.name}`\n"
-                f"View help for this command with `{prefix}help {command_name}`."
+                f"View help for this command with `{text_prefix}help {command_name}`."
             )
         elif isinstance(
             exc, (commands.BotMissingPermissions, app_commands.BotMissingPermissions)
