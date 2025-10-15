@@ -455,6 +455,11 @@ class WebCog(commands.Cog, name="Web"):
         app["kamaitachi_client_id"] = config.credentials.kamaitachi_client_id
         app["kamaitachi_client_secret"] = config.credentials.kamaitachi_client_secret
 
+        if config.web.trust_proxy:
+            import aiohttp_remotes  # pyright: ignore[reportMissingImports]
+
+            await aiohttp_remotes.setup(app, aiohttp_remotes.XForwardedRelaxed())
+
         if config.web.fallback_url is not None:
             app.middlewares.append(create_fallback_middleware(config.web.fallback_url))
 

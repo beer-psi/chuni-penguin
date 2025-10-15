@@ -85,6 +85,10 @@ class WebConfig:
     def fallback_url(self) -> str | None:
         return self.__section.get("fallback_url")
 
+    @property
+    def trust_proxy(self) -> bool:
+        return self.__section.getboolean("trust_proxy", fallback=False)
+
 
 class CredentialsConfig:
     def __init__(self, section: "SectionProxy") -> None:
