@@ -102,6 +102,10 @@ class CredentialsConfig:
     def kamaitachi_client_secret(self) -> Optional[str]:
         return self.__section.get("kamaitachi_client_secret")
 
+    @property
+    def goatcounter_api_key(self) -> Optional[str]:
+        return self.__section.get("goatcounter_api_key")
+
 
 class IconsConfig:
     __slots__ = (  # noqa: RUF023

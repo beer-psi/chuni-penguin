@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, override
 
 import aiohttp
 import discord
+import yarl
 from aiohttp import ClientSession, web
 from aiohttp.web import Application
 from async_lru import alru_cache
@@ -162,6 +163,7 @@ async def kamaitachi_user_image(request: web.Request) -> web.Response:
 @router.get("/invite")
 async def invite(request: web.Request) -> web.Response:
     bot: ChuniBot = request.config_dict["bot"]
+
     if bot.user is None:
         raise web.HTTPInternalServerError(reason="Bot is not ready yet.")
 
@@ -358,6 +360,63 @@ def create_fallback_middleware(fallback_url: str):
     return fallback_middleware
 
 
+def create_goatcounter_middleware(
+    session: ClientSession,
+    url: str | yarl.URL,
+    api_key: str,
+    exclude_paths: set[str] | None = None,
+):
+    if isinstance(url, str):
+        url = yarl.URL(url)
+    if exclude_paths is None:
+        exclude_paths = set()
+
+    count_url = url.with_path("/api/v0/count")
+
+    @web.middleware
+    async def goatcounter_middleware(
+        request: web.Request,
+        handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
+    ):
+        response = await handler(request)
+
+        if response.status < 200 or response.status > 299:
+            return response
+
+        if request.path in exclude_paths:
+            return response
+
+        hit = {
+            "path": request.path_qs,
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+
+        if len(request.query) > 0:
+            hit["query"] = f"?{request.query}"
+
+        if (referer := request.headers.get("referer")) is not None:
+            hit["ref"] = referer
+
+        if (user_agent := request.headers.get("user-agent")) is not None:
+            hit["user_agent"] = user_agent
+
+        if request.remote is not None:
+            hit["ip"] = request.remote
+
+        async with session.post(
+            count_url,
+            json={"no_sessions": True, "hits": [hit]},
+            headers={"Authorization": f"Bearer {api_key}"},
+        ):
+            await logger.adebug(
+                "counting pageview", tag="count_pageview", count_url=count_url, hit=hit
+            )
+
+        return response
+
+    return goatcounter_middleware
+
+
 class WebCog(commands.Cog, name="Web"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
@@ -398,6 +457,19 @@ class WebCog(commands.Cog, name="Web"):
 
         if config.web.fallback_url is not None:
             app.middlewares.append(create_fallback_middleware(config.web.fallback_url))
+
+        if (
+            config.web.goatcounter is not None
+            and config.credentials.goatcounter_api_key is not None
+        ):
+            app.middlewares.append(
+                create_goatcounter_middleware(
+                    session,
+                    config.web.goatcounter,
+                    config.credentials.goatcounter_api_key,
+                    {"/login"},
+                )
+            )
 
         self._web_app = app
         self._web_task = asyncio.create_task(
