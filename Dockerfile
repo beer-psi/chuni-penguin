@@ -22,13 +22,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cargo/registry/index \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project --no-install-workspace --all-extras --no-dev --no-group test
+    uv sync --frozen --no-install-project --no-install-workspace --all-extras --no-dev --no-group test --no-group docs
 COPY . /code
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cargo/git/db \
     --mount=type=cache,target=/root/.cargo/registry/cache \
     --mount=type=cache,target=/root/.cargo/registry/index \
-    uv sync --frozen --all-extras --no-dev --no-group test
+    uv sync --frozen --all-extras --no-dev --no-group test --no-group docs
 RUN python -m compileall -b -x 'database/alembic/versions' . \
     && find . -type f -not -path "*database/alembic/versions*" -name '*.py' -exec rm {} \;
 RUN rm -rf packages/penguin-native/target

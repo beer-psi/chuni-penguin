@@ -38,6 +38,7 @@ speedup = [
     "ciso8601>=2.3.2",
     "penguin-native",
 ]
+web = ["aiohttp-remotes>=1.3.0"]
 
 [dependency-groups]
 dev = [
@@ -57,6 +58,7 @@ test = [
     "pytest-httpx>=0.32.0",
     "pytest-html>=4.1.1",
 ]
+
 
 [tool.uv]
 managed = true
