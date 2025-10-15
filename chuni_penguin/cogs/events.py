@@ -241,13 +241,30 @@ class EventsCog(commands.Cog, name="Events"):
             ),
         ):
             embed.description = "Insufficient permissions."
+        elif isinstance(exc, commands.RangeError):
+            embed.description = (
+                str(exc)
+                + "\n"
+                + f"View help for this command with `{text_prefix}help {command_name}`."
+            )
+
+            if (
+                isinstance(context_or_interaction, Context)
+                and (parameter := context_or_interaction.current_parameter) is not None
+            ):
+                embed.description = embed.description.replace(
+                    "value", f"`{parameter.displayed_name or parameter.name}`", 1
+                )
         elif isinstance(exc, commands.BadLiteralArgument):
             to_string = [repr(x) for x in exc.literals]
             if len(to_string) > 2:
                 fmt = "{}, or {}".format(", ".join(to_string[:-1]), to_string[-1])
             else:
                 fmt = " or ".join(to_string)
-            embed.description = f"`{exc.param.displayed_name or exc.param.name}` must be one of {fmt}, received {exc.argument!r}"
+            embed.description = (
+                f"`{exc.param.displayed_name or exc.param.name}` must be one of {fmt}, received {exc.argument!r}\n"
+                f"View help for this command with `{text_prefix}help {command_name}`."
+            )
         elif isinstance(exc, commands.BadArgument):
             embed.description = (
                 f"Bad argument: {exc!s}\n"
