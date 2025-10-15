@@ -48,6 +48,9 @@ class EventsCog(commands.Cog, name="Events"):
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
 
+        if isinstance(exc, discord.NotFound):
+            return
+
         embed, _ = await self._construct_error_embed(
             "/",
             interaction.command.qualified_name if interaction.command else None,
@@ -94,13 +97,13 @@ class EventsCog(commands.Cog, name="Events"):
         ctx: PenguinContext,
         error: commands.errors.CommandInvokeError,
     ):
-        if isinstance(error, commands.CommandNotFound):
-            return
-
         exc = error
 
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
+
+        if isinstance(exc, (commands.CommandNotFound, discord.NotFound)):
+            return
 
         embed, delete_after = await self._construct_error_embed(
             ctx.clean_prefix or "c>",

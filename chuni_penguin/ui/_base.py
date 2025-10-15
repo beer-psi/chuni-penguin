@@ -74,6 +74,9 @@ class PenguinViewMixin(Generic[ContextT]):
         item: discord.ui.Item[Any],
         /,
     ) -> None:
+        if isinstance(error, discord.NotFound):
+            return
+
         await logger.aexception(
             "Unhandled view error", tag="view_error", exc_info=error
         )

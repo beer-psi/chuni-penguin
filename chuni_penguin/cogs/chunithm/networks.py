@@ -70,7 +70,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                     + 1,  # for recommended UA
                 )
             except msgspec.DecodeError as e:
-                logger.exception(
+                await logger.aexception(
                     "could not parse user agents",
                     tag="update_user_agent_failed",
                     exc_info=e,
@@ -79,7 +79,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
     @_update_user_agents.error
     async def _update_user_agents_error(self, exc: BaseException):
-        logger.exception(
+        await logger.aexception(
             "unhandled exception updating user agents",
             tag="update_useragent_failed",
             exc_info=exc,

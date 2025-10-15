@@ -7,12 +7,13 @@ from typing import TYPE_CHECKING, Any, override
 import discord.ui
 from discord import ButtonStyle, Interaction
 from discord.ext import commands
-from discord.ext.commands import Context
 from discord.utils import MISSING, escape_markdown
 from PIL import Image
 
+from chuni_penguin.context import PenguinContext
 from chuni_penguin.networks.chunithm_net.exceptions import ChuniNetError
 from chuni_penguin.networks.errors import AlreadyFriends, InvalidFriendCode
+from chuni_penguin.networks.types import TeamEmblem
 
 from ._base import PenguinView
 
@@ -158,7 +159,7 @@ class PersistentSendFriendRequestButton(
 class ProfileView(PenguinView):
     def __init__(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         target: discord.abc.Snowflake,
         profile: "Profile",
         no_possession_color: int | discord.Color,
@@ -203,8 +204,14 @@ class ProfileView(PenguinView):
             embed.title = self.profile.username
             embed.url = self.profile.url
 
-        if self.profile.team is not None:
-            description_lines.append(f"Team {escape_markdown(self.profile.team.name)}")
+        if (team := self.profile.team) is not None:
+            tag = (
+                f"{team.emblem.value.capitalize()} Team"
+                if team.emblem != TeamEmblem.normal
+                else "Team"
+            )
+
+            description_lines.append(f"{tag} {escape_markdown(team.name)}")
 
         if self.profile.medal is not None:
             content = f"Class {self.profile.medal}"

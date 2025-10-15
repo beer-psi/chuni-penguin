@@ -131,6 +131,9 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
 
     @override
     async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        if isinstance(error, discord.NotFound):
+            return
+
         await logger.aexception(
             "error in SEGA ID login modal",
             tag="error_sega_id_login_modal",
