@@ -129,6 +129,7 @@ jobs:
           oauth-secret: "${{ secrets.TS_OAUTH_SECRET }}"
           tags: "tag:ci"
           use-cache: "true"
+          ping: "${{ secrets.SSH_HOST }}"
 
       - name: "Setup SSH"
         run: |
