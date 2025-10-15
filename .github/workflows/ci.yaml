@@ -123,7 +123,7 @@ jobs:
     if: "github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
     steps:
       - name: "Tailscale"
-        uses: "tailscale/github-action@6cae46e2d796f265265cfcf628b72a32b4d7cade" # v3
+        uses: "tailscale/github-action@ac425ca19416ebb90dd453776414ffb1cdba8f91" # v4
         with:
           oauth-client-id: "${{ secrets.TS_OAUTH_CLIENT_ID }}"
           oauth-secret: "${{ secrets.TS_OAUTH_SECRET }}"
