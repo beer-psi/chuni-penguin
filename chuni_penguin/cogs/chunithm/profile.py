@@ -192,7 +192,7 @@ class ProfileCog(commands.Cog, name="Profile"):
 
     async def _chunithm_inner(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
