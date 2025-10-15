@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 
 site_name: "chuni penguin"
-site_url: "https://chunithm.beerpsi.cc"
+site_url: "https://chuni-penguin.beerpsi.cc"
 copyright: "Copyright &copy; 2023-present beerpsi"
 
 repo_url: "https://chunithm.beerpsi.cc/invite"
