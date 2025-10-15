@@ -20,6 +20,10 @@ class Rarity(Enum):
     staff = "staff"
     maimai = "maimai"
 
+    phoenix_gold = "phoenix_g"
+    phoenix_platinum = "phoenix_p"
+    phoenix_rainbow = "phoenix_r"
+
     version1 = "version1"
     version2 = "version2"
     version3 = "version3"
