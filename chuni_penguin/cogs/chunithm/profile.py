@@ -220,7 +220,7 @@ class ProfileCog(commands.Cog, name="Profile"):
     @logged_prefix_command
     async def chunithm(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         *,
         kamaitachi: bool = False,
         user: discord.Member | discord.User | None = None,
