@@ -99,10 +99,10 @@ def parse_title(element: Tag) -> Title | None:
         return None
 
     title_background_url: str = title_background_url_match.group("url")
-    title_background_filename = title_background_url.split("/")[-1]
+    title_background_filename = title_background_url.split("/")[-1].split(".")[0]
 
     if title_background_filename.startswith("honor_bg_"):
-        title_rarity = extract_last_part(title_background_filename)
+        title_rarity = title_background_filename[9:]
 
         if title_rarity == "noSet":
             return None
@@ -116,16 +116,17 @@ def parse_title(element: Tag) -> Title | None:
             raise ValueError(msg)
 
         title_content = title_content_elem.get_text()
+        title_rarity = Rarity(title_rarity)
     elif special_title := SPECIAL_TITLES.get(title_background_filename):
         title_content = special_title.content
-        title_rarity = special_title.rarity
+        title_rarity = Rarity(special_title.rarity)
     else:
         _logger.warning(
             "Ignoring unknown special title with URL %s", title_background_url
         )
         return None
 
-    return Title(content=title_content, rarity=Rarity(title_rarity))
+    return Title(content=title_content, rarity=title_rarity)
 
 
 def parse_player_card_and_avatar(soup: BeautifulSoup):
