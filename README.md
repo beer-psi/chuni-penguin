@@ -6,8 +6,7 @@
 
 Discord bot for CHUNITHM International version.
 
-I have a hosted instance that you can invite
-[here](https://discord.com/oauth2/authorize?client_id=1091948342101155950&scope=bot+applications.commands&permissions=274877983744),
+I have a hosted instance that you can invite [here](https://chunithm.beerpsi.cc/invite),
 though uptime is sometimes flaky.
 
 ### Features
@@ -35,15 +34,13 @@ You can clone from either the `develop` branch or the `trunk` branch. Only the
 0. Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 1. Copy `bot.example.ini` to `bot.ini` and fill in values based on the comments.
 2. Run `uv sync` to install dependencies.
-3. Run `uv run python -m dbutils create` to create the database. You may need to
-   activate the virtualenv first if you had a previous Python installation not
-   managed by rye.
+3. Run `uv run python -m dbutils create` to create the database.
 4. Run `uv run python -m dbutils update chunirec` to populate the song database.
    For this to work, `credentials.chunirec_token` **must** be set in `bot.ini`.
    A pre-populated database is also provided
    [here](https://nightly.link/beer-psi/chuni-penguin/workflows/test_creating_db.yaml/trunk/database.zip),
    for your convenience.
-5. `uv run bot.py`
+5. `uv run launcher.py`
 
 ### Contributions
 
@@ -55,19 +52,15 @@ bugfixes will be cherry-picked back to the `trunk` branch after I merge it.
 Thanks to these projects for making this bot possible and less miserable to
 make:
 
-- [Chunirec DB](https://db.chunirec.net) from
-  [chunirec](https://twitter.com/chunirec)
-- [arcade-songs](https://arcade-songs.zetaraku.dev) from
-  [Raku Zeta](https://github.com/zetaraku)
+- [Chunirec DB](https://db.chunirec.net) from [chunirec](https://twitter.com/chunirec)
+- [arcade-songs](https://arcade-songs.zetaraku.dev) from [Raku Zeta](https://github.com/zetaraku)
 - [CHUNITHM song alias list](https://github.com/lomotos10/GCM-bot/blob/main/data/aliases/en/chuni.tsv)
   from [lomotos10](https://github.com/lomotos10)
-- [Tukkun](https://github.com/tukkun1995) for breaking my bot in unthinkable
-  ways (aside from being
-  [a contributor](https://github.com/beer-psi/chuni-penguin/pulls?q=is%3Apr+author%3Atukkun1995+)),
+- [Tukkun](https://github.com/tukkun1995) for breaking my bot in unthinkable ways (aside
+  from being [a contributor](https://github.com/beer-psi/chuni-penguin/pulls?q=is%3Apr+author%3Atukkun1995+)),
   as well as taking the time to add all the song aliases.
 
-Thanks to all the
-[contributors](https://github.com/beer-psi/chuni-penguin/graphs/contributors)
+Thanks to all the [contributors](https://github.com/beer-psi/chuni-penguin/graphs/contributors)
 who took part.
 
 Thanks to all the people who have sponsored my work through
