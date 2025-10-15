@@ -177,9 +177,12 @@ class EventsCog(commands.Cog, name="Events"):
 
         # text_prefix is for the help command, since we don't have a slash help
         # command (yet)
-        if isinstance(context_or_interaction, discord.Interaction):
-            if (guild_id := context_or_interaction.guild_id) is not None:
-                text_prefix = context_or_interaction.client.prefixes.get(
+        if isinstance((interaction := context_or_interaction), discord.Interaction) or (
+            isinstance(context_or_interaction, Context)
+            and (interaction := context_or_interaction.interaction) is not None
+        ):
+            if (guild_id := interaction.guild_id) is not None:
+                text_prefix = interaction.client.prefixes.get(
                     guild_id, config.bot.default_prefix
                 )
             else:
@@ -187,6 +190,11 @@ class EventsCog(commands.Cog, name="Events"):
 
             prefix = "/"
         else:
+            # The type checker is not smart enough to realize that the upper branch
+            # already ensures that context_or_interaction cannot be an Interaction
+            # down here.
+            assert isinstance(context_or_interaction, Context)
+
             prefix = text_prefix = (
                 context_or_interaction.clean_prefix or config.bot.default_prefix
             )
