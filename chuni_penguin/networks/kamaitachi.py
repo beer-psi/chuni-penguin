@@ -612,24 +612,36 @@ class Kamaitachi(Network):
         custom_pfp_location = data.body.custom_pfp_location
 
         if config.web.is_accessible and custom_banner_location is not None:
-            async with self._client.stream(
+            request = self._client.build_request(
                 "GET",
                 f"https://cdn-kamai.tachi.ac/users/{user_id}/banner-{custom_banner_location}",
-            ) as resp:
-                mime = await guess_mime_type(resp)
+            )
+            _ = request.headers.pop("Authorization", None)
+            response = await self._client.send(request)
+
+            try:
+                mime = await guess_mime_type(response)
 
                 if mime.startswith("image/"):
                     custom_banner_location += f".{mime[6:]}"
+            finally:
+                await response.aclose()
 
         if config.web.is_accessible and custom_pfp_location is not None:
-            async with self._client.stream(
+            request = self._client.build_request(
                 "GET",
                 f"https://cdn-kamai.tachi.ac/users/{user_id}/pfp-{custom_pfp_location}",
-            ) as resp:
-                mime = await guess_mime_type(resp)
+            )
+            _ = request.headers.pop("Authorization", None)
+            response = await self._client.send(request)
+
+            try:
+                mime = await guess_mime_type(response)
 
                 if mime.startswith("image/"):
                     custom_pfp_location += f".{mime[6:]}"
+            finally:
+                await response.aclose()
 
         return Profile(
             username=username,
