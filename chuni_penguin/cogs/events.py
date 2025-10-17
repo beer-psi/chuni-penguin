@@ -112,7 +112,9 @@ class EventsCog(commands.Cog, name="Events"):
             exc,
         )
 
-        await self._send_error(ctx, embed, delete_after=delete_after)
+        if embed.description is not None:
+            await self._send_error(ctx, embed, delete_after=delete_after)
+            return
 
         await logger.aexception(
             "Unhandled exception in command",
