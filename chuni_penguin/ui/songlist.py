@@ -30,7 +30,7 @@ class SonglistPageSource(ListPageSource[Chart]):
                 if chart.sdvxin_chart_view is not None
                 else yt_search_link(chart.song.title, chart.difficulty, chart.level)
             )
-            songlist += f"{idx + start + 1}. {escape_markdown(chart.song.title)} [[{Difficulty(chart.difficulty)} {chart.const}]]({url})\n"
+            songlist += f"{idx + start + 1}. {escape_markdown(chart.song.title)} [[{Difficulty(chart.difficulty)} {chart.const or chart.level}]]({url})\n"
 
         return {
             "embed": discord.Embed(
