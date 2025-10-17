@@ -1,3 +1,4 @@
+import contextlib
 import io
 import json
 import traceback
@@ -111,21 +112,7 @@ class EventsCog(commands.Cog, name="Events"):
             exc,
         )
 
-        if embed.description is not None and (
-            ctx.interaction is not None
-            or ctx.bot_permissions.send_messages
-            or ctx.bot_permissions.send_messages_in_threads
-        ):
-            if ctx.bot_permissions.embed_links:
-                await ctx.respond_or_edit(
-                    embed=embed, delete_after=delete_after, view=None
-                )
-            else:
-                await ctx.respond_or_edit(
-                    embed.description, delete_after=delete_after, view=None
-                )
-
-            return
+        await self._send_error(ctx, embed, delete_after=delete_after)
 
         await logger.aexception(
             "Unhandled exception in command",
@@ -151,16 +138,7 @@ class EventsCog(commands.Cog, name="Events"):
                 "and report the bug in the #help-bugs channel!"
             )
 
-        if (
-            ctx.interaction is not None
-            or ctx.bot_permissions.send_messages
-            or ctx.bot_permissions.send_messages_in_threads
-        ):
-            if ctx.bot_permissions.embed_links:
-                await ctx.respond_or_edit(embed=embed, view=None)
-            else:
-                await ctx.respond_or_edit(embed.description, view=None)
-
+        await self._send_error(ctx, embed)
         await self._submit_error_to_webhook(ctx, exc)
 
     async def _construct_error_embed(
@@ -322,6 +300,37 @@ class EventsCog(commands.Cog, name="Events"):
             )
 
         return embed, delete_after
+
+    async def _send_error(
+        self,
+        ctx: PenguinContext,
+        embed: discord.Embed,
+        *,
+        delete_after: float | None = None,
+    ):
+        is_thread = isinstance(ctx.channel, discord.Thread)
+
+        if (
+            ctx.interaction is not None
+            or (not is_thread and ctx.bot_permissions.send_messages)
+            or (is_thread and ctx.bot_permissions.send_messages_in_threads)
+        ):
+            if ctx.bot_permissions.embed_links:
+                await ctx.respond_or_edit(
+                    embed=embed, delete_after=delete_after, view=None
+                )
+            else:
+                await ctx.respond_or_edit(
+                    embed.description, delete_after=delete_after, view=None
+                )
+        else:
+            with contextlib.suppress(discord.HTTPException):
+                dm_channel = ctx.author.dm_channel
+
+                if dm_channel is None:
+                    dm_channel = await ctx.author.create_dm()
+
+                await dm_channel.send(embed=embed)
 
     async def _submit_error_to_webhook(
         self,
