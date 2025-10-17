@@ -319,7 +319,7 @@ class ProfileView(PenguinView):
     async def show_hide_friend_code(
         self, interaction: Interaction, button: discord.ui.Button
     ):
-        if not super().interaction_check(interaction):
+        if not await super().interaction_check(interaction):
             return
 
         if not self.friend_code_visible:
