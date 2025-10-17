@@ -169,14 +169,14 @@ class LegalConfig:
     def privacy_policy(self) -> str:
         return self.__section.get(
             "privacy_policy",
-            fallback="https://gist.github.com/beer-psi/273343ec521001720823ee0b238e1314#file-privacy-policy-md",
+            fallback="https://chuni-penguin.beerpsi.cc/legal/privacy-policy",
         )  # pyright: ignore[reportReturnType]
 
     @property
     def terms_of_service(self) -> str:
         return self.__section.get(
             "terms_of_service",
-            fallback="https://gist.github.com/beer-psi/273343ec521001720823ee0b238e1314#file-terms-of-service-md",
+            fallback="https://chuni-penguin.beerpsi.cc/legal/terms-of-service",
         )  # pyright: ignore[reportReturnType]
 
 

@@ -58,15 +58,15 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
     @commands.command("block")
     @commands.is_owner()
     async def block(
-        self, ctx: PenguinContext, objects: commands.Greedy[discord.Object]
+        self, ctx: PenguinContext, object: discord.Object, *, reason: str | None = None
     ):
         """Blocks users or guilds from using the bot globally."""
 
         async with self.bot.begin_db_session() as session:
-            for object in objects:
-                session.add(Denylist(object_id=object.id))
-                self.bot.denylist.add(object.id)
+            denylist_entry = Denylist(object_id=object.id, reason=reason)
+            self.bot.denylist[object.id] = denylist_entry
 
+            session.add(denylist_entry)
             await session.commit()
 
         await ctx.message.add_reaction("✅")
@@ -87,7 +87,7 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
             await session.commit()
 
         for object in objects:
-            self.bot.denylist.discard(object.id)
+            del self.bot.denylist[object.id]
 
         await ctx.message.add_reaction("✅")
 

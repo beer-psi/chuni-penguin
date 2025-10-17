@@ -7,6 +7,10 @@ import discord
 import msgspec
 from discord.app_commands import CommandTree
 
+from chuni_penguin.config import config
+from chuni_penguin.database import Denylist
+from chuni_penguin.ui.components import BannedEmbed
+
 if TYPE_CHECKING:
     from .bot import ChuniBot
 
@@ -38,13 +42,28 @@ class PenguinCommandTree(CommandTree["ChuniBot"]):
         if await interaction.client.is_owner(interaction.user):
             return True
 
-        if interaction.user.id in interaction.client.denylist:
-            return False
+        ban_entry: Denylist | None = None
+        server_name: str | None = None
 
-        if (  # noqa: SIM103
-            interaction.guild_id is not None
-            and interaction.guild_id in interaction.client.denylist
+        if interaction.user.id in interaction.client.denylist:
+            ban_entry = interaction.client.denylist[interaction.user.id]
+        elif (
+            interaction.guild is not None
+            and interaction.guild.id in interaction.client.denylist
         ):
+            ban_entry = interaction.client.denylist[interaction.guild.id]
+            server_name = interaction.guild.name
+
+        if ban_entry is not None:
+            await interaction.response.send_message(
+                embed=BannedEmbed(
+                    client=interaction.client,
+                    entry=ban_entry,
+                    server_name=server_name,
+                    support_server_invite=config.bot.support_server_invite,
+                ),
+                ephemeral=True,
+            )
             return False
 
         return True
