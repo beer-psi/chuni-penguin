@@ -184,36 +184,43 @@ async def update_sdvxin(
                     script_data = None
                     level = None
 
-                    if category == "end" and sdvx_in_id == "01052":
-                        condition = (
-                            Song.id == 8306
-                        )  # Invitation WE got revived under a different ID.
-                    elif category == "end":
-                        script_resp = await client.get(
-                            f"https://sdvx.in{script['src']}"
-                        )
-                        script_data = await script_resp.text()
-
-                        if (
-                            match := WORLD_END_SDVXIN_REGEX.search(script_data)
-                        ) is not None and match.group("difficulty").strip():
-                            level = match.group("difficulty").strip()
-                        elif (
-                            match := WORLD_END_DIFFICULTY_REGEX.search(script_data)
-                        ) is not None:
-                            kanji = match.group("kanji")
-                            star_difficulty = match.group("star_difficulty")
-                            level = f"{kanji}{'☆' * int(star_difficulty)}"
+                    if category == "end":
+                        if sdvx_in_id == "01052":
+                            # Invitation WE got revived under a different ID.
+                            condition = Song.id == 8306
+                        elif sdvx_in_id == "01032":
+                            # ナイト・オブ・ナイツ WE got revived under a different ID.
+                            condition = Song.id == 8309
                         else:
-                            logger.warning(
-                                f"Could not extract difficulty for {title}, {sdvx_in_id}"
+                            script_resp = await client.get(
+                                f"https://sdvx.in{script['src']}"
                             )
-                            continue
+                            script_data = await script_resp.text()
 
-                        stmt = stmt.join(Chart)
-                        condition &= (Song.id >= 8000) & (Chart.level == level)
+                            if (
+                                match := WORLD_END_SDVXIN_REGEX.search(script_data)
+                            ) is not None and match.group("difficulty").strip():
+                                level = match.group("difficulty").strip()
+                            elif (
+                                match := WORLD_END_DIFFICULTY_REGEX.search(script_data)
+                            ) is not None:
+                                kanji = match.group("kanji")
+                                star_difficulty = match.group("star_difficulty")
+                                level = f"{kanji}{'☆' * int(star_difficulty)}"
+                            else:
+                                logger.warning(
+                                    f"Could not extract difficulty for {title}, {sdvx_in_id}"
+                                )
+                                continue
+
+                            stmt = stmt.join(Chart)
+                            condition &= (Song.id >= 8000) & (Chart.level == level)
                     else:
                         condition &= Song.id < 8000
+
+                    logger.debug(
+                        "Finding chart", title=title, level=level, category=category
+                    )
 
                     stmt = stmt.where(condition)
                     song = (await session.execute(stmt)).scalar_one_or_none()

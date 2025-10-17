@@ -537,7 +537,7 @@ async def merge_options(
         inserted_courses.append(
             {
                 "id": course_id,
-                "cls": cls.value,
+                "cls": cls,
                 "name": name,
                 "version": version,
                 "is_duplicate_track_allowed": is_music_duplicate_allowed == "true",
