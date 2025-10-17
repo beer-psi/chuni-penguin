@@ -14,7 +14,13 @@ from sqlalchemy.orm import joinedload
 from chuni_penguin.config import config
 from chuni_penguin.constants import SIMILARITY_THRESHOLD
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.converters import AliasNameConverter, AliasNameTransformer
+from chuni_penguin.converters import (
+    AliasNameConverter,
+    AliasNameTransformer,
+    Level,
+    LevelRange,
+    LevelRangeConverter,
+)
 from chuni_penguin.database import Alias, Chart, Course, Song
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.errors import NetworkError
@@ -73,31 +79,42 @@ class SearchCog(commands.Cog, name="Search"):
 
     @commands.hybrid_command("find")
     @logged_prefix_command
-    async def find(self, ctx: Context, level: str):
+    async def find(
+        self,
+        ctx: Context,
+        level: Annotated[Level | LevelRange, LevelRangeConverter],
+    ):
         """Find charts by level or chart constant.
 
         Parameters
         ----------
-        query: float
-            Chart constant to search for.
+        level: Level | LevelRange
+            Level (13+), chart constant (13.5), or level range (13.2-13.7) to search for.
         """
 
         stmt = (
             select(Chart)
             .options(joinedload(Chart.sdvxin_chart_view), joinedload(Chart.song))
             .join(Song, Chart.song)
-            .order_by(Song.title)
+            .order_by(Chart.const, Song.title)
         )
 
-        try:
-            if "." in level:
-                query_level = float(level)
-                stmt = stmt.where(Chart.const == query_level)
-            else:
-                stmt = stmt.where(Chart.level == level)
-        except ValueError:
-            msg = "Please enter a valid level or chart constant."
-            raise commands.BadArgument(msg) from None
+        if isinstance(level, LevelRange):
+            if level.min_level is not None:
+                stmt = stmt.where(
+                    Chart.const
+                    >= (level.min_level.const or level.min_level.inferred_const)
+                )
+
+            if level.max_level is not None:
+                stmt = stmt.where(
+                    Chart.const
+                    <= (level.max_level.const or level.max_level.inferred_max_const)
+                )
+        elif level.const is not None:
+            stmt = stmt.where(Chart.const == level.const)
+        else:
+            stmt = stmt.where(Chart.level == level.level)
 
         async with ctx.typing(), self.bot.begin_db_session() as session:
             charts = (await session.execute(stmt)).scalars().all()
