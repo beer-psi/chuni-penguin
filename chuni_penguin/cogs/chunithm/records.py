@@ -1868,9 +1868,9 @@ class RecordsCog(commands.Cog, name="Records"):
             internal_level: float | None = None
 
             if level is not None:
-                level_folder, internal_level = await LevelConverter().convert(
-                    ctx, level
-                )
+                level_data = await LevelConverter().convert(ctx, level)
+                level_folder = level_data.level
+                internal_level = level_data.const
 
             if level_folder is not None and client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL:
                 records = await client.get_personal_bests_by_level(level_folder)
