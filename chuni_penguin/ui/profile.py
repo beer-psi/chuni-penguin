@@ -176,6 +176,9 @@ class ProfileView(PenguinView):
         if not self.profile.friend_code or ctx.author != target:
             self.clear_items()
 
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        return True
+
     async def _before_start(self, *, content: str | None = None) -> dict[str, Any]:
         embed = discord.Embed(
             color=(
@@ -316,8 +319,7 @@ class ProfileView(PenguinView):
     async def show_hide_friend_code(
         self, interaction: Interaction, button: discord.ui.Button
     ):
-        if interaction.user != self.ctx.author:
-            await interaction.response.defer()
+        if not super().interaction_check(interaction):
             return
 
         if not self.friend_code_visible:
