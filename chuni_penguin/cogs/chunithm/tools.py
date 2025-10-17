@@ -26,7 +26,12 @@ from chuni_penguin.calculation import (
 from chuni_penguin.config import config
 from chuni_penguin.constants import MAX_DIFFICULTY
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.converters import AliasNameConverter, DifficultyConverter
+from chuni_penguin.converters import (
+    AliasNameConverter,
+    DifficultyConverter,
+    LevelRange,
+    LevelRangeConverter,
+)
 from chuni_penguin.database import Chart, Song
 from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.networks.consts import KEY_PLAY_RATING
@@ -347,8 +352,9 @@ class ToolsCog(commands.Cog, name="Tools"):
         Parameters
         ----------
         level: str
-            Level to search for. Can be a level (13+), a chart constant (13.5), or a
-            course class (`i`, `ii`, `iii`, `iv`, `v`, `inf`, `random`, `wallpanic`).
+            Level to search for. Can be a level (13+), a chart constant (13.5), a level
+            range (14.0-14.8), or a course class (`i`, `ii`, `iii`, `iv`, `v`, `inf`,
+            `random`, `wallpanic`).
         count: int
             Number of charts to return. Must be between 1 and 10. Not respected when
             rolling a random course.
@@ -447,20 +453,26 @@ class ToolsCog(commands.Cog, name="Tools"):
                         charts.append(chart)
             else:
                 content = None
-                try:
-                    if "." in level:
-                        query_level = float(level)
-                        stmt = stmt.limit(count).where(Chart.const == query_level)
-                    elif (
-                        level.endswith("+") and level[:-1].isnumeric()
-                    ) or level.isnumeric():
-                        stmt = stmt.limit(count).where(Chart.level == level)
-                    else:
-                        msg = "Please enter a valid level or chart constant."
-                        raise commands.BadArgument(msg)
-                except ValueError:
-                    msg = "Please enter a valid level or chart constant."
-                    raise commands.BadArgument(msg) from None
+                stmt = stmt.limit(count)
+                levels = await LevelRangeConverter().convert(ctx, level)
+
+                if isinstance(levels, LevelRange):
+                    min_level, max_level = levels
+
+                    if min_level is not None:
+                        stmt = stmt.where(
+                            Chart.const >= (min_level.const or min_level.inferred_const)
+                        )
+
+                    if max_level is not None:
+                        stmt = stmt.where(
+                            Chart.const
+                            <= (max_level.const or max_level.inferred_max_const)
+                        )
+                elif levels.const is not None:
+                    stmt = stmt.where(Chart.const == levels.const)
+                else:
+                    stmt = stmt.where(Chart.level == levels.level)
 
                 charts = (await session.execute(stmt)).scalars().all()
 
