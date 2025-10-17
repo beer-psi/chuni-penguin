@@ -1,4 +1,5 @@
 import contextlib
+from dataclasses import dataclass
 from typing import NamedTuple, override
 
 from discord import Interaction, Member, User, app_commands
@@ -72,9 +73,32 @@ class RankConverter(commands.Converter[Rank]):
             raise commands.BadArgument(msg) from e
 
 
-class Level(NamedTuple):
+@dataclass
+class Level:
     level: str
     const: float | None
+
+    @property
+    def inferred_const(self):
+        return self.const or float(self.level.replace("+", ".5", 1))
+
+    @property
+    def inferred_max_const(self):
+        if self.const is not None:
+            return self.const
+
+        if self.level.endswith("+"):
+            return float(self.level.replace("+", ".9", 1))
+
+        return (int(self.level) * 10 + 4) / 10
+
+    def __str__(self):
+        return str(self.const) if self.const is not None else self.level
+
+
+class LevelRange(NamedTuple):
+    min_level: Level | None
+    max_level: Level | None
 
 
 class LevelConverter(commands.Converter[Level]):
@@ -122,6 +146,37 @@ class LevelConverter(commands.Converter[Level]):
 
         msg = f'Could not infer level or chart constant from "{escape_markdown(argument)}".'
         raise commands.BadArgument(msg)
+
+
+class LevelRangeConverter(commands.Converter[Level | LevelRange]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> Level | LevelRange:
+        min_level_str, separator, max_level_str = argument.partition("-")
+        level_converter = LevelConverter()
+
+        if len(max_level_str) <= 0 and len(separator) <= 0:
+            return await level_converter.convert(ctx, min_level_str)
+
+        min_level = (
+            await level_converter.convert(ctx, min_level_str)
+            if len(min_level_str) > 0
+            else None
+        )
+        max_level = (
+            await level_converter.convert(ctx, max_level_str)
+            if len(max_level_str) > 0
+            else None
+        )
+
+        if (
+            min_level is not None
+            and max_level is not None
+            and min_level.inferred_const > max_level.inferred_const
+        ):
+            msg = f"Invalid range: minimum level {min_level} is larger than maximum level {max_level}"
+            raise commands.BadArgument(msg)
+
+        return LevelRange(min_level, max_level)
 
 
 # TODO: Consider inheriting from commands.clean_content instead so we
