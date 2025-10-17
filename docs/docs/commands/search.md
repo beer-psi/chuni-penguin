@@ -76,7 +76,7 @@ If you are logged in to CHUNITHM-NET, this also displays your course records.
 
 ## find
 
-Find charts by level or chart constant.
+Find charts by level (13+), chart constant (13.5), or a level range (13.5-13.8).
 
 === "Text command"
 
@@ -88,7 +88,7 @@ Find charts by level or chart constant.
 
 <h3>Options</h3>
 
-- `level`: The level or chart constant to search for.
+- `level`: The level, chart constant, or level range to search for.
 
 ## info
 
