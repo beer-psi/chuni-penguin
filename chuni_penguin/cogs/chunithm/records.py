@@ -866,7 +866,7 @@ class RecordsCog(commands.Cog, name="Records"):
             try:
                 thumbnail_urls: list[str] = image_urls_by_message[message.id]
             except KeyError:
-                thumbnail_urls = _extract_images_from_message(message, url_whitelist)
+                thumbnail_urls = _extract_images_from_message(message)
 
             if len(thumbnail_urls) == 0:
                 msg = "The message replied to does not contain any charts/scores."
