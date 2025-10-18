@@ -232,7 +232,7 @@ class ChuniBot(commands.AutoShardedBot):
             ban_entry = self.denylist[ctx.guild.id]
             server_name = ctx.guild.name
 
-        if ban_entry is not None:
+        if ban_entry is not None and ctx.valid:
             with contextlib.suppress(discord.HTTPException):
                 dm_channel = ctx.author.dm_channel
 

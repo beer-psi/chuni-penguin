@@ -116,6 +116,7 @@ TITLE_MAPPING = {
     "萌豚功夫大乱舞": "萌豚♥功夫♥大乱舞",
     "優勝Princess": "優勝Princess♡",
     "宵の平安京 Stargaze": "宵の平安京 Stargazer",
+    "内臓マニピ": "内臓♡マニピ",
     "ＧＯ！ＧＯ！ラブリズム ～あーりん書類審査通過記念Ver.～": "ＧＯ！ＧＯ！ラブリズム♥ ～あーりん書類審査通過記念Ver.～",
     "《真紅》～ Pavane Pour La Flamme": "《真紅》 ～ Pavane Pour La Flamme",
     "《楽土》～ One and Only One": "《楽土》 ～ One and Only One",
