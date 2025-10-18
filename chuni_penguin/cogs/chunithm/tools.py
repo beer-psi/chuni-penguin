@@ -342,7 +342,7 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         await ctx.reply(res, mention_author=False)
 
-    @commands.hybrid_command("random")
+    @commands.hybrid_command("random", aliases=["rand"])
     @logged_prefix_command
     async def random(
         self, ctx: PenguinContext, level: str, count: Range[int, 1, 10] = 3

@@ -124,6 +124,8 @@ Read the Codex.
 
 ## random
 
+<small>(aliases: `rand`)</small>
+
 Get random charts based on the given level/course/chart constant.
 
 === "Text command"
