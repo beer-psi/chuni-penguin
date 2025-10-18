@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+{{ super() }}
+
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ page.canonical_url }}" />
+<meta property="og:image" content="{{ config.site_url.removesuffix('/') }}/assets/images/favicon.png" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:url" content="{{ page.canonical_url }}" />
+
+{% if page.title and page.title != config.site_name %}
+    <meta property="og:title" content="{{ page.title }} | {{ config.site_name }}" />
+{% else %}
+    <meta property="og:title" content="{{ config.site_name }}" />
+{% endif %}
+
+{% if page.description %}
+    <meta property="og:description" content="{{ page.description }}" />
+{% elif config.site_description %}
+    <meta property="og:description" content="{{ config.site_description }}" />
+{% endif %}
+
+<link
+    rel="apple-touch-icon"
+    sizes="180x180"
+    href="/assets/images/apple-touch-icon.png"
+/>
+<link
+    rel="icon"
+    type="image/png"
+    sizes="32x32"
+    href="/assets/images/favicon-32x32.png"
+/>
+<link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="/assets/images/favicon-16x16.png"
+/>
+{% endblock %}
