@@ -705,6 +705,18 @@ class RecordsCog(commands.Cog, name="Records"):
         self.utils = self.bot.utils
         self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
 
+        self.compare_context_menu = app_commands.ContextMenu(
+            name="View your score", callback=self.compare_context_menu_callback
+        )
+
+    async def cog_load(self) -> None:
+        self.bot.tree.add_command(self.compare_context_menu)
+
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(
+            self.compare_context_menu.name, type=self.compare_context_menu.type
+        )
+
     async def _recent_inner(
         self,
         ctx: PenguinContext,
@@ -778,20 +790,40 @@ class RecordsCog(commands.Cog, name="Records"):
 
         return await self._recent_inner(ctx, user, kamaitachi=kamaitachi)
 
-    async def _compare_inner(
+    async def _compare_from_message(
         self,
         ctx: PenguinContext,
+        message: discord.Message,
+        message_images: list[str] | None = None,
         user: discord.User | discord.Member | None = None,
         *,
         kamaitachi: bool = False,
     ):
-        url_whitelist = [JACKET_BASE, INTERNATIONAL_JACKET_BASE]
-        image_urls_by_message: dict[int, list[str]] = {}
+        if message_images is None:
+            message_images = _extract_images_from_message(message)
 
-        if config.web.serve_assets and config.web.base_url:
-            url_whitelist.append(config.web.base_url)
+        if len(message_images) == 0:
+            msg = "The message replied to does not contain any charts/scores."
+            raise commands.BadArgument(msg)
 
-        target_id = ctx.author.id if user is None else user.id
+        embeds = message.embeds.copy()
+        containers = [
+            component
+            for component in message.components
+            if isinstance(component, discord.components.Container)
+        ]
+
+        for snapshot in message.message_snapshots:
+            embeds.extend(snapshot.embeds)
+            containers.extend(
+                [
+                    component
+                    for component in snapshot.components
+                    if isinstance(component, discord.components.Container)
+                ]
+            )
+
+        target_id = user.id if user is not None else ctx.author.id
 
         async with (
             ctx.typing(),
@@ -800,83 +832,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 ctx, target_id, kamaitachi=kamaitachi
             ) as client,
         ):
-            message: discord.Message | discord.MessageSnapshot
-
-            if (reference := ctx.message.reference) is not None:
-                if isinstance(reference.resolved, discord.Message):
-                    message = reference.resolved
-                elif reference.message_id is not None:
-                    try:
-                        message = await ctx.channel.fetch_message(reference.message_id)
-                    except discord.HTTPException:
-                        msg = "Could not fetch the message that was replied to. Is it deleted?"
-                        raise commands.CommandError(msg) from None
-                else:
-                    msg = "The message reference did not point to a valid message."
-                    raise commands.BadArgument(msg)
-            else:
-                try:
-
-                    def check(m: discord.Message):
-                        nonlocal url_whitelist
-                        nonlocal image_urls_by_message
-
-                        if m.author != self.bot.user:
-                            return False
-
-                        image_urls = _extract_images_from_message(m, url_whitelist)
-                        image_urls_by_message[m.id] = image_urls
-
-                        return len(image_urls) > 0
-
-                    messages = [
-                        x async for x in ctx.channel.history(limit=50) if check(x)
-                    ]
-                except discord.errors.Forbidden as e:
-                    msg = "Bot requires the Read Message History permission to fetch recent scores."
-
-                    if ctx.interaction is None:
-                        msg += f" Alternatively, run `{ctx.clean_prefix}compare` while replying to the score you want to compare."
-
-                    raise commands.CheckFailure(msg) from e
-
-                if len(messages) == 0:
-                    msg = "No recent scores found."
-                    raise commands.CommandError(msg)
-
-                message = messages[0]
-
-            embeds = message.embeds.copy()
-            containers = [
-                component
-                for component in message.components
-                if isinstance(component, discord.components.Container)
-            ]
-
-            for snapshot in message.message_snapshots:
-                embeds.extend(snapshot.embeds)
-                containers.extend(
-                    [
-                        component
-                        for component in snapshot.components
-                        if isinstance(component, discord.components.Container)
-                    ]
-                )
-
-            try:
-                thumbnail_urls: list[str] = image_urls_by_message[message.id]
-            except KeyError:
-                thumbnail_urls = _extract_images_from_message(message)
-
-            if len(thumbnail_urls) == 0:
-                msg = "The message replied to does not contain any charts/scores."
-                raise commands.BadArgument(msg)
-
-            condition = SongJacket.jacket_url.in_(thumbnail_urls)
-
             sql = (
                 select(SongJacket)
-                .where(condition)
+                .where(SongJacket.jacket_url.in_(message_images))
                 .group_by(SongJacket.song_id)
                 .options(joinedload(SongJacket.song).joinedload(Song.charts))
             )
@@ -1001,6 +959,71 @@ class RecordsCog(commands.Cog, name="Records"):
         else:
             await view.start(content=content)
 
+    async def _compare_inner(
+        self,
+        ctx: PenguinContext,
+        user: discord.User | discord.Member | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        url_whitelist = [JACKET_BASE, INTERNATIONAL_JACKET_BASE]
+        image_urls_by_message: dict[int, list[str]] = {}
+
+        if config.web.serve_assets and config.web.base_url:
+            url_whitelist.append(config.web.base_url)
+
+        message: discord.Message | discord.MessageSnapshot
+
+        if (reference := ctx.message.reference) is not None:
+            if isinstance(reference.resolved, discord.Message):
+                message = reference.resolved
+            elif reference.message_id is not None:
+                try:
+                    message = await ctx.channel.fetch_message(reference.message_id)
+                except discord.HTTPException:
+                    msg = "Could not fetch the message that was replied to. Is it deleted?"
+                    raise commands.CommandError(msg) from None
+            else:
+                msg = "The message reference did not point to a valid message."
+                raise commands.BadArgument(msg)
+        else:
+            try:
+
+                def check(m: discord.Message):
+                    nonlocal url_whitelist
+                    nonlocal image_urls_by_message
+
+                    if m.author != self.bot.user:
+                        return False
+
+                    image_urls = _extract_images_from_message(m, url_whitelist)
+                    image_urls_by_message[m.id] = image_urls
+
+                    return len(image_urls) > 0
+
+                messages = [x async for x in ctx.channel.history(limit=50) if check(x)]
+            except discord.errors.Forbidden as e:
+                msg = "Bot requires the Read Message History permission to fetch recent scores."
+
+                if ctx.interaction is None:
+                    msg += f" Alternatively, run `{ctx.clean_prefix}compare` while replying to the score you want to compare."
+
+                raise commands.CheckFailure(msg) from e
+
+            if len(messages) == 0:
+                msg = "No recent scores found."
+                raise commands.CommandError(msg)
+
+            message = messages[0]
+
+        await self._compare_from_message(
+            ctx,
+            message,
+            image_urls_by_message.get(message.id),
+            user,
+            kamaitachi=kamaitachi,
+        )
+
     @flags.command("compare", aliases=["c", "mog", "gap"])
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
@@ -1047,6 +1070,13 @@ class RecordsCog(commands.Cog, name="Records"):
         ctx = await PenguinContext.from_interaction(interaction)
 
         await self._compare_inner(ctx, user, kamaitachi=kamaitachi)
+
+    async def compare_context_menu_callback(
+        self, interaction: discord.Interaction["ChuniBot"], message: discord.Message
+    ):
+        await self._compare_from_message(
+            await PenguinContext.from_interaction(interaction), message
+        )
 
     async def song_title_autocomplete(
         self, interaction: discord.Interaction, current: str
