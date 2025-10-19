@@ -27,6 +27,14 @@ Starts a song guessing game:
     - `-g, --genre <genres...>`: <small>(default: None)</small> Limit song pool to the
     given genres. Specify multiple genres with spaces, e.g. `-g niconico original`.
     **Games played with this option will not be counted towards the leaderboard.**
+    `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level
+    (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels,
+    e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the
+    leaderboard.**
+    `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and
+    digits (except `O` and `0`). A seed only gives the same game if all other options
+    are the same. A seed does not guarantee the same game as new songs get added.
+    **Games played with this option will not be counted towards the leaderboard.**
     - `-v, --volume <volume>`: <small>(default: 15)</small> **(voice only)** Sets the
     volume of the bot, as a percentage between 1 and 100. This can get extremely loud.
     - `-h, --hardcore`: Hardcore mode, each player gets one chance to answer each
