@@ -167,7 +167,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
-        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
+        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-l 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
         `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
@@ -199,7 +199,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
-        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
+        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-l 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
         `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
@@ -234,7 +234,7 @@ class GamingCog(commands.Cog, name="Games"):
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
-        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
+        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-l 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
         `-v`, `--volume`: The starting volume of the audio. Defaults to 15% (can be very loud!)
         `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """

@@ -29,7 +29,7 @@ Starts a song guessing game:
     **Games played with this option will not be counted towards the leaderboard.**
     `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level
     (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels,
-    e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the
+    e.g. `-l 13+ 15`. **Games played with this option will not be counted towards the
     leaderboard.**
     `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and
     digits (except `O` and `0`). A seed only gives the same game if all other options
