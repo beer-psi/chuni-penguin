@@ -1,19 +1,22 @@
 import asyncio
 import io
+import operator
 import random
 import traceback
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import datetime
 from enum import Enum
+from functools import reduce
 from typing import TYPE_CHECKING, Any, cast
 
 import discord
 import rapidfuzz
+import sqlalchemy
 from discord.ext import songbird
 from discord.ext.commands import Context
 from PIL import Image, ImageDraw, ImageOps
 from rapidfuzz import fuzz
-from sqlalchemy import select, text
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql import update
@@ -21,7 +24,8 @@ from sqlalchemy.sql import update
 from chuni_penguin.cogs.botutils import CachedAlias
 from chuni_penguin.cogs.events import EventsCog
 from chuni_penguin.constants import ASSETS_DIR
-from chuni_penguin.database import Alias, GuessScore, Song
+from chuni_penguin.converters import Level, LevelRange
+from chuni_penguin.database import Alias, Chart, GuessScore, Song
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.types import Difficulty, Genre
 from chuni_penguin.oggopus import crop_audio, get_audio_duration
@@ -68,7 +72,9 @@ class GuessingGameSession:
         wrong_answers_limit: int | None = None,
         hardcore_mode: bool = False,
         genres: list[Genre] | None = None,
+        levels: list[Level | LevelRange] | None = None,
         volume: int = 15,
+        seed: str | None = None,
     ) -> None:
         self.ctx: Context = ctx
 
@@ -97,6 +103,7 @@ class GuessingGameSession:
         self._hardcore_mode_ignores: set[int] = set()
 
         self.genres: list[Genre] | None = genres
+        self.levels: list[Level | LevelRange] | None = levels
 
         # If stopped by the bot itself, it means that we're restarting.
         self.stopped_by: discord.User | discord.Member | discord.ClientUser | None = (
@@ -106,6 +113,17 @@ class GuessingGameSession:
         self.last_question_was_answered: bool = False
 
         self.volume: int = volume
+
+        self.seeded: bool = seed is not None
+        self.seed: str = (
+            seed
+            if seed is not None
+            else "".join(
+                random.choice("ABCDEFGHIJKLMNPQRSTUVWXYZ123456789") for _ in range(8)
+            )
+        )
+        self.random: random.Random = random.Random(self.seed)
+        self._song_ids: Sequence[int] = []
 
         self._tasks: set[asyncio.Task] = set()
         self._lock: asyncio.Lock = asyncio.Lock()
@@ -136,10 +154,53 @@ class GuessingGameSession:
     def voice_client(self):
         return cast(songbird.SongbirdClient | None, self.ctx.voice_client)
 
+    @property
+    def counts_towards_leaderboard(self):
+        return self.genres is None and self.levels is None and not self.seeded
+
     async def run(
         self,
         after: Callable[[Exception | None], Awaitable[Any]] | None = None,
     ):
+        condition = (Song.genre != "WORLD'S END") & (Song.removed == False)  # noqa: E712
+
+        if self.genres is not None:
+            condition &= Song.chunithm_catcode.in_([g.value for g in self.genres])
+
+        if self.levels is not None:
+            level_conditions: list[ColumnElement[bool]] = []
+
+            for level in self.levels:
+                if isinstance(level, LevelRange):
+                    min_level, max_level = level
+                    lower_range_cond = sqlalchemy.true()
+                    upper_range_cond = sqlalchemy.true()
+
+                    if min_level is not None:
+                        lower_range_cond = Chart.const >= (
+                            min_level.const or min_level.inferred_const
+                        )
+                    if max_level is not None:
+                        upper_range_cond = Chart.const <= (
+                            max_level.const or max_level.inferred_const
+                        )
+
+                    level_conditions.append(lower_range_cond & upper_range_cond)
+                elif level.const is not None:
+                    level_conditions.append(Chart.const == level.const)
+                else:
+                    level_conditions.append(Chart.level == level.level)
+
+            condition &= reduce(operator.or_, level_conditions)
+
+        async with self.bot.begin_db_session() as session:
+            stmt = select(Song.id).where(condition)
+
+            if self.levels is not None:
+                stmt = stmt.join(Chart, Song.id == Chart.song_id).group_by(Song.id)
+
+            self._song_ids = (await session.execute(stmt)).scalars().unique().all()
+
         state = self._current_state
 
         while state is not None:
@@ -237,15 +298,9 @@ class GuessingGameSession:
         else:
             alias_guild_ids = [-1]
 
-        condition = (Song.genre != "WORLD'S END") & (Song.removed == False)  # noqa: E712
-
-        if self.genres is not None:
-            condition &= Song.chunithm_catcode.in_([g.value for g in self.genres])
+        song_id = self.random.choice(self._song_ids)
 
         async with self.bot.begin_db_session() as session:
-            stmt = select(Song.id).where(condition).order_by(text("RANDOM()")).limit(1)
-            song_id = (await session.execute(stmt)).scalar_one()
-
             stmt = (
                 select(Song)
                 .where(Song.id == song_id)
@@ -306,8 +361,8 @@ class GuessingGameSession:
         crop_width, crop_height = self.get_crop_dimensions()
 
         with Image.open(jacket_path) as img:
-            x = random.randrange(0, img.width - crop_width)
-            y = random.randrange(0, img.height - crop_height)
+            x = self.random.randrange(0, img.width - crop_width)
+            y = self.random.randrange(0, img.height - crop_height)
 
             img = img.crop((x, y, x + crop_width, y + crop_height))
 
@@ -316,11 +371,11 @@ class GuessingGameSession:
                 Difficulty.master,
                 Difficulty.ultima,
             }:
-                rotation = random.randrange(0, 4)
+                rotation = self.random.randrange(0, 4)
                 img = img.rotate(90 * rotation)
 
             if self.difficulty == Difficulty.ultima:
-                should_invert = random.random() < 0.5
+                should_invert = self.random.random() < 0.5
 
                 if should_invert:
                     img = ImageOps.invert(img.convert("RGB"))
@@ -387,7 +442,8 @@ class GuessingGameSession:
         # Usually, the first measure of game audio will be silent. Silent audio sucks, especially
         # on games where the audio is shorter, so we guard against the most basic of them first.
         audio_start = max(
-            random.randrange(0, audio_duration - audio_length), 60 / (song.bpm / 4)
+            self.random.randrange(0, audio_duration - audio_length),
+            60 / (song.bpm / 4),
         )
 
         return (
@@ -446,7 +502,7 @@ class GuessingGameSession:
         return f"{self.wrong_answers_limit - self.wrong_answers}/{self.wrong_answers_limit}"
 
     async def increment_score(self, user_id: int):
-        if self.genres is not None:
+        if not self.counts_towards_leaderboard:
             return
 
         guild_id = self.ctx.guild.id if self.ctx.guild else -1

@@ -10,7 +10,13 @@ from discord.utils import MISSING
 from sqlalchemy import delete
 
 from chuni_penguin.context import PenguinGuildContext
-from chuni_penguin.converters import DifficultyConverter, GenreConverter
+from chuni_penguin.converters import (
+    DifficultyConverter,
+    GenreConverter,
+    Level,
+    LevelRange,
+    LevelRangeConverter,
+)
 from chuni_penguin.database.models import GuessScore
 from chuni_penguin.flags import DiscordArguments
 from chuni_penguin.logging import logged_prefix_command
@@ -33,6 +39,8 @@ class GuessArguments:
     hardcore: bool
     genres: list[Genre] | None
     volume: int
+    levels: list[Level | LevelRange] | None
+    seed: str | None
 
 
 class GamingCog(commands.Cog, name="Games"):
@@ -64,6 +72,13 @@ class GamingCog(commands.Cog, name="Games"):
         parser.add_argument("-h", "--hardcore", action="store_true")
         parser.add_argument("-g", "--genre", type=str, nargs="*")
         parser.add_argument("-v", "--volume", type=int, required=False, default=15)
+        parser.add_argument(
+            "-l",
+            "--levels",
+            type=lambda s: LevelRangeConverter().convert(ctx, s),
+            nargs="*",
+        )
+        parser.add_argument("--seed", type=str, required=False, default=None)
 
         try:
             args, _ = await parser.parse_known_intermixed_args(shlex_split(arguments))
@@ -77,10 +92,23 @@ class GamingCog(commands.Cog, name="Games"):
         wrong: int | None = args.wrong
         hardcore: bool = args.hardcore
         genre: list[str] | None = args.genre
+        levels: list[Level | LevelRange] | None = args.levels
         volume: int = args.volume
+        seed: str | None = args.seed
 
         if genre is not None and len(genre) == 0:
             msg = "No genres were specified."
+            raise commands.BadArgument(msg)
+
+        if levels is not None and len(levels) == 0:
+            msg = "No levels were specified."
+            raise commands.BadArgument(msg)
+
+        if seed is not None and (
+            len(seed) != 8
+            or any(c not in "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789" for c in seed)
+        ):
+            msg = "Invalid seed. Must contain exactly 8 uppercase characters (except `O`) and digits (except `0`)."
             raise commands.BadArgument(msg)
 
         if volume < 0 or volume > 100:
@@ -98,11 +126,13 @@ class GamingCog(commands.Cog, name="Games"):
             if genre is not None
             else None,
             volume,
+            levels,
+            seed,
         )
 
     @commands.group(
         "guess",
-        usage="<game_type> [-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+        usage="<game_type> [-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>] [-l <levels...>] [--seed <seed>]",
         invoke_without_command=True,
     )
     @logged_prefix_command
@@ -113,7 +143,7 @@ class GamingCog(commands.Cog, name="Games"):
 
     @guess.command(
         "jacket",
-        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>] [-l <levels...>] [--seed <seed>]",
     )
     @commands.bot_has_permissions(
         add_reactions=True,
@@ -137,13 +167,15 @@ class GamingCog(commands.Cog, name="Games"):
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
+        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
+        `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
         await self._guess_without_voice_channel(ctx, GuessingGameType.IMAGE, arguments)
 
     @guess.command(
         "audio",
-        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>]",
+        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-g <genres...>] [-l <levels...>] [--seed <seed>]",
     )
     @commands.bot_has_permissions(
         add_reactions=True,
@@ -167,6 +199,8 @@ class GamingCog(commands.Cog, name="Games"):
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
+        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
+        `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
         await self._guess_without_voice_channel(
@@ -175,7 +209,7 @@ class GamingCog(commands.Cog, name="Games"):
 
     @guess.command(
         "voice",
-        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-v <volume>] [-g <genres...>]",
+        usage="[-h] [-d <difficulty>] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [-v <volume>] [-g <genres...>] [-l <levels...>] [--seed <seed>]",
     )
     @commands.guild_only()
     @commands.bot_has_permissions(
@@ -200,7 +234,9 @@ class GamingCog(commands.Cog, name="Games"):
         `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
         `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
         `-g`, `--genre`: Limit song pool to the provided genre. Can specify multiple genres, e.g. `-g original niconico`. **Games played with this option will not be counted towards the leaderboard!**
+        `-l`, `--level`: Limit song pool to the provided chart levels. Can specify a level (13+), a chart constant (13.8), or a range (13.5-13.8). Can specify multiple levels, e.g. `-g 13+ 15`. **Games played with this option will not be counted towards the leaderboard!**
         `-v`, `--volume`: The starting volume of the audio. Defaults to 15% (can be very loud!)
+        `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
         if self.shutting_down:
@@ -270,6 +306,8 @@ class GamingCog(commands.Cog, name="Games"):
                 hardcore_mode=args.hardcore,
                 genres=args.genres,
                 volume=args.volume,
+                levels=args.levels,
+                seed=args.seed,
             )
 
         if session.time_per_question is MISSING:
@@ -411,7 +449,7 @@ class GamingCog(commands.Cog, name="Games"):
     async def guess_reset(self, ctx: PenguinGuildContext):
         """Resets the guess leaderboard for this server.
 
-        The user calling this command must have the Manage Server permission.
+        The user invoking this command must have the Manage Server permission.
         """
 
         async with self.bot.begin_db_session() as session:

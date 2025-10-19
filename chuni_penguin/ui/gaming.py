@@ -10,6 +10,7 @@ from sqlalchemy import Row, desc, func, select
 from chuni_penguin.cogs.gaming._session import GuessingGameSession, GuessingGameType
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinGuildContext
+from chuni_penguin.converters import Level, LevelRange, LevelRangeConverter
 from chuni_penguin.database import GuessScore
 from chuni_penguin.networks.types import Difficulty, Genre
 
@@ -177,7 +178,7 @@ class GuessLeaderboardView(PaginationView):
 
 class RetryGameButton(
     discord.ui.DynamicItem[discord.ui.Button],
-    template=r"retryguess(?P<mode>[012]):(?P<difficulty>\d+):(?P<questions>\d+):(?P<score>\d*):(?P<time>\d+):(?P<wrong>\d*):(?P<hardcore>[01]):(?P<genres>[\d,]*)(?::(?P<volume>\d+))?",
+    template=r"retryguess(?P<mode>[012]):(?P<difficulty>\d+):(?P<questions>\d+):(?P<score>\d*):(?P<time>\d+):(?P<wrong>\d*):(?P<hardcore>[01]):(?P<genres>[\d,]*)(?::(?P<volume>\d+))?(?::(?P<levels>[\d\-+.,]*))?(?::(?P<seed>[A-NP-Z1-9]{8})?)?",
 ):
     def __init__(
         self,
@@ -190,7 +191,9 @@ class RetryGameButton(
         wrong: int | None,
         hardcore: bool,
         genres: list[Genre] | None,
+        levels: list[Level | LevelRange] | None,
         volume: int,
+        seed: str | None = None,
         row: int | None = None,
     ) -> None:
         if mode == GuessingGameType.IMAGE:
@@ -203,11 +206,29 @@ class RetryGameButton(
             msg = f"Unknown guess game mode: {mode}"
             raise ValueError(msg)
 
+        custom_id_parts: list[str] = [
+            mode_id,
+            str(difficulty.value),
+            str(questions),
+            str(score) if score is not None else "",
+            str(time),
+            str(wrong) if wrong is not None else "",
+            "1" if hardcore else "0",
+            ",".join([str(g.value) for g in genres]) if genres else "",
+            str(volume),
+            ",".join([str(level) for level in levels]) if levels else "",
+            seed if seed is not None else "",
+        ]
+
         super().__init__(
             discord.ui.Button(
-                style=discord.ButtonStyle.green,
-                label="Retry",
-                custom_id=f"retryguess{mode_id}:{difficulty.value}:{questions}:{score if score is not None else ''}:{time}:{wrong if wrong is not None else ''}:{'1' if hardcore else '0'}:{','.join([str(g.value) for g in genres]) if genres else ''}:{volume}",
+                style=(
+                    discord.ButtonStyle.green
+                    if seed is None
+                    else discord.ButtonStyle.secondary
+                ),
+                label="Retry" if seed is None else "Retry (same seed)",
+                custom_id=f"retryguess{':'.join(custom_id_parts)}",
             ),
             row=row,
         )
@@ -221,6 +242,8 @@ class RetryGameButton(
         self.hardcore = hardcore
         self.genres = genres
         self.volume = volume
+        self.levels = levels
+        self.seed = seed
 
     @classmethod
     async def from_custom_id(  # pyright: ignore[reportIncompatibleMethodOverride]
@@ -253,6 +276,21 @@ class RetryGameButton(
         )
         volume = int(match["volume"]) if match["volume"] else 15
 
+        level_range_converter = LevelRangeConverter()
+        levels = (
+            await asyncio.gather(
+                *[
+                    # This doesn't actually need a context object, that's just how the
+                    # converter interface goes.
+                    level_range_converter.convert(None, level)  # pyright: ignore[reportArgumentType]
+                    for level in match["levels"].split(",")
+                ]
+            )
+            if match["levels"]
+            else None
+        )
+        seed = match["seed"]
+
         return cls(
             mode=mode,
             difficulty=difficulty,
@@ -263,6 +301,8 @@ class RetryGameButton(
             hardcore=hardcore,
             genres=genres,
             volume=volume,
+            levels=levels,
+            seed=seed,
         )
 
     @override
@@ -351,6 +391,8 @@ class RetryGameButton(
                 hardcore_mode=self.hardcore,
                 genres=self.genres,
                 volume=self.volume,
+                levels=self.levels,
+                seed=self.seed,
             )
 
         voice_channel_id = (
