@@ -1,4 +1,3 @@
-import random
 from typing import TYPE_CHECKING, override
 
 import discord
@@ -76,6 +75,13 @@ async def end_game(
             name="Genres", value=", ".join([str(g) for g in session.genres])
         )
 
+    if session.levels is not None:
+        embed.add_field(
+            name="Levels", value=", ".join([str(level) for level in session.levels])
+        )
+
+    embed.add_field(name="Seed", value=session.seed)
+
     embed.add_field(name="Final Scores", value=session.print_score_list(), inline=False)
 
     if footer is not None:
@@ -98,7 +104,7 @@ async def end_game(
                 ]
             )
 
-        embed.set_footer(text=random.choice(tips))
+        embed.set_footer(text=session.random.choice(tips))
 
     retry_btn = RetryGameButton(
         mode=session.game_type,
@@ -109,13 +115,32 @@ async def end_game(
         wrong=session.wrong_answers_limit,
         hardcore=session.hardcore_mode,
         genres=session.genres,
+        levels=session.levels,
         volume=session.volume,
     )
+    retry_seeded_btn = RetryGameButton(
+        mode=session.game_type,
+        difficulty=session.difficulty,
+        questions=session.question_count or 20,
+        score=session.score_limit,
+        time=session.time_per_question,
+        wrong=session.wrong_answers_limit,
+        hardcore=session.hardcore_mode,
+        genres=session.genres,
+        levels=session.levels,
+        volume=session.volume,
+        seed=session.seed,
+    )
+
+    view = discord.ui.View(timeout=None)
 
     if len(retry_btn.custom_id) <= 100:
-        view = discord.ui.View(timeout=None)
         view.add_item(retry_btn)
-    else:
+
+    if len(retry_seeded_btn.custom_id) <= 100:
+        view.add_item(retry_seeded_btn)
+
+    if view.total_children_count == 0:
         view = MISSING
 
     await session.channel.send(embed=embed, view=view)

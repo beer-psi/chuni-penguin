@@ -19,6 +19,10 @@ class StartState(GuessingGameState):
             color=discord.Color.yellow(),
             title="A new game is starting in 5 seconds!",
         )
+
+        if not self.session.counts_towards_leaderboard:
+            embed.description = "**This game will not count towards the leaderboard!**"
+
         embed.add_field(
             name="Started by", value=self.session.ctx.author.mention, inline=True
         )
@@ -56,10 +60,18 @@ class StartState(GuessingGameState):
             embed.add_field(name="Hardcore mode", value="Enabled", inline=True)
 
         if self.session.genres is not None:
-            embed.description = "**This game will not count towards the leaderboard!**"
             embed.add_field(
                 name="Genres", value=", ".join([str(g) for g in self.session.genres])
             )
+
+        if self.session.levels is not None:
+            embed.add_field(
+                name="Levels",
+                value=", ".join([str(level) for level in self.session.levels]),
+            )
+
+        if self.session.seeded:
+            embed.add_field(name="Seed", value=self.session.seed)
 
         await self.session.ctx.send(embed=embed)
         return WaitState(self.session, 5, self.session.question_state_cls(self.session))

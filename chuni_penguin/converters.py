@@ -100,6 +100,16 @@ class LevelRange(NamedTuple):
     min_level: Level | None
     max_level: Level | None
 
+    def __str__(self) -> str:
+        if self.min_level is not None and self.max_level is not None:
+            return f"{self.min_level}-{self.max_level}"
+        if self.min_level is not None:
+            return f"{self.min_level}-"
+        if self.max_level is not None:
+            return f"-{self.max_level}"
+
+        return "-"
+
 
 class LevelConverter(commands.Converter[Level]):
     @override
