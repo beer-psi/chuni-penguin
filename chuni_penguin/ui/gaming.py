@@ -1,6 +1,6 @@
 import asyncio
 import re
-from typing import TYPE_CHECKING, Any, Sequence, cast, override
+from typing import TYPE_CHECKING, Any, Literal, Sequence, cast, override
 
 import discord
 from discord.ext import songbird
@@ -38,6 +38,7 @@ class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
         self.guild_id = guild_id
         self.guild_name = guild_name
         self.game_type: GuessingGameType | None = None
+        self.leaderboard_type: Literal["server", "global"] = "server"
 
     @override
     async def get_page(self, page_number: int) -> Sequence[Row[tuple[int, int]]]:  # pyright: ignore[reportIncompatibleMethodOverride]
@@ -51,18 +52,23 @@ class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
                         GuessScore.score.label("score"),
                     )
                     .where(
-                        (GuessScore.guild_id == self.guild_id)
-                        & (GuessScore.difficulty == difficulty.value)
+                        (GuessScore.difficulty == difficulty.value)
                         & (GuessScore.game_type == self.game_type.value)
                     )
                     .order_by(desc("score"))
                     .limit(10)
                 )
+
+                if self.leaderboard_type == "server":
+                    stmt = stmt.where(GuessScore.guild_id == self.guild_id)
             else:
                 stmt = select(
                     GuessScore.discord_id.label("discord_id"),
                     func.sum(GuessScore.score).label("score"),
-                ).where(GuessScore.guild_id == self.guild_id)
+                )
+
+                if self.leaderboard_type == "server":
+                    stmt = stmt.where(GuessScore.guild_id == self.guild_id)
 
                 if difficulty is not None:
                     stmt = stmt.where(GuessScore.difficulty == difficulty.value)
@@ -84,7 +90,10 @@ class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
         description = ""
         difficulty = self.entries[menu.current_page]
 
-        title = f"Guess Leaderboard for {escape_markdown(self.guild_name)}"
+        if self.leaderboard_type == "server":
+            title = f"Guess Leaderboard for {escape_markdown(self.guild_name)}"
+        else:
+            title = "Global Guess Leaderboard"
 
         if difficulty is not None:
             title += f" [{difficulty}]"
@@ -112,6 +121,8 @@ class GuessLeaderboardView(PaginationView):
         self.add_item(self.game_type_image)
         self.add_item(self.game_type_audio)
         self.add_item(self.game_type_voice)
+        self.add_item(self.leaderboard_type_server)
+        self.add_item(self.leaderboard_type_global)
 
     @override
     async def on_timeout(self) -> None:
@@ -119,6 +130,8 @@ class GuessLeaderboardView(PaginationView):
         self.game_type_image.disabled = True
         self.game_type_audio.disabled = True
         self.game_type_voice.disabled = True
+        self.leaderboard_type_server.disabled = True
+        self.leaderboard_type_global.disabled = True
 
         self.remove_item(self.to_first_page)
         self.remove_item(self.to_previous_page)
@@ -156,6 +169,18 @@ class GuessLeaderboardView(PaginationView):
             interaction, button, GuessingGameType.VOICE_CHANNEL
         )
 
+    @discord.ui.button(label="Server", row=3, style=discord.ButtonStyle.green)
+    async def leaderboard_type_server(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self._switch_leaderboard_type(interaction, button, "server")
+
+    @discord.ui.button(label="Global", row=3)
+    async def leaderboard_type_global(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self._switch_leaderboard_type(interaction, button, "global")
+
     async def _switch_game_type(
         self,
         interaction: discord.Interaction,
@@ -170,6 +195,23 @@ class GuessLeaderboardView(PaginationView):
         self.game_type_image.style = discord.ButtonStyle.secondary
         self.game_type_audio.style = discord.ButtonStyle.secondary
         self.game_type_voice.style = discord.ButtonStyle.secondary
+
+        button.style = discord.ButtonStyle.green
+
+        await self.show_page(interaction, self.current_page)
+
+    async def _switch_leaderboard_type(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+        leaderboard_type: Literal["server", "global"],
+    ):
+        await interaction.response.defer()
+
+        self._source.leaderboard_type = leaderboard_type
+
+        self.leaderboard_type_global.style = discord.ButtonStyle.secondary
+        self.leaderboard_type_server.style = discord.ButtonStyle.secondary
 
         button.style = discord.ButtonStyle.green
 
