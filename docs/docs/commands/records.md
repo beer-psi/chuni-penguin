@@ -118,15 +118,17 @@ View a user's most recent scores.
 
 <small>(aliases: `score`)</small>
 
-Get a user's scores for a specific song.
+Get a user's scores for a specific song, or [compare](#compare) the user's scores with
+another score.
 
 === "Text command"
 
-    `c>scores [-k] [user] <query...>`
+    `c>scores [-k] [user] [query...]`
 
     <h3>Options</h3>
 
-    - `query`: The title of the song. You don't have to be exact; try things out!
+    - `query`: The title of the song. You don't have to be exact; try things out! If a
+    query was not specified, the command works the same as [compare](#compare).
     - `user`: <small>(default: you)</small> The user to get the score of.
     - `-k, --kamaitachi`: View the user's score on Kamaitachi, if available.
 

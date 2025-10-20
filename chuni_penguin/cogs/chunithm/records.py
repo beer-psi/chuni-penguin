@@ -1207,7 +1207,7 @@ class RecordsCog(commands.Cog, name="Records"):
         default=None,
         type=MemberOrUserConverter,
     )
-    @flags.argument("query", nargs="+")
+    @flags.argument("query", nargs="*")
     @logged_prefix_command
     async def scores(
         self,
@@ -1215,7 +1215,7 @@ class RecordsCog(commands.Cog, name="Records"):
         *,
         kamaitachi: bool = False,
         user: discord.Member | discord.User | None = None,
-        query: list[str],
+        query: list[str] | None = None,
     ):
         """Get a player's scores for a specific song.
 
@@ -1224,6 +1224,10 @@ class RecordsCog(commands.Cog, name="Records"):
         `query` (required): The song to search for. You don't have to be exact; try things out!
         `-k, --kamaitachi`: Get scores from Kamaitachi, if the user has that linked.
         """
+
+        if query is None or len(query) <= 0:
+            await self._compare_inner(ctx, user=user, kamaitachi=kamaitachi)
+            return
 
         _query = await AliasNameConverter(lower=True).convert(ctx, " ".join(query))
 
