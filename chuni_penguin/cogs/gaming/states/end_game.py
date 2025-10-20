@@ -16,6 +16,7 @@ STATIC_TIPS = tips = [
     "i'm chuning my shit",
     "WTF sperm slider",
     "TRUENITHM NUKE",
+    "Falsenithm...",
     "The bread you ate for lunch is farmable",
     "i can help you set this up for a symbolic $15 fee",
     "in my onion",
@@ -31,7 +32,7 @@ STATIC_TIPS = tips = [
     "IS THAT ODIN BY GRAM",
     "do you want to buy a controller",
     "repost if you have dementia",
-    "Tips Have The Right To Humour",
+    "Tips Have The Right To Humor",
     "'DROP TABLE guess_leaderboard;--",
     "it's been one week since ya looked at me",
     "put the maid dress on",
@@ -40,6 +41,9 @@ STATIC_TIPS = tips = [
     "Play UNREAL LIFE",
     "c>guess is actually the shittiest fucking minigame. Ugly ass UI, bot keeps rebooting, crops that are honestly impossible, the only people enjoying the game are 30 somethings who have played the game for 15 years",
     "say that again?",
+    "Oh.. Onisan Daizyobu_deathkka?",
+    "L9 upside down is six seven",
+    "ok daddy sega please feed me more slop",
     "go ahead, look up the source for these tips, ruin the fun for yourself",
 ]
 
