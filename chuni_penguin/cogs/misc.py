@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import os
 import platform
 import time
@@ -170,11 +171,14 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
                     raise commands.MissingPermissions(["manage_guild"])
 
                 default_prefix: str = config.bot.default_prefix
+
                 async with self.bot.begin_db_session() as session, session.begin():
                     if new_prefix == default_prefix:
                         stmt = delete(Prefix).where(Prefix.guild_id == ctx.guild.id)
                         await session.execute(stmt)
-                        del self.bot.prefixes[ctx.guild.id]
+
+                        with contextlib.suppress(KeyError):
+                            del self.bot.prefixes[ctx.guild.id]
                     else:
                         prefix = Prefix(guild_id=ctx.guild.id, prefix=new_prefix)
                         await session.merge(prefix)

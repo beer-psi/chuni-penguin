@@ -1,3 +1,4 @@
+import contextlib
 from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
@@ -87,7 +88,8 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
             await session.commit()
 
         for object in objects:
-            del self.bot.denylist[object.id]
+            with contextlib.suppress(KeyError):
+                del self.bot.denylist[object.id]
 
         await ctx.message.add_reaction("✅")
 
