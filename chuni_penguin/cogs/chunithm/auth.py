@@ -162,7 +162,16 @@ class AuthCog(commands.Cog, name="Auth"):
                         message_id=ctx.message.id,
                     )
 
-                    please_delete_message = "Please delete the original command, as people can use the cookie to access your CHUNITHM-NET profile. "
+                    please_delete_message = (
+                        "You sent the command in a public channel and included your "
+                        "CHUNITHM-NET cookie, which leaves your CHUNITHM-NET account at risk. "
+                        "Please delete the command yourself, as I do not have sufficient "
+                        "permissions to do it. "
+                        "Please also practice some internet safety and don't send credentials "
+                        "in public places.\n\n"
+                        "Visit https://chunithm-net-eng.com/mobile/home/userOption/logout/ "
+                        "on the tab you retrieved the cookie from to revoke the cookie."
+                    )
 
             await logger.adebug(
                 "Sending login instructions",
@@ -177,8 +186,8 @@ class AuthCog(commands.Cog, name="Auth"):
             )
 
             await ctx.respond_or_edit(
-                f"Login instructions have been sent to your DMs. {please_delete_message}"
-                "(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)"
+                "Login instructions have been sent to your DMs. "
+                f"(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)\n\n{please_delete_message}"
             )
         elif clal is not None and is_valid_clal(clal):
             if (e := await self._verify_and_login(ctx.author.id, clal)) is None:

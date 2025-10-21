@@ -129,11 +129,20 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                         message_id=ctx.message.id,
                     )
 
-                    please_delete_message = "Please delete the original command. Why are you exposing your API keys? "
+                    please_delete_message = (
+                        "You sent the command in a public channel and included your "
+                        "Kamaitachi API key, which leaves your Kamaitachi account at risk. "
+                        "Please delete the command yourself, as I do not have sufficient "
+                        "permissions to do it. "
+                        "Please also practice some internet safety and don't send credentials "
+                        "in public places.\n\n"
+                        "Visit https://kamai.tachi.ac/u/me/integrations to revoke your "
+                        "API key."
+                    )
 
             await ctx.respond_or_edit(
-                f"Login instructions have been sent to your DMs. {please_delete_message}"
-                "(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)"
+                f"Login instructions have been sent to your DMs. "
+                f"(please **enable Privacy Settings -> Direct Messages** if you haven't received it.)\n\n{please_delete_message}"
             )
         elif token is not None:
             result = await self._verify_and_login(token)
