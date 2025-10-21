@@ -181,6 +181,7 @@ class GamingCog(commands.Cog, name="Games"):
         add_reactions=True,
         read_messages=True,
         attach_files=True,
+        send_voice_messages=True,
     )
     @logged_prefix_command
     async def guess_audio(self, ctx: Context, *, arguments: str = ""):
