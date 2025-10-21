@@ -1,13 +1,14 @@
+# ruff: noqa: E731
 import argparse
 import asyncio
 import contextlib
 import itertools
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
 from math import ceil
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import discord
 from discord import Interaction, app_commands
@@ -73,6 +74,7 @@ from chuni_penguin.ui import (
     SelectToCompareView,
 )
 from chuni_penguin.utils import did_you_mean_text, floor_to_ndp
+from chuni_penguin.utils.misc import Reversor
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -1684,7 +1686,9 @@ class RecordsCog(commands.Cog, name="Records"):
         difficulty: Optional[Difficulty] = None,
         genre: Optional[Genre] = None,
         rank: Optional[Rank] = None,
-        sort: Literal["rating", "score", "overpower", "overpower %"] = "rating",
+        sort: Literal[
+            "rating", "score", "overpower", "overpower %", "note lamp", "clear lamp"
+        ] = "rating",
         sort_order: Literal["ascending", "descending"] = "descending",
         kamaitachi: bool = False,
     ):
@@ -1777,6 +1781,8 @@ class RecordsCog(commands.Cog, name="Records"):
                     x.extras.get(KEY_PLAY_RATING),
                     x.score,
                     x.extras.get(KEY_OVERPOWER),
+                    x.combo_lamp.value,
+                    x.clear_lamp.value,
                 ),
             )
         elif sort == "score":
@@ -1786,6 +1792,8 @@ class RecordsCog(commands.Cog, name="Records"):
                     x.score,
                     x.extras.get(KEY_PLAY_RATING),
                     x.extras.get(KEY_OVERPOWER),
+                    x.combo_lamp.value,
+                    x.clear_lamp.value,
                 ),
             )
         elif sort == "overpower":
@@ -1795,6 +1803,8 @@ class RecordsCog(commands.Cog, name="Records"):
                     x.extras.get(KEY_OVERPOWER),
                     x.extras.get(KEY_PLAY_RATING),
                     x.score,
+                    x.combo_lamp.value,
+                    x.clear_lamp.value,
                 ),
             )
         elif sort == "overpower %":
@@ -1805,6 +1815,30 @@ class RecordsCog(commands.Cog, name="Records"):
                     x.extras.get(KEY_OVERPOWER),
                     x.extras.get(KEY_PLAY_RATING),
                     x.score,
+                    x.combo_lamp.value,
+                    x.clear_lamp.value,
+                ),
+            )
+        elif sort == "note lamp":
+            records.sort(
+                reverse=sort_order != "ascending",
+                key=lambda x: (
+                    x.combo_lamp.value,
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                    x.extras.get(KEY_OVERPOWER),
+                    x.clear_lamp.value,
+                ),
+            )
+        elif sort == "clear lamp":
+            records.sort(
+                reverse=sort_order != "ascending",
+                key=lambda x: (
+                    x.clear_lamp.value,
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                    x.extras.get(KEY_OVERPOWER),
+                    x.combo_lamp.value,
                 ),
             )
 
@@ -1836,9 +1870,14 @@ class RecordsCog(commands.Cog, name="Records"):
                 "op_percent",
                 "overpower",
                 "overpower_percent",
+                "note_lamp",
+                "notelamp",
+                "clear_lamp",
+                "clearlamp",
             )
             for order in ("", "-", "+")
         ],
+        nargs="+",
         required=False,
     )
     @flags.argument("-k", "--kamaitachi", action="store_true")
@@ -1854,7 +1893,7 @@ class RecordsCog(commands.Cog, name="Records"):
         difficulty: Difficulty | None = None,
         genre: Genre | None = None,
         rank: Rank | None = None,
-        sort: str | None = None,
+        sort: list[str] | None = None,
         kamaitachi: bool = False,
         user: discord.User | discord.Member | None = None,
         level: str | None = None,
@@ -1868,7 +1907,13 @@ class RecordsCog(commands.Cog, name="Records"):
         `-d`: Difficulty to search for. Must be one of `BASIC`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
         `-g`: Genre to search for.
         `-r`: Rank to search for.
-        `-s`: Choose a metric to sort scores by. Supported options are `score`, `rating`, `op`, `op_percent`. You can optionally add `+` or `-` after a metric to sort in ascending or descending order, e.g. `score+`. The default is to sort by rating in descending order.
+        `-s`: Choose a metric to sort scores by. You can specify multiple metrics, e.g. `-s score clear_lamp`. You can optionally add `+` or `-` after a metric to sort in ascending or descending order, e.g. `score+`. The default is to sort by rating, then score, then overpower, then note lamp, then clear lamp, in descending order. Supported options are:
+        - `score`: Sort by score.
+        - `rating`: Sort by calculated play rating. Might not work if there are unknown songs.
+        - `overpower`: Sort by calculated raw overpower value.
+        - `overpower_percent`: Sort by calculated overpower percentage.
+        - `note_lamp`: Sort by note lamp (also known as combo lamp, e.g. FULL COMBO/ALL JUSTICE).
+        - `clear_lamp`: Sort by clear lamp (FAILED, CLEAR, HARD, BRAVE, ABSOLUTE, CATASTROPHY).
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
 
         On CHUNITHM-NET, at least level or difficulty must be set.
@@ -1981,47 +2026,53 @@ class RecordsCog(commands.Cog, name="Records"):
                 await ctx.reply("No scores found.", mention_author=False)
                 return
 
-            if sort is None or sort.startswith("rating"):
-                records.sort(
-                    # our default has always been to sort descending, so
-                    # `rating` or `rating-` should sort by descending.
-                    # only `rating+` will sort by ascending
-                    reverse=sort is None or not sort.endswith("+"),
-                    key=lambda x: (
-                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
-                        x.score,
-                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
-                    ),
-                )
-            elif sort.startswith("score"):
-                records.sort(
-                    reverse=not sort.endswith("+"),
-                    key=lambda x: (
-                        x.score,
-                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
-                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
-                    ),
-                )
-            elif sort.startswith(("overpower_percent", "op_percent")):
-                records.sort(
-                    reverse=not sort.endswith("+"),
-                    key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER, Decimal(0))
-                        / x.extras.get(KEY_OVERPOWER_MAX, Decimal(1)),
-                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
-                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
-                        x.score,
-                    ),
-                )
-            elif sort.startswith(("overpower", "op")):
-                records.sort(
-                    reverse=not sort.endswith("+"),
-                    key=lambda x: (
-                        x.extras.get(KEY_OVERPOWER, Decimal(0)),
-                        x.extras.get(KEY_PLAY_RATING, Decimal(0)),
-                        x.score,
-                    ),
-                )
+            sort_fns: list[Callable[[Score], Any]] = []
+
+            if sort is not None:
+                for item in sort:
+                    sort_fn: Callable[[Score], Any] = lambda score: None
+
+                    if item.startswith("score"):
+                        sort_fn = lambda score: score.score
+                    elif item.startswith("rating"):
+                        sort_fn = lambda score: score.extras.get(KEY_PLAY_RATING)
+                    elif item.startswith(("op_percent", "overpower_percent")):
+                        sort_fn = lambda score: (
+                            score.extras[KEY_OVERPOWER]
+                            / score.extras[KEY_OVERPOWER_MAX]
+                            * 100
+                            if KEY_OVERPOWER in score.extras
+                            and KEY_OVERPOWER_MAX in score.extras
+                            else None
+                        )
+                    elif item.startswith(("op", "overpower")):
+                        sort_fn = lambda score: score.extras.get(KEY_OVERPOWER)
+                    elif item.startswith(("note_lamp", "notelamp")):
+                        sort_fn = lambda score: score.combo_lamp.value
+                    elif item.startswith(("clear_lamp", "clearlamp")):
+                        sort_fn = lambda score: score.clear_lamp.value
+
+                    if item.endswith("+"):
+                        sort_fns.append(sort_fn)
+                    else:
+                        sort_fns.append(
+                            lambda score, sort_fn=sort_fn: Reversor(sort_fn(score))
+                        )
+
+            # fallback metrics
+            sort_fns.extend(
+                [
+                    lambda score: Reversor(score.extras.get(KEY_PLAY_RATING)),
+                    lambda score: Reversor(score.score),
+                    lambda score: Reversor(score.extras.get(KEY_OVERPOWER)),
+                    lambda score: Reversor(score.combo_lamp.value),
+                    lambda score: Reversor(score.clear_lamp.value),
+                ]
+            )
+
+            records.sort(
+                key=lambda score: tuple([sort_fn(score) for sort_fn in sort_fns])
+            )
 
         view = B30View(
             ctx,

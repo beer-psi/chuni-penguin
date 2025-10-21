@@ -1,4 +1,5 @@
 import decimal
+from functools import total_ordering
 from typing import TypeVar
 from zoneinfo import ZoneInfo
 
@@ -48,3 +49,21 @@ def round_to_nearest(number: "T", value: int) -> "T":
     return type(number)(
         round(decimal.Decimal(number * multiplier), round_dp) / multiplier
     )
+
+
+@total_ordering
+class Reversor:
+    def __init__(self, obj: object):
+        self.obj = obj
+
+    def __eq__(self, value: object, /) -> bool:
+        if isinstance(value, Reversor):
+            return value.obj == self.obj
+
+        return value == self.obj
+
+    def __lt__(self, value: object, /) -> bool:
+        if isinstance(value, Reversor):
+            return value.obj < self.obj  # pyright: ignore[reportOperatorIssue]
+
+        return value < self.obj  # pyright: ignore[reportOperatorIssue]

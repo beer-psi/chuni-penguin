@@ -149,7 +149,7 @@ Get a user's best scores for a specified set of charts.
 
 === "Text command"
 
-    `c>top [-k] [-d <difficuly>] [-g <genre>] [-r <rank>] [-s <sort>] [user] [level]`
+    `c>top [-k] [-d <difficuly>] [-g <genre>] [-r <rank>] [-s <sort...>] [user] [level]`
 
     <h3>Options</h3>
 
@@ -161,9 +161,20 @@ Get a user's best scores for a specified set of charts.
     abbreviations such as `MAS`.
     - `-g, --genre`: Get scores for songs in the specified genre.
     - `-r, --rank`: Get scores from the specified rank.
-    - `-s, --sort`: <small>(default: rating)</small> Sort scores by the specified
-    metric. Supported metrics are `score`, `rating`, `op` and `op_percent`. You can
-    optionally add a `+` (ascending) or `-` (descending) to specify the sort order.
+    - `-s, --sort`: Sort scores by the specified metric. You can specify multiple
+    metrics, e.g. `-s score clear_lamp`. You can optionally add `+` or `-` after a
+    metric to sort in ascending or descending order, e.g. `score+`. The default is to
+    sort by rating, then score, then overpower, then note lamp, then clear lamp, all in
+    descending order. Supported options are:
+        - `score`: Sort by score.
+        - `rating`: Sort by calculated play rating. Might not work if there are unknown
+        songs.
+        - `overpower`: Sort by calculated raw overpower value.
+        - `overpower_percent`: Sort by calculated overpower percentage.
+        - `note_lamp`: Sort by note lamp (also known as combo lamp, e.g. FULL COMBO/ALL
+        JUSTICE).
+        - `clear_lamp`: Sort by clear lamp (FAILED, CLEAR, HARD, BRAVE, ABSOLUTE,
+        CATASTROPHY).
     - `-k, --kamaitachi`: View the user's scores on Kamaitachi, if available.
 
 === "Slash command"
