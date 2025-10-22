@@ -128,7 +128,7 @@ class DatabaseCog(commands.Cog, name="Database"):
     def sessionmaker(self):
         return self._sessionmaker
 
-    @tasks.loop(hours=1)
+    @tasks.loop(hours=1, reconnect=True)
     async def optimize_database(self):
         async with self.bot.begin_db_session() as session:
             await session.execute(text("PRAGMA optimize"))

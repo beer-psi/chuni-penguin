@@ -41,7 +41,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
     async def cog_unload(self) -> None:
         self._update_user_agents.stop()
 
-    @tasks.loop(hours=24)
+    @tasks.loop(hours=24, reconnect=True)
     async def _update_user_agents(self):
         async with httpx.AsyncClient(
             transport=httpx_aiohttp.AIOHTTPTransport(retries=5)

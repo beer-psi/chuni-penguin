@@ -208,7 +208,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
         await ctx.reply(embed=embed, mention_author=False)
 
-    @tasks.loop(minutes=3)
+    @tasks.loop(minutes=3, reconnect=True)
     async def listening(self):
         async with self.bot.begin_db_session() as session:
             query = (
