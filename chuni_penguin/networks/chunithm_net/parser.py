@@ -531,13 +531,17 @@ def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
 
     monthly_login_bonus_rewards: list[LoginBonusItem] = []
 
-    for e in soup.select(".monthly_cumulative_login_bonus_reward"):
+    for e in soup.select(
+        ".monthly_cumulative_login_bonus_reward, .monthly_cumulative_login_bonus_reward_off"
+    ):
         day = chuni_int(
             e.select_one(".bonus_days_block").get_text().removeprefix("Day ")
         )
         icon_url = e.select_one(".monthly_cumulative_login_bonus_reward_img img")["src"]
         name = e.select_one(".bonus_reward_honor_text").get_text().strip()
-        obtained = e.select_one(".bonus_reward_get") is not None
+        obtained = (
+            e.select_one(".monthly_cumulative_login_bonus_reward_get") is not None
+        )
 
         monthly_login_bonus_rewards.append(
             LoginBonusItem(
