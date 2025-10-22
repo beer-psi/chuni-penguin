@@ -1246,8 +1246,9 @@ async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: str):
         login_bonus = await client.get_login_bonus_progress()
 
         assert login_bonus.monthly_login_bonus.name == "Oct 2025 Login Bonus"
-        assert login_bonus.monthly_login_bonus.days_logged_in == 0
+        assert login_bonus.monthly_login_bonus.days_logged_in == 5
         assert len(login_bonus.monthly_login_bonus.rewards) == 10
+
         assert (
             login_bonus.monthly_login_bonus.rewards[0].name
             == "CHARACTER EXP BOOST ×6.0"  # noqa: RUF001
@@ -1257,7 +1258,18 @@ async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: str):
             == "https://chunithm-net-eng.com/mobile//img/58920c78d8363d42.png"
         )
         assert login_bonus.monthly_login_bonus.rewards[0].day == 3
-        assert not login_bonus.monthly_login_bonus.rewards[0].obtained
+        assert login_bonus.monthly_login_bonus.rewards[0].obtained
+
+        assert (
+            login_bonus.monthly_login_bonus.rewards[1].name
+            == "CHARACTER EXP BOOST ×6.0"  # noqa: RUF001
+        )
+        assert (
+            login_bonus.monthly_login_bonus.rewards[0].icon_url
+            == "https://chunithm-net-eng.com/mobile//img/58920c78d8363d42.png"
+        )
+        assert login_bonus.monthly_login_bonus.rewards[1].day == 6
+        assert not login_bonus.monthly_login_bonus.rewards[1].obtained
 
         assert len(login_bonus.login_bonus) == 14
         assert login_bonus.login_bonus[0].name == "5000メモリー"
@@ -1265,7 +1277,7 @@ async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: str):
             login_bonus.login_bonus[0].icon_url
             == "https://chunithm-net-eng.com/mobile/images/GameCurrency_v230.png"
         )
-        assert login_bonus.login_bonus[0].day == 1
+        assert login_bonus.login_bonus[0].day == 15
         assert login_bonus.login_bonus[0].obtained
 
         assert not login_bonus.login_bonus[11].obtained
@@ -1278,4 +1290,4 @@ async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: str):
         assert login_bonus.daily_bonus[0].bonus == "キャラクターEXP×1.5"  # noqa: RUF001
         assert not login_bonus.daily_bonus[0].is_today
 
-        assert login_bonus.daily_bonus[4].is_today
+        assert login_bonus.daily_bonus[2].is_today
