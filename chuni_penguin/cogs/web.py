@@ -173,6 +173,8 @@ async def invite(request: web.Request) -> web.Response:
         send_messages_in_threads=True,
         manage_messages=True,
         read_message_history=True,
+        connect=True,
+        speak=True,
     )
     url = oauth_url(bot.user.id, permissions=permissions)
 
