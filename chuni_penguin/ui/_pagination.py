@@ -73,7 +73,7 @@ class JumpToPageModal(discord.ui.Modal, title="Jump to page"):
         super().__init__()
         self.view = view
 
-    async def on_submit(self, interaction: Interaction["ChuniBot"], /) -> None:
+    async def on_submit(self, interaction: Interaction["ChuniBot"], /) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         assert isinstance(self.page.component, discord.ui.TextInput)
 
         try:
@@ -85,11 +85,15 @@ class JumpToPageModal(discord.ui.Modal, title="Jump to page"):
             )
             return
 
-        if page_number < 1 or page_number > self.view.source.get_max_pages():
-            await interaction.response.send_message(
-                f"Invalid page number: Must be between 1 and {self.view.source.get_max_pages()}.",
-                ephemeral=True,
-            )
+        max_pages = self.view.source.get_max_pages()
+
+        if page_number < 1 or (max_pages is not None and page_number > max_pages):
+            if max_pages is None:
+                message = "Invalid page number: Must be larger than 1."
+            else:
+                message = f"Invalid page number: Must be between 1 and {max_pages}."
+
+            await interaction.response.send_message(message, ephemeral=True)
             return
 
         await interaction.response.defer()
@@ -125,9 +129,13 @@ class PaginationView(PenguinView, Generic[PageT]):
     def _update_labels(self, page_index: int):
         max_pages = self.source.get_max_pages()
 
+        if max_pages is not None:
+            self.jump_to_page.label = f"{page_index + 1}/{max_pages}"
+        else:
+            self.jump_to_page.label = f"{page_index + 1}"
+
         self.to_first_page.disabled = page_index == 0
         self.to_previous_page.disabled = page_index == 0
-        self.jump_to_page.label = f"{page_index + 1}/{max_pages}"
         self.to_next_page.disabled = (
             max_pages is not None and (page_index + 1) >= max_pages
         )
