@@ -111,6 +111,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                     elif (
                         self.synthesis_alt_jacket != "default"
                         and config.web.serve_assets
+                        and config.web.is_accessible
                     ):
                         embed.set_thumbnail(
                             url=f"{config.web.base_url}/assets/jackets/{song.id}_{self.synthesis_alt_jacket}.png"

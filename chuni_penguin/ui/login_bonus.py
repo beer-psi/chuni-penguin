@@ -91,6 +91,7 @@ class LoginBonusView(PaginationView):
     def _remove_pagination_buttons(self):
         self.remove_item(self.to_first_page)
         self.remove_item(self.to_previous_page)
+        self.remove_item(self.jump_to_page)
         self.remove_item(self.to_next_page)
         self.remove_item(self.to_last_page)
 
@@ -171,9 +172,7 @@ class LoginBonusView(PaginationView):
         embed.description = "\n".join(description_parts)
 
         self._highlight_selected_button(button)
-        self.source = EmbedPageSource(
-            entries=[embed], per_page=1, with_page_marker=False
-        )
+        self.source = EmbedPageSource(entries=[embed], per_page=1)
         self._remove_pagination_buttons()
 
         await self.show_page(interaction, 0)

@@ -41,8 +41,8 @@ class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
         self.leaderboard_type: Literal["server", "global"] = "server"
 
     @override
-    async def get_page(self, page_number: int) -> Sequence[Row[tuple[int, int]]]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        difficulty = self.entries[page_number]
+    async def get_page(self, page_index: int) -> Sequence[Row[tuple[int, int]]]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        difficulty = self.entries[page_index]
 
         async with self.bot.begin_db_session() as session:
             if difficulty is not None and self.game_type is not None:
@@ -135,6 +135,7 @@ class GuessLeaderboardView(PaginationView):
 
         self.remove_item(self.to_first_page)
         self.remove_item(self.to_previous_page)
+        self.remove_item(self.jump_to_page)
         self.remove_item(self.to_next_page)
         self.remove_item(self.to_last_page)
 

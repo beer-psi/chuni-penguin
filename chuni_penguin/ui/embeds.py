@@ -14,25 +14,14 @@ class EmbedPageSource(ListPageSource[discord.Embed]):
         entries: list[discord.Embed],
         *,
         per_page: int,
-        with_page_marker: bool = False,
     ) -> None:
         super().__init__(entries, per_page=per_page)
-        self.with_page_marker = with_page_marker
 
     @override
     async def format_page(
         self, menu: "PaginationView", page: Sequence[discord.Embed]
     ) -> dict[str, Any]:
-        embeds = [*page]
-
-        if self.with_page_marker:
-            embeds.append(
-                discord.Embed(
-                    description=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-                )
-            )
-
-        return {"embeds": embeds}
+        return {"embeds": page}
 
 
 class EmbedPaginationView(PaginationView):

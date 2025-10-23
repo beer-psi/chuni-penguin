@@ -40,7 +40,8 @@ class B30N20View(PaginationView):
         )
 
         super().__init__(ctx, self.new20)
-        self.add_item(self.toggle_rating_views)
+        self.add_item(self.show_best30)
+        self.add_item(self.show_new20)
 
         self.best30_total: Decimal = sum(
             (item.extras[KEY_PLAY_RATING] for item in b30), Decimal(0)
@@ -61,6 +62,19 @@ class B30N20View(PaginationView):
 
         self.rating = floor_to_ndp((self.best30_total + self.new20_total) / 50, 2)
 
+    async def _switch_rating_views(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+        source: B30PageSource,
+    ):
+        self.show_best30.style = discord.ButtonStyle.gray
+        self.show_new20.style = discord.ButtonStyle.gray
+        button.style = discord.ButtonStyle.green
+        self.source = source
+
+        await self.show_page(interaction, 0)
+
     @override
     async def get_kwargs_from_page(self, page: list["Score"]):
         kwargs = await super().get_kwargs_from_page(page)
@@ -73,20 +87,13 @@ class B30N20View(PaginationView):
         return kwargs
 
     @discord.ui.button(label="Best 30", style=discord.ButtonStyle.grey)
-    async def toggle_rating_views(
+    async def show_best30(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        if button.label == "Best 30":
-            self.source = self.best30
-            button.label = "New 20"
-        elif button.label == "New 20":
-            self.source = self.new20
-            button.label = "Best 30"
-        else:
-            msg = f"Unknown button label: {button.label}"
-            raise ValueError(msg)
+        await self._switch_rating_views(interaction, button, self.best30)
 
-        self.clear_items()
-        self.fill_items()
-        self.add_item(self.toggle_rating_views)
-        await self.show_page(interaction, 0)
+    @discord.ui.button(label="New 20", style=discord.ButtonStyle.green)
+    async def show_new20(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self._switch_rating_views(interaction, button, self.new20)

@@ -218,13 +218,13 @@ class LoginFlowView(PaginationView):
         self.add_item(self.login_with_sega_id)
 
     @override
-    async def show_page(self, interaction: Interaction, page_number: int):
-        if page_number != 0:
+    async def show_page(self, interaction: Interaction, page_index: int):
+        if page_index != 0:
             self.remove_item(self.login_with_sega_id)
         else:
             self.add_item(self.login_with_sega_id)
 
-        return await super().show_page(interaction, page_number)
+        return await super().show_page(interaction, page_index)
 
     @discord.ui.button(
         label="Login with SEGA ID", style=discord.ButtonStyle.danger, row=1

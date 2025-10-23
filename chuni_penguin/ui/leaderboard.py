@@ -86,12 +86,7 @@ class LeaderboardPageSource(ListPageSource):
             timestamp=self.leaderboard.updated_at,
         )
 
-        footer = f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-
-        if self.network is not None:
-            footer = f"{self.network}  •  {footer}"
-
-        leaderboard_embed.set_footer(text=footer)
+        leaderboard_embed.set_footer(text=self.network)
 
         return {"embeds": [info_embed, leaderboard_embed]}
 

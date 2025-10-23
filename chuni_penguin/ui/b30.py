@@ -63,10 +63,6 @@ class B30PageSource(ListPageSource["Score"]):
             for i, record in enumerate(page)
         ]
 
-        embeds.append(
-            discord.Embed(description=f"Page {menu.current_page + 1}/{self._max_pages}")
-        )
-
         kwargs: dict[str, Any] = {"embeds": embeds}
 
         if self.show_average or self.show_reachable or self.has_estimated_play_rating:
