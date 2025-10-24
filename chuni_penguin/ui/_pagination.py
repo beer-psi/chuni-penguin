@@ -206,7 +206,7 @@ class PaginationView(PenguinView, Generic[PageT]):
     async def to_previous_page(
         self, interaction: discord.Interaction, _: discord.ui.Button
     ):
-        await self.show_page(interaction, self.current_page - 1)
+        await self.show_page(interaction, max(self.current_page - 1, 0))
 
     @discord.ui.button(label="...", style=discord.ButtonStyle.grey)
     async def jump_to_page(
@@ -218,7 +218,12 @@ class PaginationView(PenguinView, Generic[PageT]):
     async def to_next_page(
         self, interaction: discord.Interaction, _: discord.ui.Button
     ):
-        await self.show_page(interaction, self.current_page + 1)
+        max_pages = self.source.get_max_pages()
+
+        if max_pages is not None:
+            await self.show_page(interaction, min(self.current_page + 1, max_pages - 1))
+        else:
+            await self.show_page(interaction, self.current_page + 1)
 
     @discord.ui.button(label=">>", style=discord.ButtonStyle.grey)
     async def to_last_page(
