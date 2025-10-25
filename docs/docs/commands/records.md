@@ -175,6 +175,7 @@ Get a user's best scores for a specified set of charts.
         JUSTICE).
         - `clear_lamp`: Sort by clear lamp (FAILED, CLEAR, HARD, BRAVE, ABSOLUTE,
         CATASTROPHY).
+        - `life`: Sort by total number of JUSTICE/ATTACK/MISS, if data is available.
     - `-k, --kamaitachi`: View the user's scores on Kamaitachi, if available.
 
 === "Slash command"

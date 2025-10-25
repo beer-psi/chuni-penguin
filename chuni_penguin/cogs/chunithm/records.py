@@ -3,6 +3,7 @@ import argparse
 import asyncio
 import contextlib
 import itertools
+import math
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -56,6 +57,7 @@ from chuni_penguin.networks.consts import (
 from chuni_penguin.networks.errors import ChartNotFound, SongNotFound
 from chuni_penguin.networks.kamaitachi import Kamaitachi
 from chuni_penguin.networks.types import (
+    ClearLamp,
     ComboLamp,
     Difficulty,
     Genre,
@@ -1687,7 +1689,13 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Optional[Genre] = None,
         rank: Optional[Rank] = None,
         sort: Literal[
-            "rating", "score", "overpower", "overpower %", "note lamp", "clear lamp"
+            "rating",
+            "score",
+            "overpower",
+            "overpower %",
+            "note lamp",
+            "clear lamp",
+            "life",
         ] = "rating",
         sort_order: Literal["ascending", "descending"] = "descending",
         kamaitachi: bool = False,
@@ -1841,6 +1849,22 @@ class RecordsCog(commands.Cog, name="Records"):
                     x.combo_lamp.value,
                 ),
             )
+        elif sort == "life":
+            records.sort(
+                reverse=sort_order != "ascending",
+                key=lambda x: (
+                    Reversor(
+                        (x.judgements.justice + x.judgements.attack + x.judgements.miss)
+                        if x.judgements is not None and x.clear_lamp != ClearLamp.failed
+                        else math.inf
+                    ),
+                    x.extras.get(KEY_PLAY_RATING),
+                    x.score,
+                    x.extras.get(KEY_OVERPOWER),
+                    x.combo_lamp.value,
+                    x.clear_lamp.value,
+                ),
+            )
 
         view = B30View(
             ctx,
@@ -1874,6 +1898,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 "notelamp",
                 "clear_lamp",
                 "clearlamp",
+                "hp",
+                "life",
             )
             for order in ("", "-", "+")
         ],
@@ -1914,6 +1940,7 @@ class RecordsCog(commands.Cog, name="Records"):
         - `overpower_percent`: Sort by calculated overpower percentage.
         - `note_lamp`: Sort by note lamp (also known as combo lamp, e.g. FULL COMBO/ALL JUSTICE).
         - `clear_lamp`: Sort by clear lamp (FAILED, CLEAR, HARD, BRAVE, ABSOLUTE, CATASTROPHY).
+        - `life`: Sort by total number of JUSTICE/ATTACK/MISS, if data is available.
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
 
         On CHUNITHM-NET, at least level or difficulty must be set.
@@ -2035,7 +2062,9 @@ class RecordsCog(commands.Cog, name="Records"):
                     if item.startswith("score"):
                         sort_fn = lambda score: score.score
                     elif item.startswith("rating"):
-                        sort_fn = lambda score: score.extras.get(KEY_PLAY_RATING)
+                        sort_fn = lambda score: score.extras.get(
+                            KEY_PLAY_RATING, Decimal(0)
+                        )
                     elif item.startswith(("op_percent", "overpower_percent")):
                         sort_fn = lambda score: (
                             score.extras[KEY_OVERPOWER]
@@ -2043,27 +2072,61 @@ class RecordsCog(commands.Cog, name="Records"):
                             * 100
                             if KEY_OVERPOWER in score.extras
                             and KEY_OVERPOWER_MAX in score.extras
-                            else None
+                            else Decimal(0)
                         )
                     elif item.startswith(("op", "overpower")):
-                        sort_fn = lambda score: score.extras.get(KEY_OVERPOWER)
+                        sort_fn = lambda score: score.extras.get(
+                            KEY_OVERPOWER, Decimal(0)
+                        )
                     elif item.startswith(("note_lamp", "notelamp")):
                         sort_fn = lambda score: score.combo_lamp.value
                     elif item.startswith(("clear_lamp", "clearlamp")):
                         sort_fn = lambda score: score.clear_lamp.value
+                    elif item.startswith(("hp", "life")):
+                        sort_fn = (
+                            lambda score: (
+                                score.judgements.justice
+                                + score.judgements.attack
+                                + score.judgements.miss
+                            )
+                            if (
+                                score.judgements is not None
+                                and score.clear_lamp != ClearLamp.failed
+                            )
+                            else math.inf
+                        )
 
-                    if item.endswith("+"):
-                        sort_fns.append(sort_fn)
+                    # other metrics are default descending, but hp/life is default
+                    # ascending, since lower number of mistakes is better
+                    apply_reversor = True
+
+                    if item.startswith(("hp", "life")):
+                        apply_reversor = item.endswith("-")
                     else:
+                        apply_reversor = not item.endswith("+")
+
+                    if apply_reversor:
                         sort_fns.append(
                             lambda score, sort_fn=sort_fn: Reversor(sort_fn(score))
                         )
+                    else:
+                        sort_fns.append(sort_fn)
 
             # fallback metrics
             sort_fns.extend(
                 [
                     lambda score: Reversor(score.extras.get(KEY_PLAY_RATING)),
                     lambda score: Reversor(score.score),
+                    lambda score: (
+                        score.judgements.justice
+                        + score.judgements.attack
+                        + score.judgements.miss
+                    )
+                    if (
+                        score.judgements is not None
+                        and score.clear_lamp != ClearLamp.failed
+                    )
+                    else math.inf,
                     lambda score: Reversor(score.extras.get(KEY_OVERPOWER)),
                     lambda score: Reversor(score.combo_lamp.value),
                     lambda score: Reversor(score.clear_lamp.value),
