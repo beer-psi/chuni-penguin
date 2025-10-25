@@ -95,6 +95,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         self.utils = self.bot.utils
         self.autocompleters: "AutocompletersCog" = self.bot.get_cog("Autocompleters")  # type: ignore[reportGeneralTypeIssues]
         self.http_client = self.bot.caching_http_client
+        self._rng = random.Random()
 
     @commands.hybrid_command("anmitsu", aliases=["rub"])
     @logged_prefix_command
@@ -504,10 +505,10 @@ class ToolsCog(commands.Cog, name="Tools"):
                         # since there's only 4 15.7s in the game as of current,
                         # if we do a random 15.7 then the jumpscare will always show up
                         # without this guard.
-                        level != "15.7" or random.random() < 0.25
+                        level != "15.7" or self._rng.random() < 0.25
                     )
                 ):
-                    if random.random() > 0.5:
+                    if self._rng.random() > 0.5:
                         await ctx.bot.database.user_found_easter_egg(
                             ctx.author.id, "crossmythos-rhapsodia-jumpscare"
                         )
@@ -524,7 +525,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     # since there's only 4 15.7s in the game as of current,
                     # if we do a random 15.7 then the jumpscare will always show up
                     # without this guard.
-                    level != "15.7" or random.random() < 0.25
+                    level != "15.7" or self._rng.random() < 0.25
                 ):
                     await ctx.bot.database.user_found_easter_egg(
                         ctx.author.id, "crossmythos-rhapsodia-jumpscare"
@@ -537,7 +538,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     # since there's only 4 15.7s in the game as of current,
                     # if we do a random 15.7 then the jumpscare will always show up
                     # without this guard.
-                    level != "15.7" or random.random() < 0.25
+                    level != "15.7" or self._rng.random() < 0.25
                 ):
                     await ctx.bot.database.user_found_easter_egg(
                         ctx.author.id, "forsaken-tale-jumpscare"
@@ -1043,6 +1044,23 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         await ctx.reply(
             content="[Read the Codex.](https://chunithm.org)",
+            mention_author=False,
+        )
+
+    @commands.hybrid_command("roll", extras={"invoke_on_edit": False})
+    @logged_prefix_command
+    async def roll(self, ctx: Context, max: Range[int, 1] = 100):
+        """Rolls a random number between 1 and the specified maximum.
+
+        Parameters
+        ----------
+        max: int
+            The maximum roll. Must be an integer larger than 1.
+        """
+
+        # Add 1 since randrange is max-exclusive like range()
+        await ctx.reply(
+            f"{ctx.author.mention} rolled a {self._rng.randrange(1, max + 1)}",
             mention_author=False,
         )
 

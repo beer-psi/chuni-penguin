@@ -199,3 +199,19 @@ Calculate rating gained if you achieve a play with the given play rating.
 - `current_play_rating`: The current play rating of the chart if it is already in your
 best 50 scores. Leave blank if the chart is currently not included in your
 best 50 scores.
+
+## roll
+
+Rolls a random number between 1 and the specified maximum.
+
+=== "Text command"
+
+    `c>roll [max]`
+
+=== "Slash command"
+
+    `/roll [max:<max>]`
+
+<h3>Options</h3>
+
+- `max`: <small>(default: 100)</small> The maximum roll. Must be an integer larger than 1.
