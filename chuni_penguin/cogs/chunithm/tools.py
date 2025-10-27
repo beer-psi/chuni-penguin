@@ -1049,7 +1049,11 @@ class ToolsCog(commands.Cog, name="Tools"):
 
     @commands.hybrid_command("roll", extras={"invoke_on_edit": False})
     @logged_prefix_command
-    async def roll(self, ctx: Context, max: Range[int, 1] = 100):
+    async def roll(
+        self,
+        ctx: Context,
+        max: Range[int, 1] = 100,
+    ):
         """Rolls a random number between 1 and the specified maximum.
 
         Parameters
@@ -1058,11 +1062,35 @@ class ToolsCog(commands.Cog, name="Tools"):
             The maximum roll. Must be an integer larger than 1.
         """
 
+        if max > 10**4000 - 1:
+            msg = "Maximum roll cannot be larger than 10^4000 - 1 due to Discord character limit."
+            raise commands.BadArgument(msg)
+
+        prefix = f"{ctx.author.mention} rolled a "
+
         # Add 1 since randrange is max-exclusive like range()
-        await ctx.reply(
-            f"{ctx.author.mention} rolled a {self._rng.randrange(1, max + 1)}",
-            mention_author=False,
-        )
+        result = self._rng.randrange(1, max + 1)
+        content = f"{prefix}{result}"
+
+        if len(content) <= 2000:
+            await ctx.reply(content=content, mention_author=False)
+        elif len(content) <= 4000 + len(prefix):
+            view = discord.ui.LayoutView()
+
+            container = discord.ui.Container()
+            view.add_item(container)
+
+            if len(content) <= 4000:
+                text_display = discord.ui.TextDisplay(content)
+            else:
+                text_display = discord.ui.TextDisplay(str(result))
+
+            container.add_item(text_display)
+
+            await ctx.reply(view=view, mention_author=False)
+        else:
+            msg = "Roll result was too large to fit in a single message. Try a smaller maximum roll."
+            raise commands.CommandError(msg)
 
 
 XL_TECHNO_SONG_ID = 2035
