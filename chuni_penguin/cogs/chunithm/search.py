@@ -513,11 +513,17 @@ class SearchCog(commands.Cog, name="Search"):
                 if not view.result:
                     return
 
+            if query == "67" and any(song.id == 45 for song in result.songs):
+                await ctx.bot.database.user_found_easter_egg(
+                    ctx.author.id, "L9-upside-down-is-67"
+                )
+
             view = SongInfoPaginationView(
                 ctx,
                 result.songs,
                 detailed=detailed,
                 synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                brainrot=query == "67",
             )
             await view.start()
 

@@ -3,7 +3,6 @@ from typing import Any, override
 from urllib.parse import quote
 
 import discord
-import discord.utils
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 from sqlalchemy import select
@@ -24,10 +23,12 @@ class SongInfoPageSource(ListPageSource[Song]):
         *,
         detailed: bool,
         synthesis_alt_jacket: str | None = None,
+        brainrot: bool = False,
     ) -> None:
         super().__init__(entries, per_page=1)
         self.detailed: bool = detailed
         self.synthesis_alt_jacket: str | None = synthesis_alt_jacket
+        self.brainrot: bool = brainrot
 
     @override
     async def format_page(
@@ -116,6 +117,15 @@ class SongInfoPageSource(ListPageSource[Song]):
                         embed.set_thumbnail(
                             url=f"{config.web.base_url}/assets/jackets/{song.id}_{self.synthesis_alt_jacket}.png"
                         )
+                elif (
+                    self.brainrot
+                    and song.id in (45, 8100)
+                    and config.web.serve_assets
+                    and config.web.is_accessible
+                ):
+                    embed.set_thumbnail(
+                        url=f"{config.web.base_url}/assets/jackets/45_67.png"
+                    )
 
                 chart_level_desc = []
 
@@ -205,10 +215,14 @@ class SongInfoPaginationView(PaginationView):
         *,
         detailed: bool = False,
         synthesis_alt_jacket: str | None = None,
+        brainrot: bool = False,
     ):
         super().__init__(
             ctx,
             SongInfoPageSource(
-                items, detailed=detailed, synthesis_alt_jacket=synthesis_alt_jacket
+                items,
+                detailed=detailed,
+                synthesis_alt_jacket=synthesis_alt_jacket,
+                brainrot=brainrot,
             ),
         )

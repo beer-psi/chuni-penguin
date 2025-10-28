@@ -91,7 +91,9 @@ def gettext(
     return default
 
 
-def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
+def extract_jacket(
+    song_id: int, jacket_file: Path, alt_suffix: str = "", *, rotate_180: bool = False
+):
     try:
         with Image.open(jacket_file) as im:
             im = im.convert("RGB")
@@ -108,6 +110,9 @@ def extract_jacket(song_id: int, jacket_file: Path, alt_suffix: str = ""):
             im_small = im.resize(
                 (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), Image.Resampling.LANCZOS
             )
+
+            if rotate_180:
+                im_small = im_small.transpose(Image.Transpose.ROTATE_180)
 
             # pregenerate jacket art merged with b50 base
             for difficulty in Difficulty:
@@ -278,6 +283,14 @@ async def merge_options(
                             musicdiver_alt,
                             "_musicdiver",
                         )
+                elif song_id_int == 45:
+                    pool.submit(
+                        extract_jacket,
+                        song_id_int,
+                        xml_path.parent / jacket_file,
+                        "_67",
+                        rotate_180=True,
+                    )
 
             if we_tag_name != "Invalid":
                 genre = "WORLD'S END"
@@ -675,44 +688,48 @@ async def merge_options(
 
         await session.execute(upsert_stmt, inserted_charts)
 
-        insert_stmt = insert(Course)
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=[Course.id],
-            set_={
-                k: getattr(insert_stmt.excluded, k)
-                for k in (
-                    "cls",
-                    "name",
-                    "version",
-                    "is_duplicate_track_allowed",
-                    "life",
-                    "recovery_life",
-                    "clear_life",
-                    "damage_miss",
-                    "damage_attack",
-                    "damage_justice",
-                    "damage_jcrit",
-                )
-            },
-        )
+        if len(inserted_courses) > 0:
+            insert_stmt = insert(Course)
+            upsert_stmt = insert_stmt.on_conflict_do_update(
+                index_elements=[Course.id],
+                set_={
+                    k: getattr(insert_stmt.excluded, k)
+                    for k in (
+                        "cls",
+                        "name",
+                        "version",
+                        "is_duplicate_track_allowed",
+                        "life",
+                        "recovery_life",
+                        "clear_life",
+                        "damage_miss",
+                        "damage_attack",
+                        "damage_justice",
+                        "damage_jcrit",
+                    )
+                },
+            )
 
-        await session.execute(upsert_stmt, inserted_courses)
+            await session.execute(upsert_stmt, inserted_courses)
 
-        insert_stmt = insert(CourseTrack)
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=[CourseTrack.course_id, CourseTrack.track],
-            set_={
-                "level": insert_stmt.excluded.level,
-            },
-        )
+        if len(inserted_course_tracks) > 0:
+            insert_stmt = insert(CourseTrack)
+            upsert_stmt = insert_stmt.on_conflict_do_update(
+                index_elements=[CourseTrack.course_id, CourseTrack.track],
+                set_={
+                    "level": insert_stmt.excluded.level,
+                },
+            )
 
-        await session.execute(upsert_stmt, inserted_course_tracks)
+            await session.execute(upsert_stmt, inserted_course_tracks)
 
-        await session.execute(
-            delete(course_track_charts).where(
-                (course_track_charts.c.course_id + course_track_charts.c.track).in_(
-                    {c["course_id"] + c["track"] for c in inserted_course_tracks}
+            await session.execute(
+                delete(course_track_charts).where(
+                    (course_track_charts.c.course_id + course_track_charts.c.track).in_(
+                        {c["course_id"] + c["track"] for c in inserted_course_tracks}
+                    )
                 )
             )
-        )
-        await session.execute(insert(course_track_charts), inserted_course_track_charts)
+            await session.execute(
+                insert(course_track_charts), inserted_course_track_charts
+            )
