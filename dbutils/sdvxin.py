@@ -29,7 +29,10 @@ SDVXIN_CATEGORIES = [
     "gekimai",
     "original",
     "ultima",
-    "end",
+    # Don't automatically process WORLD'S ENDs, these are a pain in the ass to
+    # process properly, since there can be multiple different entries for a (song, difficulty)
+    # tuple.
+    # "end",
 ]
 SDVXIN_DIFFICULTY_MAPPING = {
     "B": "BAS",
