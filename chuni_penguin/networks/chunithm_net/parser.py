@@ -521,43 +521,66 @@ def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
     ).get_text()
     received_bonus_today = "Not achieved" not in login_bonus_status
 
-    monthly_login_bonus_name = soup.select(".box01_title")[0].get_text().strip()
+    monthly_bonuses: list[MonthlyLoginBonus] = []
 
-    monthly_days_logged_in: int = 0
-
-    for e in soup.select(".monthly_cumulative_login_bonus_days_count_num img"):
-        digit = extract_last_part(e["src"])
-        monthly_days_logged_in = monthly_days_logged_in * 10 + int(digit)
-
-    monthly_login_bonus_rewards: list[LoginBonusItem] = []
-
-    for e in soup.select(
-        ".monthly_cumulative_login_bonus_reward, .monthly_cumulative_login_bonus_reward_off"
-    ):
-        day = chuni_int(
-            e.select_one(".bonus_days_block").get_text().removeprefix("Day ")
-        )
-        icon_url = e.select_one(".monthly_cumulative_login_bonus_reward_img img")["src"]
-        name = e.select_one(".bonus_reward_honor_text").get_text().strip()
-        obtained = (
-            e.select_one(".monthly_cumulative_login_bonus_reward_get") is not None
+    for monthly_bonus_elem in soup.select(".frame01_inside > div > div.w420"):
+        monthly_login_bonus_name = (
+            monthly_bonus_elem.select(".box01_title")[0].get_text().strip()
         )
 
-        monthly_login_bonus_rewards.append(
-            LoginBonusItem(
-                day=day,
-                icon_url=icon_url,
-                name=name,
-                obtained=obtained,
+        monthly_days_logged_in: int = 0
+
+        for e in monthly_bonus_elem.select(
+            ".monthly_cumulative_login_bonus_days_count_num img"
+        ):
+            digit = extract_last_part(e["src"])
+            monthly_days_logged_in = monthly_days_logged_in * 10 + int(digit)
+
+        monthly_login_bonus_rewards: list[LoginBonusItem] = []
+
+        for e in monthly_bonus_elem.select(
+            ".monthly_cumulative_login_bonus_reward, .monthly_cumulative_login_bonus_reward_off"
+        ):
+            bonus_days_block = e.select_one(".bonus_days_block")
+
+            if bonus_days_block is None:
+                continue
+
+            day = chuni_int(bonus_days_block.get_text().removeprefix("Day "))
+            icon_url = e.select_one(".monthly_cumulative_login_bonus_reward_img img")[
+                "src"
+            ]
+            name = e.select_one(".bonus_reward_honor_text").get_text().strip()
+            obtained = (
+                e.select_one(".monthly_cumulative_login_bonus_reward_get") is not None
+            )
+
+            monthly_login_bonus_rewards.append(
+                LoginBonusItem(
+                    day=day,
+                    icon_url=icon_url,
+                    name=name,
+                    obtained=obtained,
+                )
+            )
+
+        monthly_bonuses.append(
+            MonthlyLoginBonus(
+                name=monthly_login_bonus_name,
+                days_logged_in=monthly_days_logged_in,
+                rewards=monthly_login_bonus_rewards,
             )
         )
 
     login_bonus: list[LoginBonusItem] = []
 
     for e in soup.select(".bonus_block_on, .bonus_block_off"):
-        day = chuni_int(
-            e.select_one(".bonus_days_block").get_text().removeprefix("Day ")
-        )
+        bonus_days_block = e.select_one(".bonus_days_block")
+
+        if bonus_days_block is None:
+            continue
+
+        day = chuni_int(bonus_days_block.get_text().removeprefix("Day "))
         icon_url = e.select_one(".bonus_reward_block img")["src"]
         name = e.select_one(".bonus_reward_honor_text").get_text().strip()
         obtained = e.select_one(".bonus_reward_get") is not None
@@ -591,11 +614,7 @@ def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
 
     return LoginBonus(
         received_bonus_today=received_bonus_today,
-        monthly_login_bonus=MonthlyLoginBonus(
-            name=monthly_login_bonus_name,
-            days_logged_in=monthly_days_logged_in,
-            rewards=monthly_login_bonus_rewards,
-        ),
+        monthly_login_bonus=monthly_bonuses,
         login_bonus=login_bonus,
         daily_bonus=daily_bonus,
     )
