@@ -210,7 +210,6 @@ class SdvxinChartView(Base):
     __tablename__ = "sdvxin"
     __table_args__ = (
         Index("ix_sdvxin_song_id_difficulty", "song_id", "difficulty", unique=True),
-        Index("ix_sdvxin_id_difficulty", "id", "difficulty", "end_index", unique=True),
         ForeignKeyConstraint(
             ["song_id", "difficulty"],
             ["chunirec_charts.song_id", "chunirec_charts.difficulty"],
