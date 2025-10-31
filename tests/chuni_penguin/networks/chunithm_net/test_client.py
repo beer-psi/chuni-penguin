@@ -1245,31 +1245,33 @@ async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: str):
     async with ChunithmNet(jar) as client:
         login_bonus = await client.get_login_bonus_progress()
 
-        assert login_bonus.monthly_login_bonus.name == "Oct 2025 Login Bonus"
-        assert login_bonus.monthly_login_bonus.days_logged_in == 5
-        assert len(login_bonus.monthly_login_bonus.rewards) == 10
+        assert len(login_bonus.monthly_login_bonus) == 1
+
+        monthly_bonus = login_bonus.monthly_login_bonus[0]
+
+        assert monthly_bonus.name == "Oct 2025 Login Bonus"
+        assert monthly_bonus.days_logged_in == 5
+        assert len(monthly_bonus.rewards) == 10
 
         assert (
-            login_bonus.monthly_login_bonus.rewards[0].name
-            == "CHARACTER EXP BOOST ×6.0"  # noqa: RUF001
+            monthly_bonus.rewards[0].name == "CHARACTER EXP BOOST ×6.0"  # noqa: RUF001
         )
         assert (
-            login_bonus.monthly_login_bonus.rewards[0].icon_url
+            monthly_bonus.rewards[0].icon_url
             == "https://chunithm-net-eng.com/mobile//img/58920c78d8363d42.png"
         )
-        assert login_bonus.monthly_login_bonus.rewards[0].day == 3
-        assert login_bonus.monthly_login_bonus.rewards[0].obtained
+        assert monthly_bonus.rewards[0].day == 3
+        assert monthly_bonus.rewards[0].obtained
 
         assert (
-            login_bonus.monthly_login_bonus.rewards[1].name
-            == "CHARACTER EXP BOOST ×6.0"  # noqa: RUF001
+            monthly_bonus.rewards[1].name == "CHARACTER EXP BOOST ×6.0"  # noqa: RUF001
         )
         assert (
-            login_bonus.monthly_login_bonus.rewards[0].icon_url
+            monthly_bonus.rewards[1].icon_url
             == "https://chunithm-net-eng.com/mobile//img/58920c78d8363d42.png"
         )
-        assert login_bonus.monthly_login_bonus.rewards[1].day == 6
-        assert not login_bonus.monthly_login_bonus.rewards[1].obtained
+        assert monthly_bonus.rewards[1].day == 6
+        assert not monthly_bonus.rewards[1].obtained
 
         assert len(login_bonus.login_bonus) == 14
         assert login_bonus.login_bonus[0].name == "5000メモリー"

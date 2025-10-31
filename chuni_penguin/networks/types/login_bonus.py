@@ -40,6 +40,6 @@ class DailyBonus:
 class LoginBonus:
     received_bonus_today: bool
 
-    monthly_login_bonus: MonthlyLoginBonus
+    monthly_login_bonus: list[MonthlyLoginBonus]
     login_bonus: list[LoginBonusItem]
     daily_bonus: list[DailyBonus]
