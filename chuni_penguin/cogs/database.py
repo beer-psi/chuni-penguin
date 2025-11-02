@@ -57,6 +57,16 @@ def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
         # Enables recursive triggers.
         cursor.execute("PRAGMA recursive_triggers=ON")
 
+        # Increase the cache size to 51200 KiB = 50 MiB.
+        cursor.execute("PRAGMA cache_size=-51200")
+
+        # Increase memory-mapped I/O size to 50 MiB, which should be more than enough
+        # for the current database (production is around 10MB).
+        cursor.execute("PRAGMA mmap_size=52428800")
+
+        # Store temporary tables and indices in memory.
+        cursor.execute("PRAGMA temp_store=MEMORY")
+
 
 class SongQueries:
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
