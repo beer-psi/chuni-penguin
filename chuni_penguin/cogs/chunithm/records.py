@@ -1192,6 +1192,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     ScoreCardEmbed(
                         r,
                         synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                        detailed=True,
                     )
                     for r in records
                 ],
