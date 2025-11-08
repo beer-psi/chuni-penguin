@@ -65,9 +65,6 @@ class RecentRecordsPageSource(ListPageSource[list["RecentScore"]]):
 
 
 class RecentRecordsView(PaginationView):
-    if TYPE_CHECKING:
-        source: RecentRecordsPageSource  # pyright: ignore[reportIncompatibleVariableOverride]
-
     def __init__(
         self,
         ctx: Context,
