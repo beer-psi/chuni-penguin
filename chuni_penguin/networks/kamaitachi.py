@@ -359,6 +359,7 @@ def convert_kt_to_score(
         rank=getattr(Rank, score.score_data.grade.lower().replace("+", "p")),
         clear_lamp=KT_CLEAR_LAMP_MAP.get(score.score_data.clear_lamp, ClearLamp.failed),
         combo_lamp=KT_NOTE_LAMP_MAP.get(score.score_data.note_lamp, ComboLamp.none),
+        max_combo=score.score_data.optional.max_combo,
     )
     record.extras[KEY_SONG_ID] = chart.data.in_game_id
     record.extras[KEY_LEVEL] = chart.level
