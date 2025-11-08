@@ -43,11 +43,11 @@ def split_scores_into_credits(
 class RecentRecordsPageSource(ListPageSource[list["RecentScore"]]):
     def __init__(
         self,
-        records: list["RecentScore"],
+        credits: list[list["RecentScore"]],
         *,
         synthesis_alt_jacket: str | None = None,
     ) -> None:
-        super().__init__(split_scores_into_credits(records), per_page=1)
+        super().__init__(credits, per_page=1)
 
         self.synthesis_alt_jacket = synthesis_alt_jacket
 
@@ -65,6 +65,9 @@ class RecentRecordsPageSource(ListPageSource[list["RecentScore"]]):
 
 
 class RecentRecordsView(PaginationView):
+    if TYPE_CHECKING:
+        source: RecentRecordsPageSource  # pyright: ignore[reportIncompatibleVariableOverride]
+
     def __init__(
         self,
         ctx: Context,
@@ -74,16 +77,17 @@ class RecentRecordsView(PaginationView):
         userinfo: "Profile",
         synthesis_alt_jacket: str | None = None,
     ):
+        self.scores = scores
+        self.credits = split_scores_into_credits(scores)
+
         super().__init__(
             ctx,
             source=RecentRecordsPageSource(
-                scores, synthesis_alt_jacket=synthesis_alt_jacket
+                self.credits, synthesis_alt_jacket=synthesis_alt_jacket
             ),
         )
-        self.add_item(self.switch_to_26_50)
         self.add_item(self.dropdown)
 
-        self.scores = scores
         self.network_client = network_client
         self.network_client_manager: AsyncContextManager["Network"] | None = (
             network_client_manager
@@ -93,20 +97,30 @@ class RecentRecordsView(PaginationView):
 
         self.utils: "UtilsCog" = ctx.bot.utils
 
-        self._dropdown_options = [
-            discord.SelectOption(
-                label=f"{idx + 1}. {score.title} - {score.difficulty}",
-                value=f"{idx}",
-            )
-            for (idx, score) in enumerate(scores)
-        ]
-        self.dropdown.options = self._dropdown_options[:25]
+        self._dropdown_options: list[list[discord.SelectOption]] = []
+
+        score_idx = 0
+
+        for scores in self.credits:
+            options: list[discord.SelectOption] = []
+
+            for idx, score in enumerate(scores):
+                options.append(
+                    discord.SelectOption(
+                        label=f"{score.track_no or idx + 1}. {score.title} - {score.difficulty}",
+                        value=f"{score_idx}",
+                    )
+                )
+                score_idx += 1
+
+            self._dropdown_options.append(options)
+
+        self.dropdown.options = (
+            self._dropdown_options[0] if len(self._dropdown_options) > 0 else []
+        )
 
     async def _before_start(self, *, content: str | None = None):
         if not self.network_client.SUPPORTS_DETAILED_RECENT_SCORE:
-            self.remove_item(self.dropdown)
-            self.remove_item(self.switch_to_26_50)
-
             if self.network_client_manager is not None:
                 await self.network_client_manager.__aexit__(None, None, None)
 
@@ -114,48 +128,46 @@ class RecentRecordsView(PaginationView):
 
         return await super()._before_start(content=content)
 
+    async def show_page(self, interaction: discord.Interaction, page_index: int):
+        self.dropdown.options = self._dropdown_options[page_index]
+        return await super().show_page(interaction, page_index)
+
     async def on_timeout(self):
         if self.network_client_manager is not None:
             await self.network_client_manager.__aexit__(None, None, None)
 
         return await super().on_timeout()
 
-    @discord.ui.button(label="Switch dropdown to 26-50", row=1)
-    async def switch_to_26_50(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        if button.label == "Switch dropdown to 26-50":
-            self.dropdown.options = self._dropdown_options[25:]
-            button.label = "Switch dropdown to 1-25"
-        else:
-            self.dropdown.options = self._dropdown_options[:25]
-            button.label = "Switch dropdown to 26-50"
-
-        await interaction.response.edit_message(view=self)
-
     if TYPE_CHECKING:
         dropdown: discord.ui.Select
     else:
 
-        @discord.ui.select(placeholder="Select a score", row=2)
+        @discord.ui.select(placeholder="View details of...", row=2)
         async def dropdown(
             self, interaction: discord.Interaction, select: discord.ui.Select
         ):
             if not isinstance(interaction.channel, discord.abc.Messageable):
                 return
+
             await interaction.response.defer()
 
             idx = int(select.values[0])
-            score = await self.network_client.get_detailed_recent_score(
-                self.scores[idx]
-            )
-            score = await self.utils.hydrate_record(score)
+
+            if self.network_client.SUPPORTS_DETAILED_RECENT_SCORE:
+                score = await self.network_client.get_detailed_recent_score(
+                    self.scores[idx]
+                )
+                score = await self.utils.hydrate_record(score)
+            else:
+                score = self.scores[idx]
 
             if interaction.message is not None:
                 await interaction.message.edit(
                     content=f"Score of {self.userinfo.username}",
                     embed=ScoreCardEmbed(
-                        score, synthesis_alt_jacket=self.synthesis_alt_jacket
+                        score,
+                        synthesis_alt_jacket=self.synthesis_alt_jacket,
+                        detailed=True,
                     ),
                     view=self,
                 )
@@ -163,7 +175,9 @@ class RecentRecordsView(PaginationView):
                 await interaction.channel.send(
                     content=f"Score of {self.userinfo.username}",
                     embed=ScoreCardEmbed(
-                        score, synthesis_alt_jacket=self.synthesis_alt_jacket
+                        score,
+                        synthesis_alt_jacket=self.synthesis_alt_jacket,
+                        detailed=True,
                     ),
                     view=self,
                 )

@@ -1,6 +1,7 @@
 import discord
 from discord.utils import escape_markdown
 
+from chuni_penguin.calculation.border import calculate_score_deduction_per_judgement
 from chuni_penguin.config import config
 from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
@@ -31,6 +32,7 @@ class ScoreCardEmbed(discord.Embed):
         show_lamps: bool = True,
         index: int | None = None,
         synthesis_alt_jacket: str | None = None,
+        detailed: bool = False,
     ):
         super().__init__(color=record.difficulty.color())
 
@@ -119,31 +121,52 @@ class ScoreCardEmbed(discord.Embed):
         )
 
         if has_judgements and has_note_percentages:
-            assert record.judgements is not None
-            assert record.note_percentage is not None
+            detailed = True
 
-            self.add_field(
-                name="\u200b",
-                value=(
-                    f"CRITICAL {record.judgements.justice_critical}\n"
-                    f"JUSTICE {record.judgements.justice}\n"
-                    f"ATTACK {record.judgements.attack}\n"
-                    f"MISS {record.judgements.miss}"
-                ),
-                inline=True,
-            )
+        if detailed:
+            if has_judgements:
+                assert record.judgements is not None
 
-            self.add_field(
-                name="\u200b",
-                value=(
-                    f"TAP {record.note_percentage.tap:.2f}%\n"
-                    f"HOLD {record.note_percentage.hold:.2f}%\n"
-                    f"SLIDE {record.note_percentage.slide:.2f}%\n"
-                    f"AIR {record.note_percentage.air:.2f}%\n"
-                    f"FLICK {record.note_percentage.flick:.2f}%"
-                ),
-                inline=True,
-            )
+                if total_combo:
+                    deductions = calculate_score_deduction_per_judgement(total_combo)
+                    loss_justice = (
+                        int(deductions["justice"] * 100) * record.judgements.justice
+                    )
+                    loss_attack = (
+                        int(deductions["attack"] * 100) * record.judgements.attack
+                    )
+                    loss_miss = int(deductions["miss"] * 100) * record.judgements.miss
+                else:
+                    deductions = None
+                    loss_justice = None
+                    loss_attack = None
+                    loss_miss = None
+
+                self.add_field(
+                    name="\u200b",
+                    value=(
+                        f"CRITICAL {record.judgements.justice_critical}\n"
+                        f"JUSTICE {record.judgements.justice}{f' (-{loss_justice // 100}.{loss_justice % 100:02})' if loss_justice else ''}\n"
+                        f"ATTACK {record.judgements.attack}{f' (-{loss_attack // 100}.{loss_attack % 100:02})' if loss_attack else ''}\n"
+                        f"MISS {record.judgements.miss}{f' (-{loss_miss // 100}.{loss_miss % 100:02})' if loss_miss else ''}"
+                    ),
+                    inline=True,
+                )
+
+            if has_note_percentages:
+                assert record.note_percentage is not None
+
+                self.add_field(
+                    name="\u200b",
+                    value=(
+                        f"TAP {record.note_percentage.tap:.2f}%\n"
+                        f"HOLD {record.note_percentage.hold:.2f}%\n"
+                        f"SLIDE {record.note_percentage.slide:.2f}%\n"
+                        f"AIR {record.note_percentage.air:.2f}%\n"
+                        f"FLICK {record.note_percentage.flick:.2f}%"
+                    ),
+                    inline=True,
+                )
         elif has_judgements:
             assert record.judgements is not None
 
