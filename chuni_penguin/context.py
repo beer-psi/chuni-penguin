@@ -1,9 +1,12 @@
+import asyncio
 import contextlib
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Self, overload, override
 
 import discord
+import discord.context_managers
 from discord.ext import commands
+from discord.ext.commands.context import DeferTyping
 from discord.ext.track_edits import EditTrackableContext
 from discord.utils import MISSING, escape_markdown
 from discord.webhook.async_ import WebhookMessage
@@ -17,6 +20,30 @@ from chuni_penguin.utils import did_you_mean_text
 
 if TYPE_CHECKING:
     from .bot import ChuniBot
+
+
+def _typing_done_callback(fut: asyncio.Future) -> None:
+    # just retrieve any exception and call it a day
+    with contextlib.suppress(asyncio.CancelledError, Exception):
+        fut.exception()
+
+
+class Typing(discord.context_managers.Typing):
+    async def wrapped_typer(self) -> None:
+        with contextlib.suppress(discord.HTTPException):
+            return await super().wrapped_typer()
+
+    async def do_typing(self) -> None:
+        channel = await self._get_channel()
+        typing = channel._state.http.send_typing
+
+        while True:
+            await typing(channel.id)
+            await asyncio.sleep(5)
+
+    async def __aenter__(self) -> None:
+        self.task: asyncio.Task[None] = self.loop.create_task(self.do_typing())
+        self.task.add_done_callback(_typing_done_callback)
 
 
 class PenguinContext(EditTrackableContext["ChuniBot"]):
@@ -109,6 +136,15 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
                 return self.response
 
         return await self.reply(content=content, mention_author=False, **kwargs)
+
+    @override
+    def typing(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self, *, ephemeral: bool = False
+    ) -> Typing | DeferTyping["ChuniBot"]:
+        if self.interaction is None:
+            return Typing(self)
+
+        return DeferTyping(self, ephemeral=ephemeral)
 
     async def find_chart(
         self,
