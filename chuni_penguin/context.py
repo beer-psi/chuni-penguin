@@ -37,9 +37,11 @@ class Typing(discord.context_managers.Typing):
         channel = await self._get_channel()
         typing = channel._state.http.send_typing
 
+        await typing(channel.id)
+
         while True:
-            await typing(channel.id)
             await asyncio.sleep(5)
+            await typing(channel.id)
 
     async def __aenter__(self) -> None:
         self.task: asyncio.Task[None] = self.loop.create_task(self.do_typing())
