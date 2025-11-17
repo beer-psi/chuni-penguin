@@ -105,6 +105,7 @@ INTER_32 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Regular.ttf", 3
 INTER_40_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 40)
 INTER_44_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 44)
 
+B30_IMAGE_WIDTH = 1872
 B30_HEADER_HEIGHT = 220
 B30_HEADER_SPACING = 185
 B30_OLD_NEW_SPACING = 130
@@ -410,7 +411,7 @@ def render_b30(
         new_row_num = ceil(new_record_slots / 5)
         image_height += B30_OLD_NEW_SPACING + (B30_ENTRY_HEIGHT + 15) * new_row_num
 
-    b30_image = Image.new("RGBA", size=(1872, image_height), color="#FFFFFF")
+    b30_image = Image.new("RGBA", size=(B30_IMAGE_WIDTH, image_height), color="#FFFFFF")
 
     # draw background
     with Image.open(ASSETS_DIR / "b50" / "b50_bg.png") as im:
@@ -449,7 +450,11 @@ def render_b30(
     # draw logo
     with Image.open(ASSETS_DIR / "b50" / "b50_logo.png") as im:
         logo_padded = Image.new("RGBA", b30_image.size)
-        logo_padded.paste(im, (1442, 10))
+        # the original verse icon was 400x289. for best results other logos should
+        # also be scaled to x289.
+        logo_padded.paste(
+            im, (1442 + (400 - im.width) // 2, 10 + (289 - im.height) // 2)
+        )
         b30_image = Image.alpha_composite(b30_image, logo_padded)
 
     # draw generated date overlay
