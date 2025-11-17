@@ -17,7 +17,11 @@ from sqlalchemy.orm import joinedload
 
 from chuni_penguin import flags
 from chuni_penguin.config import config
-from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION, SIMILARITY_THRESHOLD
+from chuni_penguin.constants import (
+    CACHE_DIR,
+    CURRENT_CHUNITHM_VERSION,
+    SIMILARITY_THRESHOLD,
+)
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
@@ -157,6 +161,7 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
     async def cog_load(self) -> None:
+        (CACHE_DIR / "b50").mkdir(parents=True, exist_ok=True)
         self.bot.tree.add_command(self.compare_context_menu)
 
     async def cog_unload(self) -> None:

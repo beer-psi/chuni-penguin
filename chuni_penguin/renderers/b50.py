@@ -1,4 +1,3 @@
-import functools
 from datetime import UTC, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -8,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from chuni_penguin.constants import ASSETS_DIR
+from chuni_penguin.constants import ASSETS_DIR, CACHE_DIR
 from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
     KEY_PLAY_RATING,
@@ -61,8 +60,16 @@ INVITE_LINK = "https://chunithm.beerpsi.cc/invite"
 
 # Used to cache crops of the best50 background and overlay because apparently
 # resizing images is very expensive
-@functools.lru_cache(maxsize=8)
 def _make_background_image(file: Path, width: int, height: int):
+    cached_file = (
+        CACHE_DIR
+        / "b50"
+        / f"{file.stem}_{file.stat().st_mtime}_preprocessed_{width}x{height}{file.suffix}"
+    )
+
+    if cached_file.exists():
+        return Image.open(cached_file)
+
     with Image.open(file) as im:
         im = im.resize((im.width * height // im.height, height))
         im = im.crop(
@@ -73,8 +80,10 @@ def _make_background_image(file: Path, width: int, height: int):
                 (im.height + height) / 2,
             )
         )
+        im = im.filter(ImageFilter.GaussianBlur(5))
+        im.save(cached_file, optimize=True)
 
-    return im.filter(ImageFilter.GaussianBlur(5))
+    return im
 
 
 def _render_b30_entry(

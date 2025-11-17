@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import platformdirs
+
 # Threshold for matching song titles.
 SIMILARITY_THRESHOLD = 65
 
@@ -27,3 +29,4 @@ VERSION_NAMES = {
 }
 
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
+CACHE_DIR = Path(platformdirs.user_cache_dir("chuni-penguin", "beerpsi"))
