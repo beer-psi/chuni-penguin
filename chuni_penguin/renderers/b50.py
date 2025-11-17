@@ -64,11 +64,16 @@ def _make_background_image(file: Path, width: int, height: int):
     cached_file = (
         CACHE_DIR
         / "b50"
-        / f"{file.stem}_{file.stat().st_mtime}_preprocessed_{width}x{height}{file.suffix}"
+        / f"{file.stem}_{file.stat().st_mtime}_preprocessed_{width}x{height}.webp"
     )
 
     if cached_file.exists():
-        return Image.open(cached_file)
+        im = Image.open(cached_file)
+
+        if im.mode != "RGBA":
+            im = im.convert("RGBA")
+
+        return im
 
     with Image.open(file) as im:
         im = im.resize((im.width * height // im.height, height))
@@ -81,7 +86,7 @@ def _make_background_image(file: Path, width: int, height: int):
             )
         )
         im = im.filter(ImageFilter.GaussianBlur(5))
-        im.save(cached_file, optimize=True)
+        im.save(cached_file, lossless=True)
 
     return im
 
