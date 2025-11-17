@@ -1,5 +1,4 @@
 # ruff: noqa: E731
-import argparse
 import asyncio
 import contextlib
 import itertools
@@ -14,7 +13,6 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 import discord
 from discord import Interaction, app_commands
 from discord.ext import commands
-from discord.ext.commands import Context
 from discord.utils import escape_markdown
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from sqlalchemy import select
@@ -1273,7 +1271,6 @@ class RecordsCog(commands.Cog, name="Records"):
         ctx: PenguinContext,
         user: discord.User | discord.Member | None = None,
         *,
-        image: bool | None = None,
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
@@ -1528,24 +1525,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
 
-            if image:
-                if ctx.interaction is None:
-                    image_flag = "`-i` flag"
-                    classic_flag = "`-c` flag"
-                else:
-                    image_flag = "`image: True` option"
-                    classic_flag = "`classic: True` option"
-
-                content = (
-                    f"The {image_flag} is not needed anymore, because generating an image is now the default. "
-                    "Using it will cause a hard error in a future update. "
-                    f"If you wish to view your scores with Discord embeds, please use the {classic_flag}."
-                )
-            else:
-                content = None
-
             await ctx.reply(
-                content=content,
                 file=discord.File(
                     b30_image, filename=f"chuni-penguin-b50-{generation_timestamp}.png"
                 ),
@@ -1554,7 +1534,6 @@ class RecordsCog(commands.Cog, name="Records"):
 
     @flags.command("best50", aliases=["best30", "b30", "b50"])
     @flags.argument("-c", "--classic", action="store_true")
-    @flags.argument("-i", "--image", action="store_true", help=argparse.SUPPRESS)
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("-n", "--new-rating", action="store_true")
     @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
@@ -1565,7 +1544,6 @@ class RecordsCog(commands.Cog, name="Records"):
         ctx: PenguinContext,
         *,
         classic: bool = False,
-        image: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
         user: discord.Member | discord.User | None = None,
@@ -1582,17 +1560,12 @@ class RecordsCog(commands.Cog, name="Records"):
         Does nothing for official network.
         """
 
-        if image and classic:
-            msg = "Cannot specify both `--image` and `--classic`."
-            raise commands.BadArgument(msg)
-
         if not classic and not ctx.bot_permissions.attach_files:
             raise commands.BotMissingPermissions(["attach_files"])
 
         await self._best50_inner(
             ctx,
             user,
-            image=image,
             classic=classic,
             kamaitachi=kamaitachi,
             new_rating=new_rating,
@@ -1627,27 +1600,6 @@ class RecordsCog(commands.Cog, name="Records"):
             kamaitachi=kamaitachi,
             new_rating=new_rating,
         )
-
-    @commands.command("recent10", aliases=["r10"], hidden=True)
-    @logged_prefix_command
-    async def recent10(self, ctx: Context):
-        msg = (
-            "This command has been disabled due to rating changes in CHUNITHM VERSE. "
-            "It will be fully removed in a future update."
-        )
-        raise commands.CommandError(msg)
-
-    @commands.command(
-        "new20", aliases=["n10", "n15", "n20", "new10", "new15"], hidden=True
-    )
-    @logged_prefix_command
-    async def new20(self, ctx: Context):
-        msg = (
-            "This command has been disabled because the new rating system is now official. "
-            "It will be fully removed in a future update.\n\n"
-            f"Please use the `{ctx.clean_prefix}best50` command to see your new rating."
-        )
-        raise commands.CommandError(msg)
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(
