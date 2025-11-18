@@ -97,7 +97,7 @@ class ShowAnswerState(GuessingGameState):
             color=color,
             description="".join(description_parts),
         )
-        embed.set_image(url="attachment://image.png")
+        embed.set_image(url="attachment://image.webp")
 
         if self.guess_time is not None:
             embed.set_footer(text=f"Guessed in {self.guess_time:.2f} seconds")
@@ -126,7 +126,7 @@ class ShowAnswerState(GuessingGameState):
         await self.session.channel.send(
             content=content,
             embed=embed,
-            file=discord.File(self.answer_image, "image.png"),
+            file=discord.File(self.answer_image, "image.webp"),
         )
         self.answer_image.close()
 

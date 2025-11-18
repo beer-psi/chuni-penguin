@@ -344,7 +344,7 @@ class GuessingGameSession:
         while True:
             song, aliases = await self._get_random_song()
 
-            jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
+            jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.webp"
 
             if not jacket_path.exists():
                 await logger.awarning(
@@ -381,7 +381,7 @@ class GuessingGameSession:
                     img = ImageOps.invert(img.convert("RGB"))
 
             cropped_image_buffer = io.BytesIO()
-            img.save(cropped_image_buffer, format="PNG", compress_level=3)
+            img.save(cropped_image_buffer, format="WEBP", lossless=True)
             cropped_image_buffer.seek(0)
 
         with Image.open(jacket_path) as img:
@@ -394,7 +394,7 @@ class GuessingGameSession:
             )
 
             answer_image_buffer = io.BytesIO()
-            img.save(answer_image_buffer, format="PNG", compress_level=3)
+            img.save(answer_image_buffer, format="WEBP", lossless=True)
             answer_image_buffer.seek(0)
 
         return song, aliases, answer_image_buffer, cropped_image_buffer
@@ -417,7 +417,7 @@ class GuessingGameSession:
                 continue
 
             audio_path = ASSETS_DIR / "audio" / f"{song.id}.ogg"
-            jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.png"
+            jacket_path = ASSETS_DIR / "jackets" / f"{song.id}.webp"
 
             if not audio_path.exists() or not jacket_path.exists():
                 await logger.awarning(

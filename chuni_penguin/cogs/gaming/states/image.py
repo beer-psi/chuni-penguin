@@ -27,7 +27,7 @@ class AskImageQuestionState(GuessingGameState):
             description=f"You have {self.session.time_per_question} seconds to guess the song.\nUse `{self.session.ctx.clean_prefix}skip` to skip.",
             color=self.session.difficulty.color(),
         )
-        question_embed.set_image(url="attachment://image.png")
+        question_embed.set_image(url="attachment://image.webp")
 
         if self.session.question_count is not None:
             question_embed.set_footer(
@@ -40,7 +40,7 @@ class AskImageQuestionState(GuessingGameState):
 
         await self.session.channel.send(
             embed=question_embed,
-            file=discord.File(question_image, "image.png"),
+            file=discord.File(question_image, "image.webp"),
             mention_author=False,
         )
         question_image.close()

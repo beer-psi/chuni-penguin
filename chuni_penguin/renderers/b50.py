@@ -133,9 +133,9 @@ def _render_b30_entry(
         elif user_config.synthesis_alt_jacket == "none":
             jacket_basename = "__nonexistent"
 
-    jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.png"
+    jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.webp"
     prerendered_path = (
-        ASSETS_DIR / "jackets" / f"{jacket_basename}_{record.difficulty.value}.png"
+        ASSETS_DIR / "jackets" / f"{jacket_basename}_{record.difficulty.value}.webp"
     )
 
     if prerendered_path.exists():
