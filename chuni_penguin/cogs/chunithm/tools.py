@@ -82,7 +82,7 @@ def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
         result = Image.alpha_composite(result, bar_img)
 
         output = BytesIO()
-        result.convert("RGB").save(output, format="WEBP", quality=90)
+        result.convert("RGB").save(output, format="JPEG", quality=92)
 
     output.seek(0)
 
@@ -1031,7 +1031,7 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             file = discord.File(
                 output,
-                filename=f"{sdvxin_id}{chart.difficulty.lower()}.webp",
+                filename=f"{sdvxin_id}{chart.difficulty.lower()}.jpg",
                 description=f"Chart view for {chart_display_name}",
             )
 

@@ -58,7 +58,7 @@ class LeaderboardPageSource(ListPageSource):
                 info_embed.set_thumbnail(url=None)
             elif self.synthesis_alt_jacket != "default" and config.web.serve_assets:
                 info_embed.set_thumbnail(
-                    url=f"{config.web.base_url}/assets/jackets/{self.song.id}_{self.synthesis_alt_jacket}.png"
+                    url=f"{config.web.base_url}/assets/jackets/{self.song.id}_{self.synthesis_alt_jacket}.webp"
                 )
 
         description = ""

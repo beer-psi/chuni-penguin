@@ -115,7 +115,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                         and config.web.is_accessible
                     ):
                         embed.set_thumbnail(
-                            url=f"{config.web.base_url}/assets/jackets/{song.id}_{self.synthesis_alt_jacket}.png"
+                            url=f"{config.web.base_url}/assets/jackets/{song.id}_{self.synthesis_alt_jacket}.webp"
                         )
                 elif (
                     self.brainrot
@@ -124,7 +124,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                     and config.web.is_accessible
                 ):
                     embed.set_thumbnail(
-                        url=f"{config.web.base_url}/assets/jackets/45_67.png"
+                        url=f"{config.web.base_url}/assets/jackets/45_67.webp"
                     )
 
                 chart_level_desc = []
