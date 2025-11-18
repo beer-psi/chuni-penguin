@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import sys
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
@@ -21,6 +22,7 @@ from chuni_penguin.networks.kamaitachi import (
     KTImportPollStatusCompleted,
     KTImportPollStatusOngoing,
     KTImportPollStatusResponse,
+    KTResponse,
     KTStatusResponse,
     convert_to_kt_batch_manual,
 )
@@ -31,7 +33,14 @@ if TYPE_CHECKING:
     from chuni_penguin.cogs.botutils import UtilsCog
 
 
-class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": True}):
+class ReprocessOrphanSummary(msgspec.Struct, rename="camel"):
+    processed: int
+    failed: int
+    success: int
+    removed: int
+
+
+class KamaitachiCog(commands.Cog, name="Kamaitachi"):
     def __init__(self, bot: "ChuniBot") -> None:
         if (kt_client_id := config.credentials.kamaitachi_client_id) is None:
             msg = "Kamaitachi client ID is not set"
@@ -53,7 +62,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
         self.kt_client_secret = kt_client_secret
         self.user_agent = f"ChuniPenguin (https://github.com/Rapptz/discord.py {discord.__version__}) Python/{sys.version_info[0]}.{sys.version_info[1]} httpx/{httpx.__version__}"
 
-    @commands.hybrid_group("kamaitachi", aliases=["kt"])
+    @commands.hybrid_group("kamaitachi", aliases=["kt"], hidden=True)
     @logged_prefix_command
     async def kamaitachi(self, ctx: Context):
         pass
@@ -194,6 +203,8 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
     @kamaitachi.command("unlink", aliases=["logout"])
     @logged_prefix_command
     async def kamaitachi_unlink(self, ctx: Context):
+        """Unlinks your Kamaitachi account."""
+
         async with self.bot.begin_db_session() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
@@ -354,24 +365,129 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi", command_attrs={"hidden": Tr
                     continue
 
                 if isinstance(data.body, KTImportPollStatusCompleted):
-                    msg = (
-                        f"{data.description} {len(data.body.import_.score_ids)} scores"
-                    )
-
-                    if len(data.body.import_.errors) > 0:
-                        msg += f", {len(data.body.import_.errors)} errors"
-
-                    msg += "."
+                    import_doc = data.body.import_
+                    content = None
 
                     if len(data.body.import_.score_ids) == 50 and sync == "recent":
-                        msg += (
-                            "\n\nIt seems like some earlier unsynced scores were pushed out of your recents. "
+                        content = (
+                            "It seems like some earlier unsynced scores were pushed out of your recents. "
                             f"If any scores are missing, please run `{ctx.clean_prefix}kamaitachi sync pb` to sync your personal bests. "
                             "Please sync more often when you're having large sessions, since syncing recents lets you keep track "
                             "of playcount and judgements."
                         )
 
-                    return await ctx.respond_or_edit(msg)
+                    return await ctx.respond_or_edit(
+                        content=content,
+                        embed=(
+                            discord.Embed(
+                                title=f"Imported {len(import_doc.score_ids)} scores.",
+                                color=tachi_client.ACCENT_COLOR,
+                                timestamp=datetime.fromtimestamp(
+                                    import_doc.time_finished / 1000, UTC
+                                ),
+                            )
+                            .add_field(
+                                name="Created sessions",
+                                value=str(
+                                    len(
+                                        [
+                                            s
+                                            for s in import_doc.created_sessions
+                                            if s.type == "Created"
+                                        ]
+                                    )
+                                ),
+                            )
+                            .add_field(
+                                name="Errors",
+                                value=f"{len(import_doc.errors)} ({', '.join({e.type for e in import_doc.errors})})",
+                            )
+                        ),
+                        view=(
+                            discord.ui.View(timeout=None)
+                            .add_item(
+                                discord.ui.Button(
+                                    style=discord.ButtonStyle.link,
+                                    label="CHUNITHM Profile",
+                                    url=f"https://kamai.tachi.ac/u/{import_doc.user_id}/games/chunithm/Single",
+                                )
+                            )
+                            .add_item(
+                                discord.ui.Button(
+                                    style=discord.ButtonStyle.link,
+                                    label="Imports",
+                                    url=f"https://kamai.tachi.ac/u/{import_doc.user_id}/imports",
+                                )
+                            )
+                        ),
+                    )
+
+    @kamaitachi.command("deorphan")
+    @logged_prefix_command
+    async def kamaitachi_deorphan(self, ctx: PenguinContext):
+        """Forces Tachi to reprocess your orphaned scores.
+
+        This is automatically done daily, but this command allows users to speed that up.
+        """
+
+        async with ctx.typing(), self.bot.begin_db_session() as session:
+            query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
+            cookie = (await session.execute(query)).scalar_one_or_none()
+
+        if cookie is None or cookie.kamaitachi_token is None:
+            msg = f"You are not linked with Kamaitachi. DM me with `{'/' if ctx.interaction else config.bot.default_prefix}kamaitachi link` for instructions."
+            raise commands.CommandError(msg)
+
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.kamaitachi(
+                cookie.kamaitachi_token
+            ) as tachi_client,
+        ):
+            profile = await tachi_client.get_minimal_profile()
+            resp = await tachi_client._client.post("/api/v1/import/orphans")
+
+            if resp.status_code != 200:
+                msg = f"Could not send a request to deorphan scores (HTTP status {resp.status_code})"
+                raise commands.CommandError(msg)
+
+            data = msgspec.json.decode(
+                resp.content, type=KTResponse[ReprocessOrphanSummary]
+            )
+
+            if not data.success or data.body is None:
+                msg = f"Could not deorphan scores: {data.description}"
+                raise commands.CommandError(msg)
+
+        await ctx.respond_or_edit(
+            embed=(
+                discord.Embed(
+                    title=f"Processed {data.body.processed} orphan scores.",
+                    color=tachi_client.ACCENT_COLOR,
+                    timestamp=datetime.now(UTC),
+                )
+                .add_field(name="Success", value=str(data.body.success))
+                .add_field(name="Failed", value=str(data.body.failed))
+                .add_field(name="Removed", value=str(data.body.removed))
+            ),
+            view=(
+                discord.ui.View(timeout=None)
+                .add_item(
+                    discord.ui.Button(
+                        style=discord.ButtonStyle.link,
+                        label="CHUNITHM Profile",
+                        url=f"https://kamai.tachi.ac/u/{profile.username}/games/chunithm/Single",
+                    )
+                )
+                .add_item(
+                    discord.ui.Button(
+                        style=discord.ButtonStyle.link,
+                        label="Imports",
+                        url=f"https://kamai.tachi.ac/u/{profile.username}/imports",
+                    )
+                )
+            ),
+        )
 
 
 async def setup(bot: "ChuniBot"):
