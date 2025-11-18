@@ -86,9 +86,27 @@ def _make_background_image(file: Path, width: int, height: int):
             )
         )
         im = im.filter(ImageFilter.GaussianBlur(5))
+
+        if im.mode != "RGBA":
+            im = im.convert("RGBA")
+
         im.save(cached_file, lossless=True)
 
     return im
+
+
+def _paste_alpha_composite(
+    im1: Image.Image,
+    im2: Image.Image,
+    box: Image.Image | tuple[int, int] | tuple[int, int, int, int] | None = None,
+):
+    if im1.mode != "RGBA":
+        im1 = im1.convert("RGBA")
+
+    im2_padded = Image.new("RGBA", im1.size)
+    im2_padded.paste(im2, box)
+
+    return Image.alpha_composite(im1, im2_padded)
 
 
 def _render_b30_entry(
@@ -126,7 +144,7 @@ def _render_b30_entry(
     else:
         # draw the base image based on the difficulty
         b30_base_image_path = (
-            ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.png"
+            ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.webp"
         )
 
         with Image.open(b30_base_image_path) as b30_base_image:
@@ -310,37 +328,29 @@ def render_b30(
 
     # draw background, copy so we can paste things on top of it
     b30_image = _make_background_image(
-        ASSETS_DIR / "b50" / "b50_bg.png", B30_IMAGE_WIDTH, b30_image_height
+        ASSETS_DIR / "b50" / "b50_bg.webp", B30_IMAGE_WIDTH, b30_image_height
     ).copy()
 
     # draw background overlay
     b30_overlay = _make_background_image(
-        ASSETS_DIR / "b50" / "b50_overlay.png", b30_image.width, b30_image.height
+        ASSETS_DIR / "b50" / "b50_overlay.webp", b30_image.width, b30_image.height
     )
 
     b30_image = Image.alpha_composite(b30_image, b30_overlay)
 
     # draw header overlay
-    with Image.open(ASSETS_DIR / "b50" / "b50_part_header.png") as im:
-        header_padded = Image.new("RGBA", b30_image.size)
-        header_padded.paste(im, (0, 0))
-        b30_image = Image.alpha_composite(b30_image, header_padded)
+    with Image.open(ASSETS_DIR / "b50" / "b50_part_header.webp") as im:
+        b30_image = _paste_alpha_composite(b30_image, im, (0, 0))
 
     # draw logo
-    with Image.open(ASSETS_DIR / "b50" / "b50_logo.png") as im:
-        logo_padded = Image.new("RGBA", b30_image.size)
-        # the original verse icon was 400x289. for best results other logos should
-        # also be scaled to x289.
-        logo_padded.paste(
-            im, (1442 + (400 - im.width) // 2, 10 + (289 - im.height) // 2)
+    with Image.open(ASSETS_DIR / "b50" / "b50_logo.webp") as im:
+        b30_image = _paste_alpha_composite(
+            b30_image, im, (1442 + (400 - im.width) // 2, 10 + (289 - im.height) // 2)
         )
-        b30_image = Image.alpha_composite(b30_image, logo_padded)
 
     # draw generated date overlay
-    with Image.open(ASSETS_DIR / "b50" / "b50_part_date.png") as im:
-        date_padded = Image.new("RGBA", b30_image.size)
-        date_padded.paste(im, (1492, 310))
-        b30_image = Image.alpha_composite(b30_image, date_padded)
+    with Image.open(ASSETS_DIR / "b50" / "b50_part_date.webp") as im:
+        b30_image = _paste_alpha_composite(b30_image, im, (1492, 310))
 
     # draw semitransparent rectangles to darken footer
     b30_semitransparent_base = Image.new("RGBA", b30_image.size)
@@ -444,16 +454,14 @@ def render_b30(
         # draw each digit of the rating number
         digit_count += 1
         image_name = (
-            f"rating_{rating_tier}_{char}.png"
+            f"rating_{rating_tier}_{char}.webp"
             if char != "."
-            else f"rating_{rating_tier}_dot.png"
+            else f"rating_{rating_tier}_dot.webp"
         )
         digit_path = ASSETS_DIR / "b50" / image_name
 
         with Image.open(digit_path) as digit_im:
-            digit_padded = Image.new("RGBA", b30_image.size)
-            digit_padded.paste(digit_im, (digit_x, 58))
-            b30_image = Image.alpha_composite(b30_image, digit_padded)
+            b30_image = _paste_alpha_composite(b30_image, digit_im, (digit_x, 58))
 
         digit_x += 40
 
@@ -524,15 +532,11 @@ def render_b30(
 
     if new_records is not None:
         # draw the "OLD CHARTS" and "NEW CHARTS" separators
-        with Image.open(ASSETS_DIR / "b50" / "b50_part_old.png") as im:
-            old_padded = Image.new("RGBA", b30_image.size)
-            old_padded.paste(im, (0, 300))
-            b30_image = Image.alpha_composite(b30_image, old_padded)
+        with Image.open(ASSETS_DIR / "b50" / "b50_part_old.webp") as im:
+            b30_image = _paste_alpha_composite(b30_image, im, (0, 300))
 
-        with Image.open(ASSETS_DIR / "b50" / "b50_part_new.png") as im:
-            new_padded = Image.new("RGBA", b30_image.size)
-            new_padded.paste(im, (0, 1870))
-            b30_image = Image.alpha_composite(b30_image, new_padded)
+        with Image.open(ASSETS_DIR / "b50" / "b50_part_new.webp") as im:
+            b30_image = _paste_alpha_composite(b30_image, im, (0, 1870))
 
         b30_draw = ImageDraw.Draw(b30_image)
 
