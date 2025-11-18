@@ -376,33 +376,44 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                             "of playcount and judgements."
                         )
 
+                    embed = (
+                        discord.Embed(
+                            title="Import finished.",
+                            color=tachi_client.ACCENT_COLOR,
+                            timestamp=datetime.fromtimestamp(
+                                import_doc.time_finished / 1000, UTC
+                            ),
+                        )
+                        .add_field(
+                            name="Created sessions",
+                            value=str(
+                                len(
+                                    [
+                                        s
+                                        for s in import_doc.created_sessions
+                                        if s.type == "Created"
+                                    ]
+                                )
+                            ),
+                        )
+                        .add_field(name="Scores", value=str(len(import_doc.score_ids)))
+                    )
+
+                    if len(import_doc.errors) > 0:
+                        error_content = "\n".join(
+                            [f"- {e.type}: {e.message}" for e in import_doc.errors]
+                        )
+
+                        if len(error_content) > 1024:
+                            error_content = error_content[:1021] + "..."
+
+                        embed.add_field(
+                            name="Errors", value=error_content, inline=False
+                        )
+
                     return await ctx.respond_or_edit(
                         content=content,
-                        embed=(
-                            discord.Embed(
-                                title=f"Imported {len(import_doc.score_ids)} scores.",
-                                color=tachi_client.ACCENT_COLOR,
-                                timestamp=datetime.fromtimestamp(
-                                    import_doc.time_finished / 1000, UTC
-                                ),
-                            )
-                            .add_field(
-                                name="Created sessions",
-                                value=str(
-                                    len(
-                                        [
-                                            s
-                                            for s in import_doc.created_sessions
-                                            if s.type == "Created"
-                                        ]
-                                    )
-                                ),
-                            )
-                            .add_field(
-                                name="Errors",
-                                value=f"{len(import_doc.errors)} ({', '.join({e.type for e in import_doc.errors})})",
-                            )
-                        ),
+                        embed=embed,
                         view=(
                             discord.ui.View(timeout=None)
                             .add_item(
