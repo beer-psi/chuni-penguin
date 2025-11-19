@@ -62,7 +62,7 @@ def get_jacket_url(song: "Song") -> str:
         if url.host.startswith("127.") or url.host == "localhost":
             return song.jacket
 
-        return f"{config.web.base_url}/assets/jackets/{song.id}.png"
+        return f"{config.web.base_url}/assets/jackets/{song.id}.webp"
 
     return song.jacket
 

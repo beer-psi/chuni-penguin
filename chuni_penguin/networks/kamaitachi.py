@@ -252,9 +252,18 @@ class KTImportErrContent(msgspec.Struct, rename="camel"):
     message: str
 
 
+class KTSessionInfoReturn(msgspec.Struct, rename="camel"):
+    session_id: str = msgspec.field(name="sessionID")
+    type: Literal["Appended", "Created"]
+
+
 class KTImportDocument(msgspec.Struct, rename="camel"):
+    user_id: int = msgspec.field(name="userID")
+    time_finished: int
     score_ids: list[str] = msgspec.field(name="scoreIDs")
+    game: str
     errors: list[KTImportErrContent]
+    created_sessions: list[KTSessionInfoReturn]
 
 
 class KTImportPollStatus(msgspec.Struct, rename="camel", tag_field="importStatus"):

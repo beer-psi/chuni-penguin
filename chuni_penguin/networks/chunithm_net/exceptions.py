@@ -10,6 +10,7 @@ class ChuniNetError(NetworkError):
     CONNECTION_EXPIRED = 200002
     INVALID_SESSION = 200004
     # 200008
+    NOT_FOUND = 200020
 
     def __init__(self, code: int, description: str) -> None:
         super().__init__(f"Error code {code}: {description}")

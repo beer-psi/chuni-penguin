@@ -288,11 +288,11 @@ class ProfileView(PenguinView):
                 charaframe.paste(character, (6, 6), character)
 
                 avatar = io.BytesIO()
-                charaframe.save(avatar, "PNG", optimize=True)
+                charaframe.save(avatar, "WEBP", optimize=True)
                 avatar.seek(0)
 
-                files = [discord.File(avatar, filename="avatar.png")]
-                embed.set_thumbnail(url="attachment://avatar.png")
+                files = [discord.File(avatar, filename="avatar.webp")]
+                embed.set_thumbnail(url="attachment://avatar.webp")
 
         return {"embed": embed, "files": files}
 

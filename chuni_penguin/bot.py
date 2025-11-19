@@ -3,15 +3,12 @@ import contextlib
 import time
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 import discord
-import discord.utils
 import hishel
 import httpx
 import httpx_aiohttp
-import platformdirs
 from discord.ext import commands
 from discord.ext.track_edits import EditTrackerCog
 from sqlalchemy import select, text
@@ -21,6 +18,7 @@ from chuni_penguin.ui.components import BannedEmbed
 from .cogs import COG_LIST
 from .command_tree import PenguinCommandTree
 from .config import config
+from .constants import CACHE_DIR
 from .context import PenguinContext
 from .database.models import Denylist, Prefix
 from .logging import logger
@@ -105,7 +103,7 @@ class ChuniBot(commands.AutoShardedBot):
             ),
             storage=hishel.AsyncFileStorage(
                 serializer=HishelMsgspecSerializer(),
-                base_path=Path(platformdirs.user_cache_dir("chuni-penguin", "beerpsi")),
+                base_path=CACHE_DIR,
                 check_ttl_every=300,
             ),
         )

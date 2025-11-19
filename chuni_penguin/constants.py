@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import platformdirs
+
 # Threshold for matching song titles.
 SIMILARITY_THRESHOLD = 65
 
@@ -7,11 +9,8 @@ SIMILARITY_THRESHOLD = 65
 # Probably not the best way to implement this but whatever.
 MAX_DIFFICULTY = 15.7
 
-# This is a temporary variable to split new records from old
-# records. Will probably not be needed once CHUNITHM VERSE
-# drops in international and we can just get the n15 list
-# directly from the web UI.
-CURRENT_CHUNITHM_VERSION = "VERSE"
+# Used to split old records from new records.
+CURRENT_CHUNITHM_VERSION = "X-VERSE"
 CURRENT_CHUNITHM_VERSION_KT = f"CHUNITHM {CURRENT_CHUNITHM_VERSION}"
 
 # The version names are just my favorite CHUNITHM songs
@@ -27,6 +26,8 @@ VERSION_NAMES = {
     "v2025.5": "黎命に殉ず",
     "v2025.6": "deadeye",
     "v2025.9": "Elusive Enforcer",
+    "v2025.11": "Parallel Horizons",
 }
 
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
+CACHE_DIR = Path(platformdirs.user_cache_dir("chuni-penguin", "beerpsi"))

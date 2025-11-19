@@ -43,7 +43,7 @@ class ScoreCardEmbed(discord.Embed):
                 self.set_thumbnail(url=None)
             elif synthesis_alt_jacket != "default" and config.web.serve_assets:
                 self.set_thumbnail(
-                    url=f"{config.web.base_url}/assets/jackets/2698_{synthesis_alt_jacket}.png"
+                    url=f"{config.web.base_url}/assets/jackets/2698_{synthesis_alt_jacket}.webp"
                 )
 
         if show_lamps:

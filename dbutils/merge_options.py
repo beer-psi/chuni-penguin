@@ -58,11 +58,11 @@ WE_LEVEL_OVERRIDES = {
 B30_JACKET_WIDTH = 110
 B30_JACKET_HEIGHT = 110
 B30_BASE_IMAGES = {
-    Difficulty.basic: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_0.png"),
-    Difficulty.advanced: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_1.png"),
-    Difficulty.expert: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_2.png"),
-    Difficulty.master: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_3.png"),
-    Difficulty.ultima: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_4.png"),
+    Difficulty.basic: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_0.webp"),
+    Difficulty.advanced: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_1.webp"),
+    Difficulty.expert: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_2.webp"),
+    Difficulty.master: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_3.webp"),
+    Difficulty.ultima: lambda: Image.open(ASSETS_DIR / "b50" / "b50_base_4.webp"),
 }
 COURSE_CLASS_MAP = {
     10: CourseClass.i,
@@ -97,10 +97,18 @@ def extract_jacket(
     try:
         with Image.open(jacket_file) as im:
             im = im.convert("RGB")
+
+            # Keep the PNG version around to prevent dead links, I'm pretty sure some
+            # other tools use these jackets
             im.save(
                 ASSETS_DIR / "jackets" / f"{song_id}{alt_suffix}.png",
                 format="PNG",
                 optimize=True,
+            )
+            im.save(
+                ASSETS_DIR / "jackets" / f"{song_id}{alt_suffix}.webp",
+                format="WEBP",
+                lossless=True,
             )
 
             # world's ends arent going to show up in b50 anytime soon
@@ -124,8 +132,11 @@ def extract_jacket(
                     b30_base_image.save(
                         ASSETS_DIR
                         / "jackets"
-                        / f"{song_id}{alt_suffix}_{difficulty.value}.png",
+                        / f"{song_id}{alt_suffix}_{difficulty.value}.webp",
+                        format="WEBP",
+                        lossless=True,
                     )
+
     except Exception:
         traceback.print_exc()
         raise
