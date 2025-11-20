@@ -114,7 +114,7 @@ class FluffCog(commands.Cog, name="Fluff"):
         count = await ctx.bot.database.count_easter_eggs_found(ctx.author.id)
 
         await ctx.reply(
-            content=f"You've found {count}/8 easter eggs!",
+            content=f"You've found {count}/9 easter eggs!",
             mention_author=False,
         )
 
