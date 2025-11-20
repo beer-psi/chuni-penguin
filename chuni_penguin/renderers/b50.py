@@ -301,6 +301,7 @@ def render_b30(
     new_record_slots: int = 20,
     current_rating: float | None = None,
     user_config: "UserConfig | None" = None,
+    *,
     uncross_verse: bool = False,
 ):
     if len(records) > record_slots:
