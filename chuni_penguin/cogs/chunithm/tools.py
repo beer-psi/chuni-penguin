@@ -921,6 +921,17 @@ class ToolsCog(commands.Cog, name="Tools"):
                     )
                 )
 
+    async def _fetch_sdvxin_with_fallback(self, chart: Chart, url: str, fallback: str):
+        resp = await self.http_client.get(url)
+
+        if resp.is_success:
+            return resp
+
+        if resp.is_error and chart.difficulty in ("ULT", "WE"):
+            return await self.http_client.get(fallback)
+
+        return resp
+
     @commands.hybrid_command("chart")
     @commands.bot_has_permissions(attach_files=True)
     @app_commands.choices(
@@ -993,9 +1004,17 @@ class ToolsCog(commands.Cog, name="Tools"):
                 )
 
             bg_resp, data_resp, bar_resp = await asyncio.gather(
-                self.http_client.get(bg_url),
+                self._fetch_sdvxin_with_fallback(
+                    chart,
+                    bg_url,
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png",
+                ),
                 self.http_client.get(data_url),
-                self.http_client.get(bar_url),
+                self._fetch_sdvxin_with_fallback(
+                    chart,
+                    bar_url,
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png",
+                ),
             )
 
             if bg_resp.is_error or data_resp.is_error or bar_resp.is_error:
