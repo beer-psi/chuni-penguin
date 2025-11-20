@@ -301,6 +301,7 @@ def render_b30(
     new_record_slots: int = 20,
     current_rating: float | None = None,
     user_config: "UserConfig | None" = None,
+    uncross_verse: bool = False,
 ):
     if len(records) > record_slots:
         msg = "More records provided than number of record slots"
@@ -343,7 +344,12 @@ def render_b30(
         b30_image = _paste_alpha_composite(b30_image, im, (0, 0))
 
     # draw logo
-    with Image.open(ASSETS_DIR / "b50" / "b50_logo.webp") as im:
+    if uncross_verse:
+        logo_path = ASSETS_DIR / "b50" / "b50_logo_uncrossverse.webp"
+    else:
+        logo_path = ASSETS_DIR / "b50" / "b50_logo.webp"
+
+    with Image.open(logo_path) as im:
         b30_image = _paste_alpha_composite(
             b30_image, im, (1442 + (400 - im.width) // 2, 10 + (289 - im.height) // 2)
         )

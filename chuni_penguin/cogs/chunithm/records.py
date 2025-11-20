@@ -3,6 +3,7 @@ import asyncio
 import contextlib
 import itertools
 import math
+import random
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -159,6 +160,8 @@ class RecordsCog(commands.Cog, name="Records"):
         self.compare_context_menu = app_commands.ContextMenu(
             name="View your score", callback=self.compare_context_menu_callback
         )
+
+        self._random = random.Random()
 
     async def cog_load(self) -> None:
         (CACHE_DIR / "b50").mkdir(parents=True, exist_ok=True)
@@ -958,6 +961,16 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 return
 
+            uncross_verse = isinstance(client, Kamaitachi)
+
+            if not uncross_verse:
+                uncross_verse = self._random.random() <= 0.1
+
+                if uncross_verse:
+                    await self.bot.database.user_found_easter_egg(
+                        ctx.author.id, "chunithm-uncross-verse"
+                    )
+
             b30_image = await asyncio.to_thread(
                 render_b30,
                 profile.username,
@@ -967,6 +980,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 new_record_slots=new_record_slots,
                 current_rating=current_rating,
                 user_config=user_config,
+                uncross_verse=uncross_verse,
             )
             generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
 
