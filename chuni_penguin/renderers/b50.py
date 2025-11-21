@@ -30,6 +30,7 @@ NOTO_SANS_JP_24_BOLD = ImageFont.truetype(
 NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Medium.ttf", 28
 )
+NOTO_SANS_32_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "NotoSans-Bold.ttf", 32)
 NOTO_SANS_JP_32_BOLD = ImageFont.truetype(
     ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 32
 )
@@ -180,7 +181,11 @@ def _render_b30_entry(
         (x + 10, y),
         title + ("..." if title != record.title else ""),
         fill="#FFFFFF",
-        font=NOTO_SANS_JP_32_BOLD,
+        font=(
+            NOTO_SANS_JP_32_BOLD
+            if record.extras[KEY_SONG_ID] != 2831  # Street - χρόνος
+            else NOTO_SANS_32_BOLD
+        ),
     )
 
     # draw the score
