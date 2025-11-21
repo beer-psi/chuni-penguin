@@ -11,7 +11,6 @@ MAX_DIFFICULTY = 15.7
 
 # Used to split old records from new records.
 CURRENT_CHUNITHM_VERSION = "X-VERSE"
-CURRENT_CHUNITHM_VERSION_KT = "CHUNITHM VERSE"
 
 # The version names are just my favorite CHUNITHM songs
 # in no particular order.

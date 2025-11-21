@@ -961,15 +961,12 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 return
 
-            uncross_verse = isinstance(client, Kamaitachi)
+            uncross_verse = self._random.random() <= 0.1
 
-            if not uncross_verse:
-                uncross_verse = self._random.random() <= 0.1
-
-                if uncross_verse:
-                    await self.bot.database.user_found_easter_egg(
-                        ctx.author.id, "chunithm-uncross-verse"
-                    )
+            if uncross_verse:
+                await self.bot.database.user_found_easter_egg(
+                    ctx.author.id, "chunithm-uncross-verse"
+                )
 
             b30_image = await asyncio.to_thread(
                 render_b30,
