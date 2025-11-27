@@ -21,6 +21,9 @@ class DifficultyConverter(commands.Converter[Difficulty]):
         if argument == "MST":
             return Difficulty.master
 
+        if argument == "BSC":
+            return Difficulty.basic
+
         # special case this since it's bad
         if argument == "WORLD'S END":
             return Difficulty.worlds_end
