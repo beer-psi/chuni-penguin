@@ -93,6 +93,30 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
 
         await ctx.message.add_reaction("✅")
 
+    @commands.command("say")
+    @commands.is_owner()
+    async def say(
+        self,
+        ctx: PenguinContext,
+        target: discord.TextChannel
+        | discord.VoiceChannel
+        | discord.StageChannel
+        | discord.Thread
+        | discord.User,
+        *,
+        content: str,
+    ):
+        """Say stuff as the bot."""
+
+        if (reference := await ctx.resolve_message_reference()) is not None:
+            await reference.reply(content=content, mention_author=False)
+        else:
+            await target.send(content=content)
+
+        if ctx.bot_permissions.manage_messages:
+            with contextlib.suppress(discord.HTTPException):
+                await ctx.message.delete()
+
 
 async def setup(bot: "ChuniBot"):
     await bot.add_cog(AdminCog(bot))

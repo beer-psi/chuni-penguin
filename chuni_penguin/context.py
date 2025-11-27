@@ -148,6 +148,23 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
 
         return DeferTyping(self, ephemeral=ephemeral)
 
+    async def resolve_message_reference(self) -> discord.Message | None:
+        if (reference := self.message.reference) is not None:
+            if isinstance(reference.resolved, discord.Message):
+                return reference.resolved
+
+            if reference.message_id is not None:
+                try:
+                    return await self.channel.fetch_message(reference.message_id)
+                except discord.HTTPException:
+                    msg = "Could not fetch the message that was replied to. Is it deleted?"
+                    raise commands.CommandError(msg) from None
+            else:
+                msg = "The message reference did not point to a valid message."
+                raise commands.BadArgument(msg)
+
+        return None
+
     async def find_chart(
         self,
         difficulty: Difficulty,

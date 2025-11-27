@@ -428,21 +428,7 @@ class RecordsCog(commands.Cog, name="Records"):
         if config.web.serve_assets and config.web.base_url:
             url_whitelist.append(config.web.base_url)
 
-        message: discord.Message | discord.MessageSnapshot
-
-        if (reference := ctx.message.reference) is not None:
-            if isinstance(reference.resolved, discord.Message):
-                message = reference.resolved
-            elif reference.message_id is not None:
-                try:
-                    message = await ctx.channel.fetch_message(reference.message_id)
-                except discord.HTTPException:
-                    msg = "Could not fetch the message that was replied to. Is it deleted?"
-                    raise commands.CommandError(msg) from None
-            else:
-                msg = "The message reference did not point to a valid message."
-                raise commands.BadArgument(msg)
-        else:
+        if (message := await ctx.resolve_message_reference()) is None:
             try:
 
                 def check(m: discord.Message):
