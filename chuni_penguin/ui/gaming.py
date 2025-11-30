@@ -413,7 +413,8 @@ class RetryGameButton(
             )
 
         ctx = await interaction.client.get_context(interaction.message)
-        ctx.author = interaction.user
+        # user will have the appropriate type if the message is in a guild context
+        ctx.author = interaction.user  # pyright: ignore[reportAttributeAccessIssue]
         ctx.prefix = (
             interaction.client.prefixes.get(
                 interaction.guild_id, config.bot.default_prefix
