@@ -19,7 +19,7 @@ from .cogs import COG_LIST
 from .command_tree import PenguinCommandTree
 from .config import config
 from .constants import CACHE_DIR
-from .context import PenguinContext
+from .context import PenguinContext, PenguinGuildContext
 from .database.models import Denylist, Prefix
 from .logging import logger
 from .utils import HishelMsgspecSerializer
@@ -197,6 +197,9 @@ class ChuniBot(commands.AutoShardedBot):
         *,
         cls: type[PenguinContext] = PenguinContext,
     ):
+        if origin.guild is not None:
+            cls = PenguinGuildContext
+
         try:
             ctx = await super().get_context(origin, cls=cls)
         except Exception as e:

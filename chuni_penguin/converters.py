@@ -59,7 +59,7 @@ class GenreConverter(commands.Converter[Genre]):
             return Genre.variety
         if genre_lower.startswith("irodori"):
             return Genre.irodorimidori
-        if genre_lower.startswith(("geki", "ゲキ", "mai", "マイ")):
+        if genre_lower.startswith(("geki", "ゲキ", "mai", "マイ", "ongeki")):
             return Genre.gekimai
 
         msg = f'Could not infer genre name from "{argument}".'

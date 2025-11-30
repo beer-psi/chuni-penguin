@@ -240,15 +240,6 @@ class GamingCog(commands.Cog, name="Games"):
         `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
-        if self.shutting_down:
-            msg = "I am currently pending a restart. No new games can be started."
-            raise commands.CommandError(msg)
-
-        async with self.game_sessions.read() as game_sessions:
-            if ctx.channel.id in game_sessions:
-                msg = "There is already an ongoing session in this channel!"
-                raise commands.CommandError(msg)
-
         if ctx.voice_client is not None:
             msg = "Another voice guessing game is already ongoing in this server. Only one voice guessing game can run at a time for each server."
             raise commands.CommandError(msg)
@@ -268,17 +259,20 @@ class GamingCog(commands.Cog, name="Games"):
         if missing:
             raise commands.BotMissingPermissions(missing)
 
-        await voice_channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
-
         session = await self._guess_without_voice_channel(
-            ctx, GuessingGameType.VOICE_CHANNEL, arguments
+            ctx, GuessingGameType.VOICE_CHANNEL, arguments, voice_channel=voice_channel
         )
 
         async with self.game_sessions.write() as game_sessions:
             game_sessions[voice_channel.id] = session
 
     async def _guess_without_voice_channel(
-        self, ctx: Context, game_type: GuessingGameType, arguments: str
+        self,
+        ctx: Context,
+        game_type: GuessingGameType,
+        arguments: str,
+        *,
+        voice_channel: discord.VoiceChannel | discord.StageChannel | None = None,
     ):
         if self.shutting_down:
             msg = "I am currently pending a restart. No new games can be started. Please wait a few minutes."
@@ -320,11 +314,11 @@ class GamingCog(commands.Cog, name="Games"):
             ):
                 session.time_per_question = session.get_audio_length() + 5
 
-        voice_channel_id = (
-            session.voice_client.channel.id
-            if session.voice_client is not None
-            else None
-        )
+        if voice_channel is not None:
+            voice_channel_id = voice_channel.id
+            await voice_channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
+        else:
+            voice_channel_id = None
 
         async def after(e):
             await self._clear_state(ctx.channel.id)
