@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.utils import escape_markdown
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     Column,
     ForeignKey,
     ForeignKeyConstraint,
@@ -39,6 +40,12 @@ class Cookie(Base):
     discord_id: Mapped[int] = mapped_column(BigInteger(), primary_key=True)
     cookie: Mapped[str] = mapped_column(String(64), nullable=False)
     kamaitachi_token: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    is_contributor: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("FALSE")
+    )
+    is_supporter: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("FALSE")
+    )
 
 
 class Song(Base):

@@ -14,7 +14,7 @@ from sqlalchemy import select
 from chuni_penguin import flags
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import MemberOrUserConverter
-from chuni_penguin.database import UserConfig
+from chuni_penguin.database import Cookie, UserConfig
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.chunithm_net import ChuniNetError
 from chuni_penguin.ui import (
@@ -210,8 +210,19 @@ class ProfileCog(commands.Cog, name="Profile"):
                 raise commands.CommandError(msg)
 
             profile = await client.get_profile()
-            view = ProfileView(ctx, target, profile, client.ACCENT_COLOR)
 
+        async with self.bot.begin_db_session() as session:
+            query = select(Cookie).where(Cookie.discord_id == target.id)
+            cookie = (await session.execute(query)).scalar_one_or_none()
+
+        view = ProfileView(
+            ctx,
+            target,
+            profile,
+            client.ACCENT_COLOR,
+            is_supporter=cookie is not None and cookie.is_supporter,
+            is_contributor=cookie is not None and cookie.is_contributor,
+        )
         await view.start()
 
     @flags.command(name="chunithm", aliases=["chuni", "profile"])

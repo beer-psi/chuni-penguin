@@ -165,6 +165,8 @@ class ProfileView(PenguinView):
         no_possession_color: int | discord.Color,
         *,
         timeout: float | None = 120,
+        is_supporter: bool = False,
+        is_contributor: bool = False,
     ):
         super().__init__(ctx, timeout=timeout)
 
@@ -172,6 +174,8 @@ class ProfileView(PenguinView):
         self.no_possession_color = no_possession_color
         self.friend_code_visible = False
         self.send_friend_request_button = None
+        self.is_supporter = is_supporter
+        self.is_contributor = is_contributor
 
         if not self.profile.friend_code or ctx.author != target:
             self.clear_items()
@@ -265,6 +269,23 @@ class ProfileView(PenguinView):
 
         if self.profile.banner is not None:
             embed.set_image(url=self.profile.banner)
+
+        special_roles: list[str] = []
+
+        if self.is_contributor:
+            special_roles.append("contributor")
+        if self.is_supporter:
+            special_roles.append("supporter")
+
+        if special_roles:
+            if len(special_roles) >= 3:
+                combined = f"{', '.join(special_roles[:-1])} and {special_roles[-1]}"
+            else:
+                combined = " and ".join(special_roles)
+
+            embed.set_footer(
+                text=f"This player is a chuni penguin {combined}. Thank you! :D"
+            )
 
         files: list[discord.File] = MISSING
 
