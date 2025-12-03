@@ -148,7 +148,7 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     team_name = team_name_elem.get_text() if team_name_elem else None
 
     team_emblem_elem = soup.select_one(
-        ".player_team_emblem_normal, .player_team_emblem_silver, .player_team_emblem_gold, .player_team_emblem_rainbow"
+        ".player_team_emblem_normal, .player_team_emblem_silver, .player_team_emblem_gold, .player_team_emblem_rainbow, .player_team_emblem_purple, .player_team_emblem_red, .player_team_emblem_yellow, .player_team_emblem_green"
     )
     team_emblem = (
         TeamEmblem(extract_last_part(team_emblem_elem["class"][0]))

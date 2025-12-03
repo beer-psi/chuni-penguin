@@ -11,6 +11,10 @@ class TeamEmblem(Enum):
     silver = "silver"
     gold = "gold"
     rainbow = "rainbow"
+    purple = "purple"
+    red = "red"
+    yellow = "yellow"
+    green = "green"
 
 
 @dataclass(kw_only=True)

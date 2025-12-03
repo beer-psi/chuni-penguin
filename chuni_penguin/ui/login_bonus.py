@@ -54,7 +54,7 @@ class LoginBonusItemPaginationSource(ListPageSource[LoginBonusItem]):
 
         if self.days_logged_in is not MISSING and self.days_logged_in > 0:
             result["content"] = (
-                f"You've logged in {self.days_logged_in} day{'s' if self.days_logged_in != 1 else ''} this month."
+                f"You've logged in {self.days_logged_in} day{'s' if self.days_logged_in != 1 else ''} for this event."
             )
         else:
             result["content"] = ""
