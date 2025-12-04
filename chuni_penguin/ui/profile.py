@@ -261,9 +261,9 @@ class ProfileView(PenguinView):
             description_lines.append(f"▸ **{escape_markdown(k)}**: {v}")
 
         if self.profile.last_played is not None:
-            description_lines.append(
-                f"▸ **Last played**: <t:{int(self.profile.last_played.timestamp())}:f>"
-            )
+            ts = int(self.profile.last_played.timestamp())
+
+            description_lines.append(f"▸ **Last played**: <t:{ts}:f> (<t:{ts}:R>)")
 
         embed.description = "\n".join(description_lines)
 
