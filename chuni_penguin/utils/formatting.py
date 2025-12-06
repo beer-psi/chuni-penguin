@@ -31,7 +31,7 @@ def did_you_mean_text(
     return reply
 
 
-def yt_search_link(title: str, difficulty: str, level: str) -> str:
+def yt_search_link(title: str, difficulty: str) -> str:
     try:
         diff = Difficulty(difficulty)
         difficulty = str(diff)
@@ -39,7 +39,7 @@ def yt_search_link(title: str, difficulty: str, level: str) -> str:
         pass
 
     return "https://www.youtube.com/results?search_query=" + quote(
-        f'"CHUNITHM" "{title}" "{difficulty}" "{level}"'
+        f"CHUNITHM {title} {difficulty}"
     )
 
 

@@ -133,7 +133,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                     url = (
                         chart.sdvxin_chart_view.url
                         if chart.sdvxin_chart_view is not None
-                        else yt_search_link(song.title, chart.difficulty, chart.level)
+                        else yt_search_link(song.title, chart.difficulty)
                     )
 
                     if self.detailed:

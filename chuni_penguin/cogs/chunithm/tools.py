@@ -1074,7 +1074,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     discord.ui.Button(
                         style=discord.ButtonStyle.link,
                         label="Search on YouTube",
-                        url=yt_search_link(song.title, chart.difficulty, chart.level),
+                        url=yt_search_link(song.title, chart.difficulty),
                     ),
                 )
             )

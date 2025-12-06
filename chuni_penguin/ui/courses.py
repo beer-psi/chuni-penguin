@@ -116,7 +116,7 @@ def format_chart(chart: Chart):
         footer_parts.append(f"[sdvx.in]({sdvxin_link(chart.sdvxin_chart_view)})")
 
     footer_parts.append(
-        f"[Search on YouTube]({yt_search_link(chart.song.title, chart.difficulty, chart.level)})"
+        f"[Search on YouTube]({yt_search_link(chart.song.title, chart.difficulty)})"
     )
 
     content += f"\n-# {' • '.join(footer_parts)}"
@@ -218,7 +218,7 @@ class CourseViewSongsButton(discord.ui.Button):
                     if chart.sdvxin_chart_view is not None:
                         displayed_difficulty = f"[{displayed_difficulty}]({sdvxin_link(chart.sdvxin_chart_view)})"
                     else:
-                        displayed_difficulty = f"[{displayed_difficulty}]({yt_search_link(chart.song.title, str(difficulty), chart.level)})"
+                        displayed_difficulty = f"[{displayed_difficulty}]({yt_search_link(chart.song.title, str(difficulty))})"
 
                     chart_list.append(f"▸ {chart.song.title} {displayed_difficulty}")
 

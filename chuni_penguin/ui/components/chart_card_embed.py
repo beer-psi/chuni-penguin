@@ -57,9 +57,7 @@ class ChartCardEmbed(discord.Embed):
         if chart.const is not None:
             difficulty_display += f" ({chart.const})"
 
-        difficulty_link = yt_search_link(
-            chart.song.title, chart.difficulty, chart.level
-        )
+        difficulty_link = yt_search_link(chart.song.title, chart.difficulty)
         if chart.sdvxin_chart_view is not None:
             difficulty_link = sdvxin_link(chart.sdvxin_chart_view)
 

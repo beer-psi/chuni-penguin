@@ -28,7 +28,7 @@ class SonglistPageSource(ListPageSource[Chart]):
             url = (
                 chart.sdvxin_chart_view.url
                 if chart.sdvxin_chart_view is not None
-                else yt_search_link(chart.song.title, chart.difficulty, chart.level)
+                else yt_search_link(chart.song.title, chart.difficulty)
             )
             songlist += f"{idx + start + 1}. {escape_markdown(chart.song.title)} [[{Difficulty(chart.difficulty)} {chart.const or chart.level}]]({url})\n"
 
