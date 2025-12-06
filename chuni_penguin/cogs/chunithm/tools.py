@@ -39,6 +39,7 @@ from chuni_penguin.networks.types import Difficulty, Rank
 from chuni_penguin.ui import ChartCardEmbed
 from chuni_penguin.utils import (
     floor_to_ndp,
+    get_jacket_url,
     round_to_nearest,
     sdvxin_link,
     yt_search_link,
@@ -1038,7 +1039,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 displayed_bpm = "Unknown"
 
             content = (
-                f"**{chart_display_name}**\n"
+                f"### {chart_display_name}\n"
                 f"BPM: {displayed_bpm}\n"
                 f"CHAIN: {chart.maxcombo or '-'} / TAP: {chart.tap or '-'} / HOLD: {chart.hold or '-'} / SLIDE: {chart.slide or '-'} / AIR: {chart.air or '-'} / FLICK: {chart.flick or '-'}\n"
             )
@@ -1046,15 +1047,39 @@ class ToolsCog(commands.Cog, name="Tools"):
             if chart.charter is not None:
                 content += f"NOTES DESIGNER: {escape_markdown(chart.charter)}\n"
 
-            content += f"-# [sdvx.in](<{sdvxin_link(chart.sdvxin_chart_view)}>) • [Search on YouTube](<{yt_search_link(song.title, chart.difficulty, chart.level)}>)"
-
             file = discord.File(
                 output,
                 filename=f"{sdvxin_id}{chart.difficulty.lower()}.jpg",
                 description=f"Chart view for {chart_display_name}",
             )
 
-            await ctx.respond_or_edit(content, files=[file])
+            view = discord.ui.LayoutView(timeout=None)
+            view.add_item(
+                discord.ui.Container(
+                    discord.ui.Section(
+                        discord.ui.TextDisplay(content),
+                        accessory=discord.ui.Thumbnail(get_jacket_url(song)),
+                    ),
+                    discord.ui.MediaGallery(discord.components.MediaGalleryItem(file)),
+                    accent_color=difficulty.color(),
+                )
+            )
+            view.add_item(
+                discord.ui.ActionRow(
+                    discord.ui.Button(
+                        style=discord.ButtonStyle.link,
+                        label="sdvx.in",
+                        url=sdvxin_link(chart.sdvxin_chart_view),
+                    ),
+                    discord.ui.Button(
+                        style=discord.ButtonStyle.link,
+                        label="Search on YouTube",
+                        url=yt_search_link(song.title, chart.difficulty, chart.level),
+                    ),
+                )
+            )
+
+            await ctx.respond_or_edit(view=view, files=[file])
 
     @commands.hybrid_command("odex")
     @logged_prefix_command

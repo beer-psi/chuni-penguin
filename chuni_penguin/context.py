@@ -85,6 +85,19 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         self,
         content: str | None = ...,
         *,
+        files: Sequence[discord.File] = ...,
+        suppress_embeds: bool = ...,
+        delete_after: float | None = ...,
+        allowed_mentions: discord.AllowedMentions = ...,
+        view: discord.ui.LayoutView,
+        ephemeral: bool = ...,
+    ) -> discord.Message: ...
+
+    @overload
+    async def respond_or_edit(
+        self,
+        content: str | None = ...,
+        *,
         embed: discord.Embed = ...,
         files: Sequence[discord.File] = ...,
         suppress_embeds: bool = ...,
