@@ -32,7 +32,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out repository"
-        uses: "actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3" # v6
+        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8" # v6
 
       - name: "Install uv"
         uses: "astral-sh/setup-uv@5a7eac68fb9809dea845d802897dc5c723910fa3" # v7
@@ -70,7 +70,7 @@ jobs:
       contents: "read"
     steps:
       - name: "Check out repository"
-        uses: "actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3" # v6
+        uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8" # v6
 
       - name: "Commit hash"
         run: 'echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV'
