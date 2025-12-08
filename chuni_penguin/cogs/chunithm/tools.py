@@ -1064,20 +1064,33 @@ class ToolsCog(commands.Cog, name="Tools"):
                     accent_color=difficulty.color(),
                 )
             )
-            view.add_item(
-                discord.ui.ActionRow(
-                    discord.ui.Button(
-                        style=discord.ButtonStyle.link,
-                        label="sdvx.in",
-                        url=sdvxin_link(chart.sdvxin_chart_view),
-                    ),
+
+            action_row = discord.ui.ActionRow(
+                discord.ui.Button(
+                    style=discord.ButtonStyle.link,
+                    label="sdvx.in",
+                    url=sdvxin_link(chart.sdvxin_chart_view),
+                )
+            )
+            yt_url = yt_search_link(song.title, chart.difficulty)
+
+            if len(yt_url) > 512:
+                yt_url = (
+                    f"{config.web.base_url}/youtube/{song.id}/{chart.difficulty}"
+                    if config.web.is_accessible
+                    else None
+                )
+
+            if yt_url is not None:
+                action_row.add_item(
                     discord.ui.Button(
                         style=discord.ButtonStyle.link,
                         label="Search on YouTube",
-                        url=yt_search_link(song.title, chart.difficulty),
-                    ),
+                        url=yt_url,
+                    )
                 )
-            )
+
+            view.add_item(action_row)
 
             await ctx.respond_or_edit(view=view, files=[file])
 

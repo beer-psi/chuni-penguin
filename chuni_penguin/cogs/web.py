@@ -24,7 +24,13 @@ from chuni_penguin.constants import ASSETS_DIR
 from chuni_penguin.database import Chart, Cookie, Song
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import is_valid_clal
-from chuni_penguin.utils import get_jacket_url, json_dumps, json_loads, sdvxin_link
+from chuni_penguin.utils import (
+    get_jacket_url,
+    json_dumps,
+    json_loads,
+    sdvxin_link,
+    yt_search_link,
+)
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -331,6 +337,22 @@ async def list_songs(request: web.Request) -> web.Response:
         result,
         headers={"last-modified": result_time.strftime("%a, %d %b %Y %H:%M:%S GMT")},
     )
+
+
+@router.get(r"/youtube/{song_id:\d+}/{difficulty}")
+async def redirect_to_youtube_search(request: web.Request) -> web.Response:
+    song_id = int(request.match_info["song_id"])
+    difficulty = request.match_info["difficulty"]
+    bot: ChuniBot = request.config_dict["bot"]
+
+    async with bot.begin_db_session() as session:
+        query = select(Song).where(Song.id == song_id)
+        song = (await session.execute(query)).scalar_one_or_none()
+
+    if song is None:
+        raise web.HTTPNotFound
+
+    raise web.HTTPFound(yt_search_link(song.title, difficulty))
 
 
 if config.web.serve_assets and (ASSETS_DIR / "jackets").exists():
