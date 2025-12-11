@@ -1569,7 +1569,7 @@ class RecordsCog(commands.Cog, name="Records"):
         `-k`, `--kamaitachi`: View the Kamaitachi leaderboard for the song.
         """
 
-        query_str = " ".join(query)
+        query_str = await AliasNameConverter(lower=True).convert(ctx, " ".join(query))
 
         async with (
             ctx.typing(),
