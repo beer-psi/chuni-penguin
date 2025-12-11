@@ -352,7 +352,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             aliases.extend(guild_aliases)
 
         (_, similarity, index) = process.extractOne(
-            query, [x.alias for x in aliases], scorer=fuzz.QRatio
+            query.lower(), [x.alias for x in aliases], scorer=fuzz.QRatio
         )
         matching_alias = aliases[index]
 
@@ -399,7 +399,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             aliases.extend(guild_aliases)
 
         (_, similarity, index) = process.extractOne(
-            query, [x.alias for x in aliases], scorer=fuzz.QRatio
+            query.lower(), [x.alias for x in aliases], scorer=fuzz.QRatio
         )
         matching_alias = aliases[index]
 
