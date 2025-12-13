@@ -1573,7 +1573,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         async with (
             ctx.typing(),
-            ctx.bot.chunithm_networks.network(ctx, kamaitachi=kamaitachi) as client,
+            ctx.bot.chunithm_networks.bot_network(kamaitachi=kamaitachi) as client,
         ):
             if not client.SUPPORTS_CHART_LEADERBOARD:
                 msg = f"Network {client.NAME} does not support viewing chart leaderboards."

@@ -60,7 +60,13 @@ class ChunithmNet(Network):
     SUPPORTS_UPDATE_USERNAME = True
     SUPPORTS_SEND_FRIEND_REQUEST = True
 
-    def __init__(self, authentication: str):
+    def __init__(
+        self,
+        authentication: str,
+        *,
+        username: str | None = None,
+        password: str | None = None,
+    ):
         self._jar = LWPCookieJar()
         self._jar._really_load(  # type: ignore[reportAttributeAccessIssue]
             io.StringIO(authentication),
@@ -85,7 +91,9 @@ class ChunithmNet(Network):
                 "referer": str(_BASE_URL.join("/")),
             },
         )
-        self._client.auth = ChunithmNetAuth(self._client)
+        self._client.auth = ChunithmNetAuth(
+            self._client, username=username, password=password
+        )
 
     async def _request_as_soup(self, method: str, url: str, **kwargs: Any):
         resp = await self._client.request(method, url, **kwargs)

@@ -107,8 +107,20 @@ class CredentialsConfig:
         return self.__section.get("kamaitachi_client_secret")
 
     @property
+    def kamaitachi_api_key(self) -> Optional[str]:
+        return self.__section.get("kamaitachi_api_key")
+
+    @property
     def goatcounter_api_key(self) -> Optional[str]:
         return self.__section.get("goatcounter_api_key")
+
+    @property
+    def sega_id_username(self) -> Optional[str]:
+        return self.__section.get("sega_id_username")
+
+    @property
+    def sega_id_password(self) -> Optional[str]:
+        return self.__section.get("sega_id_password")
 
 
 class IconsConfig:

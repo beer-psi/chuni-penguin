@@ -26,8 +26,16 @@ class ChunithmNetAuth(httpx.Auth):
     requires_request_body = True
     requires_response_body = True
 
-    def __init__(self, client: httpx.Client | httpx.AsyncClient):
+    def __init__(
+        self,
+        client: httpx.Client | httpx.AsyncClient,
+        *,
+        username: str | None = None,
+        password: str | None = None,
+    ):
         self.client = client
+        self.username = username
+        self.password = password
 
     def auth_flow(
         self, request: httpx.Request
@@ -42,7 +50,22 @@ class ChunithmNetAuth(httpx.Auth):
         auth_response = yield self.client.build_request("GET", _AUTHENTICATION_URL)
 
         if auth_response.url.host == _AUTHENTICATION_URL.host:
-            raise AuthenticationError
+            if self.username is None or self.password is None:
+                raise AuthenticationError
+
+            auth_response = yield self.client.build_request(
+                "POST",
+                "https://lng-tgk-aime-gw.am-all.net/common_auth/login/sid/",
+                data={
+                    "retention": "1",
+                    "sid": self.username,
+                    "password": self.password,
+                },
+            )
+
+            # Invalid username/password or TOTP is enabled
+            if auth_response.url.host == _AUTHENTICATION_URL.host:
+                raise AuthenticationError
 
         if str(auth_response.url) == str(request.url):
             return

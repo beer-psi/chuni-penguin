@@ -14,6 +14,7 @@ from chuni_penguin.database import Chart, Cookie
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.base import Network
 from chuni_penguin.networks.chunithm_net import ChunithmNet
+from chuni_penguin.networks.errors import AuthenticationError
 from chuni_penguin.networks.kamaitachi import Kamaitachi
 from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import AsyncRcContextManager
@@ -114,7 +115,14 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             yield client
 
     @contextlib.asynccontextmanager
-    async def chunithm_net(self, user_id: int, lwp_cookies: str):
+    async def chunithm_net(
+        self,
+        user_id: int,
+        lwp_cookies: str,
+        *,
+        username: str | None = None,
+        password: str | None = None,
+    ):
         if (rc := self._chuni_net_sessions.get(user_id)) and rc.refcount > 0:
             logger.debug(
                 "using cached chunithm-net session",
@@ -128,7 +136,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
             return
 
-        session = ChunithmNet(lwp_cookies)
+        session = ChunithmNet(lwp_cookies, username=username, password=password)
 
         if session.RANDOMIZE_USER_AGENT and self.user_agents is not None:
             session.user_agent = self.user_agents.desktop[
@@ -245,6 +253,52 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             None, author_id, target_id, is_interaction=is_interaction
         )
         raise commands.CommandError(msg)
+
+    @contextlib.asynccontextmanager
+    async def bot_network(self, *, kamaitachi: bool = False):
+        if self.bot.user is None:
+            msg = "Bot user is not initialized"
+            raise RuntimeError(msg)
+
+        if kamaitachi:
+            if config.credentials.kamaitachi_api_key is None:
+                msg = "Bot does not have a Kamaitachi API key configured."
+                raise AuthenticationError(msg)
+
+            async with self.kamaitachi(config.credentials.kamaitachi_api_key) as client:
+                yield client
+
+            return
+
+        async with self.bot.begin_db_session() as session:
+            stmt = select(Cookie).where(Cookie.discord_id == self.bot.user.id)
+            cookie = (await session.execute(stmt)).scalar_one_or_none()
+
+            if (
+                cookie is None
+                and config.credentials.sega_id_username is not None
+                and config.credentials.sega_id_password is not None
+            ):
+                cookie = Cookie(
+                    discord_id=self.bot.user.id,
+                    cookie="#LWP-Cookies-2.0\n",
+                    kamaitachi_token=None,
+                    is_contributor=False,
+                    is_supporter=False,
+                )
+                session.add(cookie)
+                await session.commit()
+            elif cookie is None:
+                msg = "Bot does not have a SEGA ID account configured."
+                raise AuthenticationError(msg)
+
+        async with self.chunithm_net(
+            self.bot.user.id,
+            cookie.cookie,
+            username=config.credentials.sega_id_username,
+            password=config.credentials.sega_id_password,
+        ) as client:
+            yield client
 
 
 async def setup(bot: "ChuniBot"):
