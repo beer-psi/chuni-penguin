@@ -128,16 +128,14 @@ class ScoreCardEmbed(discord.Embed):
                 assert record.judgements is not None
 
                 if total_combo:
-                    deductions = calculate_score_deduction_per_judgement(total_combo)
                     loss_justice = (
-                        int(deductions["justice"] * 100) * record.judgements.justice
+                        10_000 * 100 * record.judgements.justice // total_combo
                     )
                     loss_attack = (
-                        int(deductions["attack"] * 100) * record.judgements.attack
+                        510_000 * 100 * record.judgements.attack // total_combo
                     )
-                    loss_miss = int(deductions["miss"] * 100) * record.judgements.miss
+                    loss_miss = 1_010_000 * 100 * record.judgements.miss // total_combo
                 else:
-                    deductions = None
                     loss_justice = None
                     loss_attack = None
                     loss_miss = None
