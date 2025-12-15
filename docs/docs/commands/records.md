@@ -66,7 +66,8 @@ invoking the command.
 
 <small>(aliases: `lb`)</small>
 
-View the leaderboard for a chart.
+View the leaderboard for a chart. The default network is Kamaitachi if you **only** have
+a Kamaitachi account linked, else it is CHUNITHM-NET International.
 
 === "Text command"
 
@@ -76,6 +77,7 @@ View the leaderboard for a chart.
 
     - `difficulty`: The difficulty of the chart.
     - `query`: The title of the song. You don't have to be exact; try things out!
+    - `-c`, `--chunithm-net`: View the CHUNITHM-NET International leaderboard for the song.
     - `-k, --kamaitachi`: View the Kamaitachi leaderboard for the song.
 
 === "Slash command"
@@ -86,6 +88,8 @@ View the leaderboard for a chart.
 
     - `difficulty`: The difficulty of the chart.
     - `query`: The title of the song. You don't have to be exact; try things out!
+    - `chunithm-net`: <small>(default: False)</small> View the CHUNITHM-NET International
+    leaderboard for the song.
     - `kamaitachi`: <small>(default: False)</small> View the Kamaitachi leaderboard for
     the song.
 

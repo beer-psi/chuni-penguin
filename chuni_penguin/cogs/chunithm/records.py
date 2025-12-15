@@ -1549,6 +1549,7 @@ class RecordsCog(commands.Cog, name="Records"):
         await view.start()
 
     @flags.command("leaderboard", aliases=["lb"])
+    @flags.argument("-c", "--chunithm-net", action="store_true")
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("difficulty", type=DifficultyConverter)
     @flags.argument("query", nargs="+")
@@ -1559,6 +1560,7 @@ class RecordsCog(commands.Cog, name="Records"):
         *,
         difficulty: Difficulty,
         query: list[str],
+        chunithm_net: bool = False,
         kamaitachi: bool = False,
     ):
         """View the leaderboard for a specific song and difficulty.
@@ -1566,10 +1568,24 @@ class RecordsCog(commands.Cog, name="Records"):
         **Parameters**:
         `difificulty`: Chart difficulty to view the leaderboard for (BAS/ADV/EXP/MAS/ULT).
         `query`: Song title to search for. You don't have to be exact; try things out!
+        `-c`, `--chunithm-net`: View the CHUNITHM-NET International leaderboard for the song.
         `-k`, `--kamaitachi`: View the Kamaitachi leaderboard for the song.
         """
 
         query_str = await AliasNameConverter(lower=True).convert(ctx, " ".join(query))
+
+        if chunithm_net and kamaitachi:
+            msg = "You can only select either CHUNITHM-NET International or Kamaitachi."
+            raise commands.BadArgument(msg)
+
+        if (
+            not chunithm_net and not kamaitachi
+        ):  # determine the network based on the user
+            try:
+                async with ctx.bot.chunithm_networks.network(ctx) as client:
+                    kamaitachi = isinstance(client, Kamaitachi)
+            except commands.CommandError:
+                kamaitachi = False
 
         async with (
             ctx.typing(),
@@ -1615,6 +1631,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @app_commands.command(
         name="leaderboard", description="View the leaderboard for the given chart."
     )
+    @app_commands.rename(chunithm_net="chunithm-net")
     @app_commands.choices(
         difficulty=[
             app_commands.Choice(name=str(x), value=x.value)
@@ -1625,6 +1642,7 @@ class RecordsCog(commands.Cog, name="Records"):
         difficulty="Chart difficulty to view the leaderboard for.",
         query="Song title to search for. You don't have to be exact; try things out!",
         kamaitachi="View the Kamaitachi leaderboard for the song.",
+        chunithm_net="View the CHUNITHM-NET International leaderboard for the song.",
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
     @logged_app_command
@@ -1635,11 +1653,16 @@ class RecordsCog(commands.Cog, name="Records"):
         query: app_commands.Transform[str, AliasNameTransformer(lower=True)],
         *,
         kamaitachi: bool = False,
+        chunithm_net: bool = False,
     ):
         ctx = await PenguinContext.from_interaction(interaction)
 
         await self.leaderboard(
-            ctx, difficulty=difficulty, query=query.split(" "), kamaitachi=kamaitachi
+            ctx,
+            difficulty=difficulty,
+            query=query.split(" "),
+            kamaitachi=kamaitachi,
+            chunithm_net=chunithm_net,
         )
 
 
