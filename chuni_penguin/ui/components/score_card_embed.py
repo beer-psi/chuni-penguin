@@ -1,7 +1,6 @@
 import discord
 from discord.utils import escape_markdown
 
-from chuni_penguin.calculation.border import calculate_score_deduction_per_judgement
 from chuni_penguin.config import config
 from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
