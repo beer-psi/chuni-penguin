@@ -31,7 +31,7 @@ from chuni_penguin.ui import (
     SongInfoPaginationView,
     SonglistView,
 )
-from chuni_penguin.utils import did_you_mean_text, shlex_split
+from chuni_penguin.utils import did_you_mean_text, get_jacket_url, shlex_split
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -517,13 +517,16 @@ class SearchCog(commands.Cog, name="Search"):
                 await ctx.bot.database.user_found_easter_egg(
                     ctx.author.id, "L9-upside-down-is-67"
                 )
+                brainrot = True
+            else:
+                brainrot = False
 
             view = SongInfoPaginationView(
                 ctx,
                 result.songs,
                 detailed=detailed,
                 synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
-                brainrot=query == "67",
+                brainrot=brainrot,
             )
             await view.start()
 
@@ -567,6 +570,50 @@ class SearchCog(commands.Cog, name="Search"):
 
         view = CourseListView(ctx, versions, course_records)
         await view.start()
+
+    @commands.hybrid_command("jacket")
+    @logged_prefix_command
+    async def jacket(self, ctx: PenguinContext, *, query: str):
+        """Get a song's jacket art."""
+
+        async with ctx.typing():
+            guild_id = ctx.guild.id if ctx.guild is not None else None
+            result = await self.utils.find_songs(
+                query, guild_id=guild_id, load_global_aliases=True
+            )
+
+            if result.similarity < SIMILARITY_THRESHOLD:
+                view = ConfirmationYesView(ctx)
+
+                await view.start(
+                    content=did_you_mean_text(
+                        ctx.clean_prefix, result.songs[0], result.matched_alias
+                    )
+                )
+                await view.wait()
+
+                if not view.result:
+                    return
+
+            song = result.songs[0]
+
+            if query == "67" and song.id == 45:
+                await ctx.bot.database.user_found_easter_egg(
+                    ctx.author.id, "L9-upside-down-is-67"
+                )
+                await ctx.reply(f"{config.web.base_url}/assets/jackets/45_67.webp")
+            elif (
+                song.id == 2698
+                and config.web.is_accessible
+                and ctx.user_config.synthesis_alt_jacket not in {"none", "default"}
+            ):
+                await ctx.reply(
+                    f"{config.web.base_url}/assets/jackets/{song.id}_{ctx.user_config.synthesis_alt_jacket}.webp"
+                )
+            elif config.web.is_accessible:
+                await ctx.reply(f"{config.web.base_url}/assets/jackets/{song.id}.webp")
+            else:
+                await ctx.reply(get_jacket_url(song))
 
 
 async def setup(bot: "ChuniBot"):

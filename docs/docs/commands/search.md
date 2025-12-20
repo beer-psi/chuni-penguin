@@ -112,3 +112,23 @@ Search for a song.
     - `query`: The title of the song. You don't have to be exact; try things out!
     - `detailed`: <small>(default: False)</small> View the charter and notecount for
     each chart in the song.
+
+## jacket
+
+Get a song's jacket art.
+
+=== "Text command"
+
+    `c>jacket <query...>`
+
+    <h3>Options</h3>
+
+    - `query`: The title of the song. You don't have to be exact; try things out!
+
+=== "Slash command"
+
+    `/jacket query:<query>`
+
+    <h3>Options</h3>
+
+    - `query`: The title of the song. You don't have to be exact; try things out!
