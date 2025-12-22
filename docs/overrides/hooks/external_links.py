@@ -39,11 +39,14 @@ def on_post_page(output: str, page: Page, config: MkDocsConfig):
         anchor["target"] = "_blank"
         anchor["rel"] = "noopener noreferrer"
 
-        cls = anchor["class"]
-
-        if isinstance(cls, str):
-            anchor["class"] = AttributeValueList([cls, "external-link"])
+        try:
+            cls = anchor["class"]
+        except KeyError:
+            anchor["class"] = AttributeValueList(["external-link"])
         else:
-            anchor["class"] = AttributeValueList([*cls, "external-link"])
+            if isinstance(cls, str):
+                anchor["class"] = AttributeValueList([cls, "external-link"])
+            else:
+                anchor["class"] = AttributeValueList([*cls, "external-link"])
 
     return str(soup)
