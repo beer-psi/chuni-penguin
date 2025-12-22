@@ -1,5 +1,6 @@
 # pyright: reportMissingImports=false
 from bs4 import BeautifulSoup
+from bs4.element import AttributeValueList
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.structure.pages import Page
 
@@ -29,15 +30,20 @@ def on_post_page(output: str, page: Page, config: MkDocsConfig):
     for anchor in soup.find_all("a", {"href": True}):
         href = anchor["href"]
 
+        if isinstance(href, list):
+            href = href[0]
+
         if not href or not _is_external_url(href, config):
             continue
 
         anchor["target"] = "_blank"
         anchor["rel"] = "noopener noreferrer"
 
-        try:
-            anchor["class"].append("external-link")
-        except KeyError:
-            anchor["class"] = ["external-link"]
+        cls = anchor["class"]
+
+        if isinstance(cls, str):
+            anchor["class"] = AttributeValueList([cls, "external-link"])
+        else:
+            anchor["class"] = AttributeValueList([*cls, "external-link"])
 
     return str(soup)
