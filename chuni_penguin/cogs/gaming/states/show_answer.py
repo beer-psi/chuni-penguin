@@ -62,7 +62,10 @@ class ShowAnswerState(GuessingGameState):
                 self.session.scores[accepted_user.id] += 1
 
             content_lower = self.accepted_answer.content.lower()
-            (_, accuracy, _) = rapidfuzz.process.extractOne(
+            # Since we don't define a score_cutoff here, there's no possible way for
+            # process.extractOne to return None. This is true as of RapidFuzz 3.14.3,
+            # and in earlier versions this did not raise a type error.
+            (_, accuracy, _) = rapidfuzz.process.extractOne(  # pyright: ignore[reportGeneralTypeIssues]
                 content_lower,
                 [alias.alias for alias in self.aliases],
                 scorer=fuzz.QRatio,
