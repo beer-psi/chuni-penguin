@@ -17,7 +17,7 @@ jobs:
         uses: "actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8" # v6
 
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244" # v7
+        uses: "astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867" # v7
         with:
           enable-cache: true
           cache-dependency-glob: "**/uv.lock"
@@ -50,7 +50,7 @@ jobs:
         run: "uv run python -m dbutils update tachi"
 
       - name: Upload created database
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: "actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f" # v6
         with:
           name: database
           path: data/database.sqlite3
