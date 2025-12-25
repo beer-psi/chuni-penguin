@@ -471,7 +471,7 @@ requires-dist = [
     { name = "audioop-lts", marker = "python_full_version >= '3.13'", specifier = "~=0.2.2" },
     { name = "beautifulsoup4", specifier = "~=4.14" },
     { name = "ciso8601", marker = "extra == 'speedup'", specifier = "~=2.3" },
-    { name = "discord-ext-songbird", git = "https://github.com/beer-psi/discord-ext-songbird.git" },
+    { name = "discord-ext-songbird", index = "https://beer-psi.github.io/discord-ext-songbird" },
     { name = "discord-ext-track-edits", specifier = "~=0.1.2" },
     { name = "discord-py", specifier = "~=2.6" },
     { name = "hishel", specifier = "==0.1.3" },
@@ -589,11 +589,43 @@ wheels = [
 
 [[package]]
 name = "discord-ext-songbird"
-version = "0.1.0"
-source = { git = "https://github.com/beer-psi/discord-ext-songbird.git#4d3b3e1e37b3a7a9782175fb67167297a4f16dbd" }
+version = "0.1.0.post1"
+source = { registry = "https://beer-psi.github.io/discord-ext-songbird" }
 dependencies = [
     { name = "discord-py" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1.tar.gz", hash = "sha256:0cc07adb59077968092da6192cec6651747f91bb4d4434268e244f1f40c9036c" }
+wheels = [
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:615aec78894a67270f61d9f204be2e32c79471706c551a4374d5b20ecb76bfc7" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:0fe9e9098868d40fb32ef1aaf38a1ae21c212d39f5842bc1c1b87773abba92da" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:153ae8d1dc1db66d42ccdfc7ce656cfa0c3b5504ce940892694354850266b160" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-manylinux_2_28_ppc64le.whl", hash = "sha256:08fe34c2f42817170e24dde9cbdffd29a7554fd1f47a5ac4a8690efb857a6db8" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-manylinux_2_28_s390x.whl", hash = "sha256:5370f876085072a4879781fcd932efa1d9b87d0f79d25454f31baa09c3b45a54" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:962e14262651c5177403b302ec96a769fcf77eee40f053f5eb7b20d2964d855f" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:13c078e227bd22a6bcfe2c3c6a0536cb681d846c291f7eb8df8a3acf5260db91" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:06b8d0065d3e3dea3be7de499108e4951e5880be30c9aa828d584294257ed7a1" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313-win_amd64.whl", hash = "sha256:54474e37fcbf0844bda0c8128d8190a04bb2fe4b58ec03fa7eb3c0e6c1b1ac07" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:990d58a326f8b6339b2adb299e331ce646aa348420cb53546775756d9dcc9432" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313t-manylinux_2_28_ppc64le.whl", hash = "sha256:02589a254013946917e84fc2721db40813ff8ce2cba39b37e47a019330c42569" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313t-manylinux_2_28_s390x.whl", hash = "sha256:d29f18d8aa0eff9ad75e2fd8ea8f77e6778c7cd4f77afd505d2c2b50cde03142" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:134741b02b7d2a6bdab96a5f0d9887ac54367ff5b381729afe605e019203fd3c" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:4cdca4240c324b0170850841f139e019ed9d92972abaad845d5da404c53149a0" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:2dc81db83eda4031fa4d7bc36d1f01f9b843304740623b896c945d825c1f0c80" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:94167d66c477b783c5d5693a5ab4478f7a987f507c6a79053ae2fe4c253acdf1" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:1aaacb274b54f63a2d6c835bf42f73b68a9a9588e2b6561cd0c817dc190407ee" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-manylinux_2_28_ppc64le.whl", hash = "sha256:aae590bffccb7ac2ad52f153f679736792d472397dfb899a8b41be2c09c22b0f" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-manylinux_2_28_s390x.whl", hash = "sha256:f0654c83a18500cc1197de4ed358193e52373697b395454756b9739bb35dca10" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:6b8862cfb7e7c110619779da4ba92c504813c23650c33c0c18a82e26028fc82b" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:b770e7f49d7e9615d788b6e67f325c1c4d955664a2b67fe946ad46e5ed1a67c1" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:c3e5d0e925ac015d7a59ddeb9e3043d176d1d1808d3bc343d10e6e6f11db6e9c" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-win32.whl", hash = "sha256:474f9e79c4a928f072112f89ebb8755a8b9199d7cfe28d5701e710fa7b51d5c5" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314-win_amd64.whl", hash = "sha256:c83f22b74235551d628ce973b2e9ceb77c2cd0479ff8ce5912e07b0ce318439d" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:ced48d057758ddd99ac190221c2ffe77a02a61944eb93804ef79e0df426759ac" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314t-manylinux_2_28_ppc64le.whl", hash = "sha256:c8f7ebc959991663d04cfd57c41ba75bd8177be66caaa48ccc9fc3fdc2e9d469" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314t-manylinux_2_28_s390x.whl", hash = "sha256:752145eb4b24b782cd814c7a9d6014096d4ba36675d06dd04021e1fd987260a3" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:e38420be35c9948e5c4f42b2c186513f8f0dd0358b2cf86793859ccb2285b160" },
+    { url = "https://github.com/beer-psi/discord-ext-songbird/releases/download/v0.1.0.post1/discord_ext_songbird-0.1.0.post1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:5d228f1d8011102c2c529bceee724cc56fa385e04c66741429a4f9dbcf123b2b" },
 ]
 
 [[package]]

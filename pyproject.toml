@@ -25,7 +25,7 @@ dependencies = [
     "python-magic~=0.4.27",
 ]
 readme = "README.md"
-requires-python = ">= 3.12"
+requires-python = ">= 3.13"
 
 [project.optional-dependencies]
 speedup = [
@@ -72,9 +72,14 @@ generate-hashes = true
 members = ["packages/*"]
 
 [tool.uv.sources]
-discord-ext-songbird = { git = "https://github.com/beer-psi/discord-ext-songbird.git" }
+discord-ext-songbird = { index = "discord-ext-songbird" }
 penguin-native = { workspace = true }
 httpx-aiohttp = { workspace = true }
+
+[[tool.uv.index]]
+name = "discord-ext-songbird"
+url = "https://beer-psi.github.io/discord-ext-songbird"
+explicit = true
 
 [tool.ruff]
 respect-gitignore = true
