@@ -43,7 +43,7 @@ ARG GID=1000
 ARG GIT_SHA=unknown
 
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive mimalloc opus libmagic patch libwebp \
+    && apk add --no-interactive mimalloc opus libgcc libmagic patch libwebp \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
