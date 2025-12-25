@@ -9,9 +9,9 @@ ENV PYTHONOPTIMIZE=1 PYTHONNODEBUGRANGES=1 UV_LINK_MODE=copy
 # for an example.
 ENV UV_PYTHON_DOWNLOADS=0
 
-# for building faust-cchardet
+# for building penguin-native
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive build-base pkgconf git rust cargo opus-dev openssl-dev libgcc \
+    && apk add --no-interactive rust cargo \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
@@ -43,7 +43,7 @@ ARG GID=1000
 ARG GIT_SHA=unknown
 
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive mimalloc opus libssl3 libcrypto3 libgcc libmagic patch libwebp \
+    && apk add --no-interactive mimalloc opus libmagic patch libwebp \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
