@@ -12,7 +12,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin.config import config
-from chuni_penguin.constants import SIMILARITY_THRESHOLD
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
@@ -25,13 +24,8 @@ from chuni_penguin.database import Alias, Chart, Course, Song
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.errors import NetworkError
 from chuni_penguin.networks.types import CourseRecord
-from chuni_penguin.ui import (
-    ConfirmationYesView,
-    CourseListView,
-    SongInfoPaginationView,
-    SonglistView,
-)
-from chuni_penguin.utils import did_you_mean_text, get_jacket_url, shlex_split
+from chuni_penguin.ui import CourseListView, SongInfoPaginationView, SonglistView
+from chuni_penguin.utils import get_jacket_url, shlex_split
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -374,7 +368,10 @@ class SearchCog(commands.Cog, name="Search"):
     @alias.command("list")
     @logged_prefix_command
     async def listalias(
-        self, ctx: Context, *, query: Annotated[str, AliasNameConverter(lower=True)]
+        self,
+        ctx: PenguinContext,
+        *,
+        query: Annotated[str, AliasNameConverter(lower=True)],
     ):
         """List aliases for a given song
 
@@ -384,23 +381,10 @@ class SearchCog(commands.Cog, name="Search"):
             The song to get aliases for. You don't have to be exact; this works
             the same way as `c>info`.
         """
-        guild_id = ctx.guild.id if ctx.guild is not None else None
-        song, alias, similarity = await self.utils.find_song(query, guild_id=guild_id)
+        song, _, _ = await ctx.find_song(query)
 
         if song is None:
-            await ctx.reply(
-                did_you_mean_text(ctx.clean_prefix, song, alias), mention_author=False
-            )
             return
-
-        if similarity < SIMILARITY_THRESHOLD:
-            view = ConfirmationYesView(ctx)
-
-            await view.start(content=did_you_mean_text(ctx.clean_prefix, song, alias))
-            await view.wait()
-
-            if not view.result:
-                return
 
         async with self.bot.begin_db_session() as session:
             stmt = select(Alias).where(Alias.song_id == song.id)
@@ -495,23 +479,10 @@ class SearchCog(commands.Cog, name="Search"):
         self, ctx: PenguinContext, *, query: str, detailed: bool = False
     ):
         async with ctx.typing():
-            guild_id = ctx.guild.id if ctx.guild is not None else None
-            result = await self.utils.find_songs(
-                query, guild_id=guild_id, load_global_aliases=True
-            )
+            result = await ctx.find_songs(query, load_global_aliases=True)
 
-            if result.similarity < SIMILARITY_THRESHOLD:
-                view = ConfirmationYesView(ctx)
-
-                await view.start(
-                    content=did_you_mean_text(
-                        ctx.clean_prefix, result.songs[0], result.matched_alias
-                    )
-                )
-                await view.wait()
-
-                if not view.result:
-                    return
+            if result is None:
+                return
 
             if query == "67" and any(song.id == 45 for song in result.songs):
                 await ctx.bot.database.user_found_easter_egg(
@@ -577,25 +548,10 @@ class SearchCog(commands.Cog, name="Search"):
         """Get a song's jacket art."""
 
         async with ctx.typing():
-            guild_id = ctx.guild.id if ctx.guild is not None else None
-            result = await self.utils.find_songs(
-                query, guild_id=guild_id, load_global_aliases=True
-            )
+            song, _, _ = await ctx.find_song(query)
 
-            if result.similarity < SIMILARITY_THRESHOLD:
-                view = ConfirmationYesView(ctx)
-
-                await view.start(
-                    content=did_you_mean_text(
-                        ctx.clean_prefix, result.songs[0], result.matched_alias
-                    )
-                )
-                await view.wait()
-
-                if not view.result:
-                    return
-
-            song = result.songs[0]
+            if song is None:
+                return
 
             if query == "67" and song.id == 45:
                 await ctx.bot.database.user_found_easter_egg(

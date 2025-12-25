@@ -1,7 +1,7 @@
 import asyncio
 import contextlib
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Self, overload, override
+from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
 
 import discord
 import discord.context_managers
@@ -14,12 +14,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin.constants import SIMILARITY_THRESHOLD
-from chuni_penguin.database import Chart, UserConfig
+from chuni_penguin.database import Alias, Chart, Song, UserConfig
 from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import did_you_mean_text
 
 if TYPE_CHECKING:
     from .bot import ChuniBot
+    from .cogs.botutils import SongSearchResult
 
 
 def _typing_done_callback(fut: asyncio.Future) -> None:
@@ -177,6 +178,70 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
                 raise commands.BadArgument(msg)
 
         return None
+
+    async def find_song(
+        self,
+        query: str,
+        *,
+        worlds_end: bool = False,
+    ) -> tuple[Song, Alias | None, float] | tuple[None, None, Literal[0]]:
+        from chuni_penguin.ui import ConfirmationYesView
+
+        song, alias, similarity = await self.bot.utils.find_song(
+            query,
+            guild_id=self.guild.id if self.guild is not None else None,
+            worlds_end=worlds_end,
+        )
+
+        if song is None:
+            await self.reply(
+                did_you_mean_text(self.clean_prefix, song, alias), mention_author=False
+            )
+            return (None, None, 0)
+
+        if similarity < SIMILARITY_THRESHOLD:
+            view = ConfirmationYesView(self)
+
+            await view.start(content=did_you_mean_text(self.clean_prefix, song, alias))
+            await view.wait()
+
+            if not view.result:
+                return (None, None, 0)
+
+        return (song, alias, similarity)
+
+    async def find_songs(
+        self,
+        query: str,
+        *,
+        available: bool | None = None,
+        load_charts: bool = False,
+        load_global_aliases: bool = False,
+    ) -> "SongSearchResult | None":
+        from chuni_penguin.ui import ConfirmationYesView
+
+        result = await self.bot.utils.find_songs(
+            query,
+            guild_id=self.guild.id if self.guild is not None else None,
+            available=available,
+            load_charts=load_charts,
+            load_global_aliases=load_global_aliases,
+        )
+
+        if result.similarity < SIMILARITY_THRESHOLD:
+            view = ConfirmationYesView(self)
+
+            await view.start(
+                content=did_you_mean_text(
+                    self.clean_prefix, result.songs[0], result.matched_alias
+                )
+            )
+            await view.wait()
+
+            if not view.result:
+                return None
+
+        return result
 
     async def find_chart(
         self,

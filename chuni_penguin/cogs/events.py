@@ -288,7 +288,9 @@ class EventsCog(commands.Cog, name="Events"):
         ):
             embed.description = str(exc)
 
-        if isinstance(exc, (httpx.TimeoutException, aiohttp.ServerTimeoutError)):
+        if isinstance(
+            exc, (httpx.TimeoutException, aiohttp.ServerTimeoutError, TimeoutError)
+        ):
             embed.description = "Timed out trying to connect to the network."
 
         if isinstance(exc, (httpx.TransportError, aiohttp.ClientConnectionError)):

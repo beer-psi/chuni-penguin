@@ -18,11 +18,7 @@ from sqlalchemy.orm import joinedload
 
 from chuni_penguin import flags
 from chuni_penguin.config import config
-from chuni_penguin.constants import (
-    CACHE_DIR,
-    CURRENT_CHUNITHM_VERSION,
-    SIMILARITY_THRESHOLD,
-)
+from chuni_penguin.constants import CACHE_DIR, CURRENT_CHUNITHM_VERSION
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
@@ -64,14 +60,13 @@ from chuni_penguin.renderers.b50 import render_b30
 from chuni_penguin.ui import (
     B30N20View,
     B30View,
-    ConfirmationYesView,
     EmbedPaginationView,
     LeaderboardView,
     RecentRecordsView,
     ScoreCardEmbed,
     SelectToCompareView,
 )
-from chuni_penguin.utils import did_you_mean_text, floor_to_ndp
+from chuni_penguin.utils import floor_to_ndp
 from chuni_penguin.utils.misc import Reversor
 
 if TYPE_CHECKING:
@@ -541,23 +536,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 ctx, target_id, kamaitachi=kamaitachi
             ) as client,
         ):
-            guild_id = ctx.guild.id if ctx.guild else None
-            result = await self.utils.find_songs(
-                query, guild_id=guild_id, load_charts=True
-            )
+            result = await ctx.find_songs(query, load_charts=True)
 
-            if result.similarity < SIMILARITY_THRESHOLD:
-                view = ConfirmationYesView(ctx)
-
-                await view.start(
-                    content=did_you_mean_text(
-                        ctx.clean_prefix, result.songs[0], result.matched_alias
-                    )
-                )
-                await view.wait()
-
-                if not view.result:
-                    return
+            if result is None:
+                return
 
             # if we're fetching scores from Kamaitachi, we don't need to care about whether
             # the song is available in CHUNITHM International.

@@ -19,14 +19,16 @@ def did_you_mean_text(
     from chuni_penguin.config import config
 
     did_you_mean = ""
+
     if result is not None:
         did_you_mean = f"Did you mean **{escape_markdown(result.title)}**?"
         if alias is not None:
             did_you_mean = f"Did you mean **{escape_markdown(alias.alias)}** (for **{escape_markdown(result.title)}**)?"
 
     reply = f"No songs found. {did_you_mean}".strip()
+
     if did_you_mean:
-        reply += f"\n(You can also use `{prefix or config.bot.default_prefix}addalias <title> <alias>` to add the alias for this server.)"
+        reply += f"\n(You can also use `{prefix or config.bot.default_prefix}alias add <title> <alias>` to add the alias for this server.)"
 
     return reply
 
