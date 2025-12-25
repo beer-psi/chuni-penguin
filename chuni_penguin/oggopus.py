@@ -9,7 +9,6 @@
 #
 # If you use different audio files and formats, feel free to just use ffmpeg, but
 # I don't want to carry around ~150MB just to deal with some oggs.
-import audioop
 import base64
 import io
 import itertools
@@ -20,6 +19,7 @@ from enum import IntFlag, auto
 from pathlib import Path
 from typing import IO, Final, TypeVar
 
+import audioop
 import discord
 from discord.oggparse import OggError
 

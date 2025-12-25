@@ -18,7 +18,7 @@ def split_scores_into_credits(
     scores: list["RecentScore"],
 ) -> list[list["RecentScore"]]:
     if any(s.track_no is None for s in scores):
-        return [list(c) for c in itertools.batched(scores, 3)]
+        return [list(c) for c in itertools.batched(scores, 3, strict=False)]
 
     credits = []
     current_credit = [scores[0]]
