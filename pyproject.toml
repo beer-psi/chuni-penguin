@@ -20,7 +20,7 @@ dependencies = [
     "hishel==0.1.3",
     "platformdirs~=4.5",
     "audioop-lts~=0.2.2; python_version >= '3.13'",
-    "discord-ext-songbird~=0.1.0",
+    "discord-ext-songbird~=0.1.1",
     "httpx-aiohttp",
     "python-magic~=0.4.27",
 ]
