@@ -200,6 +200,8 @@ class LoginFlowPageSource(ListPageSource[FormatPageReturn]):
                         f"Copy [this link](https://lng-tgk-aime-gw.am-all.net/common_auth/{fragment}) and paste it in the incognito window.\n"
                         'The website should display "Not found".'
                     ),
+                ).set_image(
+                    url="https://chuni-penguin.beerpsi.cc/assets/images/login-not-found.png"
                 ),
             },
             {
