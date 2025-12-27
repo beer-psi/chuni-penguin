@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Any, override
+from typing import override
 
 import discord
 from discord.ext.commands import Context
@@ -16,7 +16,7 @@ from chuni_penguin.networks.types import (
 from chuni_penguin.ui import ChartCardEmbed
 from chuni_penguin.utils import get_jacket_url
 
-from ._pagination import ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
 
 class LeaderboardPageSource(ListPageSource):
@@ -43,7 +43,7 @@ class LeaderboardPageSource(ListPageSource):
     @override
     async def format_page(
         self, menu: "PaginationView", page: Sequence[LeaderboardEntry]
-    ) -> dict[str, Any]:
+    ) -> FormatPageReturn:
         if self.chart is not None:
             info_embed = ChartCardEmbed(
                 self.chart, synthesis_alt_jacket=self.synthesis_alt_jacket

@@ -2,7 +2,7 @@ import asyncio
 import functools
 import io
 import re
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import discord.ui
 from discord import ButtonStyle, Interaction
@@ -15,7 +15,7 @@ from chuni_penguin.networks.chunithm_net.exceptions import ChuniNetError
 from chuni_penguin.networks.errors import AlreadyFriends, InvalidFriendCode
 from chuni_penguin.networks.types import TeamEmblem
 
-from ._base import PenguinView
+from ._base import MessageKwargs, PenguinView
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -183,7 +183,7 @@ class ProfileView(PenguinView):
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
         return True
 
-    async def _before_start(self, *, content: str | None = None) -> dict[str, Any]:
+    async def _before_start(self, *, content: str | None = None) -> MessageKwargs:
         embed = discord.Embed(
             color=(
                 self.profile.possession.color

@@ -1,8 +1,7 @@
 from collections.abc import Sequence
-from typing import Any, override
+from typing import override
 
 import discord
-import discord.ui
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
@@ -10,7 +9,7 @@ from chuni_penguin.database import Chart
 from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import yt_search_link
 
-from ._pagination import ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
 
 class SonglistPageSource(ListPageSource[Chart]):
@@ -20,7 +19,7 @@ class SonglistPageSource(ListPageSource[Chart]):
     @override
     async def format_page(
         self, menu: "PaginationView", page: Sequence[Chart]
-    ) -> dict[str, Any]:
+    ) -> FormatPageReturn:
         start = menu.current_page * self.per_page
         songlist = ""
 

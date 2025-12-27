@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from http.cookiejar import CookieJar
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import discord.ui
 import httpx
@@ -13,7 +13,7 @@ from discord.utils import escape_markdown
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net._hooks import _AUTHENTICATION_URL
 
-from ._pagination import ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -154,58 +154,70 @@ class LoginWithSegaIDView(discord.ui.View):
         )
 
 
-class LoginFlowPageSource(ListPageSource):
+class LoginFlowPageSource(ListPageSource[FormatPageReturn]):
     def __init__(self, code: str, server: str | None) -> None:
-        self.code = code
-
-        fragment = f"#otp={code}&server={server}" if server is not None else ""
-        items = [
-            (
-                "**Step 1:**\n"
-                "Log into [CHUNITHM-NET](https://chunithm-net-eng.com) in an incognito/private window.\n"
-                "(right click and copy link on desktop, long press and copy link on mobile)"
-            ),
-            (
-                "**Step 2**:\n"
-                f"Copy [this link](https://lng-tgk-aime-gw.am-all.net/common_auth/{fragment}) and paste it in the incognito window.\n"
-                'The website should display "Not found".'
-            ),
-            (
-                "**Step 3**:\n"
-                "(Save the [login bookmarklet](https://chuni-penguin.beerpsi.cc/bookmarklet/) if you haven't already.)\n\n"
-                'Run the login bookmarklet on the "Not found" page opened previously.\n\n'
-                "This script cannot access your Aime account! It can only access CHUNITHM-NET.\n"
-                "\n"
-            ),
-        ]
+        step_3_description = (
+            "**Step 3**:\n"
+            "(Save the [login bookmarklet](https://chuni-penguin.beerpsi.cc/bookmarklet/) if you haven't already.)\n\n"
+            'Run the login bookmarklet on the "Not found" page opened previously.\n\n'
+            "This script cannot access your Aime account! It can only access CHUNITHM-NET.\n"
+            "\n"
+        )
 
         if code is None or server is None:
-            items[2] += (
-                "The website will display the login command. Copy it and paste it in the bot's DMs."
-            )
+            step_3_description += "The website will display the login command. Copy it and paste it in the bot's DMs."
         else:
-            items[2] += (
+            step_3_description += (
                 f"If the website asks for a passcode, enter **{code}**.\n"
                 f"If the website asks for a server, enter **{escape_markdown(server)}**.\n"
             )
 
+        fragment = f"#otp={code}&server={server}" if server is not None else ""
+        items: list[FormatPageReturn] = [
+            {
+                "content": "",
+                "embed": discord.Embed(
+                    color=discord.Color.yellow(),
+                    title="How to login",
+                    description=(
+                        "**Step 1:**\n"
+                        "Log into [CHUNITHM-NET](https://chunithm-net-eng.com) in an incognito/private window.\n"
+                        "(right click and copy link on desktop, long press and copy link on mobile)\n"
+                        "\n"
+                        "**Remember to enable auto login!**"
+                    ),
+                ).set_image(
+                    url="https://chuni-penguin.beerpsi.cc/assets/images/enable-auto-login.png"
+                ),
+            },
+            {
+                "content": "",
+                "embed": discord.Embed(
+                    color=discord.Color.yellow(),
+                    title="How to login",
+                    description=(
+                        "**Step 2**:\n"
+                        f"Copy [this link](https://lng-tgk-aime-gw.am-all.net/common_auth/{fragment}) and paste it in the incognito window.\n"
+                        'The website should display "Not found".'
+                    ),
+                ),
+            },
+            {
+                "content": "",
+                "embed": discord.Embed(
+                    color=discord.Color.yellow(),
+                    title="How to login",
+                    description=step_3_description,
+                ),
+            },
+        ]
+
         super().__init__(items, per_page=1)
 
-    @override
     async def format_page(
-        self, menu: "PaginationView", page: Sequence[str]
-    ) -> dict[str, Any]:
-        embed = discord.Embed(
-            color=discord.Color.yellow(),
-            title="How to login",
-            description=page[0],
-        )
-        kwargs: dict[str, Any] = {"embed": embed}
-
-        if menu.current_page != 0:
-            kwargs["content"] = ""
-
-        return kwargs
+        self, menu: "PaginationView", page: Sequence[FormatPageReturn]
+    ) -> FormatPageReturn:
+        return page[0]
 
 
 class LoginFlowView(PaginationView):

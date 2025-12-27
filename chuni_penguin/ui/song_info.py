@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Any, override
+from typing import override
 from urllib.parse import quote
 
 import discord
@@ -13,7 +13,7 @@ from chuni_penguin.database import Chart, Song
 from chuni_penguin.networks.types import Difficulty
 from chuni_penguin.utils import get_jacket_url, yt_search_link
 
-from ._pagination import ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
 
 class SongInfoPageSource(ListPageSource[Song]):
@@ -33,7 +33,7 @@ class SongInfoPageSource(ListPageSource[Song]):
     @override
     async def format_page(
         self, menu: "PaginationView", page: Sequence[Song]
-    ) -> dict[str, Any]:
+    ) -> FormatPageReturn:
         embeds: list[discord.Embed] = []
 
         async with menu.ctx.bot.begin_db_session() as session:

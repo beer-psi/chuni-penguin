@@ -1,6 +1,15 @@
 # pyright: reportAttributeAccessIssue=false
 import traceback
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
+from collections.abc import Sequence
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    NotRequired,
+    TypedDict,
+    TypeVar,
+    override,
+)
 
 import discord
 
@@ -13,12 +22,23 @@ if TYPE_CHECKING:
 ContextT = TypeVar("ContextT", bound="PenguinContext", covariant=True)
 
 
+class MessageKwargs(TypedDict):
+    content: NotRequired[str | None]
+    embed: NotRequired[discord.Embed | None]
+    embeds: NotRequired[Sequence[discord.Embed]]
+    attachments: NotRequired[Sequence[discord.Attachment | discord.File]]
+    suppress_embeds: NotRequired[bool]
+    delete_after: NotRequired[float | None]
+    allowed_mentions: NotRequired[discord.AllowedMentions | None]
+    view: NotRequired[discord.ui.View | discord.ui.LayoutView]
+
+
 class PenguinViewMixin(Generic[ContextT]):
     if TYPE_CHECKING:
         ctx: ContextT
         message: discord.Message | None
 
-    async def _before_start(self, *, content: str | None = None) -> dict[str, Any]:
+    async def _before_start(self, *, content: str | None = None) -> MessageKwargs:
         return {"content": content}
 
     async def start(
@@ -38,13 +58,21 @@ class PenguinViewMixin(Generic[ContextT]):
     async def start_from(self, message: discord.Message, *, content: str | None = None):
         kwargs = await self._before_start(content=content)
 
-        # Same reason as above.
+        # Change suppress_embeds -> suppress when unpacking kwargs into a message.edit
+        # call
+        if "suppress_embeds" in kwargs:
+            kwargs["suppress"] = kwargs["suppress_embeds"]  # pyright: ignore[reportGeneralTypeIssues]
+            del kwargs["suppress_embeds"]
+
+        # self will either be a discord.ui.View or discord.ui.LayoutView
+        # depending on what you inherited it from.
+        kwargs["view"] = self  # pyright: ignore[reportGeneralTypeIssues]
+        kwargs["allowed_mentions"] = discord.AllowedMentions.none()
+
         self.message = message
-        await message.edit(
-            **kwargs,
-            view=self,  # pyright: ignore[reportArgumentType]
-            allowed_mentions=discord.AllowedMentions.none(),
-        )
+
+        # suppress_embeds kwarg has already been fixed above.
+        await message.edit(**kwargs)  # pyright: ignore[reportCallIssue]
 
     async def start_in(
         self, messageable: discord.abc.Messageable, *, content: str | None = None
@@ -109,6 +137,10 @@ class PenguinViewMixin(Generic[ContextT]):
 
     async def edit_message(self, interaction: discord.Interaction, **kwargs: Any):
         if interaction.response.is_done() and self.message is not None:
+            if "suppress_embeds" in kwargs:
+                kwargs["suppress"] = kwargs["suppress_embeds"]
+                del kwargs["suppress_embeds"]
+
             await self.message.edit(
                 **kwargs,
                 view=self,  # pyright: ignore[reportArgumentType]

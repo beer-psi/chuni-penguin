@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext.commands import Context
@@ -11,7 +11,7 @@ from chuni_penguin.networks.consts import (
 )
 from chuni_penguin.utils import floor_to_ndp
 
-from ._pagination import ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 from .components.score_card_embed import ScoreCardEmbed
 
 if TYPE_CHECKING:
@@ -51,7 +51,9 @@ class B30PageSource(ListPageSource["Score"]):
         self.synthesis_alt_jacket = synthesis_alt_jacket
 
     @override
-    async def format_page(self, menu: "PaginationView", page: Sequence["Score"]):
+    async def format_page(
+        self, menu: "PaginationView", page: Sequence["Score"]
+    ) -> FormatPageReturn:
         start = menu.current_page * self.per_page
         embeds: list[discord.Embed] = [
             ScoreCardEmbed(
@@ -63,7 +65,7 @@ class B30PageSource(ListPageSource["Score"]):
             for i, record in enumerate(page)
         ]
 
-        kwargs: dict[str, Any] = {"embeds": embeds}
+        kwargs: FormatPageReturn = {"embeds": embeds}
 
         if self.show_average or self.show_reachable or self.has_estimated_play_rating:
             kwargs["content"] = (

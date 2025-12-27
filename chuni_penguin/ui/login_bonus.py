@@ -1,6 +1,6 @@
 import calendar
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.utils import MISSING, escape_markdown
@@ -9,7 +9,7 @@ from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.networks.types import LoginBonus, LoginBonusItem
 
-from ._pagination import ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 from .embeds import EmbedPageSource
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class LoginBonusItemPaginationSource(ListPageSource[LoginBonusItem]):
     @override
     async def format_page(
         self, menu: "PaginationView", page: Sequence[LoginBonusItem]
-    ) -> dict[str, Any]:
+    ) -> FormatPageReturn:
         embeds: list[discord.Embed] = []
 
         for item in page:
@@ -50,7 +50,7 @@ class LoginBonusItemPaginationSource(ListPageSource[LoginBonusItem]):
 
             embeds.append(embed)
 
-        result: dict[str, Any] = {"embeds": embeds}
+        result: FormatPageReturn = {"embeds": embeds}
 
         if self.days_logged_in is not MISSING and self.days_logged_in > 0:
             result["content"] = (

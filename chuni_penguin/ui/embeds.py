@@ -1,11 +1,11 @@
 from collections.abc import Sequence
-from typing import Any, override
+from typing import override
 
 import discord
 from discord import Embed
 from discord.ext.commands import Context
 
-from ._pagination import ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
 
 class EmbedPageSource(ListPageSource[discord.Embed]):
@@ -20,7 +20,7 @@ class EmbedPageSource(ListPageSource[discord.Embed]):
     @override
     async def format_page(
         self, menu: "PaginationView", page: Sequence[discord.Embed]
-    ) -> dict[str, Any]:
+    ) -> FormatPageReturn:
         return {"embeds": page}
 
 

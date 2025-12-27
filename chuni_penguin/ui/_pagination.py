@@ -1,19 +1,27 @@
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Protocol,
+    TypeVar,
+    override,
+)
 
 import discord.ui
 from discord import Interaction
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
-from ._base import PenguinView
+from ._base import MessageKwargs, PenguinView
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
 
+
 PageT = TypeVar("PageT")
 PageItemT = TypeVar("PageItemT")
-FormatPageReturn = dict[str, Any] | str | discord.Embed
+FormatPageReturn = MessageKwargs | str | discord.Embed
 
 
 class PageSourceProtocol(Protocol, Generic[PageT]):
@@ -141,7 +149,7 @@ class PaginationView(PenguinView, Generic[PageT]):
         )
         self.to_last_page.disabled = max_pages is None or (page_index + 1) >= max_pages
 
-    async def get_kwargs_from_page(self, page: PageT):
+    async def get_kwargs_from_page(self, page: PageT) -> MessageKwargs:
         value = await self.source.format_page(self, page)
 
         if isinstance(value, dict):
