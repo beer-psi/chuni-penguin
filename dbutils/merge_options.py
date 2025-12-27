@@ -262,38 +262,29 @@ async def merge_options(
                     musicdiver_alt = (
                         xml_path.parent / "CHU_UI_Jacket_2698_MusicDiver.dds"
                     )
+                    sdvx_alt = xml_path.parent / "CHU_UI_Jacket_2698_SDVX.dds"
 
                     if cytus2_alt.exists():
-                        pool.submit(
-                            extract_jacket,
-                            song_id_int,
-                            cytus2_alt,
-                            "_cytus2",
-                        )
+                        pool.submit(extract_jacket, song_id_int, cytus2_alt, "_cytus2")
 
                     if vividstasis_alt.exists():
                         pool.submit(
-                            extract_jacket,
-                            song_id_int,
-                            vividstasis_alt,
-                            "_vividstasis",
+                            extract_jacket, song_id_int, vividstasis_alt, "_vividstasis"
                         )
 
                     if musedash_alt.exists():
                         pool.submit(
-                            extract_jacket,
-                            song_id_int,
-                            musedash_alt,
-                            "_musedash",
+                            extract_jacket, song_id_int, musedash_alt, "_musedash"
                         )
 
                     if musicdiver_alt.exists():
                         pool.submit(
-                            extract_jacket,
-                            song_id_int,
-                            musicdiver_alt,
-                            "_musicdiver",
+                            extract_jacket, song_id_int, musicdiver_alt, "_musicdiver"
                         )
+
+                    if sdvx_alt.exists():
+                        pool.submit(extract_jacket, song_id_int, sdvx_alt, "_sdvx")
+
                 elif song_id_int == 45:
                     pool.submit(
                         extract_jacket,

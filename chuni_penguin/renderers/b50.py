@@ -123,16 +123,10 @@ def _render_b30_entry(
     jacket_basename = f"{song_id}"
 
     if song_id == 2698 and user_config is not None:
-        if user_config.synthesis_alt_jacket == "cytus2":
-            jacket_basename = "2698_cytus2"
-        elif user_config.synthesis_alt_jacket == "vividstasis":
-            jacket_basename = "2698_vividstasis"
-        elif user_config.synthesis_alt_jacket == "musedash":
-            jacket_basename = "2698_musedash"
-        elif user_config.synthesis_alt_jacket == "musicdiver":
-            jacket_basename = "2698_musicdiver"
-        elif user_config.synthesis_alt_jacket == "none":
+        if user_config.synthesis_alt_jacket == "none":
             jacket_basename = "__nonexistent"
+        elif user_config.synthesis_alt_jacket != "default":
+            jacket_basename = f"{song_id}_{user_config.synthesis_alt_jacket}"
 
     jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.webp"
     prerendered_path = (

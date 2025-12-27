@@ -379,8 +379,9 @@ class ProfileCog(commands.Cog, name="Profile"):
                 "vividstasis",
                 "musedash",
                 "musicdiver",
+                "sdvx",
             ):
-                msg = "Invalid option for `synthesis-alt-jacket`. Expected one of `none`, `default`, `cytus2`, `vividstasis`, `musedash`, `musicdiver`."
+                msg = "Invalid option for `synthesis-alt-jacket`. Expected one of `none`, `default`, `cytus2`, `vividstasis`, `musedash`, `musicdiver`, `sdvx`."
                 raise commands.BadArgument(msg)
 
             user_config.synthesis_alt_jacket = value
