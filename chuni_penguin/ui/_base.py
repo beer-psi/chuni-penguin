@@ -26,7 +26,7 @@ class MessageKwargs(TypedDict):
     content: NotRequired[str | None]
     embed: NotRequired[discord.Embed | None]
     embeds: NotRequired[Sequence[discord.Embed]]
-    attachments: NotRequired[Sequence[discord.Attachment | discord.File]]
+    files: NotRequired[Sequence[discord.File]]
     suppress_embeds: NotRequired[bool]
     delete_after: NotRequired[float | None]
     allowed_mentions: NotRequired[discord.AllowedMentions | None]
@@ -58,11 +58,14 @@ class PenguinViewMixin(Generic[ContextT]):
     async def start_from(self, message: discord.Message, *, content: str | None = None):
         kwargs = await self._before_start(content=content)
 
-        # Change suppress_embeds -> suppress when unpacking kwargs into a message.edit
-        # call
+        # Change some key names when unpacking kwargs into Message.edit
         if "suppress_embeds" in kwargs:
             kwargs["suppress"] = kwargs["suppress_embeds"]  # pyright: ignore[reportGeneralTypeIssues]
             del kwargs["suppress_embeds"]
+
+        if "files" in kwargs:
+            kwargs["attachments"] = kwargs["files"]  # pyright: ignore[reportGeneralTypeIssues]
+            del kwargs["files"]
 
         # self will either be a discord.ui.View or discord.ui.LayoutView
         # depending on what you inherited it from.
@@ -79,8 +82,12 @@ class PenguinViewMixin(Generic[ContextT]):
     ) -> discord.Message:
         kwargs = await self._before_start(content=content)
 
+        # self will either be a discord.ui.View or discord.ui.LayoutView
+        # depending on what you inherited it from.
+        kwargs["view"] = self  # pyright: ignore[reportGeneralTypeIssues]
+
         # Same reason as above.
-        self.message = await messageable.send(**kwargs, view=self)  # pyright: ignore[reportCallIssue, reportArgumentType]
+        self.message = await messageable.send(**kwargs)  # pyright: ignore[reportCallIssue, reportArgumentType]
         return self.message  # pyright: ignore[reportReturnType]
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
