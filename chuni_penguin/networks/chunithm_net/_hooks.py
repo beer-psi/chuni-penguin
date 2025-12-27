@@ -49,9 +49,13 @@ class ChunithmNetAuth(httpx.Auth):
 
         auth_response = yield self.client.build_request("GET", _AUTHENTICATION_URL)
 
-        if auth_response.url.host == _AUTHENTICATION_URL.host:
+        if (
+            auth_response.url.host == _AUTHENTICATION_URL.host
+            and auth_response.url.path == _AUTHENTICATION_URL.path
+        ):
             if self.username is None or self.password is None:
-                raise AuthenticationError
+                msg = "The provided access token is invalid."
+                raise AuthenticationError(msg)
 
             auth_response = yield self.client.build_request(
                 "POST",
@@ -63,9 +67,12 @@ class ChunithmNetAuth(httpx.Auth):
                 },
             )
 
-            # Invalid username/password or TOTP is enabled
-            if auth_response.url.host == _AUTHENTICATION_URL.host:
-                raise AuthenticationError
+            if (
+                auth_response.url.host == _AUTHENTICATION_URL.host
+                and auth_response.url.path == _AUTHENTICATION_URL.path
+            ):
+                msg = "The provided username or password is invalid, or the account has TOTP enabled."
+                raise AuthenticationError(msg)
 
         if str(auth_response.url) == str(request.url):
             return

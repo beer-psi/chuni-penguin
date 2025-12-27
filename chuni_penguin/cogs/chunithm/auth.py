@@ -209,7 +209,7 @@ class AuthCog(commands.Cog, name="Auth"):
                 user_id=ctx.author.id,
             )
 
-            msg = f"Invalid cookie: {e}"
+            msg = f"Invalid cookie: {e.__class__.__name__}: {e}"
             raise commands.CommandError(msg)
 
         passcode = str(self.random.randrange(10**5, 10**6))
@@ -268,7 +268,7 @@ class AuthCog(commands.Cog, name="Auth"):
                     embed=discord.Embed(
                         color=discord.Color.red(),
                         title="Failed to login",
-                        description=f"Invalid cookie: {e}",
+                        description=f"Invalid cookie: {e.__class__.__name__}: {e}",
                     ),
                     view=None,
                 )

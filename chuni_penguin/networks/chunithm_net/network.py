@@ -1,5 +1,5 @@
 import io
-from http.cookiejar import LWPCookieJar
+from http.cookiejar import DefaultCookiePolicy, LWPCookieJar
 from typing import Any, override
 
 import httpx
@@ -67,7 +67,7 @@ class ChunithmNet(Network):
         username: str | None = None,
         password: str | None = None,
     ):
-        self._jar = LWPCookieJar()
+        self._jar = LWPCookieJar(policy=DefaultCookiePolicy(hide_cookie2=True))
         self._jar._really_load(  # type: ignore[reportAttributeAccessIssue]
             io.StringIO(authentication),
             "?",
