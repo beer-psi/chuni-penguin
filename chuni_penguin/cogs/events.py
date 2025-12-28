@@ -10,7 +10,7 @@ import discord
 import httpx
 from discord import Webhook, app_commands
 from discord.app_commands import AppCommandError
-from discord.ext import commands
+from discord.ext import commands, songbird
 from discord.ext.commands import Context
 
 from chuni_penguin.config import config
@@ -287,13 +287,20 @@ class EventsCog(commands.Cog, name="Events"):
             ),
         ):
             embed.description = str(exc)
+        elif isinstance(exc, songbird.SongbirdError):
+            if (
+                context_or_interaction.guild is not None
+                and (voice := context_or_interaction.guild.voice_client) is not None
+            ):
+                with contextlib.suppress(songbird.SongbirdError):
+                    await voice.disconnect(force=True)
 
-        if isinstance(
+            embed.description = f"Voice error: {exc!s}"
+        elif isinstance(
             exc, (httpx.TimeoutException, aiohttp.ServerTimeoutError, TimeoutError)
         ):
             embed.description = "Timed out trying to connect to the network."
-
-        if isinstance(exc, (httpx.TransportError, aiohttp.ClientConnectionError)):
+        elif isinstance(exc, (httpx.TransportError, aiohttp.ClientConnectionError)):
             embed.description = (
                 "An unknown network error occured trying to connect to the network.\n"
                 "\n"
