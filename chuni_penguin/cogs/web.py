@@ -335,7 +335,12 @@ async def list_songs(request: web.Request) -> web.Response:
 
     return web.json_response(
         result,
-        headers={"last-modified": result_time.strftime("%a, %d %b %Y %H:%M:%S GMT")},
+        headers={
+            "last-modified": result_time.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+            "access-control-allow-credentials": "false",
+            "access-control-allow-methods": "GET",
+            "access-control-allow-origin": "*",
+        },
     )
 
 
