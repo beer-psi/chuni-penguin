@@ -230,6 +230,9 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
     ):
         """Sync scores from CHUNITHM-NET International with Kamaitachi.
 
+        If the import fails due to a network issue, the data is saved and will be
+        imported next time this command is run.
+
         Parameters
         ----------
         mode: str
@@ -317,7 +320,17 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
 
             await ctx.respond_or_edit("Uploading scores to Kamaitachi...")
 
-            batch_manual = convert_to_kt_batch_manual(profile, scores)
+            # Insert the pending import into the database, then fetch everything
+            # from the database into a single import
+            await ctx.bot.database.pending_kamaitachi_imports.insert(
+                ctx.author.id,
+                msgspec.to_builtins(convert_to_kt_batch_manual(profile, scores)),
+            )
+            batch_manual = (
+                await ctx.bot.database.pending_kamaitachi_imports.get_import_data(
+                    ctx.author.id
+                )
+            )
 
             resp = await tachi_client._client.post(
                 "https://kamai.tachi.ac/ir/direct-manual/import",
@@ -328,6 +341,9 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                 },
             )
             data = msgspec.json.decode(resp.content, type=KTBatchManualResponse)
+
+            # if we made it to here, kt should have received the import already
+            await ctx.bot.database.pending_kamaitachi_imports.delete_all(ctx.author.id)
 
             if not data.success:
                 return await ctx.respond_or_edit(
