@@ -344,19 +344,27 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                     },
                 )
                 data = msgspec.json.decode(resp.content, type=KTBatchManualResponse)
-            except (NetworkError, msgspec.DecodeError) as e:
+            except Exception as e:  # noqa: BLE001
                 events: "EventsCog" = ctx.bot.get_cog("Events")  # pyright: ignore[reportAssignmentType]
-                embed, _ = await events._construct_error_embed(
+                embed, delete_after = await events._construct_error_embed(
                     ctx, ctx.command.name if ctx.command else None, e
                 )
 
                 if embed.description is None:
+                    await logger.aexception(
+                        "Unhandled exception in command",
+                        tag="command_error",
+                        command=ctx.command.qualified_name if ctx.command else None,
+                        exc_info=e,
+                    )
+                    await events._submit_error_to_webhook(ctx, e)
+
                     embed.description = (
                         "There was an error submitting scores to Kamaitachi."
                     )
 
                 embed.description += "\n\nYour scores are saved in the bot and will be submitted next time you run the command."
-                await events._send_error(ctx, embed)
+                await events._send_error(ctx, embed, delete_after=delete_after)
                 return None
 
             # if we made it to here, kt should have received the import already
