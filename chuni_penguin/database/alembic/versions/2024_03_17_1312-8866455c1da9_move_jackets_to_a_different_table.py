@@ -11,16 +11,14 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-from chuni_penguin.networks.chunithm_net import (
-    INTERNATIONAL_JACKET_BASE,
-    JACKET_BASE,
-)
-
 # revision identifiers, used by Alembic.
 revision: str = "8866455c1da9"
 down_revision: Union[str, None] = "8cd5df7f3bb4"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
+JACKET_BASE = "https://new.chunithm-net.com/chuni-mobile/html/mobile/img"
+INTERNATIONAL_JACKET_BASE = "https://chunithm-net-eng.com/mobile/img"
 
 metadata = sa.MetaData()
 songs = sa.Table(
