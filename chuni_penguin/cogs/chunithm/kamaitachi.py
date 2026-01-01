@@ -17,7 +17,6 @@ from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_prefix_command, logger
 from chuni_penguin.networks.consts import KEY_SONG_ID
-from chuni_penguin.networks.errors import NetworkError
 from chuni_penguin.networks.kamaitachi import (
     KTBatchManualResponse,
     KTImportPollStatusCompleted,
