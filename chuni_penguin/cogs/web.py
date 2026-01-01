@@ -504,7 +504,7 @@ class WebCog(commands.Cog, name="Web"):
                     session,
                     config.web.goatcounter,
                     config.credentials.goatcounter_api_key,
-                    ["/login", "/kamaitachi/oauth*", "/assets/jackets*"],
+                    ["/kamaitachi/users/*", "/assets/jackets/*"],
                 )
             )
 
