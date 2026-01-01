@@ -6,6 +6,7 @@ import httpx
 import httpx_aiohttp
 from bs4 import BeautifulSoup
 
+from chuni_penguin.networks._hooks import raise_on_server_errors
 from chuni_penguin.networks.base import Network
 from chuni_penguin.networks.errors import AlreadyFriends, InvalidFriendCode
 from chuni_penguin.networks.types import (
@@ -19,7 +20,7 @@ from chuni_penguin.networks.types import (
 )
 
 from ._bs4 import BS4_FEATURE
-from ._hooks import ChunithmNetAuth, raise_on_chunithm_net_error, raise_on_maintenance
+from ._hooks import ChunithmNetAuth, raise_on_chunithm_net_error
 from .consts import _KEY_DETAILED_PARAMS_IDX
 from .parser import (
     parse_basic_recent_record,
@@ -80,7 +81,7 @@ class ChunithmNet(Network):
             timeout=httpx.Timeout(timeout=60.0),
             follow_redirects=True,
             event_hooks={
-                "response": [raise_on_maintenance, raise_on_chunithm_net_error]
+                "response": [raise_on_server_errors, raise_on_chunithm_net_error]
             },
             transport=httpx_aiohttp.AIOHTTPTransport(retries=5),
             headers={

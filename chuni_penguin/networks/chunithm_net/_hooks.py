@@ -1,11 +1,10 @@
 import contextlib
 from collections.abc import Generator
-from http.client import SERVICE_UNAVAILABLE
 
 import httpx
 from bs4 import BeautifulSoup
 
-from chuni_penguin.networks.errors import AuthenticationError, MaintenanceError
+from chuni_penguin.networks.errors import AuthenticationError
 
 from ._bs4 import BS4_FEATURE
 from .exceptions import ChuniNetError
@@ -105,8 +104,3 @@ async def raise_on_chunithm_net_error(response: httpx.Response):
         or "chunithm_net_reauth" in response.request.extensions
     ):
         raise error
-
-
-async def raise_on_maintenance(response: httpx.Response):
-    if response.status_code == SERVICE_UNAVAILABLE:
-        raise MaintenanceError

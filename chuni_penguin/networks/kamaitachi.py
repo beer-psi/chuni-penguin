@@ -15,6 +15,7 @@ import msgspec
 from chuni_penguin.config import config
 from chuni_penguin.utils import floor_to_ndp
 
+from ._hooks import raise_on_server_errors
 from .base import Network
 from .consts import (
     KEY_INTERNAL_LEVEL,
@@ -548,7 +549,9 @@ class Kamaitachi(Network):
     SUPPORTS_PERSONAL_BESTS_ON_SONG = True
     SUPPORTS_CHART_LEADERBOARD = True
 
-    def __init__(self, authentication: str):
+    def __init__(
+        self, authentication: str, *, base_url: str = "https://kamai.tachi.ac"
+    ):
         self._api_key = authentication
         self._client = httpx.AsyncClient(
             headers={
@@ -557,7 +560,8 @@ class Kamaitachi(Network):
             },
             timeout=httpx.Timeout(60.0),
             follow_redirects=True,
-            base_url="https://kamai.tachi.ac",
+            event_hooks={"response": [raise_on_server_errors]},
+            base_url=base_url,
             transport=httpx_aiohttp.AIOHTTPTransport(retries=5),
         )
 

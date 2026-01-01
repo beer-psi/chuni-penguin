@@ -19,6 +19,7 @@ from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import ChuniNetError
 from chuni_penguin.networks.errors import (
     AuthenticationError,
+    HTTPError,
     InvalidFriendCode,
     MaintenanceError,
     NetworkError,
@@ -194,6 +195,19 @@ class EventsCog(commands.Cog, name="Events"):
             )
         elif isinstance(exc, InvalidFriendCode):
             embed.description = "Could not find anyone with this friend code. Please double-check and try again."
+        elif isinstance(exc, HTTPError):
+            if exc.text is not None:
+                displayed_error = f"`{exc.code} {exc.text}`"
+            else:
+                displayed_error = f"`{exc.code}`"
+
+            embed.description = f"An HTTP error occured while communicating with the network: {displayed_error}"
+
+            if exc.code >= 500:
+                embed.description += "\nThis is likely not a problem with the bot."
+
+            embed.set_image(url=f"https://http.cat/{exc.code}.jpg")
+            embed.set_footer(text="Image from https://http.cat")
         elif isinstance(exc, NetworkError):
             embed.description = (
                 "An error occurred while communicating with the network. Please try again later (or re-login).\n"
