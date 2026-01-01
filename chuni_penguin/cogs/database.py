@@ -1,12 +1,13 @@
 import contextlib
 import functools
 import sqlite3
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
+import msgspec
 import sqlalchemy.event
 from discord.ext import commands, tasks
 from rapidfuzz import fuzz
-from sqlalchemy import func, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
 from sqlalchemy.engine import Engine
@@ -18,7 +19,8 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from chuni_penguin.config import config
-from chuni_penguin.database import Chart, EasterEggFound, Song
+from chuni_penguin.database import Chart, EasterEggFound, PendingKamaitachiImport, Song
+from chuni_penguin.networks.kamaitachi import KTBatchManualChunithm
 from chuni_penguin.networks.types import Difficulty
 
 if TYPE_CHECKING:
@@ -103,6 +105,67 @@ class ChartQueries:
             return (await session.execute(query)).scalars().all()
 
 
+class PendingKamaitachiImportQueries:
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        self._sessionmaker = sessionmaker
+
+    async def insert(self, discord_id: int, import_data: dict[str, Any]):
+        async with self._sessionmaker() as session:
+            session.add(
+                PendingKamaitachiImport(discord_id=discord_id, import_data=import_data)
+            )
+            await session.commit()
+
+    async def get_import_data(self, discord_id: int):
+        async with self._sessionmaker() as session:
+            query = select(PendingKamaitachiImport).where(
+                PendingKamaitachiImport.discord_id == discord_id
+            )
+            data = (await session.execute(query)).scalars().all()
+
+        # Fast path optimizations
+        if len(data) == 1:
+            return msgspec.convert(data[0].import_data, type=KTBatchManualChunithm)
+
+        import_data = KTBatchManualChunithm()
+
+        # this should probably never happen but just in case
+        if len(data) == 0:
+            return import_data
+
+        for datum in data:
+            datum_import = msgspec.convert(
+                datum.import_data, type=KTBatchManualChunithm
+            )
+            import_data.scores += datum_import.scores
+
+            if datum_import.classes.dan is not msgspec.UNSET:
+                if import_data.classes.dan is not msgspec.UNSET:
+                    import_data.classes.dan = max(
+                        datum_import.classes.dan, import_data.classes.dan
+                    )
+                else:
+                    import_data.classes.dan = datum_import.classes.dan
+
+            if datum_import.classes.emblem is not msgspec.UNSET:
+                if import_data.classes.emblem is not msgspec.UNSET:
+                    import_data.classes.emblem = max(
+                        datum_import.classes.emblem, import_data.classes.emblem
+                    )
+                else:
+                    import_data.classes.emblem = datum_import.classes.emblem
+
+        return import_data
+
+    async def delete_all(self, discord_id: int):
+        async with self._sessionmaker() as session:
+            query = delete(PendingKamaitachiImport).where(
+                PendingKamaitachiImport.discord_id == discord_id
+            )
+            await session.execute(query)
+            await session.commit()
+
+
 class DatabaseCog(commands.Cog, name="Database"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
@@ -116,6 +179,9 @@ class DatabaseCog(commands.Cog, name="Database"):
 
         self.songs = SongQueries(self._sessionmaker)
         self.charts = ChartQueries(self._sessionmaker)
+        self.pending_kamaitachi_imports = PendingKamaitachiImportQueries(
+            self._sessionmaker
+        )
 
     @override
     async def cog_load(self) -> None:

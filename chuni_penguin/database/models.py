@@ -1,8 +1,10 @@
-from typing import Optional
+from datetime import datetime
+from typing import Any, Optional
 
 from discord.ext import commands
 from discord.utils import escape_markdown
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Column,
@@ -385,3 +387,14 @@ class CourseTrack(Base):
 
     def __repr__(self) -> str:
         return f"CourseTrack(course_id={self.course_id!r}, track={self.track!r}, level={self.level!r})"
+
+
+class PendingKamaitachiImport(Base):
+    __tablename__ = "pending_kamaitachi_imports"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    discord_id: Mapped[int] = mapped_column(BigInteger())
+    import_data: Mapped[dict[str, Any]] = mapped_column(JSON())
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=text("CURRENT_TIMESTAMP"),
+    )

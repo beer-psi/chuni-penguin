@@ -1,9 +1,11 @@
 import asyncio
+import functools
 import io
 import sys
 from collections.abc import Awaitable, Callable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
+from enum import Enum
 from http.client import NOT_FOUND
 from typing import Any, Generic, Literal, TypeVar
 
@@ -50,9 +52,42 @@ KTChunithmClearLamp = Literal[
     "FAILED", "CLEAR", "HARD", "BRAVE", "ABSOLUTE", "CATASTROPHY"
 ]
 KTChunithmDifficulty = Literal["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"]
-KTChunithmClass = Literal[
-    "DAN_I", "DAN_II", "DAN_III", "DAN_IV", "DAN_V", "DAN_INFINITE"
-]
+
+
+@functools.total_ordering
+class KTChunithmClass(Enum):
+    i = "DAN_I"
+    ii = "DAN_II"
+    iii = "DAN_III"
+    iv = "DAN_IV"
+    v = "DAN_V"
+    infinite = "DAN_INFINITE"
+
+    def __lt__(self, other: object):
+        if not isinstance(other, KTChunithmClass):
+            return NotImplemented
+
+        members = list(KTChunithmClass)
+
+        return members.index(self) < members.index(other)
+
+    @classmethod
+    def from_skill_class(cls, skill_class: SkillClass):
+        if skill_class == SkillClass.i:
+            return cls.i
+        if skill_class == SkillClass.ii:
+            return cls.ii
+        if skill_class == SkillClass.iii:
+            return cls.iii
+        if skill_class == SkillClass.iv:
+            return cls.iv
+        if skill_class == SkillClass.v:
+            return cls.v
+        if skill_class == SkillClass.infinite:
+            return cls.infinite
+
+        msg = f"Invalid skill class: {skill_class}"
+        raise ValueError(msg)
 
 
 class KamaitachiError(NetworkError):
@@ -451,26 +486,13 @@ def convert_kt_scores_to_records(
     ]
 
 
-def _to_tachi_class(cls: SkillClass) -> KTChunithmClass:
-    mapping: dict[SkillClass, KTChunithmClass] = {
-        SkillClass.i: "DAN_I",
-        SkillClass.ii: "DAN_II",
-        SkillClass.iii: "DAN_III",
-        SkillClass.iv: "DAN_IV",
-        SkillClass.v: "DAN_V",
-        SkillClass.infinite: "DAN_INFINITE",
-    }
-
-    return mapping[cls]
-
-
 def convert_to_kt_batch_manual(profile: Profile, scores: Sequence[Score]):
     batch_manual = KTBatchManualChunithm()
 
     if profile.medal is not None:
-        batch_manual.classes.dan = _to_tachi_class(profile.medal)
+        batch_manual.classes.dan = KTChunithmClass.from_skill_class(profile.medal)
     if profile.emblem is not None:
-        batch_manual.classes.emblem = _to_tachi_class(profile.emblem)
+        batch_manual.classes.emblem = KTChunithmClass.from_skill_class(profile.emblem)
 
     for score in scores:
         if score.difficulty == Difficulty.worlds_end:
