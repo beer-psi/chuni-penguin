@@ -1,6 +1,8 @@
 import asyncio
+import fnmatch
+import re
 import sys
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from datetime import UTC, datetime
 from html import escape
 from io import BytesIO
@@ -393,13 +395,14 @@ def create_goatcounter_middleware(
     session: ClientSession,
     url: str | yarl.URL,
     api_key: str,
-    exclude_paths: set[str] | None = None,
+    exclude_paths: Iterable[str] | None = None,
 ):
     if isinstance(url, str):
         url = yarl.URL(url)
     if exclude_paths is None:
-        exclude_paths = set()
+        exclude_paths = []
 
+    exclude_patterns = [re.compile(fnmatch.translate(path)) for path in exclude_paths]
     count_url = url.with_path("/api/v0/count")
 
     @web.middleware
@@ -412,11 +415,11 @@ def create_goatcounter_middleware(
         if response.status < 200 or response.status > 299:
             return response
 
-        if request.path in exclude_paths:
+        if any(pat.match(request.path) for pat in exclude_patterns):
             return response
 
         hit = {
-            "path": request.path_qs,
+            "path": request.path,
             "created_at": datetime.now(UTC).isoformat(),
         }
 
@@ -501,7 +504,7 @@ class WebCog(commands.Cog, name="Web"):
                     session,
                     config.web.goatcounter,
                     config.credentials.goatcounter_api_key,
-                    {"/login"},
+                    ["/login", "/kamaitachi/oauth*", "/assets/jackets*"],
                 )
             )
 
