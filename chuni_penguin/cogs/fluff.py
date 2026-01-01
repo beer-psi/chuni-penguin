@@ -1,7 +1,6 @@
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
-import discord
 from discord import (
     DeletedReferencedMessage,
     app_commands,
@@ -121,11 +120,14 @@ class FluffCog(commands.Cog, name="Fluff"):
     @commands.hybrid_command("heck", aliases=["check"])
     @logged_prefix_command
     async def check(
-        self, ctx: PenguinContext, *, target: discord.Member | discord.User
+        self,
+        ctx: PenguinContext,
+        *,
+        target: Annotated[
+            str, commands.clean_content(fix_channel_mentions=True, escape_markdown=True)
+        ],
     ):
         """They need to check them cab and game....."""
-
-        name = escape_markdown(target.display_name)
 
         if ctx.guild is not None:
             server_name = escape_markdown(ctx.guild.name)
@@ -133,7 +135,15 @@ class FluffCog(commands.Cog, name="Fluff"):
             server_name = "PRO"
 
         await ctx.reply(
-            content=f"{name} skilled player but that is not normally, This very very insane....They need to check them cab and game.....Maybe they not cheating but maybe they using the game deficit ...and this cant seem on game screen..They need to check-up...{name} using game deficit on {server_name} scene ,ON BIG scoreposting. Maybe everyone dont knows them trick.They incredible....I want to ask their where is the comming of your skill's ?",
+            content=(
+                f"{target} skilled player but that is not normally, This very very insane"
+                "....They need to check them cab and game.....Maybe they not cheating "
+                "but maybe they using the game deficit ...and this cant seem on game "
+                f"screen..They need to check-up...{target} using game deficit on "
+                f"{server_name} scene ,ON BIG scoreposting. Maybe everyone dont knows "
+                "them trick.They incredible....I want to ask their where is the "
+                "comming of your skill's ?"
+            ),
             mention_author=False,
         )
 
