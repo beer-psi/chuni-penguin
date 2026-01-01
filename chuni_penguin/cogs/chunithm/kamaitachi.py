@@ -17,6 +17,7 @@ from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_prefix_command, logger
 from chuni_penguin.networks.consts import KEY_SONG_ID
+from chuni_penguin.networks.errors import NetworkError
 from chuni_penguin.networks.kamaitachi import (
     KTBatchManualResponse,
     KTImportPollStatusCompleted,
@@ -31,6 +32,7 @@ from chuni_penguin.networks.types import Difficulty, PersonalBest, RecentScore
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
     from chuni_penguin.cogs.botutils import UtilsCog
+    from chuni_penguin.cogs.events import EventsCog
 
 
 class ReprocessOrphanSummary(msgspec.Struct, rename="camel"):
@@ -332,15 +334,30 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                 )
             )
 
-            resp = await tachi_client._client.post(
-                "https://kamai.tachi.ac/ir/direct-manual/import",
-                content=msgspec.json.encode(batch_manual),
-                headers={
-                    "Content-Type": "application/json",
-                    "X-User-Intent": "true",
-                },
-            )
-            data = msgspec.json.decode(resp.content, type=KTBatchManualResponse)
+            try:
+                resp = await tachi_client._client.post(
+                    "https://kamai.tachi.ac/ir/direct-manual/import",
+                    content=msgspec.json.encode(batch_manual),
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-User-Intent": "true",
+                    },
+                )
+                data = msgspec.json.decode(resp.content, type=KTBatchManualResponse)
+            except (NetworkError, msgspec.DecodeError) as e:
+                events: "EventsCog" = ctx.bot.get_cog("Events")  # pyright: ignore[reportAssignmentType]
+                embed, _ = await events._construct_error_embed(
+                    ctx, ctx.command.name if ctx.command else None, e
+                )
+
+                if embed.description is None:
+                    embed.description = (
+                        "There was an error submitting scores to Kamaitachi."
+                    )
+
+                embed.description += "\n\nYour scores are saved in the bot and will be submitted next time you run the command."
+                await events._send_error(ctx, embed)
+                return None
 
             # if we made it to here, kt should have received the import already
             await ctx.bot.database.pending_kamaitachi_imports.delete_all(ctx.author.id)
