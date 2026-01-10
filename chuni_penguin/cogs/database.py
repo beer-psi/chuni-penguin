@@ -190,19 +190,31 @@ class PersonalBestQueries:
             "score": func.max(PersonalBest.score, query.excluded.score),
             "clear_lamp": func.max(PersonalBest.clear_lamp, query.excluded.clear_lamp),
             "combo_lamp": func.max(PersonalBest.combo_lamp, query.excluded.combo_lamp),
-            "achieved_at": func.iif(
-                (query.excluded.score > PersonalBest.score)
-                | (query.excluded.clear_lamp > PersonalBest.clear_lamp)
-                | (query.excluded.combo_lamp > PersonalBest.combo_lamp),
-                # We want to keep whichever is newer of the two timestamps if both
-                # timestamps are available.
-                func.iif(
-                    query.excluded.achieved_at.is_not(None)
+            "achieved_at": case(
+                (
+                    (
+                        (query.excluded.score > PersonalBest.score)
+                        | (query.excluded.clear_lamp > PersonalBest.clear_lamp)
+                        | (query.excluded.combo_lamp > PersonalBest.combo_lamp)
+                    )
+                    & query.excluded.achieved_at.is_not(None)
                     & PersonalBest.achieved_at.is_not(None),
                     func.max(query.excluded.achieved_at, PersonalBest.achieved_at),
+                ),
+                (
+                    (query.excluded.score > PersonalBest.score)
+                    | (query.excluded.clear_lamp > PersonalBest.clear_lamp)
+                    | (query.excluded.combo_lamp > PersonalBest.combo_lamp),
                     query.excluded.achieved_at,
                 ),
-                PersonalBest.achieved_at,
+                (
+                    (query.excluded.score == PersonalBest.score)
+                    & (query.excluded.clear_lamp == PersonalBest.clear_lamp)
+                    & (query.excluded.combo_lamp == PersonalBest.combo_lamp)
+                    & (PersonalBest.achieved_at.is_(None)),
+                    query.excluded.achieved_at,
+                ),
+                else_=PersonalBest.achieved_at,
             ),
         }
 
