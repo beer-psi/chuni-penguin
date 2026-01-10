@@ -156,7 +156,7 @@ class RecentRecordsView(PaginationView):
                 score = await self.network_client.get_detailed_recent_score(
                     self.scores[idx]
                 )
-                score = await self.utils.hydrate_record(
+                score = await self.utils.process_record(
                     self.target_id, self.network_client.NAME, score
                 )
             else:

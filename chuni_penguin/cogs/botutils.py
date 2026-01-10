@@ -317,6 +317,9 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         return hydrated_records
 
+    async def process_record(self, discord_id: int, network: str, record: T) -> T:
+        return (await self.process_records(discord_id, network, [record]))[0]
+
     async def process_records(
         self, discord_id: int, network: str, records: Sequence[T]
     ) -> list[T]:
@@ -327,9 +330,6 @@ class UtilsCog(commands.Cog, name="Utils"):
         )
 
         return hydrated_records
-
-    async def hydrate_record(self, discord_id: int, network: str, record: T) -> T:
-        return (await self.process_records(discord_id, network, [record]))[0]
 
     async def find_song(
         self,
