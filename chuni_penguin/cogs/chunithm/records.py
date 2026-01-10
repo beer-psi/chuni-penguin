@@ -188,10 +188,11 @@ class RecordsCog(commands.Cog, name="Records"):
             profile = await client.get_minimal_profile()
 
             recents = await client.get_recent_scores()
-            recents = await self.utils.hydrate_records(recents)
+            recents = await self.utils.process_records(target_id, client.NAME, recents)
 
         view = RecentRecordsView(
             ctx,
+            target_id,
             recents,
             client,
             client_manager,
@@ -354,7 +355,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 )
                 return
 
-            records = await self.utils.hydrate_records(records)
+            records = await self.utils.process_records(target_id, client.NAME, records)
             records.sort(key=lambda r: r.difficulty.value)
 
             page = 0
@@ -603,7 +604,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 await ctx.respond_or_edit(msg)
                 return
 
-            records = await self.utils.hydrate_records(records)
+            records = await self.utils.process_records(target_id, client.NAME, records)
             records.sort(key=lambda r: r.difficulty.value)
 
             view = EmbedPaginationView(
@@ -746,8 +747,12 @@ class RecordsCog(commands.Cog, name="Records"):
                         ]
                     )
 
-                records = await self.utils.hydrate_records(records)
-                new_records = await self.utils.hydrate_records(new_records)
+                records = await self.utils.process_records(
+                    target_id, client.NAME, records
+                )
+                new_records = await self.utils.process_records(
+                    target_id, client.NAME, new_records
+                )
 
                 # sort the fetched best30/new20 by their position in the original b30/n20 list
                 records.sort(
@@ -783,8 +788,10 @@ class RecordsCog(commands.Cog, name="Records"):
                         record_list = records
                         record_list_slots = record_slots
 
-                    hidden_song_records = await self.utils.hydrate_records(
-                        await client.get_personal_bests_on_song(hidden_song.id)
+                    hidden_song_records = await self.utils.process_records(
+                        target_id,
+                        client.NAME,
+                        await client.get_personal_bests_on_song(hidden_song.id),
                     )
 
                     for hidden_song_record in hidden_song_records:
@@ -834,15 +841,19 @@ class RecordsCog(commands.Cog, name="Records"):
                 except StopIteration:
                     current_rating = None
 
-                records = await self.utils.hydrate_records(await client.get_best30())
-                new_records = await self.utils.hydrate_records(await client.get_new20())
+                records = await self.utils.process_records(
+                    target_id, client.NAME, await client.get_best30()
+                )
+                new_records = await self.utils.process_records(
+                    target_id, client.NAME, await client.get_new20()
+                )
             elif new_rating:
                 if not client.SUPPORTS_PERSONAL_BESTS:
                     msg = f"Network {client.NAME} does not support best30/new20, and does not support fetching personal bests."
                     raise commands.CommandError(msg)
 
-                pbs = await self.utils.hydrate_records(
-                    await client.get_personal_bests()
+                pbs = await self.utils.process_records(
+                    target_id, client.NAME, await client.get_personal_bests()
                 )
                 records = [
                     pb
@@ -896,8 +907,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 except StopIteration:
                     current_rating = None
 
-                pbs = (await client.get_best_ratings())[:50]
-                pbs = await self.utils.hydrate_records(pbs)
+                pbs = await client.get_best_ratings()
+                pbs = await self.utils.process_records(target_id, client.NAME, pbs)
+                pbs = pbs[:50]
 
                 records = pbs
                 record_slots = 50
@@ -1154,7 +1166,9 @@ class RecordsCog(commands.Cog, name="Records"):
             if rank is not None:
                 records = [r for r in records if r.rank == rank]
 
-            records = await self.utils.hydrate_records(records)
+            records = await self.utils.process_records(
+                target_user_id, client.NAME, records
+            )
 
             if level is not None:
                 records = [r for r in records if r.extras[KEY_LEVEL] == level]
@@ -1419,7 +1433,9 @@ class RecordsCog(commands.Cog, name="Records"):
             if rank is not None:
                 records = [r for r in records if r.rank == rank]
 
-            records = await self.utils.hydrate_records(records)
+            records = await self.utils.process_records(
+                target_user_id, client.NAME, records
+            )
 
             if level_folder is not None:
                 records = [r for r in records if r.extras[KEY_LEVEL] == level_folder]

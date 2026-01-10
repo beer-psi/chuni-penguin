@@ -593,8 +593,8 @@ class ToolsCog(commands.Cog, name="Tools"):
                 async with ctx.bot.chunithm_networks.network(ctx) as client:
                     if client.SUPPORTS_BEST30:
                         # TODO: should ideally have separate recommendations for b30 and n20?
-                        records = await self.utils.hydrate_records(
-                            await client.get_best30()
+                        records = await self.utils.process_records(
+                            ctx.author.id, client.NAME, await client.get_best30()
                         )
 
                         # get the song with the lowest rating in b30
@@ -707,11 +707,11 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             async with ctx.bot.chunithm_networks.network(ctx) as client:
                 if client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20:
-                    records = await self.utils.hydrate_records(
-                        await client.get_best30()
+                    records = await self.utils.process_records(
+                        ctx.author.id, client.NAME, await client.get_best30()
                     )
-                    new_records = await self.utils.hydrate_records(
-                        await client.get_new20()
+                    new_records = await self.utils.process_records(
+                        ctx.author.id, client.NAME, await client.get_new20()
                     )
 
                     # check the number of songs in b30
@@ -778,7 +778,10 @@ class ToolsCog(commands.Cog, name="Tools"):
                     await ctx.reply(res, mention_author=False)
                 elif client.SUPPORTS_BEST_RATINGS:
                     records = await client.get_best_ratings()
-                    records = await self.utils.hydrate_records(records[:50])
+                    records = await self.utils.process_records(
+                        ctx.author.id, client.NAME, records
+                    )
+                    records = records[:50]
                     record_count = len(records)
 
                     # get the song with lowest rating in b50
