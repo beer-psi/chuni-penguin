@@ -12,7 +12,7 @@ from discord.ext import commands
 from discord.ext.commands import Context, Range
 from discord.utils import escape_markdown
 from PIL import Image
-from sqlalchemy import select, text
+from sqlalchemy import Row, func, select, text
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin.calculation import (
@@ -32,7 +32,7 @@ from chuni_penguin.converters import (
     LevelRange,
     LevelRangeConverter,
 )
-from chuni_penguin.database import Chart, Song
+from chuni_penguin.database import Chart, PersonalBest, Song
 from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.networks.consts import KEY_PLAY_RATING
 from chuni_penguin.networks.types import Difficulty, Rank
@@ -577,7 +577,7 @@ class ToolsCog(commands.Cog, name="Tools"):
     ):
         """Get random chart recommendations with target scores based on your rating.
 
-        Please note that recommended charts are generated randomly and are independent of your high scores.
+        Please note that recommended charts are generated randomly.
 
         Parameters
         ----------
@@ -630,35 +630,60 @@ class ToolsCog(commands.Cog, name="Tools"):
                 max_level = round(target_rating - 1.5, 2)
 
             async with self.bot.begin_db_session() as session:
+                pb_cte = (
+                    select(
+                        PersonalBest.song_id,
+                        PersonalBest.difficulty,
+                        func.max(PersonalBest.score).label("score"),
+                    )
+                    .where(PersonalBest.discord_id == ctx.author.id)
+                    .group_by(PersonalBest.song_id, PersonalBest.difficulty)
+                    .cte("personal_bests_all_networks")
+                )
+
                 stmt = (
-                    select(Chart)
+                    select(Chart, pb_cte.c.score)
                     .join(Song, Chart.song_id == Song.id)
+                    .join(
+                        pb_cte,
+                        (pb_cte.c.song_id == Chart.song_id)
+                        & (pb_cte.c.difficulty == Chart.difficulty),
+                        isouter=True,
+                    )
                     .where(
                         (Chart.const >= min_level)
                         & (Chart.const <= max_level)
                         & (Song.available.is_(True))
                     )
                     .order_by(text("RANDOM()"))
-                    .limit(count)
                     .options(
                         joinedload(Chart.song), joinedload(Chart.sdvxin_chart_view)
                     )
                 )
 
-                charts: Sequence[Chart] = (await session.execute(stmt)).scalars().all()
+                charts: Sequence[Row[tuple[Chart, int]]] = (
+                    await session.execute(stmt)
+                ).all()
 
             if len(charts) == 0:
                 await ctx.reply("No charts found.", mention_author=False)
                 return
 
             embeds: list[discord.Embed] = []
-            for chart in charts:
+            for row in charts:
+                chart, pb = row._tuple()
+
                 assert chart.const is not None
 
                 target_score = calculate_score_for_rating(target_rating, chart.const)
+
                 if target_score is None:
                     target_score = 1_009_000
+
                 target_score = round_to_nearest(target_score, 50)
+
+                if pb is not None and target_score <= pb:
+                    continue
 
                 embeds.append(
                     ChartCardEmbed(
@@ -667,6 +692,10 @@ class ToolsCog(commands.Cog, name="Tools"):
                         synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
                     )
                 )
+
+                if len(embeds) >= count:
+                    break
+
             await ctx.reply(embeds=embeds, mention_author=False)
 
     @commands.hybrid_command("whatif")
