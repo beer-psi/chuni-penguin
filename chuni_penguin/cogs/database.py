@@ -194,7 +194,14 @@ class PersonalBestQueries:
                 (query.excluded.score > PersonalBest.score)
                 | (query.excluded.clear_lamp > PersonalBest.clear_lamp)
                 | (query.excluded.combo_lamp > PersonalBest.combo_lamp),
-                query.excluded.achieved_at,
+                # We want to keep whichever is newer of the two timestamps if both
+                # timestamps are available.
+                func.iif(
+                    query.excluded.achieved_at.is_not(None)
+                    & PersonalBest.achieved_at.is_not(None),
+                    func.max(query.excluded.achieved_at, PersonalBest.achieved_at),
+                    query.excluded.achieved_at,
+                ),
                 PersonalBest.achieved_at,
             ),
         }
@@ -229,10 +236,17 @@ class PersonalBestQueries:
             "miss",
             "max_combo",
         ):
-            conflict_sets[column] = func.iif(
-                query.excluded.score > PersonalBest.score,
-                getattr(query.excluded, column),
-                getattr(PersonalBest, column),
+            conflict_sets[column] = case(
+                (
+                    query.excluded.score > PersonalBest.score,
+                    getattr(query.excluded, column),
+                ),
+                (
+                    (query.excluded.score == PersonalBest.score)
+                    & (getattr(PersonalBest, column).is_(None)),
+                    getattr(query.excluded, column),
+                ),
+                else_=getattr(PersonalBest, column),
             )
 
         query = query.on_conflict_do_update(
