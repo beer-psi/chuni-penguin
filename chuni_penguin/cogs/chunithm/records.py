@@ -1164,15 +1164,14 @@ class RecordsCog(commands.Cog, name="Records"):
                         ]
                     )
 
-            if difficulty is not None:
-                records = [r for r in records if r.difficulty == difficulty]
-            if rank is not None:
-                records = [r for r in records if r.rank == rank]
-
             records = await self.utils.process_records(
                 target_user_id, client.NAME, records
             )
 
+            if difficulty is not None:
+                records = [r for r in records if r.difficulty == difficulty]
+            if rank is not None:
+                records = [r for r in records if r.rank == rank]
             if level is not None:
                 records = [r for r in records if r.extras[KEY_LEVEL] == level]
             if genre is not None:
@@ -1442,7 +1441,6 @@ class RecordsCog(commands.Cog, name="Records"):
                 records = [r for r in records if r.difficulty == difficulty]
             if rank is not None:
                 records = [r for r in records if r.rank == rank]
-
             if level_folder is not None:
                 records = [r for r in records if r.extras[KEY_LEVEL] == level_folder]
             if internal_level is not None:
