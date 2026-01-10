@@ -211,7 +211,7 @@ class PersonalBestQueries:
                     (query.excluded.score == PersonalBest.score)
                     & (query.excluded.clear_lamp == PersonalBest.clear_lamp)
                     & (query.excluded.combo_lamp == PersonalBest.combo_lamp)
-                    & (PersonalBest.achieved_at.is_(None)),
+                    & PersonalBest.achieved_at.is_(None),
                     query.excluded.achieved_at,
                 ),
                 else_=PersonalBest.achieved_at,
