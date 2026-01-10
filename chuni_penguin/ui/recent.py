@@ -68,12 +68,14 @@ class RecentRecordsView(PaginationView):
     def __init__(
         self,
         ctx: Context,
+        target_id: int,
         scores: list["RecentScore"],
         network_client: "Network",
         network_client_manager: AsyncContextManager["Network"],
         userinfo: "Profile",
         synthesis_alt_jacket: str | None = None,
     ):
+        self.target_id = target_id
         self.scores = scores
         self.credits = split_scores_into_credits(scores)
 
@@ -154,7 +156,9 @@ class RecentRecordsView(PaginationView):
                 score = await self.network_client.get_detailed_recent_score(
                     self.scores[idx]
                 )
-                score = await self.utils.hydrate_record(score)
+                score = await self.utils.process_record(
+                    self.target_id, self.network_client.NAME, score
+                )
             else:
                 score = self.scores[idx]
 

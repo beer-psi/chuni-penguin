@@ -1,13 +1,15 @@
 import contextlib
 import functools
 import sqlite3
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, override
 
 import msgspec
+import sqlalchemy
 import sqlalchemy.event
 from discord.ext import commands, tasks
 from rapidfuzz import fuzz
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import case, delete, func, select, text
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
 from sqlalchemy.engine import Engine
@@ -19,9 +21,16 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from chuni_penguin.config import config
-from chuni_penguin.database import Chart, EasterEggFound, PendingKamaitachiImport, Song
+from chuni_penguin.database import (
+    Chart,
+    EasterEggFound,
+    PendingKamaitachiImport,
+    PersonalBest,
+    Song,
+)
+from chuni_penguin.networks.consts import KEY_SONG_ID
 from chuni_penguin.networks.kamaitachi import KTBatchManualChunithm
-from chuni_penguin.networks.types import Difficulty
+from chuni_penguin.networks.types import Difficulty, RecentScore, Score
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -166,12 +175,146 @@ class PendingKamaitachiImportQueries:
             await session.commit()
 
 
+class PersonalBestQueries:
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        self._sessionmaker = sessionmaker
+
+    async def upsert_personal_bests(
+        self, discord_id: int, network: str, scores: Sequence[Score]
+    ):
+        if not scores:
+            return
+
+        query = insert(PersonalBest)
+        conflict_sets: dict[str, Any] = {
+            "score": func.max(PersonalBest.score, query.excluded.score),
+            "clear_lamp": func.max(PersonalBest.clear_lamp, query.excluded.clear_lamp),
+            "combo_lamp": func.max(PersonalBest.combo_lamp, query.excluded.combo_lamp),
+            "achieved_at": case(
+                (
+                    (
+                        (query.excluded.score > PersonalBest.score)
+                        | (query.excluded.clear_lamp > PersonalBest.clear_lamp)
+                        | (query.excluded.combo_lamp > PersonalBest.combo_lamp)
+                    )
+                    & query.excluded.achieved_at.is_not(None)
+                    & PersonalBest.achieved_at.is_not(None),
+                    func.max(query.excluded.achieved_at, PersonalBest.achieved_at),
+                ),
+                (
+                    (query.excluded.score > PersonalBest.score)
+                    | (query.excluded.clear_lamp > PersonalBest.clear_lamp)
+                    | (query.excluded.combo_lamp > PersonalBest.combo_lamp),
+                    query.excluded.achieved_at,
+                ),
+                (
+                    (query.excluded.score == PersonalBest.score)
+                    & (query.excluded.clear_lamp == PersonalBest.clear_lamp)
+                    & (query.excluded.combo_lamp == PersonalBest.combo_lamp)
+                    & PersonalBest.achieved_at.is_(None),
+                    query.excluded.achieved_at,
+                ),
+                else_=PersonalBest.achieved_at,
+            ),
+        }
+
+        # Merge nullable columns by their max values. This whole case block is needed
+        # since MAX(x, NULL) -> NULL, at least in SQLite.
+        for column_name in ("chain_lamp", "last_played_at"):
+            column = getattr(PersonalBest, column_name)
+            excluded_column = getattr(query.excluded, column_name)
+
+            conflict_sets[column_name] = case(
+                (
+                    column.is_(None) & excluded_column.is_not(None),
+                    excluded_column,
+                ),
+                (
+                    column.is_not(None) & excluded_column.is_(None),
+                    column,
+                ),
+                # At this point, either both values are null, and MAX(NULL, NULL) -> NULL
+                # or both values are not null and we get an actual max value.
+                else_=func.max(column, excluded_column),
+            )
+
+        # Merge score dependent columns based on the score. In case of ties, we select
+        # the score already in the database.
+        for column in (
+            "justice_heaven",
+            "justice_critical",
+            "justice",
+            "attack",
+            "miss",
+            "max_combo",
+        ):
+            conflict_sets[column] = case(
+                (
+                    query.excluded.score > PersonalBest.score,
+                    getattr(query.excluded, column),
+                ),
+                (
+                    (query.excluded.score == PersonalBest.score)
+                    & (getattr(PersonalBest, column).is_(None)),
+                    getattr(query.excluded, column),
+                ),
+                else_=getattr(PersonalBest, column),
+            )
+
+        query = query.on_conflict_do_update(
+            index_elements=[
+                PersonalBest.discord_id,
+                PersonalBest.network,
+                PersonalBest.song_id,
+                PersonalBest.difficulty,
+            ],
+            set_=conflict_sets,
+        )
+
+        params: list[dict[str, Any]] = []
+
+        for score in scores:
+            if KEY_SONG_ID not in score.extras:
+                continue
+
+            param = {
+                "discord_id": discord_id,
+                "network": network,
+                "song_id": score.extras[KEY_SONG_ID],
+                "difficulty": score.difficulty.short(),
+                "score": score.score,
+                "max_combo": score.max_combo,
+                "clear_lamp": score.clear_lamp.value,
+                "combo_lamp": score.combo_lamp.value,
+                "chain_lamp": (
+                    score.chain_lamp.value if score.chain_lamp is not None else None
+                ),
+                "achieved_at": score.achieved_at,
+                "last_played_at": (
+                    score.achieved_at if isinstance(score, RecentScore) else None
+                ),
+            }
+
+            if score.judgements is not None:
+                param["justice_heaven"] = score.judgements.justice_heaven
+                param["justice_critical"] = score.judgements.justice_critical
+                param["justice"] = score.judgements.justice
+                param["attack"] = score.judgements.attack
+                param["miss"] = score.judgements.miss
+
+            params.append(param)
+
+        async with self._sessionmaker() as session:
+            await session.execute(query, params)
+            await session.commit()
+
+
 class DatabaseCog(commands.Cog, name="Database"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
 
         self._engine: AsyncEngine = create_async_engine(
-            config.bot.db_connection_string, hide_parameters=True
+            config.bot.db_connection_string, hide_parameters=not config.dangerous.dev
         )
         self._sessionmaker: async_sessionmaker[AsyncSession] = async_sessionmaker(
             self._engine, expire_on_commit=False
@@ -182,6 +325,7 @@ class DatabaseCog(commands.Cog, name="Database"):
         self.pending_kamaitachi_imports = PendingKamaitachiImportQueries(
             self._sessionmaker
         )
+        self.personal_bests = PersonalBestQueries(self._sessionmaker)
 
     @override
     async def cog_load(self) -> None:

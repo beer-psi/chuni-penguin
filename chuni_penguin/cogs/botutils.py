@@ -317,8 +317,19 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         return hydrated_records
 
-    async def hydrate_record(self, record: T) -> T:
-        return (await self.hydrate_records([record]))[0]
+    async def process_record(self, discord_id: int, network: str, record: T) -> T:
+        return (await self.process_records(discord_id, network, [record]))[0]
+
+    async def process_records(
+        self, discord_id: int, network: str, records: Sequence[T]
+    ) -> list[T]:
+        hydrated_records = await self.hydrate_records(records)
+
+        await self.bot.database.personal_bests.upsert_personal_bests(
+            discord_id, network, hydrated_records
+        )
+
+        return hydrated_records
 
     async def find_song(
         self,
