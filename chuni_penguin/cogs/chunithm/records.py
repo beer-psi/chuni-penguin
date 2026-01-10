@@ -732,6 +732,9 @@ class RecordsCog(commands.Cog, name="Records"):
                     difficulty_records = await client.get_personal_bests_by_difficulty(
                         difficulty
                     )
+                    await self.bot.database.personal_bests.upsert_personal_bests(
+                        target_id, client.NAME, difficulty_records
+                    )
                     records.extend(
                         [
                             x
