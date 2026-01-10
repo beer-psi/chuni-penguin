@@ -319,6 +319,11 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                         scores.append(record)
                         charts.add((record.extras[KEY_SONG_ID], record.difficulty))
 
+            # all of these should have song IDs... i think
+            await self.bot.database.personal_bests.upsert_personal_bests(
+                ctx.author.id, chuni_client.NAME, scores
+            )
+
             await ctx.respond_or_edit("Uploading scores to Kamaitachi...")
 
             # Insert the pending import into the database, then fetch everything
