@@ -16,5 +16,4 @@ COG_LIST: list[str] = [
     "chuni_penguin.cogs.chunithm.records",
     "chuni_penguin.cogs.chunithm.search",
     "chuni_penguin.cogs.chunithm.tools",
-    "chuni_penguin.cogs.chunithm.chunirec",
 ]
