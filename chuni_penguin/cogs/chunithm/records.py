@@ -1278,7 +1278,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         return
 
-    @flags.command("top")
+    @flags.command("top", aliases=["bottom"])
     @flags.argument("-d", "--difficulty", required=False, type=DifficultyConverter)
     @flags.argument("-g", "--genre", required=False, type=GenreConverter)
     @flags.argument("-r", "--rank", required=False, type=RankConverter)
@@ -1372,6 +1372,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 if not ctx.bot_permissions.attach_files:
                     raise commands.BotMissingPermissions(["attach_files"])
 
+                if ctx.invoked_with == "bottom":
+                    raise commands.CommandNotFound
+
                 await self._best50_inner(ctx, user)
                 return
 
@@ -1431,14 +1434,14 @@ class RecordsCog(commands.Cog, name="Records"):
                         ]
                     )
 
+            records = await self.utils.process_records(
+                target_user_id, client.NAME, records
+            )
+
             if difficulty is not None:
                 records = [r for r in records if r.difficulty == difficulty]
             if rank is not None:
                 records = [r for r in records if r.rank == rank]
-
-            records = await self.utils.process_records(
-                target_user_id, client.NAME, records
-            )
 
             if level_folder is not None:
                 records = [r for r in records if r.extras[KEY_LEVEL] == level_folder]
@@ -1536,7 +1539,8 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
             records.sort(
-                key=lambda score: tuple([sort_fn(score) for sort_fn in sort_fns])
+                key=lambda score: tuple([sort_fn(score) for sort_fn in sort_fns]),
+                reverse=ctx.invoked_with == "bottom",
             )
 
         view = B30View(
