@@ -22,6 +22,10 @@ class AuthenticationError(NetworkError):
     """Authenticating with the network failed."""
 
 
+class NoCardsRegistered(AuthenticationError):
+    """The account does not have any Aime cards registered."""
+
+
 class SongNotFound(NetworkError):
     """The song requested does not exist on the network."""
 

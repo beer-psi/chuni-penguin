@@ -4,7 +4,7 @@ from collections.abc import Generator
 import httpx
 from bs4 import BeautifulSoup
 
-from chuni_penguin.networks.errors import AuthenticationError
+from chuni_penguin.networks.errors import AuthenticationError, NoCardsRegistered
 
 from ._bs4 import BS4_FEATURE
 from .exceptions import ChuniNetError
@@ -15,6 +15,10 @@ _AUTHENTICATION_URL = httpx.URL(
     "&redirect_url=https://chunithm-net-eng.com/mobile/"
     "&back_url=https://chunithm.sega.com/"
 )
+_COMMON_AUTH_REDIRECT_URL = httpx.URL(
+    "https://lng-tgk-aime-gw.am-all.net/common_auth/redirect"
+)
+_ADD_ACCESS_CODE_URL = httpx.URL("https://common-access.am-all.net/access/code/add")
 
 
 class ChunithmNetAuth(httpx.Auth):
@@ -72,6 +76,23 @@ class ChunithmNetAuth(httpx.Auth):
             ):
                 msg = "The provided username or password is invalid, or the account has TOTP enabled."
                 raise AuthenticationError(msg)
+
+        if (
+            auth_response.url.host == _COMMON_AUTH_REDIRECT_URL.host
+            and auth_response.url.path == _COMMON_AUTH_REDIRECT_URL.path
+        ):
+            soup = BeautifulSoup(auth_response.content, BS4_FEATURE)
+            form = soup.find("form")
+
+            if (
+                form is not None
+                and form["action"] == "https://common-access.am-all.net/access/code/add"
+            ):
+                msg = (
+                    "The account does not have any access codes registered. "
+                    "Please register an access code on https://my-aime.net before logging in."
+                )
+                raise NoCardsRegistered(msg)
 
         if str(auth_response.url) == str(request.url):
             return
