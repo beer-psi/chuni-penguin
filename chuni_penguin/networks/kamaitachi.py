@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import functools
 import io
 import sys
@@ -226,6 +227,11 @@ class KTChunithmChart(msgspec.Struct, rename="camel"):
     playtype: Literal["Single"]
     versions: list[str]
     data: KTChunithmChartData
+
+
+class KTChunithmChartResolveResponseBody(msgspec.Struct):
+    chart: KTChunithmChart
+    song: KTChunithmSong
 
 
 class KTChunithmPersonalBestResponseBody(msgspec.Struct):
@@ -595,39 +601,46 @@ class Kamaitachi(Network):
             self._get_kt_chart_ids
         )
 
-        self._kt_charts: list[KTChunithmChart] | None = None
+        self._kt_charts: dict[tuple[int, Difficulty], KTChunithmChart] = {}
 
     async def _get_kt_chart_id(
         self, song_id: int, difficulty: Difficulty
     ) -> str | None:
-        if self._kt_charts is None:
-            resp = await self._client.get(
-                "https://raw.githubusercontent.com/zkrising/Tachi/main/seeds/collections/charts-chunithm.json"
-            )
-            self._kt_charts = msgspec.json.decode(
-                resp.content, type=list[KTChunithmChart]
-            )
+        with contextlib.suppress(KeyError):
+            return self._kt_charts[(song_id, difficulty)].chart_id
 
-        for chart in self._kt_charts:
-            if chart.data.in_game_id == song_id and chart.difficulty == str(difficulty):
-                return chart.chart_id
+        resp = await self._client.post(
+            "/api/v1/games/chunithm/Single/charts/resolve",
+            json={
+                "matchType": "inGameID",
+                "identifier": str(song_id),
+                "difficulty": str(difficulty),
+            },
+        )
+        data = msgspec.json.decode(
+            resp.content, type=KTResponse[KTChunithmChartResolveResponseBody]
+        )
 
-        return None
+        if not data.success or data.body is None:
+            return None
+
+        self._kt_charts[(song_id, difficulty)] = data.body.chart
+
+        return data.body.chart.chart_id
 
     async def _get_kt_chart_ids(self, song_id: int) -> list[str]:
-        if self._kt_charts is None:
-            resp = await self._client.get(
-                "https://raw.githubusercontent.com/zkrising/Tachi/main/seeds/collections/charts-chunithm.json"
-            )
-            self._kt_charts = msgspec.json.decode(
-                resp.content, type=list[KTChunithmChart]
-            )
+        chart_ids: list[str] = []
 
-        return [
-            chart.chart_id
-            for chart in self._kt_charts
-            if chart.data.in_game_id == song_id
-        ]
+        for difficulty in Difficulty:
+            if difficulty == Difficulty.worlds_end:
+                continue
+
+            chart_id = await self._get_kt_chart_id(song_id, difficulty)
+
+            if chart_id is not None:
+                chart_ids.append(chart_id)
+
+        return chart_ids
 
     @property
     def authentication(self) -> str:
