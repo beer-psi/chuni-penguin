@@ -3,6 +3,7 @@ COG_LIST: list[str] = [
     "chuni_penguin.cogs.database",
     "chuni_penguin.cogs.web",
     "chuni_penguin.cogs.botutils",
+    "chuni_penguin.cogs.stats",
     "chuni_penguin.cogs.admin",
     "chuni_penguin.cogs.autocompleters",
     "chuni_penguin.cogs.events",

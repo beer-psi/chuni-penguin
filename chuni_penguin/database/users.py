@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import BigInteger, Boolean, Index, PrimaryKeyConstraint, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -37,3 +39,19 @@ class EasterEggFound(Base):
     easter_egg: Mapped[str] = mapped_column()
 
     __table_args__ = (PrimaryKeyConstraint(discord_id, easter_egg),)
+
+
+class CommandUse(Base):
+    __tablename__ = "command_uses"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    guild_id: Mapped[int | None] = mapped_column(BigInteger())
+    channel_id: Mapped[int] = mapped_column(BigInteger())
+    author_id: Mapped[int] = mapped_column(BigInteger())
+    prefix: Mapped[str] = mapped_column()
+    command: Mapped[str] = mapped_column()
+    is_failure: Mapped[bool] = mapped_column()
+    is_app_command: Mapped[bool] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=text("CURRENT_TIMESTAMP")
+    )

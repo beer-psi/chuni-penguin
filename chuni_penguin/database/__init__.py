@@ -5,11 +5,12 @@ from .kamaitachi import PendingKamaitachiImport
 from .minigames import GuessScore
 from .pbs import PersonalBest
 from .songs import Alias, Chart, SdvxinChartView, Song, SongJacket
-from .users import Cookie, EasterEggFound, UserConfig
+from .users import CommandUse, Cookie, EasterEggFound, UserConfig
 
 __all__ = (
     "Alias",
     "Chart",
+    "CommandUse",
     "Cookie",
     "Course",
     "CourseTrack",
