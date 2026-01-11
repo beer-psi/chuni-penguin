@@ -113,7 +113,7 @@ class FluffCog(commands.Cog, name="Fluff"):
         count = await ctx.bot.database.count_easter_eggs_found(ctx.author.id)
 
         await ctx.reply(
-            content=f"You've found {count}/9 easter eggs!",
+            content=f"You've found {count}/10 easter eggs!",
             mention_author=False,
         )
 
@@ -144,6 +144,17 @@ class FluffCog(commands.Cog, name="Fluff"):
                 "them trick.They incredible....I want to ask their where is the "
                 "comming of your skill's ?"
             ),
+            mention_author=False,
+        )
+
+    @commands.command(
+        "how-to-improv", aliases=["how2improv", "howtoimprov"], hidden=True
+    )
+    @logged_prefix_command
+    async def how_to_improv(self, ctx: PenguinContext):
+        await self.bot.database.user_found_easter_egg(ctx.author.id, "how-to-improv")
+        await ctx.reply(
+            "[How to improv: a guide for performers](https://www.bbcmaestro.com/blog/how-to-improv)",
             mention_author=False,
         )
 
