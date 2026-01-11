@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from chuni_penguin.config import config
-from chuni_penguin.database.models import Base
+from chuni_penguin.database import Base
 from chuni_penguin.logging import logger
 from chuni_penguin.utils import get_loop_factory
 
@@ -19,6 +19,7 @@ from .chunirec import update_db
 from .jackets import update_jackets
 from .merge_options import merge_options
 from .sdvxin import update_sdvxin
+from .seeds import dump_seeds
 from .tachi import update_tachi
 
 
@@ -58,6 +59,9 @@ async def main():
         action="store_true",
         help="If updating from data, extract song jackets to assets/audio/",
     )
+
+    seeds = subparsers.add_parser("seeds", help="Database seeds commands")
+    seeds.add_argument("action", choices=["load", "dump"])
 
     args = parser.parse_args()
 
@@ -99,6 +103,12 @@ async def main():
                 extract_jackets=args.extract_jackets,
                 extract_audios=args.extract_audio,
             )
+
+    if args.command == "seeds":
+        async_session = async_sessionmaker(engine, expire_on_commit=False)
+
+        if args.action == "dump":
+            await dump_seeds(logger, async_session)
 
     await engine.dispose()
 
