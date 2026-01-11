@@ -59,9 +59,6 @@ async def main():
         help="If updating from data, extract song jackets to assets/audio/",
     )
 
-    seeds = subparsers.add_parser("seeds", help="Database seeds commands")
-    seeds.add_argument("action", choices=["load", "dump"])
-
     args = parser.parse_args()
 
     engine: AsyncEngine = create_async_engine(
