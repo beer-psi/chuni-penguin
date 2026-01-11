@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from chuni_penguin.config import config
-from chuni_penguin.database.models import Base
+from chuni_penguin.database.base import Base
 from chuni_penguin.logging import logger
 from chuni_penguin.utils import get_loop_factory
 

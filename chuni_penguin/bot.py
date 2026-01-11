@@ -20,7 +20,7 @@ from .command_tree import PenguinCommandTree
 from .config import config
 from .constants import CACHE_DIR
 from .context import PenguinContext, PenguinGuildContext
-from .database.models import Denylist, Prefix
+from .database import Denylist, Prefix
 from .logging import logger
 from .utils import HishelMsgspecSerializer
 

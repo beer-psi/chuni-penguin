@@ -17,7 +17,7 @@ from chuni_penguin.converters import (
     LevelRange,
     LevelRangeConverter,
 )
-from chuni_penguin.database.models import GuessScore
+from chuni_penguin.database import GuessScore
 from chuni_penguin.flags import DiscordArguments
 from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.networks.types import Difficulty, Genre
