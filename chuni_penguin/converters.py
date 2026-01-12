@@ -25,7 +25,7 @@ class DifficultyConverter(commands.Converter[Difficulty]):
             return Difficulty.basic
 
         # special case this since it's bad
-        if argument == "WORLD'S END":
+        if argument in ("WORLD'S END", "WORLDSEND", "WORLDS END", "WED"):
             return Difficulty.worlds_end
 
         # this covers BASIC/ADVANCED/EXPERT/MASTER/ULTIMA full length
@@ -47,17 +47,17 @@ class GenreConverter(commands.Converter[Genre]):
     async def convert(self, ctx: commands.Context, argument: str) -> Genre:
         genre_lower = argument.lower()
 
-        if genre_lower.startswith(("pops", "anime")):
+        if genre_lower.startswith(("pops", "anime", "pna", "p&a")):
             return Genre.pops_and_anime
         if genre_lower.startswith(("nico", "voca")):
             return Genre.niconico
-        if genre_lower.startswith(("touhou", "toho", "東方")):
+        if genre_lower.startswith(("touhou", "toho", "東方", "东方")):
             return Genre.touhou_project
-        if genre_lower.startswith(("original", "chunithm")):
+        if genre_lower.startswith(("ori", "chu")):
             return Genre.original
-        if genre_lower.startswith("variety"):
+        if genre_lower.startswith(("variety", "var")):
             return Genre.variety
-        if genre_lower.startswith("irodori"):
+        if genre_lower.startswith(("irodori", "iro", "イロドリ", "irdr")):
             return Genre.irodorimidori
         if genre_lower.startswith(("geki", "ゲキ", "mai", "マイ", "ongeki")):
             return Genre.gekimai
