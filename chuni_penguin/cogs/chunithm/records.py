@@ -1867,7 +1867,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 pb_query = pb_query.where(cond)
                 chart_count_query = chart_count_query.where(cond)
             elif isinstance(client, Kamaitachi):
-                cond = Song.version != "X-VERSE-X"
+                cond = Chart.tachi_chart_id.is_not(None)
                 pb_query = pb_query.where(cond)
                 chart_count_query = chart_count_query.where(cond)
 
