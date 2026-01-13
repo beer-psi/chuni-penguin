@@ -15,7 +15,7 @@ import discord
 from discord import Interaction, app_commands
 from discord.ext import commands
 from discord.utils import escape_markdown
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin import flags
