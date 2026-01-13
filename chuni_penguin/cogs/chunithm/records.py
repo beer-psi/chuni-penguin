@@ -1835,6 +1835,11 @@ class RecordsCog(commands.Cog, name="Records"):
                     "Refreshing personal bests, may take some time..."
                 )
 
+                if client.SUPPORTS_RECENT_SCORES:
+                    await self.utils.process_records(
+                        target_id, client.NAME, await client.get_recent_scores()
+                    )
+
                 if client.SUPPORTS_PERSONAL_BESTS:
                     await self.utils.process_records(
                         target_id, client.NAME, await client.get_personal_bests()
