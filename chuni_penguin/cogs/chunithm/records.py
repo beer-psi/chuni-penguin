@@ -19,6 +19,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin import flags
+from chuni_penguin.calculation.overpower import (
+    calculate_overpower_base,
+    calculate_overpower_max,
+    calculate_play_overpower,
+)
 from chuni_penguin.config import config
 from chuni_penguin.constants import CACHE_DIR, CURRENT_CHUNITHM_VERSION
 from chuni_penguin.context import PenguinContext
@@ -1869,9 +1874,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 )
                 .order_by(DBPersonalBest.score.desc())
             )
-            chart_count_query = (
-                select(func.count("*"))
-                .select_from(Chart)
+            chart_query = (
+                select(Chart)
                 .join(Song, Chart.song_id == Song.id)
                 .where(Chart.song_id.not_in([50, 81]))  # basic and master tutorials
             )
@@ -1879,16 +1883,16 @@ class RecordsCog(commands.Cog, name="Records"):
             if isinstance(client, ChunithmNet):
                 cond = Song.available == True  # noqa: E712
                 pb_query = pb_query.where(cond)
-                chart_count_query = chart_count_query.where(cond)
+                chart_query = chart_query.where(cond)
             elif isinstance(client, Kamaitachi):
                 if not omnimix:
                     cond = Song.removed == False  # noqa: E712
                     pb_query = pb_query.where(cond)
-                    chart_count_query = chart_count_query.where(cond)
+                    chart_query = chart_query.where(cond)
 
                 cond = Chart.tachi_chart_id.is_not(None)
                 pb_query = pb_query.where(cond)
-                chart_count_query = chart_count_query.where(cond)
+                chart_query = chart_query.where(cond)
 
             if isinstance(level, LevelRange):
                 if level.min_level is not None:
@@ -1896,14 +1900,14 @@ class RecordsCog(commands.Cog, name="Records"):
                         level.min_level.const or level.min_level.inferred_const
                     )
                     pb_query = pb_query.where(cond)
-                    chart_count_query = chart_count_query.where(cond)
+                    chart_query = chart_query.where(cond)
 
                 if level.max_level is not None:
                     cond = Chart.const <= (
                         level.max_level.const or level.max_level.inferred_max_const
                     )
                     pb_query = pb_query.where(cond)
-                    chart_count_query = chart_count_query.where(cond)
+                    chart_query = chart_query.where(cond)
             elif level is not None:
                 if level.const is not None:
                     cond = Chart.const == level.const
@@ -1911,27 +1915,27 @@ class RecordsCog(commands.Cog, name="Records"):
                     cond = Chart.level == level.level
 
                 pb_query = pb_query.where(cond)
-                chart_count_query = chart_count_query.where(cond)
+                chart_query = chart_query.where(cond)
 
             if difficulty is not None:
                 cond = Chart.difficulty == difficulty.short()
                 pb_query = pb_query.where(cond)
-                chart_count_query = chart_count_query.where(cond)
+                chart_query = chart_query.where(cond)
 
             if genre is not None:
                 cond = Song.genre == str(genre)
                 pb_query = pb_query.where(cond)
-                chart_count_query = chart_count_query.where(cond)
+                chart_query = chart_query.where(cond)
 
             if version is not None:
                 cond = Song.version == version
                 pb_query = pb_query.where(cond)
-                chart_count_query = chart_count_query.where(cond)
+                chart_query = chart_query.where(cond)
 
             pbs = (await session.execute(pb_query)).scalars().all()
-            chart_count = (
-                await session.execute(chart_count_query)
-            ).scalar_one_or_none() or 0
+            charts = (await session.execute(chart_query)).scalars().all()
+
+        chart_count = len(charts)
 
         if chart_count <= 0:
             await ctx.respond_or_edit("No charts found for the given parameters.")
@@ -1940,11 +1944,33 @@ class RecordsCog(commands.Cog, name="Records"):
         pb_count = len(pbs)
         percentage_played = pb_count * 10000 // chart_count / 100
         counts = Counter()
+        charts_by_id_difficulty: dict[tuple[int, str], Chart] = {}
+        pb_op_by_song: dict[int, Decimal] = {}
+        op_by_song: dict[int, Decimal] = {}
+
+        for chart in charts:
+            charts_by_id_difficulty[(chart.song_id, chart.difficulty)] = chart
+
+            if chart.const is not None:
+                op_by_song[chart.song_id] = max(
+                    op_by_song.get(chart.song_id, Decimal(0)),
+                    calculate_overpower_max(chart.const),
+                )
 
         for pb in pbs:
             pb_rank = Rank.from_score(pb.score)
             pb_combo_lamp = ComboLamp(pb.combo_lamp)
             pb_clear_lamp = ClearLamp(pb.clear_lamp)
+
+            if (
+                chart := charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
+            ) is not None and chart.const is not None:
+                pb_op_by_song[chart.song_id] = max(
+                    pb_op_by_song.get(chart.song_id, Decimal(0)),
+                    calculate_play_overpower(
+                        calculate_overpower_base(pb.score, chart.const), pb_combo_lamp
+                    ),
+                )
 
             for rank in (Rank.s, Rank.sp, Rank.ss, Rank.ssp, Rank.sss, Rank.sssp):
                 if pb_rank.value >= rank.value:
@@ -1963,6 +1989,10 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 if pb_clear_lamp.value >= clear_lamp.value:
                     counts[clear_lamp] += 1
+
+        op = floor_to_ndp(sum(pb_op_by_song.values(), Decimal(0)), 2)
+        total_op = floor_to_ndp(sum(op_by_song.values(), Decimal(0)), 2)
+        op_percent = floor_to_ndp(op * 100 / total_op, 2)
 
         embed = discord.Embed(
             color=discord.Color.yellow(),
@@ -1993,8 +2023,12 @@ class RecordsCog(commands.Cog, name="Records"):
         embed.add_field(
             name="Played",
             value=f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
-            inline=False,
         )
+        embed.add_field(
+            name="OVER POWER",
+            value=f"{op} / {total_op} ({op_percent:.2f}%)",
+        )
+        embed.add_field(name="\u3000", value="\u3000")
         embed.add_field(
             name="Average score (played)",
             value=f"{int(statistics.fmean(pb.score for pb in pbs)) if len(pbs) > 0 else 0}",
