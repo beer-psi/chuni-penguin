@@ -1823,6 +1823,10 @@ class RecordsCog(commands.Cog, name="Records"):
             profile = await client.get_minimal_profile()
 
             if refresh:
+                await ctx.respond_or_edit(
+                    "Refreshing personal bests, may take some time..."
+                )
+
                 if client.SUPPORTS_PERSONAL_BESTS:
                     await self.utils.process_records(
                         target_id, client.NAME, await client.get_personal_bests()
