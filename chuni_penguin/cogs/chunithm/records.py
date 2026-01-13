@@ -1866,6 +1866,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 cond = Song.available == True  # noqa: E712
                 pb_query = pb_query.where(cond)
                 chart_count_query = chart_count_query.where(cond)
+            elif isinstance(client, Kamaitachi):
+                cond = Song.version != "X-VERSE-X"
+                pb_query = pb_query.where(cond)
+                chart_count_query = chart_count_query.where(cond)
 
             if isinstance(level, LevelRange):
                 if level.min_level is not None:
