@@ -2002,7 +2002,13 @@ class RecordsCog(commands.Cog, name="Records"):
                 default=None,
             ),
         )
-        embed.set_footer(text=client.NAME)
+        embed.set_footer(
+            text=(
+                f"Use `{ctx.clean_prefix}{ctx.invoked_with} --refresh` if statistics seem wrong."
+                if ctx.interaction is None
+                else "Use `/statistics refresh:True` if statistics seem wrong."
+            )
+        )
 
         description_parts: list[str] = []
 
