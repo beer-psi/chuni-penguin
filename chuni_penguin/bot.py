@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from .cogs.chunithm.networks import NetworksCog
     from .cogs.database import DatabaseCog
     from .cogs.gaming import GamingCog
+    from .cogs.permissions import PermissionsCog
     from .cogs.web import WebCog
 
 
@@ -190,6 +191,8 @@ class ChuniBot(commands.AutoShardedBot):
                 await self.tree.sync()
                 await session.execute(text(f"PRAGMA user_version={current_tree_hash}"))
 
+        self.add_check(self.permissions.permissions_check)
+
     @override
     async def get_context(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
@@ -308,6 +311,10 @@ class ChuniBot(commands.AutoShardedBot):
     @property
     def chunithm_networks(self) -> "NetworksCog":
         return self.get_cog("NetworksCog")  # pyright: ignore[reportReturnType]
+
+    @property
+    def permissions(self) -> "PermissionsCog":
+        return self.get_cog("Permissions")  # pyright: ignore[reportReturnType]
 
     async def _close_games(self):
         gaming = cast("GamingCog | None", self.get_cog("Games"))

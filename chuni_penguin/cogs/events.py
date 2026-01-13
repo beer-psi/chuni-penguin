@@ -15,6 +15,7 @@ from discord.ext.commands import Context
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
+from chuni_penguin.errors import CommandDisabled
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import ChuniNetError
 from chuni_penguin.networks.errors import (
@@ -234,6 +235,9 @@ class EventsCog(commands.Cog, name="Events"):
             )
         elif isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
             embed.description = str(exc)
+        elif isinstance(exc, CommandDisabled):
+            embed.description = str(exc)
+            delete_after = 5
         elif isinstance(
             exc,
             (
