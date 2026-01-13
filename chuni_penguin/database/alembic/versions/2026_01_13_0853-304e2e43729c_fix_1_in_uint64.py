@@ -19,7 +19,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.execute("UPDATE aliases SET guild_id = 0 WHERE guild_id = -1")
+    op.execute("UPDATE guess_leaderboard SET guild_id = 0 WHERE guild_id = -1")
 
 
 def downgrade() -> None:
     op.execute("UPDATE aliases SET guild_id = -1 WHERE guild_id = 0")
+    op.execute("UPDATE guess_leaderboard SET guild_id = -1 WHERE guild_id = 0")
