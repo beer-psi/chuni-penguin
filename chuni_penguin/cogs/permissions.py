@@ -12,6 +12,7 @@ from chuni_penguin.database.guilds import (
     PrimaryPermissionTarget,
     SecondaryPermissionTarget,
 )
+from chuni_penguin.errors import CommandDisabled
 from chuni_penguin.ui.permissions import PermissionListView
 
 if TYPE_CHECKING:
