@@ -1970,7 +1970,7 @@ class RecordsCog(commands.Cog, name="Records"):
         )
         embed.add_field(
             name="Average score (played)",
-            value=f"{int(statistics.fmean(pb.score for pb in pbs))}",
+            value=f"{int(statistics.fmean(pb.score for pb in pbs)) if len(pbs) > 0 else 0}",
         )
         embed.add_field(
             name="Average score (all)",
