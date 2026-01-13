@@ -1860,6 +1860,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 select(func.count("*"))
                 .select_from(Chart)
                 .join(Song, Chart.song_id == Song.id)
+                .where(Chart.song_id.not_in([50, 81]))  # basic and master tutorials
             )
 
             if isinstance(client, ChunithmNet):
