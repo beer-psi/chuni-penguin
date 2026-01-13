@@ -201,3 +201,46 @@ Get a user's best scores for a specified set of charts.
     descending order.
     - `kamaitachi`: <small>(default: False)</small> View the user's scores on
     Kamaitachi, if available.
+
+## statistics
+
+<small>(aliases: `stats`, `folder`, `progress`)</small>
+
+View statistics about a folder.
+
+=== "Text command"
+
+    `c>statistics [-d DIFFICULTY] [-g GENRE] [-v VERSION] [-k] [--refresh] [user] [level]`
+  
+    <h3>Options</h3>
+    
+    - `user`: Discord username of the player. Yourself, if not provided.
+    - `level`: Level (from 1 to 15+) to search for. Can also be a level range
+    (e.g. 14.3-14.5).
+    - `-d, --difficulty`: Difficulty to search for. Must be one of `BASIC`, `ADVANCED`,
+    `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
+    - `-g, --genre`: Genre to search for.
+    - `-v, --version`: Version to search for.
+    - `-k, --kamaitachi`: Get scores from Kamaitachi, if the target user has a linked
+    account.
+    - `--refresh`: Force a full refresh of your scores. By default, statistics are
+    calculated from your cached personal bests. You should only use this option if your
+    scores are out of date.
+
+=== "Slash command"
+
+    `/statistics [user:<user>] [level:<level>] [difficulty:<difficulty>] [genre:<genre>] [version:<version>] [kamaitachi:<True|False>] [refresh:<True|False>]`
+  
+    <h3>Options</h3>
+
+    - `user`: <small>(default: you)</small> The user to get the score of.
+    - `level`: <small>(default: None)</small> Level (from 1 to 15+) to search for. Can
+    also be a level range (e.g. 14.3-14.5).
+    - `difficulty`: <small>(default: None)</small> Difficulty to search for.
+    - `genre`: <small>(default: None)</small> Genre to search for.
+    - `version`: <small>(default: None)</small> Version to search for.
+    - `kamaitachi`: <small>(default: False)</small> Get scores from Kamaitachi, if the
+    target user has a linked account.
+    - `refresh`: <small>(default: False)</small> Force a full refresh of your scores. By
+    default, statistics are calculated from your cached personal bests. You should only
+    use this option if your scores are out of date.

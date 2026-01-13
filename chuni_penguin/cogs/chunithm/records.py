@@ -1707,7 +1707,7 @@ class RecordsCog(commands.Cog, name="Records"):
         `-g`: Genre to search for.
         `-v`: Version to search for.
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
-        `--refresh`: Force a full refresh of your scores. By default, statistics are calculated from your cached personal bests.
+        `--refresh`: Force a full refresh of your scores. By default, statistics are calculated from your cached personal bests. You should only use this option if your scores are out of date.
         """
 
         await self._statistics_impl(
