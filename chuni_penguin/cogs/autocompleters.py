@@ -24,7 +24,7 @@ class AutocompletersCog(commands.Cog, name="Autocompleters"):
         if len(current) < 3:
             return []
 
-        aliases = self.utils.alias_cache[-1].copy()
+        aliases = self.utils.alias_cache[0].copy()
 
         if (guild_id := interaction.guild_id) is not None and (
             guild_aliases := self.utils.alias_cache.get(guild_id)

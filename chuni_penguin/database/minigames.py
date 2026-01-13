@@ -1,7 +1,7 @@
-from sqlalchemy import BigInteger, Index, UniqueConstraint, text
+from sqlalchemy import Index, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import Base
+from .base import Base, UInt64Integer
 
 
 class GuessScore(Base):
@@ -26,9 +26,9 @@ class GuessScore(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    discord_id: Mapped[int] = mapped_column(BigInteger())
+    discord_id: Mapped[int] = mapped_column(UInt64Integer())
     guild_id: Mapped[int] = mapped_column(
-        BigInteger(), nullable=False, default=-1, server_default=text("-1")
+        UInt64Integer(), nullable=False, default=0, server_default=text("0")
     )
     difficulty: Mapped[int] = mapped_column(
         nullable=False, default=-1, server_default=text("-1")
