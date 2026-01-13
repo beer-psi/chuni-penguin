@@ -85,7 +85,9 @@ class HelpCommand(commands.HelpCommand):
         ]
 
         if command.help is not None:
-            description_parts.append(f"\n{command.help}\n")
+            description_parts.append(
+                f"\n{command.help.replace('$PREFIX', self.context.clean_prefix)}\n"
+            )
 
         params = command.clean_params.values()
 
@@ -120,7 +122,9 @@ class HelpCommand(commands.HelpCommand):
         ]
 
         if group.help is not None:
-            description_parts.append(f"\n{group.help}\n")
+            description_parts.append(
+                f"\n{group.help.replace('$PREFIX', self.context.clean_prefix)}\n"
+            )
 
         params = group.clean_params.values()
 

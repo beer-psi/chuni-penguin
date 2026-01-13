@@ -225,3 +225,22 @@ class MemberOrUserConverter(commands.Converter[Member | User]):
                 return await converter().convert(ctx, argument)
 
         raise commands.UserNotFound(argument)
+
+
+class CommandOrGroupConverter(commands.Converter[commands.Command | commands.Cog]):
+    @override
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> commands.Command | commands.Cog:
+        command = ctx.bot.get_command(argument)
+
+        if command is not None:
+            return command
+
+        cog = ctx.bot.get_cog(argument)
+
+        if cog is not None:
+            return cog
+
+        msg = f"No commands or groups found with name `{escape_markdown(argument)}`."
+        raise commands.BadArgument(msg)

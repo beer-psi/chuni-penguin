@@ -66,4 +66,6 @@ class PenguinCommandTree(CommandTree["ChuniBot"]):
             )
             return False
 
-        return True
+        return await interaction.client.permissions.permissions_interaction_check(
+            interaction
+        )

@@ -13,6 +13,7 @@ from discord.app_commands import AppCommandError
 from discord.ext import commands, songbird
 from discord.ext.commands import Context
 
+from chuni_penguin.cogs.permissions import CommandDisabled
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.logging import logger
@@ -234,6 +235,9 @@ class EventsCog(commands.Cog, name="Events"):
             )
         elif isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
             embed.description = str(exc)
+        elif isinstance(exc, CommandDisabled):
+            embed.description = str(exc)
+            delete_after = 5
         elif isinstance(
             exc,
             (

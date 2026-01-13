@@ -1,6 +1,6 @@
 from .bot import Denylist
 from .courses import Course, CourseTrack, course_track_charts
-from .guilds import Prefix
+from .guilds import CommandPermission, Prefix
 from .kamaitachi import PendingKamaitachiImport
 from .minigames import GuessScore
 from .pbs import PersonalBest
@@ -10,6 +10,7 @@ from .users import CommandUse, Cookie, EasterEggFound, UserConfig
 __all__ = (
     "Alias",
     "Chart",
+    "CommandPermission",
     "CommandUse",
     "Cookie",
     "Course",
