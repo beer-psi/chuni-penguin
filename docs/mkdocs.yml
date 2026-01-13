@@ -103,6 +103,7 @@ nav:
       - Games: "commands/games.md"
       - Fluff: "commands/fluff.md"
       - Miscellaneous: "commands/miscellaneous.md"
+      - Permissions: "commands/permissions.md"
   - Developer:
       - "developer/index.md"
       - API Reference: "developer/api.md"
