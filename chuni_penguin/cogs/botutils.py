@@ -15,7 +15,8 @@ from chuni_penguin.calculation import (
     calculate_rating,
 )
 from chuni_penguin.config import config
-from chuni_penguin.database import Alias, Cookie, Song, UserConfig
+from chuni_penguin.database import Alias, Chart, Cookie, Song, UserConfig
+from chuni_penguin.database import PersonalBest as DBPersonalBest
 from chuni_penguin.errors import MissingDetailedParams
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.consts import (
@@ -29,7 +30,17 @@ from chuni_penguin.networks.consts import (
     KEY_SONG_VERSION,
     KEY_TOTAL_COMBO,
 )
-from chuni_penguin.networks.types import Genre, Score
+from chuni_penguin.networks.types import (
+    ChainLamp,
+    ClearLamp,
+    ComboLamp,
+    Difficulty,
+    Genre,
+    Judgements,
+    Rank,
+    Score,
+)
+from chuni_penguin.networks.types import PersonalBest as NetworkPersonalBest
 from chuni_penguin.utils import get_jacket_url
 
 if TYPE_CHECKING:
@@ -453,6 +464,48 @@ class UtilsCog(commands.Cog, name="Utils"):
         return SongSearchResult(
             songs=list(songs), matched_alias=alias, similarity=similarity
         )
+
+    async def convert_to_network_pb(self, db_pb: DBPersonalBest):
+        async with self.bot.begin_db_session() as session:
+            query = (
+                select(Chart)
+                .where(
+                    (Chart.song_id == db_pb.song_id)
+                    & (Chart.difficulty == db_pb.difficulty)
+                )
+                .options(joinedload(Chart.song))
+            )
+            chart = (await session.execute(query)).scalar_one()
+
+        pb = NetworkPersonalBest(
+            title=chart.song.title,
+            difficulty=Difficulty(chart.difficulty),
+            score=db_pb.score,
+            jacket_url=get_jacket_url(chart.song),
+            rank=Rank.from_score(db_pb.score),
+            clear_lamp=ClearLamp(db_pb.clear_lamp),
+            combo_lamp=ComboLamp(db_pb.combo_lamp),
+            chain_lamp=(
+                ChainLamp(db_pb.chain_lamp) if db_pb.chain_lamp is not None else None
+            ),
+            achieved_at=db_pb.achieved_at,
+            max_combo=db_pb.max_combo,
+            judgements=(
+                Judgements(
+                    justice_critical=db_pb.justice_critical,
+                    justice=db_pb.justice,
+                    attack=db_pb.attack,
+                    miss=db_pb.miss,
+                )
+                if db_pb.justice_critical is not None
+                and db_pb.justice is not None
+                and db_pb.attack is not None
+                and db_pb.miss is not None
+                else None
+            ),
+        )
+
+        return (await self.hydrate_records([pb]))[0]
 
 
 async def setup(bot: "ChuniBot"):
