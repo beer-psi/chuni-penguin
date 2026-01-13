@@ -210,7 +210,7 @@ View statistics about a folder.
 
 === "Text command"
 
-    `c>statistics [-d DIFFICULTY] [-g GENRE] [-v VERSION] [-k] [--refresh] [user] [level]`
+    `c>statistics [-d DIFFICULTY] [-g GENRE] [-v VERSION] [-k] [-o] [--refresh] [user] [level]`
   
     <h3>Options</h3>
     
@@ -223,13 +223,14 @@ View statistics about a folder.
     - `-v, --version`: Version to search for.
     - `-k, --kamaitachi`: Get scores from Kamaitachi, if the target user has a linked
     account.
+    - `-o, --omnimix`: Count removed songs towards statistics and the final count.
     - `--refresh`: Force a full refresh of your scores. By default, statistics are
     calculated from your cached personal bests. You should only use this option if your
     scores are out of date.
 
 === "Slash command"
 
-    `/statistics [user:<user>] [level:<level>] [difficulty:<difficulty>] [genre:<genre>] [version:<version>] [kamaitachi:<True|False>] [refresh:<True|False>]`
+    `/statistics [user:<user>] [level:<level>] [difficulty:<difficulty>] [genre:<genre>] [version:<version>] [kamaitachi:<True|False>] [omnimix:<True|False>] [refresh:<True|False>]`
   
     <h3>Options</h3>
 
@@ -241,6 +242,8 @@ View statistics about a folder.
     - `version`: <small>(default: None)</small> Version to search for.
     - `kamaitachi`: <small>(default: False)</small> Get scores from Kamaitachi, if the
     target user has a linked account.
+    - `omnimix`: <small>(default: False)</small>  Count removed songs towards statistics
+    and the final count.
     - `refresh`: <small>(default: False)</small> Force a full refresh of your scores. By
     default, statistics are calculated from your cached personal bests. You should only
     use this option if your scores are out of date.

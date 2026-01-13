@@ -504,6 +504,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 else None
             ),
         )
+        pb.extras[KEY_SONG_ID] = db_pb.song_id
 
         return (await self.hydrate_records([pb]))[0]
 

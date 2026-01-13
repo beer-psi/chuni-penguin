@@ -1680,6 +1680,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.argument("-g", "--genre", required=False, type=GenreConverter)
     @flags.argument("-v", "--version", required=False)
     @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("-o", "--omnimix", action="store_true")
     @flags.argument("--refresh", action="store_true")
     @flags.argument(
         "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
@@ -1697,6 +1698,7 @@ class RecordsCog(commands.Cog, name="Records"):
         version: str | None = None,
         kamaitachi: bool = False,
         refresh: bool = False,
+        omnimix: bool = False,
     ):
         """View statistics about a folder.
 
@@ -1707,6 +1709,7 @@ class RecordsCog(commands.Cog, name="Records"):
         `-g`: Genre to search for.
         `-v`: Version to search for.
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
+        `-o`: Count removed songs towards statistics and the final count.
         `--refresh`: Force a full refresh of your scores. By default, statistics are calculated from your cached personal bests. You should only use this option if your scores are out of date.
         """
 
@@ -1719,6 +1722,7 @@ class RecordsCog(commands.Cog, name="Records"):
             version=version.upper() if version is not None else None,
             kamaitachi=kamaitachi,
             refresh=refresh,
+            omnimix=omnimix,
         )
 
     @app_commands.command(
@@ -1732,6 +1736,7 @@ class RecordsCog(commands.Cog, name="Records"):
         version="Version to search for.",
         kamaitachi="Get scores from Kamaitachi, if the target user has a linked account.",
         refresh="Force a full refresh of your scores. By default, statistics are calculated from your cached PBs.",
+        omnimix="Count removed songs towards statistics and the final count.",
     )
     @app_commands.choices(
         difficulty=[
@@ -1780,6 +1785,7 @@ class RecordsCog(commands.Cog, name="Records"):
         version: str | None = None,
         kamaitachi: bool = False,
         refresh: bool = False,
+        omnimix: bool = False,
     ):
         ctx = await PenguinContext.from_interaction(interaction)
         converted_level = (
@@ -1797,6 +1803,7 @@ class RecordsCog(commands.Cog, name="Records"):
             version=version.upper() if version is not None else None,
             kamaitachi=kamaitachi,
             refresh=refresh,
+            omnimix=omnimix,
         )
 
     async def _statistics_impl(
@@ -1810,6 +1817,7 @@ class RecordsCog(commands.Cog, name="Records"):
         version: str | None = None,
         kamaitachi: bool = False,
         refresh: bool = False,
+        omnimix: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
 
@@ -1868,6 +1876,11 @@ class RecordsCog(commands.Cog, name="Records"):
                 pb_query = pb_query.where(cond)
                 chart_count_query = chart_count_query.where(cond)
             elif isinstance(client, Kamaitachi):
+                if not omnimix:
+                    cond = Song.removed == False  # noqa: E712
+                    pb_query = pb_query.where(cond)
+                    chart_count_query = chart_count_query.where(cond)
+
                 cond = Chart.tachi_chart_id.is_not(None)
                 pb_query = pb_query.where(cond)
                 chart_count_query = chart_count_query.where(cond)
