@@ -1915,6 +1915,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 await session.execute(chart_count_query)
             ).scalar_one_or_none() or 0
 
+        if chart_count <= 0:
+            await ctx.respond_or_edit("No charts found for the given parameters.")
+            return
+
         pb_count = len(pbs)
         percentage_played = pb_count * 10000 // chart_count / 100
         counts = Counter()
