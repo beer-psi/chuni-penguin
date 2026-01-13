@@ -4,6 +4,8 @@ import contextlib
 import itertools
 import math
 import random
+import statistics
+from collections import Counter
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -13,7 +15,7 @@ import discord
 from discord import Interaction, app_commands
 from discord.ext import commands
 from discord.utils import escape_markdown
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin import flags
@@ -25,11 +27,15 @@ from chuni_penguin.converters import (
     AliasNameTransformer,
     DifficultyConverter,
     GenreConverter,
+    Level,
     LevelConverter,
+    LevelRange,
+    LevelRangeConverter,
     MemberOrUserConverter,
     RankConverter,
 )
-from chuni_penguin.database import Song, SongJacket
+from chuni_penguin.database import Chart, Song, SongJacket
+from chuni_penguin.database import PersonalBest as DBPersonalBest
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.chunithm_net import (
     INTERNATIONAL_JACKET_BASE,
@@ -50,6 +56,7 @@ from chuni_penguin.networks.errors import ChartNotFound, SongNotFound
 from chuni_penguin.networks.kamaitachi import Kamaitachi
 from chuni_penguin.networks.types import (
     ClearLamp,
+    ComboLamp,
     Difficulty,
     Genre,
     PersonalBest,
@@ -1675,6 +1682,358 @@ class RecordsCog(commands.Cog, name="Records"):
             kamaitachi=kamaitachi,
             chunithm_net=chunithm_net,
         )
+
+    @flags.command("statistics", aliases=["stats", "folder", "progress"])
+    @flags.argument("-d", "--difficulty", required=False, type=DifficultyConverter)
+    @flags.argument("-g", "--genre", required=False, type=GenreConverter)
+    @flags.argument("-v", "--version", required=False)
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("--refresh", action="store_true")
+    @flags.argument(
+        "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
+    )
+    @flags.argument("level", nargs="?", default=None, type=LevelRangeConverter)
+    @logged_prefix_command
+    async def statistics(
+        self,
+        ctx: PenguinContext,
+        *,
+        user: discord.User | discord.Member | None = None,
+        level: Level | LevelRange | None = None,
+        difficulty: Difficulty | None = None,
+        genre: Genre | None = None,
+        version: str | None = None,
+        kamaitachi: bool = False,
+        refresh: bool = False,
+    ):
+        """View statistics about a folder.
+
+        **Parameters**:
+        `user`: Discord username of the player. Yourself, if not provided.
+        `level`: Level (from 1 to 15+) to search for. Can also be a level range (e.g. 14.3-14.5).
+        `-d`: Difficulty to search for. Must be one of `BASIC`, `ADVANCED`, `EXPERT`, `MASTER`, `ULTIMA`, or `WE` if specified.
+        `-g`: Genre to search for.
+        `-v`: Version to search for.
+        `-k`: Get scores from Kamaitachi, if the target user has a linked account.
+        `--refresh`: Force a full refresh of your scores. By default, statistics are calculated from your cached personal bests.
+        """
+
+        await self._statistics_impl(
+            ctx,
+            user=user,
+            level=level,
+            difficulty=difficulty,
+            genre=genre,
+            version=version.upper() if version is not None else None,
+            kamaitachi=kamaitachi,
+            refresh=refresh,
+        )
+
+    @app_commands.command(
+        name="statistics", description="View statistics about a folder."
+    )
+    @app_commands.describe(
+        user="The player. Yourself, if not provided.",
+        level="Level (from 1 to 15+) to search for. Can also be a level range (e.g. 14.3-14.5).",
+        difficulty="Difficulty to search for.",
+        genre="Genre to search for.",
+        version="Version to search for.",
+        kamaitachi="Get scores from Kamaitachi, if the target user has a linked account.",
+        refresh="Force a full refresh of your scores. By default, statistics are calculated from your cached PBs.",
+    )
+    @app_commands.choices(
+        difficulty=[
+            app_commands.Choice(name=str(x), value=x.value)
+            for x in Difficulty.__members__.values()
+        ],  # type: ignore[reportGeneralTypeIssues]
+        genre=[
+            app_commands.Choice(name=str(x), value=x.value)
+            for x in Genre.__members__.values()
+        ],  # type: ignore[reportGeneralTypeIssues]
+        version=[
+            app_commands.Choice(name=x, value=x)
+            for x in [
+                "CHUNITHM",
+                "CHUNITHM PLUS",
+                "AIR",
+                "AIR PLUS",
+                "STAR",
+                "STAR PLUS",
+                "AMAZON",
+                "AMAZON PLUS",
+                "CRYSTAL",
+                "CRYSTAL PLUS",
+                "PARADISE",
+                "PARADISE LOST",
+                "NEW",
+                "NEW PLUS",
+                "SUN",
+                "SUN PLUS",
+                "LUMINOUS",
+                "LUMINOUS PLUS",
+                "VERSE",
+                "X-VERSE",
+                "X-VERSE-X",
+            ]
+        ],
+    )
+    async def statistics_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        *,
+        user: discord.User | discord.Member | None = None,
+        level: str | None = None,
+        difficulty: Difficulty | None = None,
+        genre: Genre | None = None,
+        version: str | None = None,
+        kamaitachi: bool = False,
+        refresh: bool = False,
+    ):
+        ctx = await PenguinContext.from_interaction(interaction)
+        converted_level = (
+            await LevelRangeConverter().convert(ctx, level)
+            if level is not None
+            else None
+        )
+
+        await self._statistics_impl(
+            await PenguinContext.from_interaction(interaction),
+            user=user,
+            level=converted_level,
+            difficulty=difficulty,
+            genre=genre,
+            version=version.upper() if version is not None else None,
+            kamaitachi=kamaitachi,
+            refresh=refresh,
+        )
+
+    async def _statistics_impl(
+        self,
+        ctx: PenguinContext,
+        *,
+        user: discord.User | discord.Member | None = None,
+        level: Level | LevelRange | None = None,
+        difficulty: Difficulty | None = None,
+        genre: Genre | None = None,
+        version: str | None = None,
+        kamaitachi: bool = False,
+        refresh: bool = False,
+    ):
+        target_id = ctx.author.id if user is None else user.id
+
+        async with (
+            ctx.typing(),
+            self.bot.begin_db_session() as session,
+            self.bot.chunithm_networks.network(
+                ctx, target_id, kamaitachi=kamaitachi
+            ) as client,
+        ):
+            profile = await client.get_minimal_profile()
+
+            if refresh:
+                if client.SUPPORTS_PERSONAL_BESTS:
+                    await self.utils.process_records(
+                        target_id, client.NAME, await client.get_personal_bests()
+                    )
+                elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
+                    for d in Difficulty:
+                        await self.utils.process_records(
+                            target_id,
+                            client.NAME,
+                            await client.get_personal_bests_by_difficulty(d),
+                        )
+                else:
+                    msg = f"Network {client.NAME} does not support refreshing personal bests quickly."
+                    raise commands.CommandError(msg)
+
+            pb_query = (
+                select(DBPersonalBest)
+                .where(
+                    (DBPersonalBest.discord_id == target_id)
+                    & (DBPersonalBest.network == client.NAME)
+                )
+                .join(Song, DBPersonalBest.song_id == Song.id)
+                .join(
+                    Chart,
+                    (DBPersonalBest.song_id == Chart.song_id)
+                    & (DBPersonalBest.difficulty == Chart.difficulty),
+                )
+                .order_by(DBPersonalBest.score.desc())
+            )
+            chart_count_query = (
+                select(func.count("*"))
+                .select_from(Chart)
+                .join(Song, Chart.song_id == Song.id)
+            )
+
+            if isinstance(client, ChunithmNet):
+                cond = Song.available == True  # noqa: E712
+                pb_query = pb_query.where(cond)
+                chart_count_query = chart_count_query.where(cond)
+
+            if isinstance(level, LevelRange):
+                if level.min_level is not None:
+                    cond = Chart.const >= (
+                        level.min_level.const or level.min_level.inferred_const
+                    )
+                    pb_query = pb_query.where(cond)
+                    chart_count_query = chart_count_query.where(cond)
+
+                if level.max_level is not None:
+                    cond = Chart.const <= (
+                        level.max_level.const or level.max_level.inferred_max_const
+                    )
+                    pb_query = pb_query.where(cond)
+                    chart_count_query = chart_count_query.where(cond)
+            elif level is not None:
+                if level.const is not None:
+                    cond = Chart.const == level.const
+                else:
+                    cond = Chart.level == level.level
+
+                pb_query = pb_query.where(cond)
+                chart_count_query = chart_count_query.where(cond)
+
+            if difficulty is not None:
+                cond = Chart.difficulty == difficulty.short()
+                pb_query = pb_query.where(cond)
+                chart_count_query = chart_count_query.where(cond)
+
+            if genre is not None:
+                cond = Song.genre == str(genre)
+                pb_query = pb_query.where(cond)
+                chart_count_query = chart_count_query.where(cond)
+
+            if version is not None:
+                cond = Song.version == version
+                pb_query = pb_query.where(cond)
+                chart_count_query = chart_count_query.where(cond)
+
+            pbs = (await session.execute(pb_query)).scalars().all()
+            chart_count = (
+                await session.execute(chart_count_query)
+            ).scalar_one_or_none() or 0
+
+        pb_count = len(pbs)
+        percentage_played = pb_count * 10000 // chart_count / 100
+        counts = Counter()
+
+        for pb in pbs:
+            pb_rank = Rank.from_score(pb.score)
+            pb_combo_lamp = ComboLamp(pb.combo_lamp)
+            pb_clear_lamp = ClearLamp(pb.clear_lamp)
+
+            for rank in (Rank.s, Rank.sp, Rank.ss, Rank.ssp, Rank.sss, Rank.sssp):
+                if pb_rank.value >= rank.value:
+                    counts[rank] += 1
+
+            for combo_lamp in ComboLamp:
+                if combo_lamp == ComboLamp.none:
+                    continue
+
+                if pb_combo_lamp.value >= combo_lamp.value:
+                    counts[combo_lamp] += 1
+
+            for clear_lamp in ClearLamp:
+                if clear_lamp == ClearLamp.failed:
+                    continue
+
+                if pb_clear_lamp.value >= clear_lamp.value:
+                    counts[clear_lamp] += 1
+
+        embed = discord.Embed(
+            color=discord.Color.yellow(),
+            title=f"{escape_markdown(profile.username)}'s folder statistics",
+        )
+        embed.set_footer(text=client.NAME)
+
+        description_parts: list[str] = []
+
+        if level is not None:
+            description_parts.append(f"Level {level}")
+
+        if difficulty is not None:
+            description_parts.append(str(difficulty))
+
+        if genre is not None:
+            description_parts.append(str(genre))
+
+        if version is not None:
+            description_parts.append(version)
+
+        embed.description = ", ".join(description_parts)
+
+        embed.add_field(
+            name="Played",
+            value=f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
+            inline=False,
+        )
+        embed.add_field(
+            name="Average score (played)",
+            value=f"{int(statistics.fmean(pb.score for pb in pbs))}",
+        )
+        embed.add_field(
+            name="Average score (all)",
+            value=f"{int(sum(pb.score for pb in pbs) / chart_count)}",
+        )
+        embed.add_field(name="\u3000", value="\u3000")
+        embed.add_field(
+            name="Ranks",
+            value="\n".join(
+                [
+                    f"{config.icons.rank_icon(rank)} ▸ {counts[rank]}"
+                    for rank in (
+                        Rank.sssp,
+                        Rank.sss,
+                        Rank.ssp,
+                        Rank.ss,
+                        Rank.sp,
+                        Rank.s,
+                    )
+                ]
+            ),
+        )
+        embed.add_field(
+            name="Combo lamps",
+            value="\n".join(
+                reversed(
+                    [
+                        f"{combo_lamp.short()} ▸ {counts[combo_lamp]}"
+                        for combo_lamp in ComboLamp
+                        if combo_lamp != ComboLamp.none
+                    ]
+                )
+            ),
+        )
+        embed.add_field(
+            name="Clear lamps",
+            value="\n".join(
+                reversed(
+                    [
+                        f"{clear_lamp.short()} ▸ {counts[clear_lamp]}"
+                        for clear_lamp in ClearLamp
+                        if clear_lamp != ClearLamp.failed
+                    ]
+                )
+            ),
+        )
+        embeds = [embed]
+        featured_scores: list[DBPersonalBest] = []
+
+        if len(pbs) >= 2:
+            featured_scores = [pbs[0], pbs[-1]]
+        elif len(pbs) > 0:
+            featured_scores = [pbs[0]]
+
+        embeds += [
+            ScoreCardEmbed(
+                await self.utils.convert_to_network_pb(pb),
+                synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+            )
+            for pb in featured_scores
+        ]
+
+        await ctx.respond_or_edit(embeds=embeds)
 
 
 async def setup(bot: "ChuniBot"):
