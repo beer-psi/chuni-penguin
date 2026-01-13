@@ -730,10 +730,12 @@ class RecordsCog(commands.Cog, name="Records"):
                     for x in await client.get_new20()
                 ]
 
-                for difficulty in Difficulty:
-                    if difficulty == Difficulty.worlds_end:
-                        continue
+                difficulties = sorted(
+                    {x[1] for x in itertools.chain(best30_charts, new20_charts)},
+                    key=lambda x: x.value,
+                )
 
+                for difficulty in difficulties:
                     difficulty_records = await client.get_personal_bests_by_difficulty(
                         difficulty
                     )
@@ -906,7 +908,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         2,
                     )
                 )
-            elif client.SUPPORTS_PERSONAL_BESTS:
+            elif client.SUPPORTS_BEST_RATINGS:
                 try:
                     rating_system = next(
                         s for s in profile.rating_systems if s.name == "NaiveRating"
@@ -915,18 +917,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 except StopIteration:
                     current_rating = None
 
-                pbs = await client.get_personal_bests()
+                pbs = await client.get_best_ratings()
                 pbs = await self.utils.process_records(target_id, client.NAME, pbs)
-
-                pbs.sort(
-                    key=lambda pb: (
-                        pb.extras.get(KEY_PLAY_RATING, Decimal(0)),
-                        pb.score,
-                        pb.combo_lamp.value,
-                    ),
-                    reverse=True,
-                )
-
                 pbs = pbs[:50]
 
                 records = pbs
