@@ -1962,6 +1962,10 @@ class RecordsCog(commands.Cog, name="Records"):
         embed = discord.Embed(
             color=discord.Color.yellow(),
             title=f"{escape_markdown(profile.username)}'s folder statistics",
+            timestamp=max(
+                (pb.last_played_at for pb in pbs if pb.last_played_at is not None),
+                default=None,
+            ),
         )
         embed.set_footer(text=client.NAME)
 
