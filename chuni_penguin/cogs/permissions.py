@@ -251,6 +251,10 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             msg = "Cannot move a permission to the same position."
             raise commands.BadArgument(msg)
 
+        if source < 1 or destination < 1:
+            msg = "Source or destination cannot be smaller than 1."
+            raise commands.BadArgument(msg)
+
         source_idx = source - 1
         destination_idx = destination - 1
 
@@ -315,6 +319,40 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         await ctx.respond_or_edit(
             f"Moved permission at position {source} to position {destination}."
         )
+
+    @permissions.command("delete", aliases=["remove", "rm", "del"])
+    @commands.has_guild_permissions(manage_guild=True)
+    async def permissions_delete(self, ctx: PenguinGuildContext, position: int):
+        """Deletes the permission at the given position."""
+
+        if position < 1:
+            msg = "Position cannot be smaller than 1."
+            raise commands.BadArgument(msg)
+
+        position_idx = position - 1
+
+        async with self.bot.begin_db_session() as session, ctx.typing():
+            query = delete(CommandPermission).where(
+                (CommandPermission.guild_id == ctx.guild.id)
+                & (CommandPermission.index == position_idx)
+            )
+            await session.execute(query)
+
+            # This should be a no-op if the perm at position_idx doesn't exist, since
+            # index is contiguous and non-negaative.
+            query = (
+                update(CommandPermission)
+                .values(index=CommandPermission.index - 1)
+                .where(
+                    (CommandPermission.guild_id == ctx.guild.id)
+                    & (CommandPermission.index > position_idx)
+                )
+            )
+            await session.execute(query)
+            await session.commit()
+
+        await self._load_permissions(ctx.guild.id)
+        await ctx.respond_or_edit(f"Deleted permission at position {position}.")
 
     @permissions.command("reset")
     @commands.has_guild_permissions(manage_guild=True)
