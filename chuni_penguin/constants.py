@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import platformdirs
 
@@ -9,6 +10,29 @@ SIMILARITY_THRESHOLD = 65
 # Probably not the best way to implement this but whatever.
 MAX_DIFFICULTY = 15.7
 
+ChunithmVersion = Literal[
+    "CHUNITHM",
+    "CHUNITHM PLUS",
+    "AIR",
+    "AIR PLUS",
+    "STAR",
+    "STAR PLUS",
+    "AMAZON",
+    "AMAZON PLUS",
+    "CRYSTAL",
+    "CRYSTAL PLUS",
+    "PARADISE",
+    "PARADISE LOST",
+    "NEW",
+    "NEW PLUS",
+    "SUN",
+    "SUN PLUS",
+    "LUMINOUS",
+    "LUMINOUS PLUS",
+    "VERSE",
+    "X-VERSE",
+    "X-VERSE-X",
+]
 # Used to split old records from new records.
 CURRENT_CHUNITHM_VERSION = "X-VERSE"
 

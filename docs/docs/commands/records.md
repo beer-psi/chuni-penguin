@@ -180,11 +180,12 @@ Get a user's best scores for a specified set of charts.
         - `clear_lamp`: Sort by clear lamp (FAILED, CLEAR, HARD, BRAVE, ABSOLUTE,
         CATASTROPHY).
         - `life`: Sort by total number of JUSTICE/ATTACK/MISS, if data is available.
+    - `-v, --version`: Version to search for.
     - `-k, --kamaitachi`: View the user's scores on Kamaitachi, if available.
 
 === "Slash command"
 
-    `/top [user:<user>] [level:<level>] [difficulty:<difficulty>] [genre:<genre>] [rank:<rank>] [sort:<sort>] [sort_order:<ascending|descending>] [kamaitachi:<True|False>]`
+    `/top [user:<user>] [level:<level>] [difficulty:<difficulty>] [genre:<genre>] [rank:<rank>] [sort:<sort>] [sort_order:<ascending|descending>] [version:<version>] [kamaitachi:<True|False>]`
 
     <h3>Options</h3>
 
@@ -199,6 +200,7 @@ Get a user's best scores for a specified set of charts.
     - `sort`: <small>(default: rating)</small> Sort scores by the specified metric.
     - `sort_order`: <small>(default: descending)</small> Sort scores in ascending or
     descending order.
+    - `version`: <small>(default: None)</small> Version to search for.
     - `kamaitachi`: <small>(default: False)</small> View the user's scores on
     Kamaitachi, if available.
 

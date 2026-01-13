@@ -25,7 +25,11 @@ from chuni_penguin.calculation.overpower import (
     calculate_play_overpower,
 )
 from chuni_penguin.config import config
-from chuni_penguin.constants import CACHE_DIR, CURRENT_CHUNITHM_VERSION
+from chuni_penguin.constants import (
+    CACHE_DIR,
+    CURRENT_CHUNITHM_VERSION,
+    ChunithmVersion,
+)
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
@@ -1060,6 +1064,7 @@ class RecordsCog(commands.Cog, name="Records"):
         rank="Rank to search for.",
         sort="Sort records by a criteria (default rating).",
         sort_order="Specify the order to sort records by.",
+        version="Version to search for.",
         kamaitachi="Get scores from Kamaitachi, if the target user has a linked account",
     )
     @app_commands.choices(
@@ -1087,6 +1092,9 @@ class RecordsCog(commands.Cog, name="Records"):
             app_commands.Choice(name=str(x), value=x.value)
             for x in Rank.__members__.values()
         ],  # type: ignore[reportGeneralTypeIssues]
+        version=[
+            app_commands.Choice(name=x, value=x) for x in ChunithmVersion.__args__
+        ],
     )
     @logged_app_command
     async def top_slash(
@@ -1108,6 +1116,7 @@ class RecordsCog(commands.Cog, name="Records"):
             "life",
         ] = "rating",
         sort_order: Literal["ascending", "descending"] = "descending",
+        version: str | None = None,
         kamaitachi: bool = False,
     ):
         ctx = await PenguinContext.from_interaction(interaction)
@@ -1188,6 +1197,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 records = [r for r in records if r.extras[KEY_LEVEL] == level]
             if genre is not None:
                 records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
+            if version is not None:
+                records = [r for r in records if r.extras[KEY_SONG_VERSION] == version]
 
             if len(records) == 0:
                 await interaction.followup.send("No scores found.")
@@ -1317,6 +1328,13 @@ class RecordsCog(commands.Cog, name="Records"):
         nargs="+",
         required=False,
     )
+    @flags.argument(
+        "-v",
+        "--version",
+        required=False,
+        choices=list(ChunithmVersion.__args__)
+        + [v.lower() for v in ChunithmVersion.__args__],
+    )
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument(
         "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
@@ -1331,6 +1349,7 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Genre | None = None,
         rank: Rank | None = None,
         sort: list[str] | None = None,
+        version: str | None = None,
         kamaitachi: bool = False,
         user: discord.User | discord.Member | None = None,
         level: str | None = None,
@@ -1463,6 +1482,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 ]
             if genre is not None:
                 records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
+            if version is not None:
+                version = version.upper()
+                records = [r for r in records if r.extras[KEY_SONG_VERSION] == version]
 
             if len(records) == 0:
                 await ctx.reply("No scores found.", mention_author=False)
@@ -1683,7 +1705,13 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.command("statistics", aliases=["stats", "folder", "progress"])
     @flags.argument("-d", "--difficulty", required=False, type=DifficultyConverter)
     @flags.argument("-g", "--genre", required=False, type=GenreConverter)
-    @flags.argument("-v", "--version", required=False)
+    @flags.argument(
+        "-v",
+        "--version",
+        required=False,
+        choices=list(ChunithmVersion.__args__)
+        + [v.lower() for v in ChunithmVersion.__args__],
+    )
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("-o", "--omnimix", action="store_true")
     @flags.argument("--refresh", action="store_true")
@@ -1753,30 +1781,7 @@ class RecordsCog(commands.Cog, name="Records"):
             for x in Genre.__members__.values()
         ],  # type: ignore[reportGeneralTypeIssues]
         version=[
-            app_commands.Choice(name=x, value=x)
-            for x in [
-                "CHUNITHM",
-                "CHUNITHM PLUS",
-                "AIR",
-                "AIR PLUS",
-                "STAR",
-                "STAR PLUS",
-                "AMAZON",
-                "AMAZON PLUS",
-                "CRYSTAL",
-                "CRYSTAL PLUS",
-                "PARADISE",
-                "PARADISE LOST",
-                "NEW",
-                "NEW PLUS",
-                "SUN",
-                "SUN PLUS",
-                "LUMINOUS",
-                "LUMINOUS PLUS",
-                "VERSE",
-                "X-VERSE",
-                "X-VERSE-X",
-            ]
+            app_commands.Choice(name=x, value=x) for x in ChunithmVersion.__args__
         ],
     )
     async def statistics_slash(
@@ -1787,7 +1792,7 @@ class RecordsCog(commands.Cog, name="Records"):
         level: str | None = None,
         difficulty: Difficulty | None = None,
         genre: Genre | None = None,
-        version: str | None = None,
+        version: ChunithmVersion | None = None,
         kamaitachi: bool = False,
         refresh: bool = False,
         omnimix: bool = False,
@@ -1805,7 +1810,7 @@ class RecordsCog(commands.Cog, name="Records"):
             level=converted_level,
             difficulty=difficulty,
             genre=genre,
-            version=version.upper() if version is not None else None,
+            version=version,
             kamaitachi=kamaitachi,
             refresh=refresh,
             omnimix=omnimix,
