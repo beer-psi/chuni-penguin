@@ -293,10 +293,7 @@ class GuessingGameSession:
         return 1
 
     async def _get_random_song(self):
-        if self.ctx.guild is not None:
-            alias_guild_ids = [-1, self.ctx.guild.id]
-        else:
-            alias_guild_ids = [-1]
+        alias_guild_ids = [0, self.ctx.guild.id] if self.ctx.guild is not None else [0]
 
         song_id = self.random.choice(self._song_ids)
 
@@ -505,7 +502,7 @@ class GuessingGameSession:
         if not self.counts_towards_leaderboard:
             return
 
-        guild_id = self.ctx.guild.id if self.ctx.guild else -1
+        guild_id = self.ctx.guild.id if self.ctx.guild else 0
 
         async with self.bot.begin_db_session() as session, session.begin():
             stmt = insert(GuessScore).values(

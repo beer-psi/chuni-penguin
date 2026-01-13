@@ -91,7 +91,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         self.alias_cache.clear()
 
         titles = set()
-        global_aliases = self.alias_cache.setdefault(-1, [])
+        global_aliases = self.alias_cache.setdefault(0, [])
 
         for song in songs:
             title_lower = song.title.lower()
@@ -100,7 +100,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 titles.add(title_lower)
 
                 global_aliases.append(
-                    CachedAlias(None, title_lower, song.title, song.id, -1)
+                    CachedAlias(None, title_lower, song.title, song.id, 0)
                 )
 
             for alias in song.aliases:
@@ -123,7 +123,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 titles.add(artist_lower)
 
                 global_aliases.append(
-                    CachedAlias(None, artist_lower, song.title, song.id, -1)
+                    CachedAlias(None, artist_lower, song.title, song.id, 0)
                 )
 
     async def guild_prefix(self, ctx: Context) -> str:
@@ -354,7 +354,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         tuple[Song, Alias | None, float]
             The third item is the similarity of the matched song.
         """
-        aliases = self.alias_cache[-1][:]
+        aliases = self.alias_cache[0][:]
 
         if (
             guild_id is not None
@@ -404,7 +404,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         load_charts: bool = False,
         load_global_aliases: bool = False,
     ) -> SongSearchResult:
-        aliases = self.alias_cache[-1][:]
+        aliases = self.alias_cache[0][:]
 
         if (
             guild_id is not None
@@ -433,7 +433,7 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             if load_global_aliases:
                 stmt = stmt.outerjoin(
-                    Alias, (Alias.song_id == Song.id) & (Alias.guild_id == -1)
+                    Alias, (Alias.song_id == Song.id) & (Alias.guild_id == 0)
                 ).options(contains_eager(Song.aliases))
 
             songs = (await session.execute(stmt)).scalars().unique()

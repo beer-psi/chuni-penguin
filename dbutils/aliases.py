@@ -62,7 +62,7 @@ async def update_aliases(
 
             inserted_aliases.extend(
                 [
-                    {"alias": x, "guild_id": -1, "song_id": song.id, "owner_id": None}
+                    {"alias": x, "guild_id": 0, "song_id": song.id, "owner_id": None}
                     for x in alias[1:]
                 ]
             )

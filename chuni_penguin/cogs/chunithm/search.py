@@ -172,7 +172,7 @@ class SearchCog(commands.Cog, name="Search"):
         added_alias_lower = added_alias.lower()
 
         if global_alias:
-            guild_id = -1
+            guild_id = 0
         elif ctx.guild is not None:
             guild_id = ctx.guild.id
         else:
@@ -205,7 +205,7 @@ class SearchCog(commands.Cog, name="Search"):
 
                 if not global_alias:
                     condition = condition & (
-                        (Alias.guild_id == -1) | (Alias.guild_id == guild_id)
+                        (Alias.guild_id == 0) | (Alias.guild_id == guild_id)
                     )
 
                 stmt = select(Alias).where(condition).options(joinedload(Alias.song))
@@ -225,12 +225,12 @@ class SearchCog(commands.Cog, name="Search"):
                 )
                 aliases = (await session.execute(stmt)).scalars().all()
 
-                if len(aliases) > 0 and aliases[0].guild_id == -1:
+                if len(aliases) > 0 and aliases[0].guild_id == 0:
                     msg = f"**{emd(added_alias)}** already exists (global alias for **{emd(aliases[0].song.title)}**)."
                     raise commands.BadArgument(msg)
 
-                if len(aliases) > 0 and aliases[0].guild_id != -1:
-                    aliases[0].guild_id = -1
+                if len(aliases) > 0 and aliases[0].guild_id != 0:
+                    aliases[0].guild_id = 0
                     aliases[0].owner_id = None
                     aliases[0].song_id = song.id
                     await session.merge(aliases[0])
@@ -249,7 +249,7 @@ class SearchCog(commands.Cog, name="Search"):
                     select(Alias)
                     .where(
                         (func.lower(Alias.alias) == added_alias_lower)
-                        & ((Alias.guild_id == -1) | (Alias.guild_id == guild_id))
+                        & ((Alias.guild_id == 0) | (Alias.guild_id == guild_id))
                     )
                     .options(joinedload(Alias.song))
                 )
@@ -258,7 +258,7 @@ class SearchCog(commands.Cog, name="Search"):
                 if alias_unit is not None:
                     msg = (
                         f"**{emd(added_alias)}** already exists "
-                        f"({'global ' if alias_unit.guild_id == -1 else ''}alias for **{emd(alias_unit.song.title)}**)."
+                        f"({'global ' if alias_unit.guild_id == 0 else ''}alias for **{emd(alias_unit.song.title)}**)."
                     )
                     raise commands.BadArgument(msg)
 
@@ -324,7 +324,7 @@ class SearchCog(commands.Cog, name="Search"):
             condition = func.lower(Alias.alias) == removed_alias.lower()
 
             if is_alias_manager:
-                guild_condition = Alias.guild_id == -1
+                guild_condition = Alias.guild_id == 0
 
                 if ctx.guild is not None:
                     guild_condition |= Alias.guild_id == ctx.guild.id
@@ -338,7 +338,7 @@ class SearchCog(commands.Cog, name="Search"):
 
             stmt = select(Alias).where(condition)
 
-            # when searching for guild_id = ctx.guild.id or guild_id = -1, the cases that happen are
+            # when searching for guild_id = ctx.guild.id or guild_id = 0, the cases that happen are
             # - it is a global alias, in which case there is only *the* global alias
             # - it is a guild alias, in which case the global alias doesn't exist
             # therefore there should be only one or no aliases
@@ -361,7 +361,7 @@ class SearchCog(commands.Cog, name="Search"):
 
         await self.utils._reload_alias_cache()
         await ctx.reply(
-            f"Removed {'global ' if alias.guild_id == -1 else ''}alias **{emd(removed_alias)}**.",
+            f"Removed {'global ' if alias.guild_id == 0 else ''}alias **{emd(removed_alias)}**.",
             mention_author=False,
         )
 
@@ -395,12 +395,12 @@ class SearchCog(commands.Cog, name="Search"):
             color=discord.Color.yellow(),
         )
         embed.description = ""
-        global_aliases = [x.alias for x in aliases if x.guild_id == -1]
+        global_aliases = [x.alias for x in aliases if x.guild_id == 0]
 
         if len(global_aliases) > 0:
             embed.description += (
                 "**Global aliases:**\n"
-                f"{', '.join([x.alias for x in aliases if x.guild_id == -1])}"
+                f"{', '.join([x.alias for x in aliases if x.guild_id == 0])}"
             )
 
         if ctx.guild is not None:

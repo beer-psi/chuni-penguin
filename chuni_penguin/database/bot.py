@@ -1,13 +1,13 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import Base
+from .base import Base, UInt64Integer
 
 
 class Denylist(Base):
     __tablename__ = "denylist"
 
-    object_id: Mapped[int] = mapped_column(primary_key=True)
+    object_id: Mapped[int] = mapped_column(UInt64Integer(), primary_key=True)
     reason: Mapped[str | None] = mapped_column(
         default=None, server_default=text("NULL")
     )

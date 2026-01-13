@@ -54,7 +54,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                         [
                             escape_markdown(x.alias)
                             for x in song.aliases
-                            if x.guild_id == -1
+                            if x.guild_id == 0
                         ]
                     )
                     song_description += "\n"

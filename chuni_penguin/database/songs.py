@@ -3,7 +3,6 @@ from typing import Optional
 from discord.ext import commands
 from discord.utils import escape_markdown
 from sqlalchemy import (
-    BigInteger,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
@@ -18,7 +17,7 @@ from sqlalchemy.orm import (
 
 from chuni_penguin.utils import sdvxin_link
 
-from .base import Base
+from .base import Base, UInt64Integer
 
 
 class Song(Base):
@@ -166,12 +165,12 @@ class Alias(Base):
     rowid: Mapped[int] = mapped_column(primary_key=True)
 
     alias: Mapped[str] = mapped_column(nullable=False)
-    guild_id: Mapped[int] = mapped_column(BigInteger(), nullable=False)
+    guild_id: Mapped[int] = mapped_column(UInt64Integer(), nullable=False)
     song_id: Mapped[int] = mapped_column(
         ForeignKey("chunirec_songs.id", onupdate="CASCADE", ondelete="CASCADE"),
         nullable=False,
     )
-    owner_id: Mapped[Optional[int]] = mapped_column(BigInteger(), nullable=True)
+    owner_id: Mapped[Optional[int]] = mapped_column(UInt64Integer(), nullable=True)
     uses: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default=text("0")
     )

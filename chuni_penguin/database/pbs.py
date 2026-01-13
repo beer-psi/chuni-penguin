@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    BigInteger,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
@@ -15,13 +14,13 @@ from sqlalchemy.orm import (
 
 from chuni_penguin.networks.types import ClearLamp, ComboLamp
 
-from .base import Base
+from .base import Base, UInt64Integer
 
 
 class PersonalBest(Base):
     __tablename__ = "personal_bests"
 
-    discord_id: Mapped[int] = mapped_column(BigInteger())
+    discord_id: Mapped[int] = mapped_column(UInt64Integer())
     network: Mapped[str] = mapped_column()
     song_id: Mapped[int] = mapped_column(
         ForeignKey("chunirec_songs.id", onupdate="CASCADE", ondelete="CASCADE"),
