@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Annotated
 
 import discord
 from discord.ext import commands
-from discord.ext.commands.errors import CheckFailure
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
 
@@ -17,30 +16,6 @@ from chuni_penguin.ui.permissions import PermissionListView
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
-
-
-class CommandDisabled(CheckFailure):
-    def __init__(self, permission: CommandPermission):
-        self.permission = permission
-
-        secondary = (
-            f"The {permission.secondary_target_type.name} `{permission.secondary_target_name}` has"
-            if permission.secondary_target_type != SecondaryPermissionTarget.all
-            else "All commands have"
-        )
-
-        if permission.primary_target_type == PrimaryPermissionTarget.guild:
-            primary = "this server"
-        elif permission.primary_target_type == PrimaryPermissionTarget.role:
-            primary = f"the role <@&{permission.primary_target_id}>"
-        elif permission.primary_target_type == PrimaryPermissionTarget.channel:
-            primary = "this channel"
-        elif permission.primary_target_type == PrimaryPermissionTarget.user:
-            primary = "you"
-        else:
-            primary = "???"
-
-        super().__init__(f"{secondary} been disabled for {primary}.")
 
 
 class PermissionsCog(commands.Cog, name="Permissions"):

@@ -13,9 +13,9 @@ from discord.app_commands import AppCommandError
 from discord.ext import commands, songbird
 from discord.ext.commands import Context
 
-from chuni_penguin.cogs.permissions import CommandDisabled
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
+from chuni_penguin.errors import CommandDisabled
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import ChuniNetError
 from chuni_penguin.networks.errors import (
