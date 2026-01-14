@@ -486,6 +486,7 @@ async def update_db(
                 "air": None,
                 "flick": None,
                 "charter": None,
+                "available": inserted_song["available"],
             }
 
             if (

@@ -364,6 +364,7 @@ async def merge_options(
                     else difficulty[:3],
                     "level": displayed_level,
                     "const": const,
+                    "available": inserted_song["available"],
                 }
 
                 with xml_path.with_name(chart_filename).open(encoding="utf-8") as f:
