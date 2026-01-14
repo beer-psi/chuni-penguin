@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, DateTime, Dialect, TypeDecorator
+from sqlalchemy import REAL, BigInteger, Dialect, TypeDecorator
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase
 
@@ -14,7 +14,7 @@ class DateTimeUTC(TypeDecorator[datetime]):
     Ensure UTC is stored in the database and that TZ aware dates are returned for all dialects.
     """
 
-    impl = DateTime(timezone=True)
+    impl = REAL()
     cache_ok = True
 
     @property
@@ -23,22 +23,19 @@ class DateTimeUTC(TypeDecorator[datetime]):
 
     def process_bind_param(
         self, value: datetime | None, dialect: Dialect
-    ) -> datetime | None:
+    ) -> float | None:
         if value is None:
             return value
-        if not value.tzinfo:
-            msg = "tzinfo is required"
-            raise TypeError(msg)
-        return value.astimezone(timezone.utc)
+
+        return value.timestamp()
 
     def process_result_value(
-        self, value: datetime | None, dialect: Dialect
+        self, value: float | None, dialect: Dialect
     ) -> datetime | None:
         if value is None:
             return value
-        if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
-        return value
+
+        return datetime.fromtimestamp(value, tz=timezone.utc)
 
 
 class UInt64Integer(TypeDecorator[int]):
