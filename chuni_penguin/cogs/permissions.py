@@ -188,7 +188,12 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             return True
 
         permission = self.get_permission(
-            None,
+            (
+                interaction.command.binding.qualified_name
+                if isinstance(interaction.command, discord.app_commands.Command)
+                and interaction.command.binding is not None
+                else None
+            ),
             interaction.command.qualified_name,
             interaction.guild_id,
             interaction.channel_id,
