@@ -134,6 +134,7 @@ class Chart(Base):
 
     charter: Mapped[Optional[str]] = mapped_column(nullable=True)
     version: Mapped[Optional[str]] = mapped_column(nullable=True)
+    available: Mapped[bool] = mapped_column(default=False, server_default=text("FALSE"))
 
     tachi_chart_id: Mapped[Optional[str]] = mapped_column(nullable=True)
 

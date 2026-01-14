@@ -1886,7 +1886,7 @@ class RecordsCog(commands.Cog, name="Records"):
             )
 
             if isinstance(client, ChunithmNet):
-                cond = Song.available == True  # noqa: E712
+                cond = (Song.available == True) & (Chart.available == True)  # noqa: E712
                 pb_query = pb_query.where(cond)
                 chart_query = chart_query.where(cond)
             elif isinstance(client, Kamaitachi):
