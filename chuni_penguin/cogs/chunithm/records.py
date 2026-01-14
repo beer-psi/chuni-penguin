@@ -1703,7 +1703,7 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
     @flags.command("statistics", aliases=["stats", "folder", "progress"])
-    @flags.argument("-d", "--difficulty", required=False, type=DifficultyConverter)
+    @flags.argument("-d", "--difficulty", required=False)
     @flags.argument("-g", "--genre", required=False, type=GenreConverter)
     @flags.argument(
         "-v",
@@ -1726,7 +1726,7 @@ class RecordsCog(commands.Cog, name="Records"):
         *,
         user: discord.User | discord.Member | None = None,
         level: Level | LevelRange | None = None,
-        difficulty: Difficulty | None = None,
+        difficulty: str | None = None,
         genre: Genre | None = None,
         version: str | None = None,
         kamaitachi: bool = False,
@@ -1746,11 +1746,25 @@ class RecordsCog(commands.Cog, name="Records"):
         `--refresh`: Force a full refresh of your scores. By default, statistics are calculated from your cached personal bests. You should only use this option if your scores are out of date.
         """
 
+        conv_diff: Difficulty | Literal["MASTER+ULTIMA"] | None = None
+
+        if difficulty is not None:
+            if difficulty.lower() in (
+                "master+ultima",
+                "mas+ult",
+                "mst+ult",
+                "masult",
+                "mstult",
+            ):
+                conv_diff = "MASTER+ULTIMA"
+            else:
+                conv_diff = await DifficultyConverter().convert(ctx, difficulty)
+
         await self._statistics_impl(
             ctx,
             user=user,
             level=level,
-            difficulty=difficulty,
+            difficulty=conv_diff,
             genre=genre,
             version=version.upper() if version is not None else None,
             kamaitachi=kamaitachi,
@@ -1773,9 +1787,10 @@ class RecordsCog(commands.Cog, name="Records"):
     )
     @app_commands.choices(
         difficulty=[
-            app_commands.Choice(name=str(x), value=x.value)
+            app_commands.Choice(name=str(x), value=str(x))
             for x in Difficulty.__members__.values()
-        ],  # type: ignore[reportGeneralTypeIssues]
+        ]
+        + [app_commands.Choice(name="MASTER+ULTIMA", value="MASTER+ULTIMA")],  # type: ignore[reportGeneralTypeIssues]
         genre=[
             app_commands.Choice(name=str(x), value=x.value)
             for x in Genre.__members__.values()
@@ -1790,7 +1805,7 @@ class RecordsCog(commands.Cog, name="Records"):
         *,
         user: discord.User | discord.Member | None = None,
         level: str | None = None,
-        difficulty: Difficulty | None = None,
+        difficulty: str | None = None,
         genre: Genre | None = None,
         version: ChunithmVersion | None = None,
         kamaitachi: bool = False,
@@ -1808,7 +1823,11 @@ class RecordsCog(commands.Cog, name="Records"):
             await PenguinContext.from_interaction(interaction),
             user=user,
             level=converted_level,
-            difficulty=difficulty,
+            difficulty=(
+                await DifficultyConverter().convert(ctx, difficulty)
+                if difficulty is not None and difficulty != "MASTER+ULTIMA"
+                else difficulty
+            ),
             genre=genre,
             version=version,
             kamaitachi=kamaitachi,
@@ -1822,7 +1841,7 @@ class RecordsCog(commands.Cog, name="Records"):
         *,
         user: discord.User | discord.Member | None = None,
         level: Level | LevelRange | None = None,
-        difficulty: Difficulty | None = None,
+        difficulty: Difficulty | Literal["MASTER+ULTIMA"] | None = None,
         genre: Genre | None = None,
         version: str | None = None,
         kamaitachi: bool = False,
@@ -1923,7 +1942,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 chart_query = chart_query.where(cond)
 
             if difficulty is not None:
-                cond = Chart.difficulty == difficulty.short()
+                if isinstance(difficulty, Difficulty):
+                    cond = Chart.difficulty == difficulty.short()
+                else:
+                    cond = (Chart.difficulty == "MAS") | (Chart.difficulty == "ULT")
                 pb_query = pb_query.where(cond)
                 chart_query = chart_query.where(cond)
 
