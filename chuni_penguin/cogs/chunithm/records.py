@@ -1944,9 +1944,11 @@ class RecordsCog(commands.Cog, name="Records"):
             if difficulty is not None and isinstance(difficulty, Difficulty):
                 cond = Chart.difficulty == difficulty.short()
             elif difficulty is not None:
-                cond = (Chart.difficulty == "MAS") | (Chart.difficulty == "ULT")
+                cond = Chart.difficulty.in_(
+                    [Difficulty.master.short(), Difficulty.ultima.short()]
+                )
             else:
-                cond = Chart.difficulty != "WE"
+                cond = Chart.difficulty != Difficulty.worlds_end.short()
 
             pb_query = pb_query.where(cond)
             chart_query = chart_query.where(cond)
@@ -1973,33 +1975,11 @@ class RecordsCog(commands.Cog, name="Records"):
         pb_count = len(pbs)
         percentage_played = pb_count * 10000 // chart_count / 100
         counts = Counter()
-        charts_by_id_difficulty: dict[tuple[int, str], Chart] = {}
-        pb_op_by_song: dict[int, Decimal] = {}
-        op_by_song: dict[int, Decimal] = {}
-
-        for chart in charts:
-            charts_by_id_difficulty[(chart.song_id, chart.difficulty)] = chart
-
-            if chart.const is not None:
-                op_by_song[chart.song_id] = max(
-                    op_by_song.get(chart.song_id, Decimal(0)),
-                    calculate_overpower_max(chart.const),
-                )
 
         for pb in pbs:
             pb_rank = Rank.from_score(pb.score)
             pb_combo_lamp = ComboLamp(pb.combo_lamp)
             pb_clear_lamp = ClearLamp(pb.clear_lamp)
-
-            if (
-                chart := charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
-            ) is not None and chart.const is not None:
-                pb_op_by_song[chart.song_id] = max(
-                    pb_op_by_song.get(chart.song_id, Decimal(0)),
-                    calculate_play_overpower(
-                        calculate_overpower_base(pb.score, chart.const), pb_combo_lamp
-                    ),
-                )
 
             for rank in (Rank.s, Rank.sp, Rank.ss, Rank.ssp, Rank.sss, Rank.sssp):
                 if pb_rank.value >= rank.value:
@@ -2018,10 +1998,6 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 if pb_clear_lamp.value >= clear_lamp.value:
                     counts[clear_lamp] += 1
-
-        op = floor_to_ndp(sum(pb_op_by_song.values(), Decimal(0)), 2)
-        total_op = floor_to_ndp(sum(op_by_song.values(), Decimal(0)), 2)
-        op_percent = floor_to_ndp(op * 100 / total_op, 2)
 
         embed = discord.Embed(
             color=discord.Color.yellow(),
@@ -2058,11 +2034,49 @@ class RecordsCog(commands.Cog, name="Records"):
         embed.add_field(
             name="Played",
             value=f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
+            inline=difficulty != Difficulty.worlds_end,
         )
-        embed.add_field(
-            name="OVER POWER",
-            value=f"{op} / {total_op} ({op_percent:.2f}%)",
-        )
+
+        if difficulty != Difficulty.worlds_end:
+            charts_by_id_difficulty: dict[tuple[int, str], Chart] = {}
+            op_by_song: dict[int, Decimal] = {}
+            pb_op_by_song: dict[int, Decimal] = {}
+
+            for chart in charts:
+                charts_by_id_difficulty[(chart.song_id, chart.difficulty)] = chart
+
+                if chart.const is not None:
+                    op_by_song[chart.song_id] = max(
+                        op_by_song.get(chart.song_id, Decimal(0)),
+                        calculate_overpower_max(chart.const),
+                    )
+
+            for pb in pbs:
+                pb_combo_lamp = ComboLamp(pb.combo_lamp)
+                chart = charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
+
+                if chart is None or chart.const is None:
+                    continue
+
+                pb_op_by_song[chart.song_id] = max(
+                    pb_op_by_song.get(chart.song_id, Decimal(0)),
+                    calculate_play_overpower(
+                        calculate_overpower_base(pb.score, chart.const),
+                        pb_combo_lamp,
+                    ),
+                )
+
+            op = floor_to_ndp(sum(pb_op_by_song.values(), Decimal(0)), 2)
+            total_op = floor_to_ndp(sum(op_by_song.values(), Decimal(0)), 2)
+            op_percent = (
+                floor_to_ndp(op * 100 / total_op, 2) if total_op > 0 else Decimal(0)
+            )
+
+            embed.add_field(
+                name="OVER POWER",
+                value=f"{op} / {total_op} ({op_percent:.2f}%)",
+            )
+
         embed.add_field(name="\u3000", value="\u3000")
         embed.add_field(
             name="Average score (played)",
