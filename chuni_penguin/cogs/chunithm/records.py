@@ -1941,13 +1941,15 @@ class RecordsCog(commands.Cog, name="Records"):
                 pb_query = pb_query.where(cond)
                 chart_query = chart_query.where(cond)
 
-            if difficulty is not None:
-                if isinstance(difficulty, Difficulty):
-                    cond = Chart.difficulty == difficulty.short()
-                else:
-                    cond = (Chart.difficulty == "MAS") | (Chart.difficulty == "ULT")
-                pb_query = pb_query.where(cond)
-                chart_query = chart_query.where(cond)
+            if difficulty is not None and isinstance(difficulty, Difficulty):
+                cond = Chart.difficulty == difficulty.short()
+            elif difficulty is not None:
+                cond = (Chart.difficulty == "MAS") | (Chart.difficulty == "ULT")
+            else:
+                cond = Chart.difficulty != "WE"
+
+            pb_query = pb_query.where(cond)
+            chart_query = chart_query.where(cond)
 
             if genre is not None:
                 cond = Song.genre == str(genre)
