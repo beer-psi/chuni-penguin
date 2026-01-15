@@ -1896,7 +1896,9 @@ class RecordsCog(commands.Cog, name="Records"):
                     (DBPersonalBest.song_id == Chart.song_id)
                     & (DBPersonalBest.difficulty == Chart.difficulty),
                 )
-                .order_by(DBPersonalBest.score.desc())
+                .order_by(
+                    DBPersonalBest.score.desc(), Chart.const.desc(), Chart.id.desc()
+                )
             )
             chart_query = (
                 select(Chart)
