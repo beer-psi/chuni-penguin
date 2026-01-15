@@ -2078,8 +2078,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 name="OVER POWER",
                 value=f"{op} / {total_op} ({op_percent:.2f}%)",
             )
+            embed.add_field(name="\u3000", value="\u3000")
 
-        embed.add_field(name="\u3000", value="\u3000")
         embed.add_field(
             name="Average score (played)",
             value=f"{int(statistics.fmean(pb.score for pb in pbs)) if len(pbs) > 0 else 0}",
