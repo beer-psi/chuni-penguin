@@ -226,9 +226,6 @@ View statistics about a folder.
     - `-k, --kamaitachi`: Get scores from Kamaitachi, if the target user has a linked
     account.
     - `-o, --omnimix`: Count removed songs towards statistics and the final count.
-    - `--refresh`: Force a full refresh of your scores. By default, statistics are
-    calculated from your cached personal bests. You should only use this option if your
-    scores are out of date.
 
 === "Slash command"
 
@@ -246,6 +243,32 @@ View statistics about a folder.
     target user has a linked account.
     - `omnimix`: <small>(default: False)</small>  Count removed songs towards statistics
     and the final count.
-    - `refresh`: <small>(default: False)</small> Force a full refresh of your scores. By
-    default, statistics are calculated from your cached personal bests. You should only
-    use this option if your scores are out of date.
+
+## sync
+
+<small>(aliases: `refresh`, `update`)</small>
+
+Sync scores with the bot.
+
+It is usually not necessary to use this command, since the bot will automatically track
+scores as they are fetched from other commands like [`best50`](#best50) or [`recent`](#recent).
+
+Currently scores stored in the bot are only used for [`statistics`](#statistics).
+This may change in the future.
+
+=== "Text command"
+    
+    `c>sync [-k] [user]`
+    
+    <h3>Options</h3>
+    
+    - `user`: The user to sync scores for. Yourself, if not specified.
+    - `-k, --kamaitachi`: Sync the user's Kamaitachi scores.
+
+=== "Slash command"
+    
+    `/sync [user:<user>] [kamaitachi:<True|False>]`
+    
+    - `user`: <small>(default: you)</small> The user to sync scores for.
+    - `-k, --kamaitachi`: <small>(default: False)</small> Sync the user's Kamaitachi
+    scores.
