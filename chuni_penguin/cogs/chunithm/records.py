@@ -2114,7 +2114,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.argument(
         "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
     )
-    @commands.cooldown(1, 60, commands.BucketType.user)
+    @commands.cooldown(2, 60, commands.BucketType.user)
     async def sync(
         self,
         ctx: PenguinContext,
@@ -2140,7 +2140,7 @@ class RecordsCog(commands.Cog, name="Records"):
         user="The user to sync scores for.",
         kamaitachi="Sync the user's Kamaitachi scores.",
     )
-    @app_commands.checks.cooldown(1, 60)
+    @app_commands.checks.cooldown(2, 60)
     async def sync_slash(
         self,
         interaction: discord.Interaction["ChuniBot"],
