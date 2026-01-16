@@ -70,6 +70,7 @@ from chuni_penguin.networks.types import (
     Genre,
     PersonalBest,
     Rank,
+    RecentScore,
     Score,
 )
 from chuni_penguin.renderers.b50 import render_b30
@@ -1714,7 +1715,6 @@ class RecordsCog(commands.Cog, name="Records"):
     )
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("-o", "--omnimix", action="store_true")
-    @flags.argument("--refresh", action="store_true")
     @flags.argument(
         "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
     )
@@ -1730,7 +1730,6 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Genre | None = None,
         version: str | None = None,
         kamaitachi: bool = False,
-        refresh: bool = False,
         omnimix: bool = False,
     ):
         """View statistics about a folder.
@@ -1743,7 +1742,6 @@ class RecordsCog(commands.Cog, name="Records"):
         `-v`: Version to search for.
         `-k`: Get scores from Kamaitachi, if the target user has a linked account.
         `-o`: Count removed songs towards statistics and the final count.
-        `--refresh`: Force a full refresh of your scores. By default, statistics are calculated from your cached personal bests. You should only use this option if your scores are out of date.
         """
 
         conv_diff: Difficulty | Literal["MASTER+ULTIMA"] | None = None
@@ -1768,7 +1766,6 @@ class RecordsCog(commands.Cog, name="Records"):
             genre=genre,
             version=version.upper() if version is not None else None,
             kamaitachi=kamaitachi,
-            refresh=refresh,
             omnimix=omnimix,
         )
 
@@ -1782,7 +1779,6 @@ class RecordsCog(commands.Cog, name="Records"):
         genre="Genre to search for.",
         version="Version to search for.",
         kamaitachi="Get scores from Kamaitachi, if the target user has a linked account.",
-        refresh="Force a full refresh of your scores. By default, statistics are calculated from your cached PBs.",
         omnimix="Count removed songs towards statistics and the final count.",
     )
     @app_commands.choices(
@@ -1809,7 +1805,6 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Genre | None = None,
         version: ChunithmVersion | None = None,
         kamaitachi: bool = False,
-        refresh: bool = False,
         omnimix: bool = False,
     ):
         ctx = await PenguinContext.from_interaction(interaction)
@@ -1831,7 +1826,6 @@ class RecordsCog(commands.Cog, name="Records"):
             genre=genre,
             version=version,
             kamaitachi=kamaitachi,
-            refresh=refresh,
             omnimix=omnimix,
         )
 
@@ -1845,7 +1839,6 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Genre | None = None,
         version: str | None = None,
         kamaitachi: bool = False,
-        refresh: bool = False,
         omnimix: bool = False,
     ):
         target_id = ctx.author.id if user is None else user.id
@@ -1858,31 +1851,6 @@ class RecordsCog(commands.Cog, name="Records"):
             ) as client,
         ):
             profile = await client.get_minimal_profile()
-
-            if refresh:
-                await ctx.respond_or_edit(
-                    "Refreshing personal bests, may take some time..."
-                )
-
-                if client.SUPPORTS_RECENT_SCORES:
-                    await self.utils.process_records(
-                        target_id, client.NAME, await client.get_recent_scores()
-                    )
-
-                if client.SUPPORTS_PERSONAL_BESTS:
-                    await self.utils.process_records(
-                        target_id, client.NAME, await client.get_personal_bests()
-                    )
-                elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
-                    for d in Difficulty:
-                        await self.utils.process_records(
-                            target_id,
-                            client.NAME,
-                            await client.get_personal_bests_by_difficulty(d),
-                        )
-                else:
-                    msg = f"Network {client.NAME} does not support refreshing personal bests quickly."
-                    raise commands.CommandError(msg)
 
             pb_query = (
                 select(DBPersonalBest)
@@ -2009,13 +1977,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 default=None,
             ),
         )
-        embed.set_footer(
-            text=(
-                f"Use `{ctx.clean_prefix}{ctx.invoked_with} --refresh` if statistics seem wrong."
-                if ctx.interaction is None
-                else "Use `/statistics refresh:True` if statistics seem wrong."
-            )
-        )
+        embed.set_footer(text=f"Use `{ctx.clean_prefix}sync` if statistics seem wrong.")
 
         description_parts: list[str] = []
 
@@ -2146,6 +2108,119 @@ class RecordsCog(commands.Cog, name="Records"):
         ]
 
         await ctx.respond_or_edit(embeds=embeds)
+
+    @flags.command("sync", aliases=["refresh", "update"])
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument(
+        "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
+    )
+    async def sync(
+        self,
+        ctx: PenguinContext,
+        *,
+        user: discord.User | discord.Member | None = None,
+        kamaitachi: bool = False,
+    ):
+        """Sync scores with the bot.
+
+        It is usually not necessary to use this command, since the bot will automatically track scores as they are fetched from other commands like `c>best50` or `c>recent`.
+
+        Currently scores stored in the bot are only used for `$PREFIXstatistics`. This may change in the future.
+
+        **Parameters**:
+        `-k`: Sync the user's Kamaitachi scores.
+        `user`: The user to sync scores for. Yourself, if not specified.
+        """
+
+        await self._sync_impl(ctx, user=user, kamaitachi=kamaitachi)
+
+    @app_commands.command(name="sync", description="Sync scores with the bot.")
+    @app_commands.describe(
+        user="The user to sync scores for.",
+        kamaitachi="Sync the user's Kamaitachi scores.",
+    )
+    async def sync_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        *,
+        user: discord.User | discord.Member | None = None,
+        kamaitachi: bool = False,
+    ):
+        await self._sync_impl(
+            await PenguinContext.from_interaction(interaction),
+            user=user,
+            kamaitachi=kamaitachi,
+        )
+
+    async def _sync_impl(
+        self,
+        ctx: PenguinContext,
+        *,
+        user: discord.User | discord.Member | None = None,
+        kamaitachi: bool = False,
+    ):
+        target_id = user.id if user is not None else ctx.author.id
+
+        async with (
+            ctx.typing(),
+            self.bot.chunithm_networks.network(
+                ctx, target_id, kamaitachi=kamaitachi
+            ) as client,
+        ):
+            profile = await client.get_minimal_profile()
+
+            if client.SUPPORTS_RECENT_SCORES:
+                await ctx.respond_or_edit(
+                    f"Fetching recent scores from {client.NAME}..."
+                )
+
+                recents = await client.get_recent_scores()
+
+                if client.SUPPORTS_DETAILED_RECENT_SCORE:
+                    detailed_recents: list[RecentScore] = []
+
+                    for recent in recents:
+                        detailed_recents.append(
+                            await client.get_detailed_recent_score(recent)
+                        )
+
+                        if len(detailed_recents) % 10 == 0 or len(
+                            detailed_recents
+                        ) == len(recents):
+                            await ctx.respond_or_edit(
+                                f"Fetching recent scores from {client.NAME}... {len(detailed_recents)}/{len(recents)}"
+                            )
+
+                    await self.utils.process_records(
+                        target_id, client.NAME, detailed_recents
+                    )
+                else:
+                    await self.utils.process_records(target_id, client.NAME, recents)
+
+            if client.SUPPORTS_PERSONAL_BESTS:
+                await ctx.respond_or_edit(
+                    f"Fetching personal bests from {client.NAME}..."
+                )
+                await self.utils.process_records(
+                    target_id, client.NAME, await client.get_personal_bests()
+                )
+            elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
+                for d in Difficulty:
+                    await ctx.respond_or_edit(
+                        f"Fetching {d} personal bests from {client.NAME}..."
+                    )
+                    await self.utils.process_records(
+                        target_id,
+                        client.NAME,
+                        await client.get_personal_bests_by_difficulty(d),
+                    )
+            else:
+                msg = f"Network {client.NAME} does not support retrieving personal bests quickly."
+                raise commands.CommandError(msg)
+
+        await ctx.respond_or_edit(
+            f"Successfully synced {client.NAME} scores for {escape_markdown(profile.username)}."
+        )
 
 
 async def setup(bot: "ChuniBot"):
