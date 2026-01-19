@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -82,3 +82,7 @@ def sdvxin_link(view: "SdvxinChartView") -> str:
 
     difficulty = difficulty.replace("WE", "end").lower()
     return f"https://sdvx.in/chunithm/{difficulty[:3]}/{id}{difficulty}{view.end_index or ''}.htm"
+
+
+def bold(content: Any) -> str:
+    return f"**{content}**"

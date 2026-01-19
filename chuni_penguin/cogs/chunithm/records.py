@@ -84,6 +84,7 @@ from chuni_penguin.ui import (
     SelectToCompareView,
 )
 from chuni_penguin.utils import floor_to_ndp
+from chuni_penguin.utils.formatting import bold
 from chuni_penguin.utils.misc import Reversor
 
 if TYPE_CHECKING:
@@ -2055,7 +2056,7 @@ class RecordsCog(commands.Cog, name="Records"):
             name="Ranks",
             value="\n".join(
                 [
-                    f"{config.icons.rank_icon(rank)} ▸ {counts[rank]}"
+                    f"{config.icons.rank_icon(rank)} ▸ {bold(counts[rank]) if counts[rank] == chart_count else counts[rank]}"
                     for rank in (
                         Rank.sssp,
                         Rank.sss,
@@ -2072,7 +2073,7 @@ class RecordsCog(commands.Cog, name="Records"):
             value="\n".join(
                 reversed(
                     [
-                        f"{combo_lamp.short()} ▸ {counts[combo_lamp]}"
+                        f"{combo_lamp.short()} ▸ {bold(counts[combo_lamp]) if counts[combo_lamp] == chart_count else counts[combo_lamp]}"
                         for combo_lamp in ComboLamp
                         if combo_lamp != ComboLamp.none
                     ]
@@ -2084,7 +2085,7 @@ class RecordsCog(commands.Cog, name="Records"):
             value="\n".join(
                 reversed(
                     [
-                        f"{clear_lamp.short()} ▸ {counts[clear_lamp]}"
+                        f"{clear_lamp.short()} ▸ {bold(counts[clear_lamp]) if counts[clear_lamp] == chart_count else counts[clear_lamp]}"
                         for clear_lamp in ClearLamp
                         if clear_lamp != ClearLamp.failed
                     ]
