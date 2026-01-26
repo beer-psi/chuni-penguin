@@ -1994,6 +1994,9 @@ class RecordsCog(commands.Cog, name="Records"):
         if version is not None:
             description_parts.append(version)
 
+        if omnimix:
+            description_parts.append("Omnimix")
+
         embed.description = ", ".join(description_parts)
 
         embed.add_field(
