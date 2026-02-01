@@ -1952,6 +1952,11 @@ class RecordsCog(commands.Cog, name="Records"):
             pb_combo_lamp = ComboLamp(pb.combo_lamp)
             pb_clear_lamp = ClearLamp(pb.clear_lamp)
 
+            # Checking for AJ is probably unnecessary since currently 1009900
+            # guarantees an AJ... until a chart with 5100+ notes is added
+            if pb.score >= 1009900 and pb_combo_lamp == ComboLamp.all_justice:
+                counts["99AJ"] += 1
+
             for rank in (Rank.s, Rank.sp, Rank.ss, Rank.ssp, Rank.sss, Rank.sssp):
                 if pb_rank.value >= rank.value:
                     counts[rank] += 1
@@ -2059,8 +2064,9 @@ class RecordsCog(commands.Cog, name="Records"):
             name="Ranks",
             value="\n".join(
                 [
-                    f"{config.icons.rank_icon(rank)} ▸ {bold(counts[rank]) if counts[rank] == chart_count else counts[rank]}"
+                    f"{config.icons.rank_icon(rank) if rank != '99AJ' else rank} ▸ {bold(counts[rank]) if counts[rank] == chart_count else counts[rank]}"
                     for rank in (
+                        "99AJ",
                         Rank.sssp,
                         Rank.sss,
                         Rank.ssp,
