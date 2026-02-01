@@ -181,9 +181,9 @@ class PersonalBestQueries:
 
     async def upsert_personal_bests(
         self, discord_id: int, network: str, scores: Sequence[Score]
-    ):
+    ) -> Sequence[PersonalBest]:
         if not scores:
-            return
+            return []
 
         query = insert(PersonalBest)
         conflict_sets: dict[str, Any] = {
@@ -305,8 +305,10 @@ class PersonalBestQueries:
             params.append(param)
 
         async with self._sessionmaker() as session:
-            await session.execute(query, params)
+            result = await session.execute(query.returning(PersonalBest), params)
             await session.commit()
+
+        return result.scalars().all()
 
 
 class DatabaseCog(commands.Cog, name="Database"):

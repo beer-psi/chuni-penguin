@@ -318,11 +318,35 @@ class UtilsCog(commands.Cog, name="Utils"):
                     internal_level
                 )
 
-            if KEY_TOTAL_COMBO not in record.extras and chart.maxcombo is not None:
-                record.extras[KEY_TOTAL_COMBO] = chart.maxcombo
-
             if KEY_SONG_GENRE not in record.extras:
                 record.extras[KEY_SONG_GENRE] = Genre(song.chunithm_catcode)
+
+            # Hydrate maxcombo and judgement data when possible.
+            if chart.maxcombo is not None:
+                if KEY_TOTAL_COMBO not in record.extras:
+                    record.extras[KEY_TOTAL_COMBO] = chart.maxcombo
+
+                if record.max_combo is None and record.combo_lamp in (
+                    ComboLamp.full_combo,
+                    ComboLamp.all_justice,
+                    ComboLamp.all_justice_critical,
+                ):
+                    record.max_combo = chart.maxcombo
+
+                if record.judgements is None:
+                    if record.combo_lamp == ComboLamp.all_justice_critical:
+                        record.judgements = Judgements(
+                            justice_critical=chart.maxcombo, justice=0, attack=0, miss=0
+                        )
+                    elif record.combo_lamp == ComboLamp.all_justice:
+                        # (notecount * 101) - ((notecount * 101) * score / 1010000)
+                        justice = int(chart.maxcombo * (1010000 - record.score) / 10000)
+                        record.judgements = Judgements(
+                            justice_critical=chart.maxcombo - justice,
+                            justice=justice,
+                            attack=0,
+                            miss=0,
+                        )
 
             hydrated_records.append(record)
 
@@ -335,10 +359,54 @@ class UtilsCog(commands.Cog, name="Utils"):
         self, discord_id: int, network: str, records: Sequence[T]
     ) -> list[T]:
         hydrated_records = await self.hydrate_records(records)
-
-        await self.bot.database.personal_bests.upsert_personal_bests(
+        db_records = await self.bot.database.personal_bests.upsert_personal_bests(
             discord_id, network, hydrated_records
         )
+        db_records_by_chart = {(r.song_id, r.difficulty): r for r in db_records}
+
+        # Annotate hydrated records with PB stored in database when applicable.
+        # The returned DB records are better than or equal to the records we're trying
+        # to hydrate, since they're personal bests.
+        for record in hydrated_records:
+            try:
+                db_record = db_records_by_chart[
+                    (record.extras[KEY_SONG_ID], record.difficulty.short())
+                ]
+            except KeyError:
+                continue
+
+            # Only annotate data if the record has the same score as the stored PB.
+            if record.score != db_record.score:
+                continue
+
+            if (
+                record.judgements is None
+                and db_record.justice_critical is not None
+                and db_record.justice is not None
+                and db_record.attack is not None
+                and db_record.miss is not None
+            ):
+                record.judgements = Judgements(
+                    justice_critical=db_record.justice_critical,
+                    justice=db_record.justice,
+                    attack=db_record.attack,
+                    miss=db_record.miss,
+                )
+
+            if record.achieved_at is None and db_record.achieved_at is not None:
+                record.achieved_at = db_record.achieved_at
+
+            if record.clear_lamp is None:
+                record.clear_lamp = ClearLamp(db_record.clear_lamp)
+
+            if record.combo_lamp is None:
+                record.combo_lamp = ComboLamp(db_record.combo_lamp)
+
+            if record.chain_lamp is None and db_record.chain_lamp is not None:
+                record.chain_lamp = ChainLamp(db_record.chain_lamp)
+
+            if record.max_combo is None and db_record.max_combo is not None:
+                record.max_combo = db_record.max_combo
 
         return hydrated_records
 
