@@ -84,7 +84,7 @@ from chuni_penguin.ui import (
     SelectToCompareView,
 )
 from chuni_penguin.utils import floor_to_ndp
-from chuni_penguin.utils.formatting import bold
+from chuni_penguin.utils.formatting import bold, bold_if
 from chuni_penguin.utils.misc import Reversor
 
 if TYPE_CHECKING:
@@ -1945,7 +1945,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         pb_count = len(pbs)
         percentage_played = pb_count * 10000 // chart_count / 100
-        counts = Counter()
+        counts: Counter[Any] = Counter([chart.difficulty for chart in charts])
 
         for pb in pbs:
             pb_rank = Rank.from_score(pb.score)
@@ -1961,12 +1961,18 @@ class RecordsCog(commands.Cog, name="Records"):
                 if pb_rank.value >= rank.value:
                     counts[rank] += 1
 
+                    if rank in (Rank.s, Rank.sss):
+                        counts[f"{pb.difficulty}_{rank}"] += 1
+
             for combo_lamp in ComboLamp:
                 if combo_lamp == ComboLamp.none:
                     continue
 
                 if pb_combo_lamp.value >= combo_lamp.value:
                     counts[combo_lamp] += 1
+
+                    if combo_lamp == ComboLamp.all_justice:
+                        counts[f"{pb.difficulty}_{combo_lamp}"] += 1
 
             for clear_lamp in ClearLamp:
                 if clear_lamp == ClearLamp.failed:
@@ -2006,7 +2012,10 @@ class RecordsCog(commands.Cog, name="Records"):
 
         embed.add_field(
             name="Played",
-            value=f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
+            value=bold_if(
+                len(pbs) == chart_count,
+                f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
+            ),
             inline=difficulty != Difficulty.worlds_end,
         )
 
@@ -2047,7 +2056,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             embed.add_field(
                 name="OVER POWER",
-                value=f"{op} / {total_op} ({op_percent:.2f}%)",
+                value=bold_if(op == total_op, f"{op} / {total_op} ({op_percent:.2f}%)"),
             )
             embed.add_field(name="\u3000", value="\u3000")
 
@@ -2064,7 +2073,7 @@ class RecordsCog(commands.Cog, name="Records"):
             name="Ranks",
             value="\n".join(
                 [
-                    f"{config.icons.rank_icon(rank) if rank != '99AJ' else rank} ▸ {bold(counts[rank]) if counts[rank] == chart_count else counts[rank]}"
+                    f"{config.icons.rank_icon(rank) if rank != '99AJ' else rank} ▸ {bold_if(counts[rank] == chart_count, counts[rank])}"
                     for rank in (
                         "99AJ",
                         Rank.sssp,
@@ -2082,7 +2091,7 @@ class RecordsCog(commands.Cog, name="Records"):
             value="\n".join(
                 reversed(
                     [
-                        f"{combo_lamp.short()} ▸ {bold(counts[combo_lamp]) if counts[combo_lamp] == chart_count else counts[combo_lamp]}"
+                        f"{combo_lamp.short()} ▸ {bold_if(counts[combo_lamp] == chart_count, counts[combo_lamp])}"
                         for combo_lamp in ComboLamp
                         if combo_lamp != ComboLamp.none
                     ]
@@ -2094,13 +2103,49 @@ class RecordsCog(commands.Cog, name="Records"):
             value="\n".join(
                 reversed(
                     [
-                        f"{clear_lamp.short()} ▸ {bold(counts[clear_lamp]) if counts[clear_lamp] == chart_count else counts[clear_lamp]}"
+                        f"{clear_lamp.short()} ▸ {bold_if(counts[clear_lamp] == chart_count, counts[clear_lamp])}"
                         for clear_lamp in ClearLamp
                         if clear_lamp != ClearLamp.failed
                     ]
                 )
             ),
         )
+
+        if (
+            version is not None
+            and level is None
+            and difficulty is None
+            and genre is None
+        ):
+            embed.add_field(
+                name="Title completion",
+                value="\n".join(
+                    [
+                        (
+                            "`Total  ` ▸ "
+                            f"{Difficulty.basic.emoji()} {bold(counts[Difficulty.basic.short()])}"
+                            f" / {Difficulty.advanced.emoji()} {bold(counts[Difficulty.advanced.short()])}"
+                            f" / {Difficulty.expert.emoji()} {bold(counts[Difficulty.expert.short()])}"
+                            f" / {Difficulty.master.emoji()} {bold(counts[Difficulty.master.short()])}"
+                        )
+                    ]
+                    + [
+                        (
+                            f"{name} ▸ "
+                            f"{Difficulty.basic.emoji()} {bold_if(counts[f'{Difficulty.basic.short()}_{criteria}'] == counts[Difficulty.basic.short()], counts[f'{Difficulty.basic.short()}_{criteria}'])}"
+                            f" / {Difficulty.advanced.emoji()} {bold_if(counts[f'{Difficulty.advanced.short()}_{criteria}'] == counts[Difficulty.advanced.short()], counts[f'{Difficulty.advanced.short()}_{criteria}'])}"
+                            f" / {Difficulty.expert.emoji()} {bold_if(counts[f'{Difficulty.expert.short()}_{criteria}'] == counts[Difficulty.expert.short()], counts[f'{Difficulty.expert.short()}_{criteria}'])}"
+                            f" / {Difficulty.master.emoji()} {bold_if(counts[f'{Difficulty.master.short()}_{criteria}'] == counts[Difficulty.master.short()], counts[f'{Difficulty.master.short()}_{criteria}'])}"
+                        )
+                        for name, criteria in [
+                            ("`SPIRIT `", Rank.s),
+                            ("`TRIBUTE`", Rank.sss),
+                            ("`LEGEND `", ComboLamp.all_justice),
+                        ]
+                    ]
+                ),
+            )
+
         embeds = [embed]
         featured_scores: list[DBPersonalBest] = []
 

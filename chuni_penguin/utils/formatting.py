@@ -86,3 +86,7 @@ def sdvxin_link(view: "SdvxinChartView") -> str:
 
 def bold(content: Any) -> str:
     return f"**{content}**"
+
+
+def bold_if(condition: bool, content: Any) -> str | Any:  # noqa: FBT001
+    return f"**{content}**" if condition else content
