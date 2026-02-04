@@ -131,11 +131,6 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
             name="How to unlock", value=db_gate.unlock_condition, inline=False
         )
 
-        if gate == LinkedGate.origin:
-            info_embed.set_footer(
-                text=f"You can check songs you still need to play with `{ctx.prefix}linked-verse progress`."
-            )
-
         view = discord.ui.View()
 
         if gate == LinkedGate.origin:
