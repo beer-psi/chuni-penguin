@@ -13,6 +13,9 @@ from chuni_penguin.networks.types import (
     CourseRecord,
     Difficulty,
     Leaderboard,
+    LinkedGate,
+    LinkedGateLeaderboard,
+    LinkedGateStatus,
     LoginBonus,
     PersonalBest,
     Profile,
@@ -28,6 +31,8 @@ from .parser import (
     parse_course_list,
     parse_detailed_recent_record,
     parse_leaderboard,
+    parse_linked_gate_leaderboard,
+    parse_linked_verse_progress,
     parse_login_bonus,
     parse_music_for_rating,
     parse_music_record,
@@ -60,6 +65,8 @@ class ChunithmNet(Network):
     SUPPORTS_LOGIN_BONUS_PROGRESS = True
     SUPPORTS_UPDATE_USERNAME = True
     SUPPORTS_SEND_FRIEND_REQUEST = True
+    SUPPORTS_LINKED_VERSE_PROGRESS = True
+    SUPPORTS_LINKED_GATE_LEADERBOARD = True
 
     def __init__(
         self,
@@ -318,6 +325,22 @@ class ChunithmNet(Network):
                 "Referer": str(_BASE_URL.join("/mobile/friend/search/searchUser/"))
             },
         )
+
+    async def get_linked_verse_progress(self) -> dict[LinkedGate, LinkedGateStatus]:
+        soup = await self._request_as_soup("GET", "mobile/home/linkedVerse/")
+
+        return parse_linked_verse_progress(soup)
+
+    async def get_linked_gate_leaderboard(
+        self, linked_gate: LinkedGate
+    ) -> LinkedGateLeaderboard:
+        soup = await self._request_as_soup(
+            "POST",
+            "mobile/home/linkedVerse/linkedVerseRanking/sendSearch/",
+            data={"id": linked_gate.value, "token": self._token},
+        )
+
+        return parse_linked_gate_leaderboard(soup)
 
     async def aclose(self) -> None:
         await self._client.aclose()

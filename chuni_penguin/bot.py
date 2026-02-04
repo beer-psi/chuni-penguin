@@ -188,8 +188,12 @@ class ChuniBot(commands.AutoShardedBot):
                     old_hash=old_tree_hash,
                     new_hash=current_tree_hash,
                 )
-                await self.tree.sync()
-                await session.execute(text(f"PRAGMA user_version={current_tree_hash}"))
+
+                if not config.dangerous.dev:
+                    await self.tree.sync()
+                    await session.execute(
+                        text(f"PRAGMA user_version={current_tree_hash}")
+                    )
 
         self.add_check(self.permissions.permissions_check)
 

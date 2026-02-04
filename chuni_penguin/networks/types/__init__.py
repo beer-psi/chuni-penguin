@@ -12,6 +12,13 @@ from .enums import (
     SkillClass,
 )
 from .leaderboard import Leaderboard, LeaderboardEntry
+from .linked_verse import (
+    LinkedGate,
+    LinkedGateLeaderboard,
+    LinkedGateLeaderboardEntry,
+    LinkedGateStatus,
+    LinkLevel,
+)
 from .login_bonus import DailyBonus, LoginBonus, LoginBonusItem, MonthlyLoginBonus
 from .profile import Currency, OverPower, Possession, Profile, RatingSystem
 from .score import (
@@ -38,6 +45,11 @@ __all__ = (
     "Judgements",
     "Leaderboard",
     "LeaderboardEntry",
+    "LinkLevel",
+    "LinkedGate",
+    "LinkedGateLeaderboard",
+    "LinkedGateLeaderboardEntry",
+    "LinkedGateStatus",
     "LoginBonus",
     "LoginBonusItem",
     "MonthlyLoginBonus",

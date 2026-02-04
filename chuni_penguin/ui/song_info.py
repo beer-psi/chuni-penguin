@@ -16,6 +16,139 @@ from chuni_penguin.utils import get_jacket_url, yt_search_link
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
 
+class SongInfoEmbed(discord.Embed):
+    def __init__(
+        self,
+        song: Song,
+        charts: Sequence[Chart],
+        *,
+        detailed: bool = False,
+        synthesis_alt_jacket: str | None = None,
+        brainrot: bool = False,
+    ):
+        song_description = ""
+
+        if len(song.aliases) > 0:
+            song_description = "-# "
+            song_description += " / ".join(
+                [escape_markdown(x.alias) for x in song.aliases if x.guild_id == 0]
+            )
+            song_description += "\n"
+
+        if not song.available:
+            if song.removed:
+                song_description += "\n**This song is removed.**\n\n"
+            else:
+                song_description += (
+                    "\n**This song is not available in CHUNITHM International.**\n\n"
+                )
+        else:
+            song_description += "\n"
+
+        displayed_version = song.version
+        displayed_bpm = "Unknown"
+
+        if song.release is not None:
+            displayed_version += f" ({song.release})"
+
+        if song.bpm is not None:
+            displayed_bpm = str(song.bpm)
+
+            if (
+                song.min_bpm is not None
+                and song.max_bpm is not None
+                and song.min_bpm != song.max_bpm
+            ):
+                displayed_bpm = f"{displayed_bpm} ({song.min_bpm}~{song.max_bpm})"
+
+        song_description += (
+            f"**Artist**: {escape_markdown(song.artist)}\n"
+            f"**Category**: {song.genre}\n"
+            f"**Version**: {displayed_version}\n"
+        )
+
+        for chart in charts:
+            if chart.version is not None:
+                difficulty = Difficulty(chart.difficulty)
+
+                song_description += f"**Version ({difficulty})**: {chart.version}\n"
+
+        song_description += f"**BPM**: {displayed_bpm}\n"
+
+        super().__init__(title=song.title, color=discord.Color.yellow())
+        self.set_thumbnail(url=get_jacket_url(song))
+
+        if song.id == 2698:
+            if synthesis_alt_jacket == "none":
+                self.set_thumbnail(url=None)
+            elif (
+                synthesis_alt_jacket != "default"
+                and config.web.serve_assets
+                and config.web.is_accessible
+            ):
+                self.set_thumbnail(
+                    url=f"{config.web.base_url}/assets/jackets/{song.id}_{synthesis_alt_jacket}.webp"
+                )
+        elif (
+            brainrot
+            and song.id in (45, 8100)
+            and config.web.serve_assets
+            and config.web.is_accessible
+        ):
+            self.set_thumbnail(url=f"{config.web.base_url}/assets/jackets/45_67.webp")
+
+        chart_level_desc = []
+
+        for chart in charts:
+            url = (
+                chart.sdvxin_chart_view.url
+                if chart.sdvxin_chart_view is not None
+                else yt_search_link(song.title, chart.difficulty)
+            )
+
+            if detailed:
+                difficulty = Difficulty(chart.difficulty)
+
+                link_text = f"Lv.{chart.level}"
+                if chart.const is not None:
+                    link_text += f" ({chart.const:.1f})"
+
+                desc = f"{difficulty.emoji()} [{link_text}]({url})"
+            else:
+                if chart.difficulty == "WE":
+                    displayed_difficulty = "WORLD'S END"
+                else:
+                    displayed_difficulty = chart.difficulty[0]
+
+                desc = f"[{displayed_difficulty}]({url}) {chart.level}"
+
+                if chart.const is not None:
+                    desc += f" ({chart.const:.1f})"
+
+            if detailed and chart.charter is not None:
+                desc += f" Designer: {escape_markdown(chart.charter)}"
+
+            if detailed:
+                maxcombo = chart.maxcombo or "-"
+                tap = chart.tap or "-"
+                hold = chart.hold or "-"
+                slide = chart.slide or "-"
+                air = chart.air or "-"
+                flick = chart.flick or "-"
+                desc += f"\n**{maxcombo}** / {tap} / {hold} / {slide} / {air} / {flick}"
+            chart_level_desc.append(desc)
+
+        if len(chart_level_desc) > 0:
+            song_description += "\n**Level**:\n"
+            if detailed:
+                song_description += "**CHAIN** / TAP / HOLD / SLIDE / AIR / FLICK\n\n"
+                song_description += "\n".join(chart_level_desc)
+            else:
+                song_description += " / ".join(chart_level_desc)
+
+        self.description = song_description
+
+
 class SongInfoPageSource(ListPageSource[Song]):
     def __init__(
         self,
@@ -46,140 +179,15 @@ class SongInfoPageSource(ListPageSource[Song]):
                 )
                 charts = (await session.execute(stmt)).scalars().all()
 
-                song_description = ""
-
-                if len(song.aliases) > 0:
-                    song_description = "-# "
-                    song_description += " / ".join(
-                        [
-                            escape_markdown(x.alias)
-                            for x in song.aliases
-                            if x.guild_id == 0
-                        ]
+                embeds.append(
+                    SongInfoEmbed(
+                        song,
+                        charts,
+                        detailed=self.detailed,
+                        synthesis_alt_jacket=self.synthesis_alt_jacket,
+                        brainrot=self.brainrot,
                     )
-                    song_description += "\n"
-
-                if not song.available:
-                    if song.removed:
-                        song_description += "\n**This song is removed.**\n\n"
-                    else:
-                        song_description += "\n**This song is not available in CHUNITHM International.**\n\n"
-                else:
-                    song_description += "\n"
-
-                displayed_version = song.version
-                displayed_bpm = "Unknown"
-
-                if song.release is not None:
-                    displayed_version += f" ({song.release})"
-
-                if song.bpm is not None:
-                    displayed_bpm = str(song.bpm)
-
-                    if (
-                        song.min_bpm is not None
-                        and song.max_bpm is not None
-                        and song.min_bpm != song.max_bpm
-                    ):
-                        displayed_bpm = (
-                            f"{displayed_bpm} ({song.min_bpm}~{song.max_bpm})"
-                        )
-
-                song_description += (
-                    f"**Artist**: {escape_markdown(song.artist)}\n"
-                    f"**Category**: {song.genre}\n"
-                    f"**Version**: {displayed_version}\n"
                 )
-
-                for chart in charts:
-                    if chart.version is not None:
-                        difficulty = Difficulty(chart.difficulty)
-
-                        song_description += (
-                            f"**Version ({difficulty})**: {chart.version}\n"
-                        )
-
-                song_description += f"**BPM**: {displayed_bpm}\n"
-
-                embed = discord.Embed(
-                    title=song.title,
-                    color=discord.Color.yellow(),
-                ).set_thumbnail(url=get_jacket_url(song))
-
-                if song.id == 2698:
-                    if self.synthesis_alt_jacket == "none":
-                        embed.set_thumbnail(url=None)
-                    elif (
-                        self.synthesis_alt_jacket != "default"
-                        and config.web.serve_assets
-                        and config.web.is_accessible
-                    ):
-                        embed.set_thumbnail(
-                            url=f"{config.web.base_url}/assets/jackets/{song.id}_{self.synthesis_alt_jacket}.webp"
-                        )
-                elif (
-                    self.brainrot
-                    and song.id in (45, 8100)
-                    and config.web.serve_assets
-                    and config.web.is_accessible
-                ):
-                    embed.set_thumbnail(
-                        url=f"{config.web.base_url}/assets/jackets/45_67.webp"
-                    )
-
-                chart_level_desc = []
-
-                for chart in charts:
-                    url = (
-                        chart.sdvxin_chart_view.url
-                        if chart.sdvxin_chart_view is not None
-                        else yt_search_link(song.title, chart.difficulty)
-                    )
-
-                    if self.detailed:
-                        difficulty = Difficulty(chart.difficulty)
-
-                        link_text = f"Lv.{chart.level}"
-                        if chart.const is not None:
-                            link_text += f" ({chart.const:.1f})"
-
-                        desc = f"{difficulty.emoji()} [{link_text}]({url})"
-                    else:
-                        if chart.difficulty == "WE":
-                            displayed_difficulty = "WORLD'S END"
-                        else:
-                            displayed_difficulty = chart.difficulty[0]
-
-                        desc = f"[{displayed_difficulty}]({url}) {chart.level}"
-
-                        if chart.const is not None:
-                            desc += f" ({chart.const:.1f})"
-
-                    if self.detailed and chart.charter is not None:
-                        desc += f" Designer: {escape_markdown(chart.charter)}"
-
-                    if self.detailed:
-                        maxcombo = chart.maxcombo or "-"
-                        tap = chart.tap or "-"
-                        hold = chart.hold or "-"
-                        slide = chart.slide or "-"
-                        air = chart.air or "-"
-                        flick = chart.flick or "-"
-                        desc += f"\n**{maxcombo}** / {tap} / {hold} / {slide} / {air} / {flick}"
-                    chart_level_desc.append(desc)
-
-                if len(chart_level_desc) > 0:
-                    song_description += "\n**Level**:\n"
-                    if self.detailed:
-                        song_description += (
-                            "**CHAIN** / TAP / HOLD / SLIDE / AIR / FLICK\n\n"
-                        )
-                        song_description += "\n".join(chart_level_desc)
-                    else:
-                        song_description += " / ".join(chart_level_desc)
-
-                embed.description = song_description
-                embeds.append(embed)
 
             menu.clear_items()
             menu.fill_items()

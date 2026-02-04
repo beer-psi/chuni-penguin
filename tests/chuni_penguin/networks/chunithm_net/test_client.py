@@ -29,6 +29,9 @@ from chuni_penguin.networks.types import (
     ComboLamp,
     CourseClass,
     Difficulty,
+    LinkedGate,
+    LinkedGateStatus,
+    LinkLevel,
     Possession,
     Rank,
     Rarity,
@@ -1293,3 +1296,68 @@ async def test_client_login_bonus(httpx_mock: HTTPXMock, jar: str):
         assert not login_bonus.daily_bonus[0].is_today
 
         assert login_bonus.daily_bonus[2].is_today
+
+
+@pytest.mark.asyncio
+async def test_linked_verse_progress(httpx_mock: HTTPXMock, jar: str):
+    with (BASE_DIR / "assets" / "linked_verse.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/home/linkedVerse/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChunithmNet(jar) as client:
+        progress = await client.get_linked_verse_progress()
+
+        assert progress[LinkedGate.origin] == LinkedGateStatus.not_found
+        assert progress[LinkedGate.air] == LinkedGateStatus.under_analysis
+        assert progress[LinkedGate.star] == LinkedGateStatus.linkable
+        assert progress[LinkedGate.amazon] == LinkedGateStatus.clear
+
+
+@pytest.mark.asyncio
+async def test_linked_gate_leaderboard(httpx_mock: HTTPXMock, jar: str, token: str):
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/home/linkedVerse/linkedVerseRanking/sendSearch/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"id=10004&token={token}".encode("utf-8"),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/home/linkedVerse/linkedVerseRanking"
+        },
+    )
+
+    with (BASE_DIR / "assets" / "linked_verse_ranking.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/home/linkedVerse/linkedVerseRanking",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChunithmNet(jar) as client:
+        leaderboard = await client.get_linked_gate_leaderboard(LinkedGate.amazon)
+
+        assert leaderboard.title == "OUTRAGE"
+        assert leaderboard.artist == "USAO vs DJ Myosuke"
+        assert (
+            leaderboard.jacket_url
+            == "https://chunithm-net-eng.com/mobile/img/f4150a747aa00ceb.jpg"
+        )
+        assert leaderboard.cleared_at is None
+        assert leaderboard.updated_at == datetime.datetime(
+            2026, 2, 4, 6, 18, tzinfo=datetime.UTC
+        )
+
+        assert leaderboard.ranking[0].position == 1
+        assert leaderboard.ranking[0].player_name == "ＭＡＤＨＯＬＩＣ"  # noqa: RUF001
+        assert leaderboard.ranking[0].achieved_at == datetime.datetime(
+            2026, 1, 21, 23, 35, tzinfo=datetime.UTC
+        )
+        assert leaderboard.ranking[0].link_level == LinkLevel.v
+
+        assert leaderboard.ranking[41].position == 42
+        assert leaderboard.ranking[41].link_level == LinkLevel.iv

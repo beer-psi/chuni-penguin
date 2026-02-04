@@ -11,12 +11,15 @@ from chuni_penguin.networks.types import (
     Difficulty,
     Leaderboard,
     LeaderboardEntry,
+    LinkedGateLeaderboard,
+    LinkedGateLeaderboardEntry,
     Rank,
 )
-from chuni_penguin.ui import ChartCardEmbed
 from chuni_penguin.utils import get_jacket_url
 
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
+from .components.chart_card_embed import ChartCardEmbed
+from .song_info import SongInfoEmbed
 
 
 class LeaderboardPageSource(ListPageSource):
@@ -91,6 +94,52 @@ class LeaderboardPageSource(ListPageSource):
         return {"embeds": [info_embed, leaderboard_embed]}
 
 
+class LinkedGateLeaderboardPageSource(ListPageSource):
+    def __init__(
+        self,
+        leaderboard: LinkedGateLeaderboard,
+        song: Song,
+        color: discord.Color,
+        *,
+        per_page: int,
+        synthesis_alt_jacket: str | None = None,
+        network: str | None = None,
+    ) -> None:
+        super().__init__(leaderboard.ranking, per_page=per_page)
+
+        self.leaderboard: LinkedGateLeaderboard = leaderboard
+        self.song: Song = song
+        self.color: discord.Color = color
+        self.synthesis_alt_jacket: str | None = synthesis_alt_jacket
+        self.network: str | None = network
+
+    @override
+    async def format_page(
+        self, menu: "PaginationView", page: Sequence[LinkedGateLeaderboardEntry]
+    ) -> FormatPageReturn:
+        description = "\n".join(
+            [
+                f"`{record.position: >3}` {record.player_name} ▸ {config.icons.icon(f'link_level_{record.link_level.name}', str(record.link_level))} ▸ <t:{int(record.achieved_at.timestamp())}:f>"
+                for record in page
+            ]
+        )
+
+        if description == "":
+            description = "No scores."
+
+        leaderboard_embed = discord.Embed(
+            color=self.color,
+            description=description,
+            timestamp=self.leaderboard.updated_at,
+        )
+
+        leaderboard_embed.set_footer(text=self.network)
+
+        return {
+            "embeds": [SongInfoEmbed(self.song, self.song.charts), leaderboard_embed]
+        }
+
+
 class LeaderboardView(PaginationView):
     def __init__(
         self,
@@ -110,6 +159,30 @@ class LeaderboardView(PaginationView):
                 song,
                 difficulty,
                 chart,
+                per_page=per_page,
+                synthesis_alt_jacket=synthesis_alt_jacket,
+                network=network,
+            ),
+        )
+
+
+class LinkedGateLeaderboardView(PaginationView):
+    def __init__(
+        self,
+        ctx: Context,
+        leaderboard: LinkedGateLeaderboard,
+        song: Song,
+        color: discord.Color,
+        per_page: int = 10,
+        synthesis_alt_jacket: str | None = None,
+        network: str | None = None,
+    ):
+        super().__init__(
+            ctx,
+            LinkedGateLeaderboardPageSource(
+                leaderboard,
+                song,
+                color,
                 per_page=per_page,
                 synthesis_alt_jacket=synthesis_alt_jacket,
                 network=network,
