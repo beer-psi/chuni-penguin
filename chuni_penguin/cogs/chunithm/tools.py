@@ -1126,13 +1126,20 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             await ctx.respond_or_edit(view=view, files=[file])
 
-    @commands.hybrid_command("odex")
+    @commands.hybrid_command("codex", aliases=["odex"])
     @logged_prefix_command
     async def odex(self, ctx: Context):
         """Read the Codex."""
 
         await ctx.reply(
-            content="[Read the Codex.](https://chunithm.org)",
+            content=(
+                "Read the Codex? Codexes? Codices? It doesn't really matter, just read them.\n"
+                "- [Chunithm English Guide](<https://chunithm.org>)\n"
+                "- [The (Extended) Chunithm Tutorial](<https://chunithm.org/how-to-improve>)\n"
+                "- [Chunithm Chart Compendium/Codex](<https://chunithm.org/codex>)\n"
+                "- [Kamaitachi Chunithm Questline](<https://chunithm.org/quests>)\n"
+                "- [Linked VERSE Unlock Guide](<https://chunithm.org/linked-verse>)"
+            ),
             mention_author=False,
         )
 
