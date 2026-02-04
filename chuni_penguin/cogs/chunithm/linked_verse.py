@@ -35,7 +35,8 @@ def format_condition(condition: LinkedGateCondition):
     )
 
     if condition.end_date is not None:
-        result += f". Next level <t:{int(condition.end_date.timestamp())}:R>"
+        ts = int(condition.end_date.timestamp())
+        result += f"\nLink LEVEL decreases at <t:{ts}:d> (<t:{ts}:R>)"
 
     return result
 
