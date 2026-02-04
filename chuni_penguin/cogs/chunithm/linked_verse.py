@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 def format_condition(condition: LinkedGateCondition):
-    deduction = f"{Difficulty(condition.difficulty)}, JUSTICE -{condition.damage_justice}, ATTACK -{condition.damage_attack}, MISS -{condition.damage_miss}"
+    deduction = f"{Difficulty(condition.difficulty)}, LIFE {condition.life}, JUSTICE -{condition.damage_justice}, ATTACK -{condition.damage_attack}, MISS -{condition.damage_miss}"
 
     if condition.recovery_life > 0:
         deduction += f", +{condition.recovery_life}/100 combo"
