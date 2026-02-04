@@ -93,6 +93,12 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
         info_embed = discord.Embed(
             color=discord.Color.from_str(db_gate.color), title=db_gate.name
         )
+
+        if config.web.is_accessible:
+            info_embed.set_thumbnail(
+                url=f"{config.web.base_url}/assets/jackets/linked_gate_{LinkedGate(db_gate.id).name}.webp"
+            )
+
         jp_condition = next((c for c in db_gate.conditions if c.region == "jp"), None)
 
         if jp_condition is not None:
