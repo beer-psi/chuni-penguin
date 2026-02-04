@@ -5,7 +5,7 @@ from .confirmation import ConfirmationYesView
 from .courses import CourseListView
 from .embeds import EmbedPaginationView
 from .gaming import GuessLeaderboardView, RetryGameButton
-from .leaderboard import LeaderboardView
+from .leaderboard import LeaderboardView, LinkedGateLeaderboardView
 from .login import LoginFlowView
 from .login_bonus import LoginBonusView
 from .profile import (
@@ -15,7 +15,7 @@ from .profile import (
 )
 from .recent import RecentRecordsView
 from .select_to_compare import SelectToCompareView
-from .song_info import SongInfoPaginationView
+from .song_info import SongInfoEmbed, SongInfoPaginationView
 from .songlist import SonglistView
 
 __all__ = (
@@ -27,6 +27,7 @@ __all__ = (
     "EmbedPaginationView",
     "GuessLeaderboardView",
     "LeaderboardView",
+    "LinkedGateLeaderboardView",
     "LoginBonusView",
     "LoginFlowView",
     "PersistentHideFriendCodeButton",
@@ -36,6 +37,7 @@ __all__ = (
     "RetryGameButton",
     "ScoreCardEmbed",
     "SelectToCompareView",
+    "SongInfoEmbed",
     "SongInfoPaginationView",
     "SonglistView",
 )

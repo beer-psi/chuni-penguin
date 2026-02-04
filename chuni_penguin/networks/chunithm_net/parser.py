@@ -20,6 +20,11 @@ from chuni_penguin.networks.types import (
     Judgements,
     Leaderboard,
     LeaderboardEntry,
+    LinkedGate,
+    LinkedGateLeaderboard,
+    LinkedGateLeaderboardEntry,
+    LinkedGateStatus,
+    LinkLevel,
     LoginBonus,
     LoginBonusItem,
     MonthlyLoginBonus,
@@ -41,7 +46,7 @@ from chuni_penguin.networks.types import (
     UserAvatar,
 )
 
-from .consts import _KEY_DETAILED_PARAMS_IDX
+from .consts import _KEY_DETAILED_PARAMS_IDX, LINKED_VERSE_PROGRESS_BADGES
 from .utils import (
     chuni_int,
     difficulty_from_imgurl,
@@ -658,5 +663,94 @@ def parse_leaderboard(soup: BeautifulSoup) -> Leaderboard:
             achieved_at=parse_time(last_raised_elem.text),
         )
         lb.ranking.append(lb_entry)
+
+    return lb
+
+
+def parse_linked_verse_progress(
+    soup: BeautifulSoup,
+) -> dict[LinkedGate, LinkedGateStatus]:
+    result: dict[LinkedGate, LinkedGateStatus] = {}
+
+    for gate, element in zip(
+        LinkedGate,
+        soup.select(".linked_verse_icon_status_block .linked_verse_icon_block img"),
+        strict=False,
+    ):
+        src = element.get("src")
+
+        if not isinstance(src, str):
+            continue
+
+        filename = src.split("/")[-1].split(".")[0]
+
+        if filename in LINKED_VERSE_PROGRESS_BADGES:
+            result[gate] = LINKED_VERSE_PROGRESS_BADGES[filename][1]
+        else:
+            _logger.warning("Unknown image URL %s for gate %r", src, gate)
+            result[gate] = LinkedGateStatus.not_found
+
+    return result
+
+
+def parse_linked_gate_leaderboard(soup: BeautifulSoup) -> LinkedGateLeaderboard:
+    title_elem = soup.select_one(".course_musicdata_title_text")
+    artist_elem = soup.select_one(".course_musicdata_artist")
+    jacket_elem = soup.select_one(".play_jacket_img img")
+    clear_date_elem = soup.select_one(".course_playdata_leftside > .text_l > .text_b")
+    update_date_elem = soup.select_one(".ranking_update")
+
+    if (
+        title_elem is None
+        or artist_elem is None
+        or jacket_elem is None
+        or update_date_elem is None
+    ):
+        msg = "Linked GATE leaderboard missing required information"
+        raise ValueError(msg)
+
+    title = title_elem.text.strip()
+    artist = artist_elem.text
+    jacket_url = jacket_elem["src"]
+    clear_date = clear_date_elem.text.strip() if clear_date_elem is not None else None
+
+    if clear_date == "----/--/-- --:--:--":
+        clear_date = None
+
+    lb = LinkedGateLeaderboard(
+        title=title,
+        artist=artist,
+        jacket_url=jacket_url,
+        cleared_at=parse_time(clear_date) if clear_date is not None else None,
+        updated_at=parse_time(update_date_elem.text.removeprefix("Update on：")),  # noqa: RUF001
+        ranking=[],
+    )
+
+    for element in soup.select(".rank_block_s"):
+        position_elem = element.select_one(".rank_block_rank_s")
+        player_name_elem = element.select_one(".rank_block_name_unlock")
+        achieved_at_elem = element.select_one(".rank_block_num_linked")
+        link_level_elem = element.select_one(
+            ".linked_verse_ranking_clear_course_level_img img"
+        )
+
+        if (
+            position_elem is None
+            or player_name_elem is None
+            or achieved_at_elem is None
+            or link_level_elem is None
+        ):
+            continue
+
+        lb.ranking.append(
+            LinkedGateLeaderboardEntry(
+                position=chuni_int(position_elem.text),
+                player_name=player_name_elem.text,
+                achieved_at=parse_time(achieved_at_elem.text),
+                link_level=LinkLevel(
+                    chuni_int(extract_last_part(link_level_elem["src"]))
+                ),
+            )
+        )
 
     return lb

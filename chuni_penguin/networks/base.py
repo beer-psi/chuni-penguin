@@ -6,6 +6,9 @@ from .types import (
     CourseRecord,
     Difficulty,
     Leaderboard,
+    LinkedGate,
+    LinkedGateLeaderboard,
+    LinkedGateStatus,
     LoginBonus,
     PersonalBest,
     Profile,
@@ -121,6 +124,16 @@ class Network(ABC):
     This network supports :meth:`send_friend_request`.
     """
 
+    SUPPORTS_LINKED_VERSE_PROGRESS: ClassVar[bool] = False
+    """
+    This network supports :meth:`get_linked_verse_progress`.
+    """
+
+    SUPPORTS_LINKED_GATE_LEADERBOARD: ClassVar[bool] = False
+    """
+    This network supports :meth:`get_linked_gate_leaderboard`.
+    """
+
     @abstractmethod
     def __init__(self, authentication: str): ...
 
@@ -234,6 +247,16 @@ class Network(ABC):
 
     async def send_friend_request(self, identifier: str) -> None:
         """Send a friend request to another player on the network."""
+        raise NotImplementedError
+
+    async def get_linked_verse_progress(self) -> dict[LinkedGate, LinkedGateStatus]:
+        """Get the player's Linked VERSE progress."""
+        raise NotImplementedError
+
+    async def get_linked_gate_leaderboard(
+        self, linked_gate: LinkedGate
+    ) -> LinkedGateLeaderboard:
+        """Get the network's leaderboard for a specific Linked GATE."""
         raise NotImplementedError
 
     async def aclose(self) -> None:

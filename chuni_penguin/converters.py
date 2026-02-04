@@ -7,7 +7,7 @@ from discord.ext import commands
 from discord.utils import escape_markdown
 
 from chuni_penguin.constants import MAX_DIFFICULTY
-from chuni_penguin.networks.types import Difficulty, Genre, Rank
+from chuni_penguin.networks.types import Difficulty, Genre, LinkedGate, Rank
 
 
 class DifficultyConverter(commands.Converter[Difficulty]):
@@ -244,3 +244,30 @@ class CommandOrGroupConverter(commands.Converter[commands.Command | commands.Cog
 
         msg = f"No commands or groups found with name `{escape_markdown(argument)}`."
         raise commands.BadArgument(msg)
+
+
+class LinkedGateConverter(commands.Converter[LinkedGate]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> LinkedGate:
+        argument_lower = argument.lower()
+
+        if argument_lower.startswith("<:air:"):
+            return LinkedGate.air
+
+        if argument_lower == "amz":
+            return LinkedGate.amazon
+
+        if argument_lower.startswith("cry"):
+            return LinkedGate.crystal
+
+        if argument_lower == "lmn":
+            return LinkedGate.luminous
+
+        if argument_lower == "vrs":
+            return LinkedGate.verse
+
+        try:
+            return getattr(LinkedGate, argument_lower)
+        except AttributeError:
+            msg = f'Unknown Linked GATE "{escape_markdown(argument)}".'
+            raise commands.CommandError(msg) from None
