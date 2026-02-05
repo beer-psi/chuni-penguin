@@ -260,7 +260,7 @@ class LinkedGateConverter(commands.Converter[LinkedGate]):
         if argument_lower.startswith("cry"):
             return LinkedGate.crystal
 
-        if argument_lower == "lmn":
+        if argument_lower == "lmn" or argument_lower.startswith("lumi"):
             return LinkedGate.luminous
 
         if argument_lower == "vrs":
