@@ -524,9 +524,9 @@ class SearchCog(commands.Cog, name="Search"):
             # that the user isn't logged in.
             course_records: list[CourseRecord] = []
 
-            async with ctx.bot.chunithm_networks.network(ctx) as client:
-                if client.SUPPORTS_COURSE_RECORDS:
-                    with contextlib.suppress(NetworkError):
+            with contextlib.suppress(NetworkError, commands.CommandError):
+                async with ctx.bot.chunithm_networks.network(ctx) as client:
+                    if client.SUPPORTS_COURSE_RECORDS:
                         course_records = await client.get_course_records()
 
             async with self.bot.begin_db_session() as session:
