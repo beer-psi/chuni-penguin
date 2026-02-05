@@ -46,6 +46,7 @@ VERSIONS = [
     "LUMINOUS PLUS",
     "VERSE",
     "X-VERSE",
+    "X-VERSE-X",
 ]
 WE_LEVEL_OVERRIDES = {
     8244: "分☆☆☆ (LASTMORN)",
