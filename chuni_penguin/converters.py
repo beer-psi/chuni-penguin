@@ -251,6 +251,9 @@ class LinkedGateConverter(commands.Converter[LinkedGate]):
     async def convert(self, ctx: commands.Context, argument: str) -> LinkedGate:
         argument_lower = argument.lower()
 
+        with contextlib.suppress(ValueError):
+            return LinkedGate(int(argument_lower))
+
         if argument_lower.startswith("<:air:"):
             return LinkedGate.air
 

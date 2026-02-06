@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Annotated, cast
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.utils import escape_markdown
 from sqlalchemy import func, select
@@ -45,6 +46,26 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
 
+    async def cog_load(self) -> None:
+        async with self.bot.begin_db_session() as session:
+            query = select(
+                DBLinkedGate.id, DBLinkedGate.name, DBLinkedGate.available
+            ).order_by(DBLinkedGate.id)
+            results = (await session.execute(query)).fetchall()
+
+        app_commands.choices(
+            gate=[
+                app_commands.Choice(name=name, value=str(id)) for id, name, _ in results
+            ]
+        )(self.linked_verse_gate.app_command)
+        app_commands.choices(
+            gate=[
+                app_commands.Choice(name=name, value=str(id))
+                for id, name, available in results
+                if available
+            ]
+        )(self.linked_verse_leaderboard.app_command)
+
     async def get_linked_gates(self, whereclause):
         async with self.bot.begin_db_session() as session:
             query = (
@@ -86,6 +107,7 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
         await ctx.send_help(ctx.command)
 
     @linked_verse.command("gate", aliases=["info"])
+    @app_commands.describe(gate="The Linked GATE to view information for.")
     async def linked_verse_gate(
         self, ctx: PenguinContext, gate: Annotated[LinkedGate, LinkedGateConverter]
     ):
@@ -164,6 +186,9 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
         )
 
     @linked_verse.command("progress", aliases=["status"])
+    @app_commands.describe(
+        user="The user to view the Linked GATE progress for. Yourself, if not specified."
+    )
     async def linked_verse_progress(
         self, ctx: PenguinContext, user: discord.User | discord.Member | None = None
     ):
@@ -233,6 +258,7 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
         await ctx.respond_or_edit(embed=embed)
 
     @linked_verse.command("leaderboard", aliases=["lb"])
+    @app_commands.describe(gate="The Linked GATE to view the leaderboard for.")
     async def linked_verse_leaderboard(
         self, ctx: PenguinContext, gate: Annotated[LinkedGate, LinkedGateConverter]
     ):
