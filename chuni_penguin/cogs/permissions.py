@@ -187,13 +187,22 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         if interaction.user.guild_permissions.manage_guild:
             return True
 
+        if (
+            isinstance(interaction.command, discord.app_commands.ContextMenu)
+            and interaction.command.qualified_name == "View your score"
+        ):
+            # Manual group binding since context menu don't really have groups
+            group_name = "Records"
+        elif (
+            isinstance(interaction.command, discord.app_commands.Command)
+            and interaction.command.binding is not None
+        ):
+            group_name = interaction.command.binding.qualified_name
+        else:
+            group_name = None
+
         permission = self.get_permission(
-            (
-                interaction.command.binding.qualified_name
-                if isinstance(interaction.command, discord.app_commands.Command)
-                and interaction.command.binding is not None
-                else None
-            ),
+            group_name,
             interaction.command.qualified_name,
             interaction.guild_id,
             interaction.channel_id,
