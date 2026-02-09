@@ -42,6 +42,7 @@ from chuni_penguin.converters import (
     LevelRangeConverter,
     MemberOrUserConverter,
     RankConverter,
+    VersionConverter,
 )
 from chuni_penguin.database import Chart, Song, SongJacket
 from chuni_penguin.database import PersonalBest as DBPersonalBest
@@ -1330,13 +1331,7 @@ class RecordsCog(commands.Cog, name="Records"):
         nargs="+",
         required=False,
     )
-    @flags.argument(
-        "-v",
-        "--version",
-        required=False,
-        choices=list(ChunithmVersion.__args__)
-        + [v.lower() for v in ChunithmVersion.__args__],
-    )
+    @flags.argument("-v", "--version", required=False, type=VersionConverter)
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument(
         "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
@@ -1351,7 +1346,7 @@ class RecordsCog(commands.Cog, name="Records"):
         genre: Genre | None = None,
         rank: Rank | None = None,
         sort: list[str] | None = None,
-        version: str | None = None,
+        version: ChunithmVersion | None = None,
         kamaitachi: bool = False,
         user: discord.User | discord.Member | None = None,
         level: str | None = None,
@@ -1485,7 +1480,6 @@ class RecordsCog(commands.Cog, name="Records"):
             if genre is not None:
                 records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
             if version is not None:
-                version = version.upper()
                 records = [r for r in records if r.extras[KEY_SONG_VERSION] == version]
 
             if len(records) == 0:
@@ -1707,13 +1701,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.command("statistics", aliases=["stats", "folder", "progress"])
     @flags.argument("-d", "--difficulty", required=False)
     @flags.argument("-g", "--genre", required=False, type=GenreConverter)
-    @flags.argument(
-        "-v",
-        "--version",
-        required=False,
-        choices=list(ChunithmVersion.__args__)
-        + [v.lower() for v in ChunithmVersion.__args__],
-    )
+    @flags.argument("-v", "--version", required=False, type=VersionConverter)
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("-o", "--omnimix", action="store_true")
     @flags.argument(
@@ -1729,7 +1717,7 @@ class RecordsCog(commands.Cog, name="Records"):
         level: Level | LevelRange | None = None,
         difficulty: str | None = None,
         genre: Genre | None = None,
-        version: str | None = None,
+        version: ChunithmVersion | None = None,
         kamaitachi: bool = False,
         omnimix: bool = False,
     ):
@@ -1765,7 +1753,7 @@ class RecordsCog(commands.Cog, name="Records"):
             level=level,
             difficulty=conv_diff,
             genre=genre,
-            version=version.upper() if version is not None else None,
+            version=version,
             kamaitachi=kamaitachi,
             omnimix=omnimix,
         )

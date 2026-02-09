@@ -6,7 +6,7 @@ from discord import Interaction, Member, User, app_commands
 from discord.ext import commands
 from discord.utils import escape_markdown
 
-from chuni_penguin.constants import MAX_DIFFICULTY
+from chuni_penguin.constants import MAX_DIFFICULTY, ChunithmVersion
 from chuni_penguin.networks.types import Difficulty, Genre, LinkedGate, Rank
 
 
@@ -274,3 +274,39 @@ class LinkedGateConverter(commands.Converter[LinkedGate]):
         except AttributeError:
             msg = f'Unknown Linked GATE "{escape_markdown(argument)}".'
             raise commands.CommandError(msg) from None
+
+
+class VersionConverter(commands.Converter[ChunithmVersion]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> ChunithmVersion:
+        argument_upper = argument.upper()
+
+        if argument_upper.endswith("+"):
+            argument_upper = f"{argument_upper[:-1]} PLUS"
+
+        if argument_upper in ChunithmVersion.__args__:
+            return argument_upper  # pyright: ignore[reportReturnType]
+
+        if argument_upper.startswith("ORIGIN"):
+            return "CHUNITHM PLUS" if argument_upper.endswith("PLUS") else "CHUNITHM"
+
+        if argument_upper.startswith("AMZ"):
+            return "AMAZON PLUS" if argument_upper.endswith("PLUS") else "AMAZON"
+
+        if argument_upper.startswith("CRY"):
+            return "CRYSTAL PLUS" if argument_upper.endswith("PLUS") else "CRYSTAL"
+
+        if argument_upper.startswith(("LMN", "LUMI")):
+            return "LUMINOUS PLUS" if argument_upper.endswith("PLUS") else "LUMINOUS"
+
+        if argument_upper == "VRS":
+            return "VERSE"
+
+        if argument_upper in ("XV", "XVRS", "X-VRS"):
+            return "X-VERSE"
+
+        if argument_upper in ("XVX", "XVRSX", "X-VRS-X"):
+            return "X-VERSE-X"
+
+        msg = f'Unknown version "{escape_markdown(argument)}"'
+        raise commands.CommandError(msg) from None
