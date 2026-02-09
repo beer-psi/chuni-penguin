@@ -263,7 +263,7 @@ class LinkedGateConverter(commands.Converter[LinkedGate]):
         if argument_lower.startswith("cry"):
             return LinkedGate.crystal
 
-        if argument_lower == "lmn" or argument_lower.startswith("lumi"):
+        if argument_lower == "lmn" or argument_lower.startswith("lum"):
             return LinkedGate.luminous
 
         if argument_lower == "vrs":
@@ -296,7 +296,7 @@ class VersionConverter(commands.Converter[ChunithmVersion]):
         if argument_upper.startswith("CRY"):
             return "CRYSTAL PLUS" if argument_upper.endswith("PLUS") else "CRYSTAL"
 
-        if argument_upper.startswith(("LMN", "LUMI")):
+        if argument_upper.startswith(("LMN", "LUM")):
             return "LUMINOUS PLUS" if argument_upper.endswith("PLUS") else "LUMINOUS"
 
         if argument_upper == "VRS":
