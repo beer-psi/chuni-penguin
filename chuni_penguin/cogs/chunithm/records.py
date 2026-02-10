@@ -47,6 +47,7 @@ from chuni_penguin.converters import (
 from chuni_penguin.database import Chart, Song, SongJacket
 from chuni_penguin.database import PersonalBest as DBPersonalBest
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
+from chuni_penguin.networks.base import Network
 from chuni_penguin.networks.chunithm_net import (
     INTERNATIONAL_JACKET_BASE,
     JACKET_BASE,
@@ -185,6 +186,21 @@ class RecordsCog(commands.Cog, name="Records"):
         self.bot.tree.remove_command(
             self.compare_context_menu.name, type=self.compare_context_menu.type
         )
+
+    async def _get_all_personal_bests(self, client: Network):
+        if client.SUPPORTS_PERSONAL_BESTS:
+            return await client.get_personal_bests()
+
+        if client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
+            pbs: list[PersonalBest] = []
+
+            for difficulty in Difficulty:
+                pbs.extend(await client.get_personal_bests_by_difficulty(difficulty))
+
+            return pbs
+
+        msg = "Network does not support personal bests (all or by difficulty)"
+        raise ValueError(msg)
 
     async def _recent_inner(
         self,
@@ -710,12 +726,14 @@ class RecordsCog(commands.Cog, name="Records"):
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
+        rating_system: Literal["naive", "ingame"] | None = None,
     ):
         target_id = ctx.author.id if user is None else user.id
         records: list[PersonalBest] = []
         record_slots: int = 30
         new_records: list[PersonalBest] | None = []
         new_record_slots: int = 20
+        current_rating: float | None = None
 
         async with (
             ctx.typing(),
@@ -726,9 +744,15 @@ class RecordsCog(commands.Cog, name="Records"):
             user_config = await self.utils.fetch_user_config(target_id)
             profile = await client.get_profile()
 
+            if rating_system is None:
+                if new_rating or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20):
+                    rating_system = "ingame"
+                else:
+                    rating_system = "naive"
+
             # Having client-specific behavior sorta goes against the spirit of having a unified
             # network API, but there's too many stupid quirks with this thing.
-            if isinstance(client, ChunithmNet):
+            if isinstance(client, ChunithmNet) and rating_system != "naive":
                 current_rating = profile.rating_systems[0].value
 
                 # in order to get extra lamp information, we get the charts that are in a player's
@@ -854,93 +878,129 @@ class RecordsCog(commands.Cog, name="Records"):
                             key=lambda r: r.extras[KEY_PLAY_RATING],
                             reverse=True,
                         )
-            elif client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20:
-                try:
-                    rating_system = next(
-                        s for s in profile.rating_systems if s.name == "Rating"
-                    )
-                    current_rating = rating_system.value
-                except StopIteration:
-                    current_rating = None
-
-                records = await self.utils.process_records(
-                    target_id, client.NAME, await client.get_best30()
-                )
-                new_records = await self.utils.process_records(
-                    target_id, client.NAME, await client.get_new20()
-                )
-            elif new_rating:
-                if not client.SUPPORTS_PERSONAL_BESTS:
-                    msg = f"Network {client.NAME} does not support best30/new20, and does not support fetching personal bests."
-                    raise commands.CommandError(msg)
-
-                pbs = await self.utils.process_records(
-                    target_id, client.NAME, await client.get_personal_bests()
-                )
-                records = [
-                    pb
-                    for pb in pbs
-                    if pb.extras[KEY_SONG_VERSION] != CURRENT_CHUNITHM_VERSION
-                ]
-                new_records = [
-                    pb
-                    for pb in pbs
-                    if pb.extras[KEY_SONG_VERSION] == CURRENT_CHUNITHM_VERSION
-                ]
-
-                records.sort(
-                    key=lambda pb: (
-                        pb.extras[KEY_PLAY_RATING],
-                        pb.score,
-                        pb.extras[KEY_INTERNAL_LEVEL],
-                    ),
-                    reverse=True,
-                )
-                new_records.sort(
-                    key=lambda pb: (
-                        pb.extras[KEY_PLAY_RATING],
-                        pb.score,
-                        pb.extras[KEY_INTERNAL_LEVEL],
-                    ),
-                    reverse=True,
-                )
-
-                records = records[:record_slots]
-                new_records = new_records[:new_record_slots]
-                current_rating = float(
-                    floor_to_ndp(
-                        sum(
-                            [
-                                r.extras[KEY_PLAY_RATING]
-                                for r in itertools.chain(records, new_records)
-                            ],
-                            start=Decimal(0),
+            elif rating_system == "ingame":
+                if client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20:
+                    try:
+                        profile_rating_system = next(
+                            s for s in profile.rating_systems if s.name == "Rating"
                         )
-                        / (record_slots + new_record_slots),
-                        2,
+                        current_rating = profile_rating_system.value
+                    except StopIteration:
+                        current_rating = None
+
+                    records = await self.utils.process_records(
+                        target_id, client.NAME, await client.get_best30()
                     )
-                )
-            elif client.SUPPORTS_BEST_RATINGS:
-                try:
-                    rating_system = next(
-                        s for s in profile.rating_systems if s.name == "NaiveRating"
+                    new_records = await self.utils.process_records(
+                        target_id, client.NAME, await client.get_new20()
                     )
-                    current_rating = rating_system.value
-                except StopIteration:
-                    current_rating = None
+                elif (
+                    client.SUPPORTS_PERSONAL_BESTS
+                    or client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
+                ):
+                    pbs = [
+                        pb
+                        for pb in await self._get_all_personal_bests(client)
+                        if pb.difficulty != Difficulty.worlds_end
+                    ]
+                    pbs = await self.utils.process_records(target_id, client.NAME, pbs)
+                    records = [
+                        pb
+                        for pb in pbs
+                        if pb.extras[KEY_SONG_VERSION] != CURRENT_CHUNITHM_VERSION
+                    ]
+                    new_records = [
+                        pb
+                        for pb in pbs
+                        if pb.extras[KEY_SONG_VERSION] == CURRENT_CHUNITHM_VERSION
+                    ]
 
-                pbs = await client.get_best_ratings()
-                pbs = await self.utils.process_records(target_id, client.NAME, pbs)
-                pbs = pbs[:50]
+                    records.sort(
+                        key=lambda pb: (
+                            pb.extras[KEY_PLAY_RATING],
+                            pb.score,
+                            pb.combo_lamp,
+                            pb.extras[KEY_INTERNAL_LEVEL],
+                        ),
+                        reverse=True,
+                    )
+                    new_records.sort(
+                        key=lambda pb: (
+                            pb.extras[KEY_PLAY_RATING],
+                            pb.score,
+                            pb.combo_lamp,
+                            pb.extras[KEY_INTERNAL_LEVEL],
+                        ),
+                        reverse=True,
+                    )
 
-                records = pbs
-                record_slots = 50
-
+                    records = records[:record_slots]
+                    new_records = new_records[:new_record_slots]
+                    current_rating = float(
+                        floor_to_ndp(
+                            sum(
+                                [
+                                    r.extras[KEY_PLAY_RATING]
+                                    for r in itertools.chain(records, new_records)
+                                ],
+                                start=Decimal(0),
+                            )
+                            / (record_slots + new_record_slots),
+                            2,
+                        )
+                    )
+                else:
+                    msg = f"Network {client.NAME} does not support any features needed for a best50 breakdown."
+                    raise commands.CommandError(msg)
+            elif rating_system == "naive":
                 new_records = None
                 new_record_slots = 0
-            else:
-                msg = f"Network {client.NAME} does not support any features needed for a best50 breakdown."
-                raise commands.CommandError(msg)
+
+                if client.SUPPORTS_BEST_RATINGS:
+                    try:
+                        profile_rating_system = next(
+                            s for s in profile.rating_systems if s.name == "NaiveRating"
+                        )
+                        current_rating = profile_rating_system.value
+                    except StopIteration:
+                        current_rating = None
+
+                    pbs = await client.get_best_ratings()
+                    pbs = await self.utils.process_records(target_id, client.NAME, pbs)
+                elif (
+                    client.SUPPORTS_PERSONAL_BESTS
+                    or client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
+                ):
+                    pbs = await self._get_all_personal_bests(client)
+                    pbs = await self.utils.process_records(target_id, client.NAME, pbs)
+
+                    pbs.sort(
+                        key=lambda pb: (
+                            pb.extras[KEY_PLAY_RATING],
+                            pb.score,
+                            pb.combo_lamp,
+                            pb.extras[KEY_INTERNAL_LEVEL],
+                        ),
+                        reverse=True,
+                    )
+                else:
+                    msg = f"Network {client.NAME} does not support any features needed for a best50 breakdown."
+                    raise commands.CommandError(msg)
+
+                records = pbs[:50]
+                record_slots = 50
+
+                if current_rating is None:
+                    current_rating = float(
+                        floor_to_ndp(
+                            sum(
+                                [pb.extras[KEY_PLAY_RATING] for pb in records],
+                                Decimal(0),
+                            )
+                            / record_slots,
+                            2,
+                        )
+                    )
 
             if classic:
                 if new_records is not None:
@@ -994,6 +1054,13 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.argument("-c", "--classic", action="store_true")
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("-n", "--new-rating", action="store_true")
+    @flags.argument(
+        "-r",
+        "--rating-system",
+        choices=["naive", "ingame"],
+        default=None,
+        required=False,
+    )
     @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
     @commands.cooldown(15, 600, commands.BucketType.member)
     @logged_prefix_command
@@ -1004,6 +1071,7 @@ class RecordsCog(commands.Cog, name="Records"):
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
+        rating_system: Literal["naive", "ingame"] | None = None,
         user: discord.Member | discord.User | None = None,
     ):
         """View top 50 scores of you or another player.
@@ -1014,8 +1082,9 @@ class RecordsCog(commands.Cog, name="Records"):
         an image.
         `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
         has that linked.
-        `-n, --new-rating`: For Kamaitachi, calculates best30 + new20 instead of best50.
-        Does nothing for official network.
+        `-n, --new-rating`: Calculates best30 + new20 instead of best50.
+        `-r, --rating-system`: Choose between `ingame` (best30 + new20) and `naive` (best50)
+        rating systems. `-r ingame` is functionally equivalent to `-n`.
         """
 
         if not classic and not ctx.bot_permissions.attach_files:
@@ -1027,6 +1096,7 @@ class RecordsCog(commands.Cog, name="Records"):
             classic=classic,
             kamaitachi=kamaitachi,
             new_rating=new_rating,
+            rating_system=rating_system,
         )
 
     @app_commands.command(name="best50", description="View top plays")
@@ -1037,8 +1107,15 @@ class RecordsCog(commands.Cog, name="Records"):
         classic="View your best 50 scores using Discord embeds instead of an image",
         kamaitachi="Get your best 50 from Kamaitachi if linked",
         new_rating="(Kamaitachi) Calculates best30+new20 instead of best50",
+        rating_system="The rating system to view the best50 for",
     )
-    @app_commands.rename(new_rating="new-rating")
+    @app_commands.rename(new_rating="new-rating", rating_system="rating-system")
+    @app_commands.choices(
+        rating_system=[
+            app_commands.Choice(name="In-game (Best 30 + New 20)", value="ingame"),
+            app_commands.Choice(name="Naive (Best 50)", value="naive"),
+        ]
+    )
     @logged_app_command
     async def best50_slash(
         self,
@@ -1048,6 +1125,7 @@ class RecordsCog(commands.Cog, name="Records"):
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
+        rating_system: Literal["naive", "ingame"] | None = None,
     ):
         ctx = await PenguinContext.from_interaction(interaction)
 
@@ -1057,6 +1135,7 @@ class RecordsCog(commands.Cog, name="Records"):
             classic=classic,
             kamaitachi=kamaitachi,
             new_rating=new_rating,
+            rating_system=rating_system,
         )
 
     @app_commands.command(name="top", description="View your best scores for a level.")
