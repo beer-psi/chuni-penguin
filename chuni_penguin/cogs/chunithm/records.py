@@ -188,19 +188,24 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
     async def _get_all_personal_bests(self, client: Network):
+        pbs: list[PersonalBest] = []
+
         if client.SUPPORTS_PERSONAL_BESTS:
-            return await client.get_personal_bests()
-
-        if client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
-            pbs: list[PersonalBest] = []
-
+            pbs = await client.get_personal_bests()
+        elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
             for difficulty in Difficulty:
                 pbs.extend(await client.get_personal_bests_by_difficulty(difficulty))
+        else:
+            msg = f"Network {client.NAME} does not support personal bests (all or by difficulty)"
+            raise ValueError(msg)
 
-            return pbs
+        if isinstance(client, ChunithmNet):
+            hidden_songs = await self.bot.database.songs.get_hidden_on_chuninet()
 
-        msg = "Network does not support personal bests (all or by difficulty)"
-        raise ValueError(msg)
+            for hidden_song in hidden_songs:
+                pbs.extend(await client.get_personal_bests_on_song(hidden_song.id))
+
+        return pbs
 
     async def _recent_inner(
         self,
