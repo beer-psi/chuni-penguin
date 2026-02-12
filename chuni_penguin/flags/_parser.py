@@ -442,6 +442,41 @@ class DiscordArguments(ArgumentParser):
         # return the updated namespace and the extra arguments
         return namespace, extras
 
+    def _parse_optional(
+        self, arg_string: str
+    ) -> list[tuple[Action | None, str, str | None, str | None]] | None:
+        # if it's an empty string, it was meant to be a positional
+        if not arg_string:
+            return None
+
+        # if it doesn't start with a prefix, it was meant to be positional
+        if not arg_string[0] in self.prefix_chars:
+            return None
+
+        # if the option string is present in the parser, return the action
+        if arg_string in self._option_string_actions:
+            action = self._option_string_actions[arg_string]
+            return [(action, arg_string, None, None)]
+
+        # if it's just a single character, it was meant to be positional
+        if len(arg_string) == 1:
+            return None
+
+        # if the option string before the "=" is present, return the action
+        option_string, sep, explicit_arg = arg_string.partition("=")
+        if sep and option_string in self._option_string_actions:
+            action = self._option_string_actions[option_string]
+            return [(action, option_string, sep, explicit_arg)]
+
+        # search through all possible prefixes of the option string
+        # and all actions in the parser for possible interpretations
+        option_tuples = self._get_option_tuples(arg_string)
+
+        if option_tuples:
+            return option_tuples
+
+        return None
+
     async def parse_intermixed_args(self, args=None, namespace=None):
         args, argv = await self.parse_known_intermixed_args(args, namespace)
         if argv:
