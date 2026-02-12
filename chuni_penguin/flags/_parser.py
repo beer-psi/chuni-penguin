@@ -450,7 +450,7 @@ class DiscordArguments(ArgumentParser):
             return None
 
         # if it doesn't start with a prefix, it was meant to be positional
-        if not arg_string[0] in self.prefix_chars:
+        if arg_string[0] not in self.prefix_chars:
             return None
 
         # if the option string is present in the parser, return the action
