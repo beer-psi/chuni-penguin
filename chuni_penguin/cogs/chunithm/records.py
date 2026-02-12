@@ -201,9 +201,22 @@ class RecordsCog(commands.Cog, name="Records"):
 
         if isinstance(client, ChunithmNet):
             hidden_songs = await self.bot.database.songs.get_hidden_on_chuninet()
+            retrieved = {(pb.extras[KEY_SONG_ID], pb.difficulty) for pb in pbs}
 
             for hidden_song in hidden_songs:
-                pbs.extend(await client.get_personal_bests_on_song(hidden_song.id))
+                hidden_song_pbs = await client.get_personal_bests_on_song(
+                    hidden_song.id
+                )
+                pbs.extend(
+                    [
+                        pb
+                        for pb in hidden_song_pbs
+                        if (pb.extras[KEY_SONG_ID], pb.difficulty) not in retrieved
+                    ]
+                )
+                retrieved |= {
+                    (pb.extras[KEY_SONG_ID], pb.difficulty) for pb in hidden_song_pbs
+                }
 
         return pbs
 
@@ -757,7 +770,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             # Having client-specific behavior sorta goes against the spirit of having a unified
             # network API, but there's too many stupid quirks with this thing.
-            if isinstance(client, ChunithmNet) and rating_system != "naive":
+            if isinstance(client, ChunithmNet) and rating_system == "ingame":
                 current_rating = profile.rating_systems[0].value
 
                 # in order to get extra lamp information, we get the charts that are in a player's
