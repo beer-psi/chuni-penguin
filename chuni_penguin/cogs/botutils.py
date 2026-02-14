@@ -50,11 +50,7 @@ T = TypeVar("T", bound=Score)
 
 
 class CachedAlias:
-    id: Optional[int] = None
-    alias: str
-    title: str
-    song_id: int
-    guild_id: Optional[int] = None
+    __slots__ = ("alias", "guild_id", "id", "song_id", "title")
 
     def __init__(
         self,
