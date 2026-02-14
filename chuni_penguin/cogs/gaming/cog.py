@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from bot import ChuniBot
 
 
-@dataclass
+@dataclass(slots=True)
 class GuessArguments:
     difficulty: Difficulty
     questions: int

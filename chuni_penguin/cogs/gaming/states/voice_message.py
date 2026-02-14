@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class AskVoiceMessageQuestionState(GuessingGameState):
+    __slots__ = ("session",)
+
     def __init__(self, session: "GuessingGameSession") -> None:
         self.session: "GuessingGameSession" = session
 

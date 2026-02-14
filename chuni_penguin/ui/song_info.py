@@ -150,6 +150,8 @@ class SongInfoEmbed(discord.Embed):
 
 
 class SongInfoPageSource(ListPageSource[Song]):
+    __slots__ = ("brainrot", "detailed", "synthesis_alt_jacket")
+
     def __init__(
         self,
         entries: list[Song],

@@ -39,6 +39,8 @@ class HishelCacheEntry(msgspec.Struct, array_like=True):
 
 
 class HishelMsgspecSerializer(hishel.BaseSerializer):
+    __slots__ = ("_decoder", "_encoder")
+
     def __init__(self) -> None:
         super().__init__()
         self._encoder = msgspec.msgpack.Encoder()

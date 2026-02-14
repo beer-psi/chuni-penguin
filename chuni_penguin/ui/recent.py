@@ -41,6 +41,8 @@ def split_scores_into_credits(
 
 
 class RecentRecordsPageSource(ListPageSource[list["RecentScore"]]):
+    __slots__ = ("synthesis_alt_jacket",)
+
     def __init__(
         self,
         credits: list[list["RecentScore"]],

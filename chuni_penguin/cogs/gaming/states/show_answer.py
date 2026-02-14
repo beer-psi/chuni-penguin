@@ -25,6 +25,17 @@ if TYPE_CHECKING:
 
 
 class ShowAnswerState(GuessingGameState):
+    __slots__ = (
+        "accepted_answer",
+        "aliases",
+        "answer_image",
+        "guess_time",
+        "session",
+        "skipped",
+        "song",
+        "timed_out",
+    )
+
     def __init__(
         self,
         session: "GuessingGameSession",

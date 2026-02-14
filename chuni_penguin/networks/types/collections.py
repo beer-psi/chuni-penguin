@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from .enums import Rarity
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class UserAvatar:
     """The user's penguin avatar."""
 
@@ -23,13 +23,13 @@ class UserAvatar:
     front: str
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class Title:
     content: str
     rarity: Rarity
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class PlayerCollections:
     avatar: UserAvatar
     titles: list[Title]

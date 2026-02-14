@@ -33,13 +33,13 @@ class Possession(Enum):
                 return 0x0B6FF3
 
 
-@dataclass
+@dataclass(slots=True)
 class Currency:
     owned: int
     total: int
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class RatingSystem:
     """
     A rating system.
@@ -64,7 +64,7 @@ class RatingSystem:
     """
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class OverPower:
     value: float
     """The user's raw overpower value."""
@@ -76,7 +76,7 @@ class OverPower:
     """
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class Profile:
     username: str
     """The player's username."""

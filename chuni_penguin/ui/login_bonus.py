@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
 
 class LoginBonusItemPaginationSource(ListPageSource[LoginBonusItem]):
+    __slots__ = ("days_logged_in", "unobtained_color")
+
     def __init__(
         self,
         entries: list[LoginBonusItem],

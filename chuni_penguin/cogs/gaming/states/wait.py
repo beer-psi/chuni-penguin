@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 class WaitState(GuessingGameSkippableState):
+    __slots__ = ("_task", "next_state", "session", "wait_time_s")
+
     def __init__(
         self,
         session: "GuessingGameSession",

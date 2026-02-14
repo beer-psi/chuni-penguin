@@ -19,6 +19,16 @@ if TYPE_CHECKING:
 
 
 class B30PageSource(ListPageSource["Score"]):
+    __slots__ = (
+        "average",
+        "has_estimated_play_rating",
+        "reachable",
+        "show_average",
+        "show_lamps",
+        "show_reachable",
+        "synthesis_alt_jacket",
+    )
+
     def __init__(
         self,
         *,

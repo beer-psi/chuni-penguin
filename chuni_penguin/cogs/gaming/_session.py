@@ -60,6 +60,35 @@ class GuessingGameType(Enum):
 
 
 class GuessingGameSession:
+    __slots__ = (
+        "_current_state",
+        "_game_type",
+        "_hardcore_mode_ignores",
+        "_lock",
+        "_question_state_cls",
+        "_song_ids",
+        "_tasks",
+        "ctx",
+        "difficulty",
+        "genres",
+        "hardcore_mode",
+        "last_question_was_answered",
+        "levels",
+        "question_count",
+        "questions_done",
+        "questions_timed_out",
+        "random",
+        "score_limit",
+        "scores",
+        "seed",
+        "seeded",
+        "stopped_by",
+        "time_per_question",
+        "volume",
+        "wrong_answers",
+        "wrong_answers_limit",
+    )
+
     def __init__(
         self,
         ctx: Context["ChuniBot"],

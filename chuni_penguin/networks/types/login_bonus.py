@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class LoginBonusItem:
     day: int
     icon_url: str
@@ -9,14 +9,14 @@ class LoginBonusItem:
     obtained: bool = False
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class MonthlyLoginBonus:
     name: str
     days_logged_in: int
     rewards: list[LoginBonusItem]
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class DailyBonus:
     weekday: int
     icon_url: str
@@ -36,7 +36,7 @@ class DailyBonus:
         ][self.weekday]
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class LoginBonus:
     received_bonus_today: bool
 

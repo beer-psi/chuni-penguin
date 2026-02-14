@@ -71,7 +71,7 @@ class CachedAlias:
         self.guild_id = guild_id
 
 
-@dataclass
+@dataclass(slots=True)
 class SongSearchResult:
     songs: list[Song]
     matched_alias: Optional[Alias]

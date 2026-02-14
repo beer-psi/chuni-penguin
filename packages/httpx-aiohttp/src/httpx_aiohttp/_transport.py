@@ -69,6 +69,8 @@ def exponential_backoff(factor: float) -> "Iterator[float]":
 
 
 class RetryMiddleware:
+    __slots__ = ("factor", "retries")
+
     def __init__(self, retries: int, factor: float = 0.5):
         self.retries = retries
         self.factor = factor
@@ -95,6 +97,8 @@ class RetryMiddleware:
 
 
 class AIOHTTPResponseStream(httpx.AsyncByteStream):
+    __slots__ = ("_response",)
+
     def __init__(self, response: aiohttp.ClientResponse) -> None:
         self._response = response
 
@@ -113,6 +117,17 @@ class AIOHTTPResponseStream(httpx.AsyncByteStream):
 
 
 class AIOHTTPTransport(httpx.AsyncBaseTransport):
+    __slots__ = (
+        "_retry_middleware",
+        "client",
+        "limits",
+        "local_address",
+        "proxy",
+        "socket_options",
+        "ssl_context",
+        "uds",
+    )
+
     def __init__(
         self,
         cert: str | tuple[str, str] | tuple[str, str, str] | None = None,

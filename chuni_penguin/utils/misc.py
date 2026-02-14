@@ -53,6 +53,8 @@ def round_to_nearest(number: "T", value: int) -> "T":
 
 @total_ordering
 class Reversor:
+    __slots__ = ("obj",)
+
     def __init__(self, obj: object):
         self.obj = obj
 

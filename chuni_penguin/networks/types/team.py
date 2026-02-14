@@ -17,7 +17,7 @@ class TeamEmblem(Enum):
     green = "green"
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class Team:
     emblem: TeamEmblem
     name: str
