@@ -21,6 +21,8 @@ MISSING: Any = object()
 
 
 class AsyncRWLock:
+    __slots__ = ("_cond", "_readers_active", "_writer_active", "_writers_waiting")
+
     def __init__(self) -> None:
         self._cond: asyncio.Condition = asyncio.Condition()
         self._readers_active: int = 0
@@ -76,6 +78,8 @@ class AsyncRWLock:
 class AsyncRWLockMappingReadGuard(
     Mapping[KT, VT], contextlib.AbstractAsyncContextManager
 ):
+    __slots__ = ("_inner", "_lock", "_locked")
+
     def __init__(self, lock: AsyncRWLock, inner: dict[KT, VT]):
         self._lock = lock.read()
         self._locked: bool = False
@@ -154,6 +158,8 @@ class AsyncRWLockMappingReadGuard(
 class AsyncRWLockMappingWriteGuard(
     AsyncRWLockMappingReadGuard[KT, VT], MutableMapping[KT, VT]
 ):
+    __slots__ = ("_inner", "_lock", "_locked")
+
     def __init__(self, lock: AsyncRWLock, inner: dict[KT, VT]):
         self._lock = lock.write()
         self._locked: bool = False
@@ -202,6 +208,8 @@ class AsyncRWLockMappingWriteGuard(
 
 
 class AsyncRWLockMapping(Generic[KT, VT]):
+    __slots__ = ("_inner", "_lock")
+
     def __init__(self):
         self._lock: AsyncRWLock = AsyncRWLock()
         self._inner: dict[KT, VT] = {}
@@ -214,6 +222,8 @@ class AsyncRWLockMapping(Generic[KT, VT]):
 
 
 class AsyncRcContextManager(contextlib.AbstractAsyncContextManager, Generic[T]):
+    __slots__ = ("_inner", "_lock", "_on_exit", "_refcount")
+
     def __init__(
         self, inner: T, *, on_exit: list[Callable[[T], Awaitable[Any]]] | None = None
     ) -> None:

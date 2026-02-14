@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from .enums import ClearLamp, ComboLamp, CourseClass, Rank
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class CourseRecord:
     id: int
     cls: CourseClass

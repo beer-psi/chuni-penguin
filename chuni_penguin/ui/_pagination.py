@@ -25,6 +25,8 @@ FormatPageReturn = MessageKwargs | str | discord.Embed
 
 
 class PageSourceProtocol(Protocol, Generic[PageT]):
+    __slots__ = ("__prepared",)
+
     async def _prepare_once(self) -> Any:
         try:
             self.__prepared  # noqa: B018
@@ -44,6 +46,8 @@ class PageSourceProtocol(Protocol, Generic[PageT]):
 
 
 class ListPageSource(PageSourceProtocol[Sequence[PageItemT]], Generic[PageItemT]):
+    __slots__ = ("_max_pages", "entries", "per_page")
+
     def __init__(self, entries: Sequence[PageItemT], *, per_page: int) -> None:
         self.entries = entries
         self.per_page = per_page

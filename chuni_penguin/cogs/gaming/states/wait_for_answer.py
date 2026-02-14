@@ -14,6 +14,15 @@ if TYPE_CHECKING:
 
 
 class WaitForAnswerState(GuessingGameSkippableState):
+    __slots__ = (
+        "_stop_music_task",
+        "_task",
+        "aliases",
+        "answer_image",
+        "session",
+        "song",
+    )
+
     def __init__(
         self,
         session: "GuessingGameSession",

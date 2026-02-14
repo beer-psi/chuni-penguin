@@ -5,6 +5,8 @@ T = TypeVar("T")
 
 
 class TypePairedDictKey(Generic[KT]):
+    __slots__ = ("name",)
+
     def __init__(self, name: str) -> None:
         super().__init__()
         self.name = name

@@ -23,6 +23,15 @@ from .song_info import SongInfoEmbed
 
 
 class LeaderboardPageSource(ListPageSource):
+    __slots__ = (
+        "chart",
+        "difficulty",
+        "leaderboard",
+        "network",
+        "song",
+        "synthesis_alt_jacket",
+    )
+
     def __init__(
         self,
         leaderboard: Leaderboard,
@@ -95,6 +104,14 @@ class LeaderboardPageSource(ListPageSource):
 
 
 class LinkedGateLeaderboardPageSource(ListPageSource):
+    __slots__ = (
+        "color",
+        "leaderboard",
+        "network",
+        "song",
+        "synthesis_alt_jacket",
+    )
+
     def __init__(
         self,
         leaderboard: LinkedGateLeaderboard,

@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 
 class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
+    __slots__ = ("bot", "game_type", "guild_id", "guild_name", "leaderboard_type")
+
     def __init__(self, bot: "ChuniBot", guild_id: int, guild_name: str) -> None:
         super().__init__(
             [

@@ -456,13 +456,13 @@ def convert_kt_pbs_to_records(
     charts_by_id = {c.chart_id: c for c in body.charts}
 
     return [
-        PersonalBest(
-            **convert_kt_to_score(
+        PersonalBest.from_score(
+            convert_kt_to_score(
                 pb,
                 songs_by_id[pb.song_id].title,
                 charts_by_id[pb.chart_id],
                 songs_by_id[pb.song_id].data.display_version,
-            ).__dict__
+            )
         )
         for pb in body.pbs
     ]
@@ -480,13 +480,13 @@ def convert_kt_scores_to_records(
     charts_by_id = {c.chart_id: c for c in body.charts}
 
     return [
-        RecentScore(
-            **convert_kt_to_score(
+        RecentScore.from_score(
+            convert_kt_to_score(
                 score,
                 songs_by_id[score.song_id].title,
                 charts_by_id[score.chart_id],
                 songs_by_id[score.song_id].data.display_version,
-            ).__dict__
+            )
         )
         for score in body.scores
     ]
@@ -576,6 +576,14 @@ class Kamaitachi(Network):
     SUPPORTS_PERSONAL_BESTS = True
     SUPPORTS_PERSONAL_BESTS_ON_SONG = True
     SUPPORTS_CHART_LEADERBOARD = True
+
+    __slots__ = (
+        "_api_key",
+        "_client",
+        "_kt_charts",
+        "get_kt_chart_id",
+        "get_kt_chart_ids",
+    )
 
     def __init__(
         self, authentication: str, *, base_url: str = "https://kamai.tachi.ac"
@@ -813,7 +821,7 @@ class Kamaitachi(Network):
             assert data.body is not None
 
             score = convert_kt_to_score(data.body.pb, "", data.body.chart)
-            pbs.append(PersonalBest(**score.__dict__))
+            pbs.append(PersonalBest.from_score(score))
 
         return pbs
 

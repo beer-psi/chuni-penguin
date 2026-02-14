@@ -76,7 +76,7 @@ class RankConverter(commands.Converter[Rank]):
             raise commands.BadArgument(msg) from e
 
 
-@dataclass
+@dataclass(slots=True)
 class Level:
     level: str
     const: float | None

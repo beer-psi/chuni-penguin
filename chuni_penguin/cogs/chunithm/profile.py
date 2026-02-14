@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
 
 
-@dataclass
+@dataclass(slots=True)
 class DrawCoordinates:
     sx: int = 0
     sy: int = 0

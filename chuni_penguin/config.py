@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 
 class BotConfig:
+    __slots__ = ("__section",)
+
     def __init__(self, section: "SectionProxy") -> None:
         self.__section = section
 
@@ -45,6 +47,8 @@ class BotConfig:
 
 
 class WebConfig:
+    __slots__ = ("__section",)
+
     def __init__(self, section: "SectionProxy") -> None:
         self.__section = section
 
@@ -91,6 +95,8 @@ class WebConfig:
 
 
 class CredentialsConfig:
+    __slots__ = ("__section",)
+
     def __init__(self, section: "SectionProxy") -> None:
         self.__section = section
 
@@ -201,6 +207,8 @@ class IconsConfig:
 
 
 class LegalConfig:
+    __slots__ = ("__section",)
+
     def __init__(self, section: "SectionProxy") -> None:
         self.__section = section
 
@@ -220,6 +228,8 @@ class LegalConfig:
 
 
 class DangerousConfig:
+    __slots__ = ("__section",)
+
     def __init__(self, section: "SectionProxy") -> None:
         self.__section = section
 
@@ -229,6 +239,8 @@ class DangerousConfig:
 
 
 class Config:
+    __slots__ = ("__config", "bot", "credentials", "dangerous", "icons", "legal", "web")
+
     def __init__(self, config: "ConfigParser") -> None:
         self.__config = config
         self.bot = BotConfig(self.__config["bot"])

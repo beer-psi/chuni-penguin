@@ -41,7 +41,7 @@ class LinkLevel(Enum):
         return self.name.upper()
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class LinkedGateLeaderboardEntry:
     position: int
     player_name: str
@@ -49,7 +49,7 @@ class LinkedGateLeaderboardEntry:
     link_level: LinkLevel
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class LinkedGateLeaderboard:
     title: str
     artist: str

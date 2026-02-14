@@ -4,7 +4,7 @@ from datetime import datetime
 from .score import Judgements
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class LeaderboardEntry:
     position: int
     player_name: str
@@ -14,7 +14,7 @@ class LeaderboardEntry:
     achieved_at: datetime | None
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class Leaderboard:
     updated_at: datetime
     """The time the leaderboard was last updated."""

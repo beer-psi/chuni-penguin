@@ -26,6 +26,8 @@ class ChunithmNetAuth(httpx.Auth):
     Custom authentication for CHUNITHM-NET. Requires following redirects.
     """
 
+    __slots__ = ("client", "password", "username")
+
     requires_request_body = True
     requires_response_body = True
 

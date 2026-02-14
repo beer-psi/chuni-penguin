@@ -151,6 +151,8 @@ async def end_game(
 
 
 class EndGameTimedOut(GuessingGameState):
+    __slots__ = ("n_unanswered", "session")
+
     def __init__(self, session: "GuessingGameSession", n_unanswered: int) -> None:
         self.session = session
         self.n_unanswered = n_unanswered
@@ -167,6 +169,8 @@ class EndGameTimedOut(GuessingGameState):
 
 
 class EndGameReachedQuestionLimit(GuessingGameState):
+    __slots__ = ("session",)
+
     def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 
@@ -181,6 +185,8 @@ class EndGameReachedQuestionLimit(GuessingGameState):
 
 
 class EndGameReachedScoreLimit(GuessingGameState):
+    __slots__ = ("session",)
+
     def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 
@@ -195,6 +201,8 @@ class EndGameReachedScoreLimit(GuessingGameState):
 
 
 class EndGameUserCanceled(GuessingGameState):
+    __slots__ = ("session",)
+
     def __init__(self, session: "GuessingGameSession") -> None:
         if session.stopped_by is None:
             msg = "Cannot reach this state if stopped_by is None."
@@ -224,6 +232,8 @@ class EndGameUserCanceled(GuessingGameState):
 
 
 class EndGameTooManyWrongAnswers(GuessingGameState):
+    __slots__ = ("session",)
+
     def __init__(self, session: "GuessingGameSession") -> None:
         if session.wrong_answers_limit is None:
             msg = "Cannot reach this state if wrong answers limit is not set."
@@ -242,6 +252,8 @@ class EndGameTooManyWrongAnswers(GuessingGameState):
 
 
 class EndGameVoiceDisconnected(GuessingGameState):
+    __slots__ = ("session",)
+
     def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 

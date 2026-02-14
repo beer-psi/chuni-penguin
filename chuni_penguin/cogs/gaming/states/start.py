@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 class StartState(GuessingGameState):
+    __slots__ = ("session",)
+
     def __init__(self, session: "GuessingGameSession") -> None:
         self.session = session
 

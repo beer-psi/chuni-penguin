@@ -89,6 +89,16 @@ class OggHeaderType(IntFlag):
 
 
 class OggPage:
+    __slots__ = (
+        "_data",
+        "_segment_table",
+        "bitstream_serial_number",
+        "granule_position",
+        "header_type",
+        "page_sequence_number",
+        "version",
+    )
+
     def __init__(
         self,
         *,
@@ -234,6 +244,8 @@ class OggPage:
 
 
 class OggStream:
+    __slots__ = ("_f",)
+
     def __init__(self, f: IO[bytes]):
         self._f: IO[bytes] = f
 

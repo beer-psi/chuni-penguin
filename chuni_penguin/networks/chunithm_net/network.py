@@ -68,6 +68,8 @@ class ChunithmNet(Network):
     SUPPORTS_LINKED_VERSE_PROGRESS = True
     SUPPORTS_LINKED_GATE_LEADERBOARD = True
 
+    __slots__ = ("_client", "_jar")
+
     def __init__(
         self,
         authentication: str,
