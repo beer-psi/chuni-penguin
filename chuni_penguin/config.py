@@ -1,194 +1,109 @@
 from configparser import ConfigParser
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, overload
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
+
+import msgspec
 
 if TYPE_CHECKING:
-    from configparser import SectionProxy
-
     from chuni_penguin.networks.types import Rank
 
-
-class BotConfig:
-    __slots__ = ("__section",)
-
-    def __init__(self, section: "SectionProxy") -> None:
-        self.__section = section
-
-    @property
-    def token(self) -> str:
-        return self.__section["token"]
-
-    @property
-    def default_prefix(self) -> str:
-        return self.__section.get("default_prefix", fallback="c>")  # pyright: ignore[reportReturnType]
-
-    @property
-    def db_connection_string(self) -> str:
-        return self.__section.get(
-            "db_connection_string",
-            fallback="sqlite+aiosqlite:///data/database.sqlite3",
-        )  # pyright: ignore[reportReturnType]
-
-    @property
-    def error_reporting_webhook(self) -> Optional[str]:
-        return self.__section.get("error_reporting_webhook")
-
-    @property
-    def alias_managers(self) -> list[int]:
-        raw = self.__section.get("alias_managers", "").strip()
-        if len(raw) == 0:
-            return []
-
-        return [int(x) for x in raw.split(",")]
-
-    @property
-    def support_server_invite(self) -> str | None:
-        return self.__section.get("support_server_invite")
+T = TypeVar("T")
 
 
-class WebConfig:
-    __slots__ = ("__section",)
+class CommaDelimitedSet(set[T], Generic[T]):
+    pass
 
-    def __init__(self, section: "SectionProxy") -> None:
-        self.__section = section
 
-    @property
-    def enable(self) -> bool:
-        return self.__section.getboolean("enable", fallback=False)
+class BotConfig(msgspec.Struct):
+    token: str
+    default_prefix: str = "c>"
+    db_connection_string: str = "sqlite+aiosqlite:///data/database.sqlite3"
+    error_reporting_webhook: str | None = None
+    alias_managers: CommaDelimitedSet[int] = msgspec.field(
+        default_factory=CommaDelimitedSet
+    )
+    support_server_invite: str | None = None
 
-    @property
-    def listen_address(self) -> str:
-        return self.__section.get("listen_address", fallback="127.0.0.1")  # pyright: ignore[reportReturnType]
 
-    @property
-    def port(self) -> Optional[int]:
-        return self.__section.getint("port", fallback=5730)
+class WebConfig(msgspec.Struct):
+    enable: bool = False
+    listen_address: str = "127.0.0.1"
+    port: int = 5730
+    base_url: str | None = None
+    goatcounter: str | None = None
+    serve_assets: bool = False
+    fallback_url: str | None = None
+    trust_proxy: bool = False
+    is_accessible: bool = False
 
-    @property
-    def base_url(self) -> Optional[str]:
-        return self.__section.get("base_url")
-
-    @property
-    def goatcounter(self) -> Optional[str]:
-        return self.__section.get("goatcounter")
-
-    @property
-    def serve_assets(self) -> bool:
-        return self.__section.getboolean("serve_assets", fallback=False)
-
-    @property
-    def is_accessible(self):
-        return (
+    def __post_init__(self):
+        self.is_accessible = (
             self.enable
             and self.base_url is not None
             and "127.0.0.1" not in self.base_url
             and "localhost" not in self.base_url
         )
 
-    @property
-    def fallback_url(self) -> str | None:
-        return self.__section.get("fallback_url")
 
-    @property
-    def trust_proxy(self) -> bool:
-        return self.__section.getboolean("trust_proxy", fallback=False)
-
-
-class CredentialsConfig:
-    __slots__ = ("__section",)
-
-    def __init__(self, section: "SectionProxy") -> None:
-        self.__section = section
-
-    @property
-    def chunirec_token(self) -> Optional[str]:
-        return self.__section.get("chunirec_token")
-
-    @property
-    def kamaitachi_client_id(self) -> Optional[str]:
-        return self.__section.get("kamaitachi_client_id")
-
-    @property
-    def kamaitachi_client_secret(self) -> Optional[str]:
-        return self.__section.get("kamaitachi_client_secret")
-
-    @property
-    def kamaitachi_api_key(self) -> Optional[str]:
-        return self.__section.get("kamaitachi_api_key")
-
-    @property
-    def goatcounter_api_key(self) -> Optional[str]:
-        return self.__section.get("goatcounter_api_key")
-
-    @property
-    def sega_id_username(self) -> Optional[str]:
-        return self.__section.get("sega_id_username")
-
-    @property
-    def sega_id_password(self) -> Optional[str]:
-        return self.__section.get("sega_id_password")
+class CredentialsConfig(msgspec.Struct):
+    chunirec_token: str | None = None
+    kamaitachi_client_id: str | None = None
+    kamaitachi_client_secret: str | None = None
+    kamaitachi_api_key: str | None = None
+    goatcounter_api_key: str | None = None
+    sega_id_username: str | None = None
+    sega_id_password: str | None = None
 
 
-class IconsConfig:
-    __slots__ = (  # noqa: RUF023
-        "__section",
-        "sssp",
-        "sss",
-        "ssp",
-        "ss",
-        "sp",
-        "s",
-        "aaa",
-        "aa",
-        "a",
-        "bbb",
-        "bb",
-        "b",
-        "c",
-        "d",
-        "bonus_icon_map",
-        "bonus_icon_exp",
-        "bonus_icon_point",
-        "bonus_icon_chance",
-        "bonus_icon_critical",
-        "bonus_icon_gamepoint",
-        "bonus_icon_selection",
-        "linked_gate_not_found",
-        "linked_gate_under_analysis",
-        "linked_gate_origin_linkable",
-        "linked_gate_air_linkable",
-        "linked_gate_star_linkable",
-        "linked_gate_amazon_linkable",
-        "linked_gate_crystal_linkable",
-        "linked_gate_paradise_linkable",
-        "linked_gate_new_linkable",
-        "linked_gate_sun_linkable",
-        "linked_gate_luminous_linkable",
-        "linked_gate_verse_linkable",
-        "linked_gate_origin_clear",
-        "linked_gate_air_clear",
-        "linked_gate_star_clear",
-        "linked_gate_amazon_clear",
-        "linked_gate_crystal_clear",
-        "linked_gate_paradise_clear",
-        "linked_gate_new_clear",
-        "linked_gate_sun_clear",
-        "linked_gate_luminous_clear",
-        "linked_gate_verse_clear",
-        "link_level_v",
-        "link_level_iv",
-        "link_level_iii",
-        "link_level_ii",
-        "link_level_i",
-    )
-
-    def __init__(self, section: "SectionProxy") -> None:
-        self.__section = section
-
-        for k in self.__slots__:
-            if k.startswith("__"):
-                continue
-            setattr(self, k, self.__section.get(k))
+class IconsConfig(msgspec.Struct):
+    sssp: str | None = None
+    sss: str | None = None
+    ssp: str | None = None
+    ss: str | None = None
+    sp: str | None = None
+    s: str | None = None
+    aaa: str | None = None
+    aa: str | None = None
+    a: str | None = None
+    bbb: str | None = None
+    bb: str | None = None
+    b: str | None = None
+    c: str | None = None
+    d: str | None = None
+    bonus_icon_map: str | None = None
+    bonus_icon_exp: str | None = None
+    bonus_icon_point: str | None = None
+    bonus_icon_chance: str | None = None
+    bonus_icon_critical: str | None = None
+    bonus_icon_gamepoint: str | None = None
+    bonus_icon_selection: str | None = None
+    linked_gate_not_found: str | None = None
+    linked_gate_under_analysis: str | None = None
+    linked_gate_origin_linkable: str | None = None
+    linked_gate_air_linkable: str | None = None
+    linked_gate_star_linkable: str | None = None
+    linked_gate_amazon_linkable: str | None = None
+    linked_gate_crystal_linkable: str | None = None
+    linked_gate_paradise_linkable: str | None = None
+    linked_gate_new_linkable: str | None = None
+    linked_gate_sun_linkable: str | None = None
+    linked_gate_luminous_linkable: str | None = None
+    linked_gate_verse_linkable: str | None = None
+    linked_gate_origin_clear: str | None = None
+    linked_gate_air_clear: str | None = None
+    linked_gate_star_clear: str | None = None
+    linked_gate_amazon_clear: str | None = None
+    linked_gate_crystal_clear: str | None = None
+    linked_gate_paradise_clear: str | None = None
+    linked_gate_new_clear: str | None = None
+    linked_gate_sun_clear: str | None = None
+    linked_gate_luminous_clear: str | None = None
+    linked_gate_verse_clear: str | None = None
+    link_level_v: str | None = None
+    link_level_iv: str | None = None
+    link_level_iii: str | None = None
+    link_level_ii: str | None = None
+    link_level_i: str | None = None
 
     @overload
     def icon(self, named: str) -> str | None: ...
@@ -206,55 +121,67 @@ class IconsConfig:
         return self.icon(str(rank).lower().replace("+", "p"), str(rank))
 
 
-class LegalConfig:
-    __slots__ = ("__section",)
-
-    def __init__(self, section: "SectionProxy") -> None:
-        self.__section = section
-
-    @property
-    def privacy_policy(self) -> str:
-        return self.__section.get(
-            "privacy_policy",
-            fallback="https://chuni-penguin.beerpsi.cc/legal/privacy-policy",
-        )  # pyright: ignore[reportReturnType]
-
-    @property
-    def terms_of_service(self) -> str:
-        return self.__section.get(
-            "terms_of_service",
-            fallback="https://chuni-penguin.beerpsi.cc/legal/terms-of-service",
-        )  # pyright: ignore[reportReturnType]
+class LegalConfig(msgspec.Struct):
+    privacy_policy: str | None = None
+    terms_of_service: str | None = None
 
 
-class DangerousConfig:
-    __slots__ = ("__section",)
+class DangerousConfig(msgspec.Struct):
+    dev: bool = False
 
-    def __init__(self, section: "SectionProxy") -> None:
-        self.__section = section
 
-    @property
-    def dev(self) -> bool:
-        return self.__section.getboolean("dev", fallback=False)
+def config_dec_hook(ty: type, obj: Any):
+    # Handle generic types - these have __args__ for parameters and __origin__ for the
+    # original type
+    try:
+        ty_arg = ty.__args__[0] if len(ty.__args__) > 0 else None
+        ty = ty.__origin__
+    except AttributeError:
+        ty_arg = None
+
+    if ty is CommaDelimitedSet and ty_arg is int and isinstance(obj, str):
+        return CommaDelimitedSet(int(item.strip()) for item in obj.split(","))
+
+    msg = f"Objects of type {obj.__class__.__name__} cannot be converted into type {ty}"
+    raise NotImplementedError(msg)
 
 
 class Config:
-    __slots__ = ("__config", "bot", "credentials", "dangerous", "icons", "legal", "web")
+    __slots__ = ("_path", "bot", "credentials", "dangerous", "icons", "legal", "web")
 
-    def __init__(self, config: "ConfigParser") -> None:
-        self.__config = config
-        self.bot = BotConfig(self.__config["bot"])
-        self.web = WebConfig(self.__config["web"])
-        self.credentials = CredentialsConfig(self.__config["credentials"])
-        self.icons = IconsConfig(self.__config["icons"])
-        self.legal = LegalConfig(self.__config["legal"])
-        self.dangerous = DangerousConfig(self.__config["dangerous"])
+    def __init__(self, path: "str | Path") -> None:
+        self._path = path
+        self.reload()
 
-    @classmethod
-    def from_file(cls, path: "str | Path") -> "Config":
+    def reload(self):
         cfg = ConfigParser()
-        cfg.read(path)
-        return cls(cfg)
+
+        cfg.read(self._path)
+
+        self.bot = msgspec.convert(
+            cfg["bot"], type=BotConfig, strict=False, dec_hook=config_dec_hook
+        )
+        self.web = msgspec.convert(
+            cfg["web"], type=WebConfig, strict=False, dec_hook=config_dec_hook
+        )
+        self.credentials = msgspec.convert(
+            cfg["credentials"],
+            type=CredentialsConfig,
+            strict=False,
+            dec_hook=config_dec_hook,
+        )
+        self.icons = msgspec.convert(
+            cfg["icons"], type=IconsConfig, strict=False, dec_hook=config_dec_hook
+        )
+        self.legal = msgspec.convert(
+            cfg["legal"], type=LegalConfig, strict=False, dec_hook=config_dec_hook
+        )
+        self.dangerous = msgspec.convert(
+            cfg["dangerous"],
+            type=DangerousConfig,
+            strict=False,
+            dec_hook=config_dec_hook,
+        )
 
 
-config = Config.from_file(Path(__file__).parent.parent / "bot.ini")
+config = Config(Path(__file__).parent.parent / "bot.ini")

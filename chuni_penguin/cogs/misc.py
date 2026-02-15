@@ -195,16 +195,20 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         """
 
         embed = discord.Embed(color=discord.Color.yellow())
-        embed.add_field(
-            name="Privacy policy",
-            value=f"[Link]({config.legal.privacy_policy})",
-            inline=False,
-        )
-        embed.add_field(
-            name="Terms of service",
-            value=f"[Link]({config.legal.terms_of_service})",
-            inline=False,
-        )
+
+        if config.legal.privacy_policy is not None:
+            embed.add_field(
+                name="Privacy policy",
+                value=f"[Link]({config.legal.privacy_policy})",
+                inline=False,
+            )
+
+        if config.legal.terms_of_service is not None:
+            embed.add_field(
+                name="Terms of service",
+                value=f"[Link]({config.legal.terms_of_service})",
+                inline=False,
+            )
 
         await ctx.reply(embed=embed, mention_author=False)
 
