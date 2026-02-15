@@ -1,11 +1,17 @@
 from configparser import ConfigParser
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
 
 import msgspec
 
 if TYPE_CHECKING:
     from chuni_penguin.networks.types import Rank
+
+T = TypeVar("T")
+
+
+class CommaDelimitedSet(set[T], Generic[T]):
+    pass
 
 
 class BotConfig(msgspec.Struct):
@@ -13,7 +19,9 @@ class BotConfig(msgspec.Struct):
     default_prefix: str = "c>"
     db_connection_string: str = "sqlite+aiosqlite:///data/database.sqlite3"
     error_reporting_webhook: str | None = None
-    alias_managers: set[int] = msgspec.field(default_factory=set)
+    alias_managers: CommaDelimitedSet[int] = msgspec.field(
+        default_factory=CommaDelimitedSet
+    )
     support_server_invite: str | None = None
 
 
@@ -123,10 +131,18 @@ class DangerousConfig(msgspec.Struct):
 
 
 def config_dec_hook(ty: type, obj: Any):
-    if ty is set and isinstance(obj, str):
-        return {item.strip() for item in obj.split(",")}
+    # Handle generic types - these have __args__ for parameters and __origin__ for the
+    # original type
+    try:
+        ty_arg = ty.__args__[0] if len(ty.__args__) > 0 else None
+        ty = ty.__origin__
+    except AttributeError:
+        ty_arg = None
 
-    msg = f"Objects of {obj.__class__.__name__} cannot be converted into type {ty}"
+    if ty is CommaDelimitedSet and ty_arg is int and isinstance(obj, str):
+        return CommaDelimitedSet(int(item.strip()) for item in obj.split(","))
+
+    msg = f"Objects of type {obj.__class__.__name__} cannot be converted into type {ty}"
     raise NotImplementedError(msg)
 
 
