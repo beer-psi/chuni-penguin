@@ -58,7 +58,7 @@ class CachedAlias:
         alias: str,
         title: str,
         song_id: int,
-        guild_id: Optional[int],
+        guild_id: int,
     ) -> None:
         self.id = id
         self.alias = alias

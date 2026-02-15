@@ -17,6 +17,8 @@ from .types import (
 
 
 class Network(ABC):
+    __slots__ = ()
+
     NAME: ClassVar[str]
     """The network's name."""
 
