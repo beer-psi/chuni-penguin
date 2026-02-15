@@ -344,7 +344,7 @@ class GuessingGameSession:
                     alias=song.title.lower(),
                     title=song.title,
                     song_id=song.id,
-                    guild_id=None,
+                    guild_id=0,
                 )
             ]
 
