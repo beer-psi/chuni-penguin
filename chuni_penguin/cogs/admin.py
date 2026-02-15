@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 from typing import TYPE_CHECKING, Literal, Optional
 
@@ -5,6 +6,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import delete
 
+from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Denylist
 
@@ -116,6 +118,17 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
         if ctx.bot_permissions.manage_messages:
             with contextlib.suppress(discord.HTTPException):
                 await ctx.message.delete()
+
+    @commands.group("botconfig")
+    @commands.is_owner()
+    async def botconfig(self, ctx: PenguinContext):
+        pass
+
+    @botconfig.command("reload")
+    @commands.is_owner()
+    async def botconfig_reload(self, ctx: PenguinContext):
+        await asyncio.to_thread(config.reload)
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
 
 async def setup(bot: "ChuniBot"):
