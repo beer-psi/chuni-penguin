@@ -71,6 +71,7 @@ from chuni_penguin.networks.types import (
     Difficulty,
     Genre,
     PersonalBest,
+    Possession,
     Rank,
     RecentScore,
     Score,
@@ -1818,7 +1819,9 @@ class RecordsCog(commands.Cog, name="Records"):
         kamaitachi: bool = False,
         omnimix: bool = False,
     ):
-        """View statistics about a folder.
+        """View aggregated statistics on a set of charts.
+
+        If only a version is specified, also shows progress towards achieving SPIRIT/TRIBUTE/LEGEND titles.
 
         **Parameters**:
         `user`: Discord username of the player. Yourself, if not provided.
@@ -1856,7 +1859,7 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
     @app_commands.command(
-        name="statistics", description="View statistics about a folder."
+        name="statistics", description="View aggregated statistics on a set of charts."
     )
     @app_commands.describe(
         user="The player. Yourself, if not provided.",
@@ -2046,7 +2049,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 if pb_rank.value >= rank.value:
                     counts[rank] += 1
 
-                    if rank in (Rank.s, Rank.sss):
+                    if rank.value >= Rank.s.value:
                         counts[f"{pb.difficulty}_{rank}"] += 1
 
             for combo_lamp in ComboLamp:
@@ -2139,6 +2142,46 @@ class RecordsCog(commands.Cog, name="Records"):
                 floor_to_ndp(op * 100 / total_op, 2) if total_op > 0 else Decimal(0)
             )
 
+            # TODO: update when new filters are added; embed colors are only calculated
+            # by possession rules on the full view
+            if (
+                level is None
+                and (difficulty is None or difficulty == "MASTER+ULTIMA")
+                and genre is None
+                and version is None
+            ):
+                total_mas_ult = counts["MAS"] + counts["ULT"]
+
+                # Don't bother with the rating check because if you S every MAS/ULT
+                # you're going to end up above 16 rating anyways.
+                if op_percent >= Decimal("99.5") and (
+                    counts[f"MAS_{Rank.sss}"] + counts[f"ULT_{Rank.sss}"]
+                    == total_mas_ult
+                ):
+                    embed.color = Possession.rainbow.color
+                elif op_percent >= 99 and (
+                    counts[f"MAS_{Rank.ss}"] + counts[f"ULT_{Rank.ss}"] == total_mas_ult
+                ):
+                    embed.color = Possession.platinum.color
+                elif op_percent >= Decimal("97.5") and (
+                    counts[f"MAS_{Rank.sp}"] + counts[f"ULT_{Rank.sp}"] == total_mas_ult
+                ):
+                    embed.color = Possession.gold.color
+                elif counts[f"MAS_{Rank.s}"] + counts[f"ULT_{Rank.s}"] == total_mas_ult:
+                    embed.color = Possession.silver.color
+                else:
+                    embed.color = Possession.none.color
+            elif op_percent >= 95:
+                embed.color = Possession.rainbow.color
+            elif op_percent >= 90:
+                embed.color = Possession.platinum.color
+            elif op_percent >= 80:
+                embed.color = Possession.gold.color
+            elif op_percent >= 70:
+                embed.color = Possession.silver.color
+            else:
+                embed.color = Possession.none.color
+
             embed.add_field(
                 name="OVER POWER",
                 value=bold_if(op == total_op, f"{op} / {total_op} ({op_percent:.2f}%)"),
@@ -2196,6 +2239,8 @@ class RecordsCog(commands.Cog, name="Records"):
             ),
         )
 
+        # TODO: update this if new filters are added; only the full version view should
+        # show title completion
         if (
             version is not None
             and level is None
