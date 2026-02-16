@@ -75,7 +75,7 @@ class ScoreCardEmbed(discord.Embed):
         if play_rating := record.extras.get(KEY_PLAY_RATING):
             play_overpower = record.extras[KEY_OVERPOWER]
             overpower_max = record.extras[KEY_OVERPOWER_MAX]
-            play_op_display = f"{floor_to_ndp(play_overpower, 2)} ({floor_to_ndp(play_overpower / overpower_max * 100, 2)}%)"
+            play_op_display = f"{play_overpower} ({floor_to_ndp(play_overpower / overpower_max * 100, 2)}%)"
 
             footer_sections = []
             if record.difficulty != Difficulty.worlds_end:

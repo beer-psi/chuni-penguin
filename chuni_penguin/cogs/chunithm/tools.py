@@ -19,6 +19,7 @@ from chuni_penguin.calculation import (
     calculate_border,
     calculate_overpower_base,
     calculate_overpower_max,
+    calculate_play_overpower,
     calculate_rating,
     calculate_score_deduction_per_judgement,
     calculate_score_for_rating,
@@ -35,7 +36,7 @@ from chuni_penguin.converters import (
 from chuni_penguin.database import Chart, PersonalBest, Song
 from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.networks.consts import KEY_PLAY_RATING
-from chuni_penguin.networks.types import Difficulty, Rank
+from chuni_penguin.networks.types import ComboLamp, Difficulty, Rank
 from chuni_penguin.ui import ChartCardEmbed
 from chuni_penguin.utils import (
     floor_to_ndp,
@@ -208,22 +209,26 @@ class ToolsCog(commands.Cog, name="Tools"):
                 res += "\n- OVER POWER:"
 
                 if score >= 1000000:
-                    overpower = overpower_base + Decimal(1)
-                    overpower_fc_percentage = floor_to_ndp(
-                        overpower / overpower_max * 100, 2
+                    overpower_ap = calculate_play_overpower(
+                        overpower_base, ComboLamp.all_justice
                     )
-                    res += f"\n  - AJ: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+                    overpower_ap_percentage = floor_to_ndp(
+                        overpower_ap / overpower_max * 100, 2
+                    )
+                    res += f"\n  - AJ: **{overpower_ap} / {overpower_max_floored} ({overpower_ap_percentage}%)**"
 
-                overpower = overpower_base + Decimal("0.5")
+                overpower_fc = calculate_play_overpower(
+                    overpower_base, ComboLamp.full_combo
+                )
                 overpower_fc_percentage = floor_to_ndp(
-                    overpower / overpower_max * 100, 2
+                    overpower_fc / overpower_max * 100, 2
                 )
                 overpower_base_percentage = floor_to_ndp(
                     overpower_base / overpower_max * 100, 2
                 )
 
-                res += f"\n  - FC: **{floor_to_ndp(overpower, 2)} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
-                res += f"\n  - Non-FC: **{floor_to_ndp(overpower_base, 2)} / {overpower_max_floored} ({overpower_base_percentage}%)**"
+                res += f"\n  - FC: **{overpower_fc} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
+                res += f"\n  - Non-FC: **{overpower_base} / {overpower_max_floored} ({overpower_base_percentage}%)**"
 
         await ctx.reply(res, mention_author=False)
 
