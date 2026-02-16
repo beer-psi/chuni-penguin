@@ -17,6 +17,7 @@ from chuni_penguin.networks.types import ComboLamp
         (1_000_063, 15.3, Decimal("81.53")),
         (1_005_535, 15.1, Decimal("83.535")),
         (1_007_748, 15.1, Decimal("85.87")),
+        (1_009_450, 14.0, Decimal("83.425")),
     ],
 )
 def test_calculate_overpower_base(score: int, chart_constant: float, expected: Decimal):

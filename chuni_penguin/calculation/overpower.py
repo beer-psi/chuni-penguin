@@ -1,3 +1,4 @@
+import decimal
 from decimal import Decimal
 
 from chuni_penguin.networks.types import ComboLamp
@@ -20,8 +21,13 @@ def calculate_overpower_base(score: int, internal_level: float) -> Decimal:
     # For rank S and above, OP is floored to the nearest 0.005
     # Otherwise, OP is floored to the nearest 0.05
     rounding = 2 if score >= 975_000 else 1
+    op_floor = floor_to_ndp(rawop, rounding)
 
-    return (floor_to_ndp(rawop, rounding) + round(rawop, rounding)) / 2
+    with decimal.localcontext() as ctx:
+        ctx.rounding = decimal.ROUND_HALF_UP
+        op_ceil = round(rawop, rounding)
+
+    return (op_floor + op_ceil) / 2
 
 
 def calculate_overpower_max(internal_level: float) -> Decimal:
