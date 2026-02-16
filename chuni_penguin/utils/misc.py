@@ -37,7 +37,7 @@ def floor_to_ndp(number: decimal.Decimal, dp: int) -> decimal.Decimal:
 
     with decimal.localcontext() as ctx:
         ctx.rounding = decimal.ROUND_FLOOR
-        return round(decimal.Decimal(number), dp)
+        return round(number, dp)
 
 
 def round_to_nearest(number: "T", value: int) -> "T":
