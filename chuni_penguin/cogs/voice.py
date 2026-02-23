@@ -1,10 +1,11 @@
 import contextlib
 import operator
 import random
+import re
 from collections import deque
 from functools import reduce
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 import discord
 import sqlalchemy
@@ -28,7 +29,62 @@ from chuni_penguin.utils import AsyncRWLockMapping, get_jacket_url
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
+    from chuni_penguin.cogs.events import EventsCog
     from chuni_penguin.cogs.gaming.cog import GamingCog
+
+
+class AddToFavoritesButton(
+    discord.ui.DynamicItem[discord.ui.Button], template=r"favorite:(?P<id>\d+)"
+):
+    def __init__(self, song_id: int):
+        self.song_id = song_id
+
+        super().__init__(
+            discord.ui.Button(
+                style=discord.ButtonStyle.green,
+                label="Add to CHUNITHM favorites",
+                custom_id=f"favorite:{song_id}",
+            )
+        )
+
+    @classmethod
+    @override
+    async def from_custom_id(  # pyright: ignore[reportIncompatibleMethodOverride]
+        cls,
+        interaction: discord.Interaction,
+        item: discord.ui.Button,
+        match: re.Match[str],
+    ):
+        song_id = int(match["id"])
+
+        return cls(song_id)
+
+    @override
+    async def callback(self, interaction: discord.Interaction["ChuniBot"]):  # pyright: ignore[reportIncompatibleMethodOverride]
+        await interaction.response.defer(ephemeral=True, thinking=True)
+
+        try:
+            async with interaction.client.chunithm_networks.network(
+                interaction, chunithm_net=True
+            ) as client:
+                favorites = await client.get_favorite_music()
+
+                if self.song_id in favorites:
+                    await interaction.followup.send(
+                        "You've already added this song to favorites."
+                    )
+                    return
+
+                favorites.append(self.song_id)
+                await client.set_favorite_music(favorites)
+
+                await interaction.followup.send("Added the song to your favorites.")
+        except Exception as e:  # noqa: BLE001
+            events: "EventsCog" = interaction.client.get_cog("Events")  # pyright: ignore[reportAssignmentType]
+            app_command_error = discord.app_commands.errors.AppCommandError()
+            app_command_error.original = e  # pyright: ignore[reportAttributeAccessIssue]
+
+            await events.tree_on_error(interaction, app_command_error)
 
 
 class RadioState:
@@ -344,6 +400,9 @@ class VoiceCog(commands.Cog, name="Voice"):
         if song.release is not None:
             displayed_version += f" ({song.release})"
 
+        view = discord.ui.View(timeout=None)
+        view.add_item(AddToFavoritesButton(song.id))
+
         await ctx.send(
             content=f"Now playing in {voice_client.channel.mention}",
             embed=discord.Embed(
@@ -359,6 +418,7 @@ class VoiceCog(commands.Cog, name="Voice"):
             .set_footer(
                 text=f"Track {state.total_tracks - state.remaining_tracks} / {state.total_tracks}"
             ),
+            view=view,
         )
 
     @commands.Cog.listener()

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from types import TracebackType
 from typing import ClassVar
 
@@ -136,6 +137,16 @@ class Network(ABC):
     This network supports :meth:`get_linked_gate_leaderboard`.
     """
 
+    SUPPORTS_FAVORITE_MUSIC: ClassVar[bool] = False
+    """
+    This network supports :meth:`get_favorite_music`.
+    """
+
+    SUPPORTS_SET_FAVORITE_MUSIC: ClassVar[bool] = False
+    """
+    This network supports :meth:`set_favorite_music`.
+    """
+
     @abstractmethod
     def __init__(self, authentication: str): ...
 
@@ -259,6 +270,17 @@ class Network(ABC):
         self, linked_gate: LinkedGate
     ) -> LinkedGateLeaderboard:
         """Get the network's leaderboard for a specific Linked GATE."""
+        raise NotImplementedError
+
+    async def get_favorite_music(self) -> list[int]:
+        """Get the player's favorite songs."""
+        raise NotImplementedError
+
+    async def set_favorite_music(self, ids: Sequence[int]) -> None:
+        """
+        Set the player's favorite music. Any songs that were previously in the list
+        but not included in :param:`ids` must be removed.
+        """
         raise NotImplementedError
 
     async def aclose(self) -> None:

@@ -1,4 +1,5 @@
 import io
+from collections.abc import Sequence
 from http.cookiejar import DefaultCookiePolicy, LWPCookieJar
 from typing import Any, override
 
@@ -67,6 +68,8 @@ class ChunithmNet(Network):
     SUPPORTS_SEND_FRIEND_REQUEST = True
     SUPPORTS_LINKED_VERSE_PROGRESS = True
     SUPPORTS_LINKED_GATE_LEADERBOARD = True
+    SUPPORTS_FAVORITE_MUSIC = True
+    SUPPORTS_SET_FAVORITE_MUSIC = True
 
     __slots__ = ("_client", "_jar")
 
@@ -343,6 +346,24 @@ class ChunithmNet(Network):
         )
 
         return parse_linked_gate_leaderboard(soup)
+
+    async def get_favorite_music(self) -> list[int]:
+        soup = await self._request_as_soup("GET", "mobile/home/favorite/musicList")
+
+        return [int(element["value"]) for element in soup.select("input[name=musicId]")]  # pyright: ignore[reportArgumentType]
+
+    async def set_favorite_music(self, ids: Sequence[int]) -> None:
+        await self._client.post(
+            "mobile/home/favorite/updateMusic/set",
+            data={
+                "idx": "9999",
+                "music[]": [str(id) for id in ids],
+                "token": self._token,
+            },
+            headers={
+                "referer": str(_BASE_URL.join("/mobile/home/favorite/updateMusic"))
+            },
+        )
 
     async def aclose(self) -> None:
         await self._client.aclose()
