@@ -452,3 +452,4 @@ class VoiceCog(commands.Cog, name="Voice"):
 
 async def setup(bot: "ChuniBot"):
     await bot.add_cog(VoiceCog(bot))
+    bot.add_dynamic_items(AddToFavoritesButton)
