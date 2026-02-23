@@ -92,6 +92,7 @@ class RadioState:
         "allowed_song_ids",
         "available_tracks",
         "genres",
+        "inactive_tracks",
         "levels",
         "stopped_by",
         "total_tracks",
@@ -111,6 +112,7 @@ class RadioState:
         self.allowed_song_ids = allowed_song_ids
         self.stopped_by: discord.User | discord.Member | None = None
         self.volume = volume
+        self.inactive_tracks = 0
         self.load_tracks()
 
     @property
@@ -363,6 +365,24 @@ class VoiceCog(commands.Cog, name="Voice"):
             await voice_client.disconnect(force=False)
             return
 
+        if len(voice_client.channel.members) <= 1:
+            state.inactive_tracks += 1
+        else:
+            # reset the counter if there are people
+            state.inactive_tracks = 0
+
+        if state.inactive_tracks >= 3:
+            await self._clear_radio_state(ctx.channel.id)
+            await voice_client.disconnect(force=False)
+            await ctx.send(
+                embed=discord.Embed(
+                    color=discord.Color.red(),
+                    title="Disconnected",
+                    description="The radio was stopped because no one was in the call for 3 songs.",
+                )
+            )
+            return
+
         path = state.next_track()
 
         if path is None:
@@ -432,26 +452,21 @@ class VoiceCog(commands.Cog, name="Voice"):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
-        # Listen to voice channel disconnects to track voice channel ID changes
-        if member != self.bot.user:
-            return
+        if member == self.bot.user and before.channel is not None:
+            if after.channel is None:
+                await self._clear_radio_state(before.channel.id)
+            else:
+                async with self.radio_states.write() as radio_states:
+                    if before.channel.id not in radio_states:
+                        return
 
-        # To be disconnected, you must be in a voice channel first.
-        if before.channel is None:
-            return
+                    radio_states[after.channel.id] = radio_states[before.channel.id]
 
-        # We are disconnected if the after channel is None. The on_radio_play_next_track
-        # loop will handle clearing states.
-        if after.channel is None:
-            await self._clear_radio_state(before.channel.id)
-        else:
-            async with self.radio_states.write() as radio_states:
-                if before.channel.id not in radio_states:
-                    return
-
-                radio_states[after.channel.id] = radio_states[before.channel.id]
-
-                del radio_states[before.channel.id]
+                    del radio_states[before.channel.id]
+        elif member != self.bot.user and after.channel is not None:
+            async with self.radio_states.read() as radio_states:
+                with contextlib.suppress(KeyError):
+                    radio_states[after.channel.id].inactive_tracks = 0
 
 
 async def setup(bot: "ChuniBot"):
