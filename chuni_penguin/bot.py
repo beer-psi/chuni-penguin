@@ -374,4 +374,14 @@ class ChuniBot(commands.AutoShardedBot):
         if len(timeout_tasks) > 0:
             await asyncio.wait(timeout_tasks)
 
+        # Unload extensions in reverse order (LIFO) since later extensions depend
+        # on previous extensions being available - discord.py's default behavior is FIFO
+        for extension in reversed(tuple(self._BotBase__extensions)):  # pyright: ignore[reportAttributeAccessIssue]
+            with contextlib.suppress(Exception):
+                await self.unload_extension(extension)
+
+        for cog in reversed(tuple(self._BotBase__cogs)):  # pyright: ignore[reportAttributeAccessIssue]
+            with contextlib.suppress(Exception):
+                await self.remove_cog(cog)
+
         await super().close()
