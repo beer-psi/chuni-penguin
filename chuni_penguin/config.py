@@ -53,6 +53,7 @@ class CredentialsConfig(msgspec.Struct):
     goatcounter_api_key: str | None = None
     sega_id_username: str | None = None
     sega_id_password: str | None = None
+    kofi_verification_token: str | None = None
 
 
 class IconsConfig(msgspec.Struct):

@@ -7,10 +7,11 @@ from datetime import UTC, datetime
 from html import escape
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Literal, override
 
 import aiohttp
 import discord
+import msgspec
 import yarl
 from aiohttp import ClientSession, web
 from aiohttp.web import Application
@@ -362,6 +363,104 @@ async def redirect_to_youtube_search(request: web.Request) -> web.Response:
     raise web.HTTPFound(yt_search_link(song.title, difficulty))
 
 
+class KofiShopItem(msgspec.Struct):
+    direct_link_code: str
+    variation_name: str
+    quantity: int
+
+
+class KofiShipping(msgspec.Struct):
+    full_name: str
+    street_address: str
+    city: str
+    state_or_province: str
+    postal_code: str
+    country: str
+    country_code: str
+    telephone: str
+
+
+class KofiWebhookData(msgspec.Struct):
+    verification_token: str
+    message_id: str
+    timestamp: datetime
+    type: Literal["Donation", "Subscription", "Commission", "Shop Order"]
+    is_public: bool
+    from_name: str
+    message: str | None
+    amount: str
+    url: str
+    email: str
+    currency: str
+    is_subscription_payment: bool
+    is_first_subscription_payment: bool
+    kofi_transaction_id: str
+    shop_items: list[KofiShopItem] | None
+    tier_name: str | None
+    shipping: KofiShipping | None
+    discord_username: str | None
+    discord_userid: str | None
+
+
+@router.post("/kofi")
+async def kofi_webhook(request: web.Request) -> web.Response:
+    if config.credentials.kofi_verification_token is None:
+        raise web.HTTPInternalServerError(reason="ko-fi verification token not set")
+
+    if request.headers.get("user-agent") != "Kofi.Webhooks":
+        raise web.HTTPForbidden
+
+    params = await request.post()
+
+    if "data" not in params:
+        raise web.HTTPBadRequest
+
+    raw_data = params["data"]
+
+    if not isinstance(raw_data, (str, bytes)):
+        raise web.HTTPBadRequest
+
+    try:
+        data = msgspec.json.decode(raw_data, type=KofiWebhookData)
+    except msgspec.DecodeError:
+        raise web.HTTPBadRequest from None
+
+    if data.verification_token != config.credentials.kofi_verification_token:
+        raise web.HTTPUnauthorized
+
+    if data.discord_userid is None:
+        return web.Response()
+
+    try:
+        discord_userid = int(data.discord_userid)
+    except ValueError:
+        raise web.HTTPBadRequest from None
+
+    bot: ChuniBot = request.config_dict["bot"]
+
+    async with bot.begin_db_session() as session:
+        query = select(Cookie).where(Cookie.discord_id == discord_userid)
+        result = (await session.execute(query)).scalar_one_or_none()
+
+        if result is not None:
+            result.is_supporter = True
+            session.add(result)
+        else:
+            session.add(
+                Cookie(
+                    discord_id=discord_userid,
+                    cookie="",
+                    kamaitachi_token=None,
+                    is_contributor=False,
+                    is_supporter=True,
+                )
+            )
+
+        await session.commit()
+
+    return web.Response()
+
+
 if config.web.serve_assets and (ASSETS_DIR / "jackets").exists():
     router.static("/assets/jackets", ASSETS_DIR / "jackets")
 
@@ -504,7 +603,7 @@ class WebCog(commands.Cog, name="Web"):
                     session,
                     config.web.goatcounter,
                     config.credentials.goatcounter_api_key,
-                    ["/kamaitachi/users/*", "/assets/jackets/*"],
+                    ["/kamaitachi/users/*", "/assets/jackets/*", "/kofi"],
                 )
             )
 
