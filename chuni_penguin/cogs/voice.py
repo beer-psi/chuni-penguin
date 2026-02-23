@@ -123,7 +123,7 @@ class VoiceCog(commands.Cog, name="Voice"):
             ctx.author.voice is None
             or (voice_channel := ctx.author.voice.channel) is None
         ):
-            msg = "You must connect to a voice channel to start this guessing game."
+            msg = "You must connect to a voice channel to start a radio."
             raise commands.CommandError(msg)
 
         voice_channel_permissions = voice_channel.permissions_for(ctx.me)
