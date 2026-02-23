@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, cast, override
 import discord
 import sqlalchemy
 from discord.ext import commands, songbird
-from discord.utils import MISSING
 from sqlalchemy import ColumnElement, select
 
 from chuni_penguin import flags
