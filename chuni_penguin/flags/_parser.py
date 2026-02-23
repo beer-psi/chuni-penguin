@@ -331,6 +331,9 @@ class DiscordArguments(ArgumentParser):
                     if action.nargs != OPTIONAL_INVISIBLE:
                         raise
 
+                    if i + 1 >= len(positionals):
+                        raise
+
                     next_action = positionals[i + 1]
 
                     if next_action.nargs in (
