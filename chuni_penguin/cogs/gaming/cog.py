@@ -1,11 +1,11 @@
 import asyncio
 from argparse import ArgumentError
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, songbird
-from discord.ext.commands import Context, Range
+from discord.ext.commands import Context
 from discord.utils import MISSING
 from sqlalchemy import delete
 
@@ -241,7 +241,7 @@ class GamingCog(commands.Cog, name="Games"):
         """
 
         if ctx.voice_client is not None:
-            msg = "Another voice guessing game is already ongoing in this server. Only one voice guessing game can run at a time for each server."
+            msg = "Another radio or voice guessing game is already ongoing in this server. Only one radio or voice guessing game can run at a time for each server."
             raise commands.CommandError(msg)
 
         if (
@@ -335,40 +335,6 @@ class GamingCog(commands.Cog, name="Games"):
 
         return session
 
-    @commands.hybrid_command("volume")
-    @commands.guild_only()
-    @commands.bot_has_permissions(add_reactions=True)
-    @logged_prefix_command
-    async def volume(self, ctx: Context, volume: Range[int, 1, 100]):
-        """Sets the volume of the current voice guessing game."""
-
-        assert isinstance(ctx.author, discord.Member)
-
-        if ctx.voice_client is None:
-            msg = "There are no active voice guessing games in this server."
-            raise commands.CommandError(msg)
-
-        if (
-            ctx.author.voice is None
-            or ctx.author.voice.channel != ctx.voice_client.channel
-        ):
-            msg = "You are not in the current voice guessing game."
-            raise commands.CommandError(msg)
-
-        async with self.game_sessions.read() as game_sessions:
-            if ctx.channel.id not in game_sessions:
-                msg = "There are no ongoing games in this channel."
-                raise commands.CommandError(msg)
-
-            game_sessions[ctx.channel.id].volume = volume
-
-        cast(songbird.SongbirdClient, ctx.voice_client).set_volume(volume / 100)
-
-        if ctx.interaction is not None:
-            await ctx.reply(f"Set volume to {volume}%", mention_author=False)
-        else:
-            await ctx.message.add_reaction("✅")
-
     @commands.hybrid_command("skip")
     @commands.bot_has_permissions(add_reactions=True)
     @logged_prefix_command
@@ -389,40 +355,6 @@ class GamingCog(commands.Cog, name="Games"):
             await ctx.reply("Skipped!", mention_author=False)
         else:
             await ctx.message.add_reaction("⏩")
-
-    @commands.hybrid_command("stop")
-    @commands.bot_has_permissions(add_reactions=True)
-    @logged_prefix_command
-    async def stop(self, ctx: Context):
-        """Stops the currently running guessing game."""
-
-        async with self.game_sessions.read() as game_sessions:
-            if ctx.channel.id not in game_sessions:
-                msg = "There are no ongoing games in this channel."
-                raise commands.CommandError(msg)
-
-            session = game_sessions[ctx.channel.id]
-
-            if (
-                ctx.author != session.ctx.author
-                and ctx.guild is not None
-                and not ctx.author.guild_permissions.manage_guild  # pyright: ignore[reportAttributeAccessIssue]
-            ):
-                msg = "You cannot stop a game unless you started it or have the Manage Server permission."
-                raise commands.CommandError(msg)
-
-        async with self.game_sessions.read() as game_sessions:
-            # The game may have already been stopped between reads.
-            if ctx.channel.id not in game_sessions:
-                msg = "The game has already stopped."
-                raise commands.CommandError(msg)
-
-            await game_sessions[ctx.channel.id].stop(ctx.author)
-
-        if ctx.interaction is not None:
-            await ctx.reply("Stopped!", mention_author=False)
-        else:
-            await ctx.message.add_reaction("⏹")
 
     @commands.guild_only()
     @guess.command("leaderboard", aliases=["lb"])

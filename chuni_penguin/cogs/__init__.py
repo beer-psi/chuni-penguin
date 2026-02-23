@@ -10,6 +10,7 @@ COG_LIST: list[str] = [
     "chuni_penguin.cogs.events",
     "chuni_penguin.cogs.fluff",
     "chuni_penguin.cogs.gaming",
+    "chuni_penguin.cogs.voice",
     "chuni_penguin.cogs.misc",
     "chuni_penguin.cogs.chunithm.networks",
     "chuni_penguin.cogs.chunithm.auth",
