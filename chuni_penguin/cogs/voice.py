@@ -343,7 +343,7 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     async def _clear_radio_state(self, channel_id: int):
         async with self.radio_states.write() as radio_states:
-            with contextlib.suppress(IndexError):
+            with contextlib.suppress(KeyError):
                 del radio_states[channel_id]
 
     @commands.Cog.listener()

@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from argparse import ArgumentError
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -389,7 +390,7 @@ class GamingCog(commands.Cog, name="Games"):
 
     async def _clear_state(self, channel_id: int):
         async with self.game_sessions.write() as game_sessions:
-            if channel_id in game_sessions:
+            with contextlib.suppress(KeyError):
                 del game_sessions[channel_id]
 
     @commands.Cog.listener()
