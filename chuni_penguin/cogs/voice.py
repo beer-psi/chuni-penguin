@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, cast, override
 import discord
 import sqlalchemy
 from discord.ext import commands, songbird
+from discord.utils import MISSING
 from sqlalchemy import ColumnElement, select
 
 from chuni_penguin import flags
@@ -400,12 +401,9 @@ class VoiceCog(commands.Cog, name="Voice"):
         if song.release is not None:
             displayed_version += f" ({song.release})"
 
-        view = discord.ui.View(timeout=None)
-        view.add_item(AddToFavoritesButton(song.id))
-
-        await ctx.send(
-            content=f"Now playing in {voice_client.channel.mention}",
-            embed=discord.Embed(
+        content = f"Now playing in {voice_client.channel.mention}"
+        info_embed = (
+            discord.Embed(
                 color=discord.Color.yellow(),
                 title=song.title,
                 description=(
@@ -417,9 +415,16 @@ class VoiceCog(commands.Cog, name="Voice"):
             .set_thumbnail(url=get_jacket_url(song))
             .set_footer(
                 text=f"Track {state.total_tracks - state.remaining_tracks} / {state.total_tracks}"
-            ),
-            view=view,
+            )
         )
+
+        if song.available:
+            view = discord.ui.View(timeout=None)
+            view.add_item(AddToFavoritesButton(song.id))
+
+            await ctx.send(content=content, embed=info_embed, view=view)
+        else:
+            await ctx.send(content=content, embed=info_embed)
 
     @commands.Cog.listener()
     async def on_voice_state_update(
