@@ -387,7 +387,7 @@ class VoiceCog(commands.Cog, name="Voice"):
         track.pause()
 
         try:
-            track_handle = await voice_client.play(track)
+            track_handle = voice_client.play(track)
         except discord.ClientException:
             await self._clear_radio_state(ctx.channel.id)
             await voice_client.disconnect(force=True)

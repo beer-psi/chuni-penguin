@@ -43,7 +43,7 @@ class AskVoiceCallQuestionState(GuessingGameState):
         track.pause()
 
         try:
-            track_handle = await self.session.voice_client.play(track)
+            track_handle = self.session.voice_client.play(track)
         except discord.ClientException:
             return EndGameVoiceDisconnected(self.session)
 
