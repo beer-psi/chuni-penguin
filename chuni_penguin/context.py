@@ -1,11 +1,12 @@
 import asyncio
 import contextlib
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
 
 import discord
 import discord.context_managers
-from discord.ext import commands
+from discord.ext import commands, songbird
 from discord.ext.commands.context import DeferTyping
 from discord.ext.track_edits import EditTrackableContext
 from discord.utils import MISSING, escape_markdown
@@ -322,3 +323,65 @@ class PenguinGuildContext(PenguinContext):
     channel: discord.VoiceChannel | discord.TextChannel | discord.Thread  # pyright: ignore[reportIncompatibleVariableOverride]
     me: discord.Member  # pyright: ignore[reportIncompatibleVariableOverride]
     prefix: str  # pyright: ignore[reportIncompatibleVariableOverride]
+
+    async def ensure_voice(self) -> songbird.SongbirdClient:
+        if self.voice_client is None:
+            msg = "Another voice activity is already ongoing in this server. Only one voice activity can run at a time."
+            raise commands.CommandError(msg)
+
+        if (
+            self.author.voice is None
+            or (voice_channel := self.author.voice.channel) is None
+        ):
+            msg = "You must connect to a voice channel to start a voice activity."
+            raise commands.CommandError(msg)
+
+        voice_channel_permissions = voice_channel.permissions_for(self.me)
+        missing = [
+            p for p in ("connect", "speak") if not getattr(voice_channel_permissions, p)
+        ]
+
+        if missing:
+            raise commands.BotMissingPermissions(missing)
+
+        voice_client = await voice_channel.connect(
+            cls=songbird.SongbirdClient, self_deaf=True
+        )
+
+        if (
+            isinstance(voice_channel, discord.StageChannel)
+            and self.me not in voice_channel.speakers
+        ):
+            if self.me in voice_channel.moderators:
+                await self.me.edit(suppress=False)
+            else:
+                await self.bot.http.edit_my_voice_state(
+                    self.guild.id,
+                    {
+                        "channel_id": voice_channel.id,
+                        "request_to_speak_timestamp": datetime.now(UTC).isoformat(),
+                    },
+                )
+                await self.respond_or_edit(
+                    embed=discord.Embed(
+                        color=discord.Color.yellow(),
+                        title="Suppressed",
+                        description="Please allow me to speak in the stage channel.",
+                    )
+                )
+                try:
+                    await self.bot.wait_for(
+                        "voice_state_update",
+                        check=(
+                            lambda member, _, after: member == self.me
+                            and not after.suppress
+                        ),
+                        timeout=60,
+                    )
+                except asyncio.TimeoutError:
+                    await voice_client.disconnect(force=False)
+
+                    msg = "I was not allowed to speak in the stage channel."
+                    raise commands.CommandError(msg) from None
+
+        return voice_client

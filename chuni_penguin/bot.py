@@ -3,6 +3,7 @@ import contextlib
 import time
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, cast, override
 
 import discord
@@ -73,6 +74,10 @@ def ensure_text_command_permissions():
 
 
 class ChuniBot(commands.AutoShardedBot):
+    if TYPE_CHECKING:
+        _BotBase__extensions: dict[str, ModuleType]
+        _BotBase__cogs: dict[str, commands.Cog]
+
     def __init__(self):
         super().__init__(
             command_prefix=guild_specific_prefix(config.bot.default_prefix),
@@ -376,11 +381,11 @@ class ChuniBot(commands.AutoShardedBot):
 
         # Unload extensions in reverse order (LIFO) since later extensions depend
         # on previous extensions being available - discord.py's default behavior is FIFO
-        for extension in reversed(tuple(self._BotBase__extensions)):  # pyright: ignore[reportAttributeAccessIssue]
+        for extension in reversed(tuple(self._BotBase__extensions)):
             with contextlib.suppress(Exception):
                 await self.unload_extension(extension)
 
-        for cog in reversed(tuple(self._BotBase__cogs)):  # pyright: ignore[reportAttributeAccessIssue]
+        for cog in reversed(tuple(self._BotBase__cogs)):
             with contextlib.suppress(Exception):
                 await self.remove_cog(cog)
 

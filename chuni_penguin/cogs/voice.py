@@ -173,25 +173,6 @@ class VoiceCog(commands.Cog, name="Voice"):
         `-v`, `--versions`: Limit song pool to the provided versions.
         """
 
-        if ctx.voice_client is not None:
-            msg = "Another radio or voice guessing game is already ongoing in this server. Only one radio or voice guessing game can run at a time for each server."
-            raise commands.CommandError(msg)
-
-        if (
-            ctx.author.voice is None
-            or (voice_channel := ctx.author.voice.channel) is None
-        ):
-            msg = "You must connect to a voice channel to start a radio."
-            raise commands.CommandError(msg)
-
-        voice_channel_permissions = voice_channel.permissions_for(ctx.me)
-        missing = [
-            p for p in ("connect", "speak") if not getattr(voice_channel_permissions, p)
-        ]
-
-        if missing:
-            raise commands.BotMissingPermissions(missing)
-
         async with self.bot.begin_db_session() as session:
             query = select(Song.id).where(Song.id < 8000)
 
@@ -240,10 +221,12 @@ class VoiceCog(commands.Cog, name="Voice"):
             msg = "There are no songs available for playing. Try widening your filters, if there are any."
             raise commands.CommandError(msg)
 
+        voice_client = await ctx.ensure_voice()
+        voice_channel = voice_client.channel
+
         async with self.radio_states.write() as radio_states:
             radio_states[voice_channel.id] = radio_states[ctx.channel.id] = state
 
-        await voice_channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
         await self.on_radio_play_next_track(ctx, state)
 
     @commands.hybrid_command("volume")
@@ -455,13 +438,12 @@ class VoiceCog(commands.Cog, name="Voice"):
         if member == self.bot.user and before.channel is not None:
             if after.channel is None:
                 await self._clear_radio_state(before.channel.id)
-            else:
+            elif after.channel != before.channel:
                 async with self.radio_states.write() as radio_states:
                     if before.channel.id not in radio_states:
                         return
 
                     radio_states[after.channel.id] = radio_states[before.channel.id]
-
                     del radio_states[before.channel.id]
         elif member != self.bot.user and after.channel is not None:
             async with self.radio_states.read() as radio_states:

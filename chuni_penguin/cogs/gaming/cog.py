@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import discord
-from discord.ext import commands, songbird
+from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import MISSING
 from sqlalchemy import delete
 
-from chuni_penguin.context import PenguinGuildContext
+from chuni_penguin.context import PenguinContext, PenguinGuildContext
 from chuni_penguin.converters import (
     DifficultyConverter,
     GenreConverter,
@@ -152,7 +152,7 @@ class GamingCog(commands.Cog, name="Games"):
         attach_files=True,
     )
     @logged_prefix_command
-    async def guess_jacket(self, ctx: Context, *, arguments: str = ""):
+    async def guess_jacket(self, ctx: PenguinContext, *, arguments: str = ""):
         """Starts a jacket art guessing game.
 
         **Parameters**
@@ -172,7 +172,7 @@ class GamingCog(commands.Cog, name="Games"):
         `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
-        await self._guess_without_voice_channel(ctx, GuessingGameType.IMAGE, arguments)
+        await self._guess_common(ctx, GuessingGameType.IMAGE, arguments)
 
     @guess.command(
         "audio",
@@ -185,7 +185,7 @@ class GamingCog(commands.Cog, name="Games"):
         send_voice_messages=True,
     )
     @logged_prefix_command
-    async def guess_audio(self, ctx: Context, *, arguments: str = ""):
+    async def guess_audio(self, ctx: PenguinContext, *, arguments: str = ""):
         """Starts an audio guessing game using voice messages.
 
         **Parameters**
@@ -205,9 +205,7 @@ class GamingCog(commands.Cog, name="Games"):
         `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
-        await self._guess_without_voice_channel(
-            ctx, GuessingGameType.VOICE_MESSAGE, arguments
-        )
+        await self._guess_common(ctx, GuessingGameType.VOICE_MESSAGE, arguments)
 
     @guess.command(
         "voice",
@@ -241,39 +239,23 @@ class GamingCog(commands.Cog, name="Games"):
         `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
         """
 
-        if ctx.voice_client is not None:
-            msg = "Another radio or voice guessing game is already ongoing in this server. Only one radio or voice guessing game can run at a time for each server."
-            raise commands.CommandError(msg)
+        session = await self._guess_common(
+            ctx, GuessingGameType.VOICE_CHANNEL, arguments
+        )
 
-        if (
-            ctx.author.voice is None
-            or (voice_channel := ctx.author.voice.channel) is None
-        ):
-            msg = "You must connect to a voice channel to start this guessing game."
-            raise commands.CommandError(msg)
-
-        voice_channel_permissions = voice_channel.permissions_for(ctx.me)
-        missing = [
-            p for p in ("connect", "speak") if not getattr(voice_channel_permissions, p)
-        ]
-
-        if missing:
-            raise commands.BotMissingPermissions(missing)
-
-        session = await self._guess_without_voice_channel(
-            ctx, GuessingGameType.VOICE_CHANNEL, arguments, voice_channel=voice_channel
+        assert ctx.voice_client is not None
+        assert isinstance(
+            ctx.voice_client.channel, discord.VoiceChannel | discord.StageChannel
         )
 
         async with self.game_sessions.write() as game_sessions:
-            game_sessions[voice_channel.id] = session
+            game_sessions[ctx.voice_client.channel.id] = session
 
-    async def _guess_without_voice_channel(
+    async def _guess_common(
         self,
-        ctx: Context,
+        ctx: PenguinContext,
         game_type: GuessingGameType,
         arguments: str,
-        *,
-        voice_channel: discord.VoiceChannel | discord.StageChannel | None = None,
     ):
         if self.shutting_down:
             msg = "I am currently pending a restart. No new games can be started. Please wait a few minutes."
@@ -315,17 +297,18 @@ class GamingCog(commands.Cog, name="Games"):
             ):
                 session.time_per_question = session.get_audio_length() + 5
 
-        if voice_channel is not None:
-            voice_channel_id = voice_channel.id
-            await voice_channel.connect(cls=songbird.SongbirdClient, self_deaf=True)
+        if game_type == GuessingGameType.VOICE_CHANNEL and isinstance(
+            ctx, PenguinGuildContext
+        ):
+            voice_client = await ctx.ensure_voice()
         else:
-            voice_channel_id = None
+            voice_client = None
 
-        async def after(e):
+        async def after(_):
             await self._clear_state(ctx.channel.id)
 
-            if voice_channel_id is not None:
-                await self._clear_state(voice_channel_id)
+            if voice_client is not None:
+                await self._clear_state(voice_client.channel.id)
 
         game_task = asyncio.create_task(
             session.run(after=after), name=f"chuni-penguin-guess-{ctx.channel.id}"
@@ -400,22 +383,20 @@ class GamingCog(commands.Cog, name="Games"):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
-        # Listen to voice channel disconnects so we can stop voice games early.
-        if member != self.bot.user:
+        if member != self.bot.user or before.channel is None:
             return
 
-        # To be disconnected, you must be in a voice channel first.
-        if before.channel is None:
-            return
+        # Migrate the state to the new channel if we moved channels
+        if after.channel is not None and after.channel != before.channel:
+            async with self.game_sessions.write() as game_sessions:
+                if before.channel.id not in game_sessions:
+                    return
 
-        # We are not disconnected if the after channel is not None.
-        if after.channel is not None:
-            return
+                game_sessions[after.channel.id] = game_sessions[before.channel.id]
+                del game_sessions[before.channel.id]
+        else:
+            async with self.game_sessions.read() as game_sessions:
+                if before.channel.id not in game_sessions:
+                    return
 
-        # We clear game states before disconnecting from the call, so this should be
-        # safe if the game ended normally.
-        async with self.game_sessions.read() as game_sessions:
-            if before.channel.id not in game_sessions:
-                return
-
-            await game_sessions[before.channel.id].skip()
+                await game_sessions[before.channel.id].skip()
