@@ -397,7 +397,7 @@ class GamingCog(commands.Cog, name="Games"):
 
                 # only stop tracking the previous channel if it's not the channel
                 # where the questions/answers are sent
-                if session.channel.id != before.channel.id
+                if session.channel.id != before.channel.id:
                     del game_sessions[before.channel.id]
         else:
             async with self.game_sessions.read() as game_sessions:
