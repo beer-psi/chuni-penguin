@@ -325,7 +325,7 @@ class PenguinGuildContext(PenguinContext):
     prefix: str  # pyright: ignore[reportIncompatibleVariableOverride]
 
     async def ensure_voice(self) -> songbird.SongbirdClient:
-        if self.voice_client is None:
+        if self.voice_client is not None:
             msg = "Another voice activity is already ongoing in this server. Only one voice activity can run at a time."
             raise commands.CommandError(msg)
 
