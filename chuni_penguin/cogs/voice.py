@@ -91,6 +91,7 @@ class RadioState:
     __slots__ = (
         "allowed_song_ids",
         "available_tracks",
+        "ctx",
         "genres",
         "inactive_tracks",
         "levels",
@@ -102,6 +103,7 @@ class RadioState:
 
     def __init__(
         self,
+        ctx: PenguinGuildContext,
         allowed_song_ids: set[int] | None = None,
         volume: int = 15,
     ):
@@ -109,6 +111,7 @@ class RadioState:
             msg = "volume must be between 0 and 100"
             raise ValueError(msg)
 
+        self.ctx = ctx
         self.allowed_song_ids = allowed_song_ids
         self.stopped_by: discord.User | discord.Member | None = None
         self.volume = volume
@@ -215,7 +218,7 @@ class VoiceCog(commands.Cog, name="Voice"):
                 query = query.where(Song.version.in_(versions))
 
             song_ids = (await session.execute(query)).scalars().unique().all()
-            state = RadioState(set(song_ids))
+            state = RadioState(ctx, set(song_ids))
 
         if len(state.available_tracks) <= 0:
             msg = "There are no songs available for playing. Try widening your filters, if there are any."
@@ -443,8 +446,11 @@ class VoiceCog(commands.Cog, name="Voice"):
                     if before.channel.id not in radio_states:
                         return
 
-                    radio_states[after.channel.id] = radio_states[before.channel.id]
-                    del radio_states[before.channel.id]
+                    radio_state = radio_states[before.channel.id]
+                    radio_states[after.channel.id] = radio_state
+
+                    if before.channel.id != radio_state.ctx.channel.id:
+                        del radio_states[before.channel.id]
         elif member != self.bot.user and after.channel is not None:
             async with self.radio_states.read() as radio_states:
                 with contextlib.suppress(KeyError):
