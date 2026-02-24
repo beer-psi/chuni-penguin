@@ -39,7 +39,7 @@ class AskVoiceCallQuestionState(GuessingGameState):
             audio_length,
         ) = await self.session.get_voice_question()
 
-        track = songbird.Track(songbird.File(str(audio_path)))
+        track = songbird.Track(songbird.File(audio_path))
         track.pause()
 
         try:

@@ -230,7 +230,7 @@ class VoiceCog(commands.Cog, name="Voice"):
         async with self.radio_states.write() as radio_states:
             radio_states[voice_channel.id] = radio_states[ctx.channel.id] = state
 
-        await self.on_radio_play_next_track(ctx, state)
+        await self.radio_play_next_track(ctx, state)
 
     @commands.hybrid_command("volume")
     @commands.guild_only()
@@ -334,8 +334,7 @@ class VoiceCog(commands.Cog, name="Voice"):
             with contextlib.suppress(KeyError):
                 del radio_states[channel_id]
 
-    @commands.Cog.listener()
-    async def on_radio_play_next_track(
+    async def radio_play_next_track(
         self,
         ctx: PenguinGuildContext,
         state: RadioState,
@@ -381,10 +380,10 @@ class VoiceCog(commands.Cog, name="Voice"):
             song = (await session.execute(query)).scalar_one_or_none()
 
         if song is None:
-            ctx.bot.dispatch("radio_play_next_track", ctx, state)
+            await self.radio_play_next_track(ctx, state)
             return
 
-        track = songbird.Track(songbird.File(str(path)))
+        track = songbird.Track(songbird.File(path))
         track.pause()
 
         try:
@@ -396,7 +395,7 @@ class VoiceCog(commands.Cog, name="Voice"):
 
         track_handle.add_event(
             songbird.TrackEvent.End,
-            lambda _: ctx.bot.dispatch("radio_play_next_track", ctx, state),
+            lambda _: self.radio_play_next_track(ctx, state),
         )
         track_handle.set_volume(state.volume / 100)
         track_handle.play()
