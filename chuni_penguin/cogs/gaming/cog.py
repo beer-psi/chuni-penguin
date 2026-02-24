@@ -392,8 +392,13 @@ class GamingCog(commands.Cog, name="Games"):
                 if before.channel.id not in game_sessions:
                     return
 
-                game_sessions[after.channel.id] = game_sessions[before.channel.id]
-                del game_sessions[before.channel.id]
+                session = game_sessions[before.channel.id]
+                game_sessions[after.channel.id] = session
+
+                # only stop tracking the previous channel if it's not the channel
+                # where the questions/answers are sent
+                if session.channel.id != before.channel.id
+                    del game_sessions[before.channel.id]
         else:
             async with self.game_sessions.read() as game_sessions:
                 if before.channel.id not in game_sessions:
