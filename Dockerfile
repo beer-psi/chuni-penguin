@@ -11,7 +11,7 @@ ENV UV_PYTHON_DOWNLOADS=0
 
 # for building penguin-native
 RUN apk --update-cache upgrade \
-    && apk add --no-interactive rust cargo \
+    && apk add --no-interactive rust cargo git \
     && apk cache purge \
     && rm -rf /var/cache/apk/*
 
