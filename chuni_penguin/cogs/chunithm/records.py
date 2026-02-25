@@ -1182,7 +1182,7 @@ class RecordsCog(commands.Cog, name="Records"):
         """View top 50 scores of you or another player.
 
         **Parameters**:
-        `user`: The user to get scores for.
+        `user`: The user to get scores for. Alternatively, a CHUNITHM International friend code is also accepted.
         `-c, --classic`: View your scores with Discord embeds instead of generating
         an image.
         `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
@@ -2429,7 +2429,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         **Parameters**:
         `-k`: Sync the user's Kamaitachi scores.
-        `user`: The user to sync scores for. Yourself, if not specified.
+        `user`: The user to sync scores for. Yourself, if not specified. Alternatively, a CHUNITHM International friend code is also accepted.
         """
 
         user_or_friend_code: discord.User | discord.Member | str | None = None
@@ -2448,8 +2448,10 @@ class RecordsCog(commands.Cog, name="Records"):
     @app_commands.command(name="sync", description="Sync scores with the bot.")
     @app_commands.describe(
         user="The user to sync scores for.",
+        friend_code="The friend code to sync scores for.",
         kamaitachi="Sync the user's Kamaitachi scores.",
     )
+    @app_commands.rename(friend_code="friend-code")
     @app_commands.checks.cooldown(2, 60)
     async def sync_slash(
         self,
