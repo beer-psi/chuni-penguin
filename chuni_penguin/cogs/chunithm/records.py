@@ -761,8 +761,6 @@ class RecordsCog(commands.Cog, name="Records"):
                 ctx, friend_code
             )
 
-        await self.bot.database.cookies.set_friend_code(ctx.author.id, friend_code)
-
         pbs.sort(
             key=lambda pb: (
                 pb.extras[KEY_PLAY_RATING],
@@ -2504,7 +2502,6 @@ class RecordsCog(commands.Cog, name="Records"):
                 ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
                     ctx, user
                 )
-                await self.bot.database.cookies.set_friend_code(ctx.author.id, user)
 
             await ctx.respond_or_edit(
                 f"Successfully synced CHUNITHM International scores for {escape_markdown(profile.username)}."
