@@ -42,7 +42,7 @@ class Typing(discord.context_managers.Typing):
         await typing(channel.id)
 
         while True:
-            await asyncio.sleep(5)
+            await asyncio.sleep(4.5)
             await typing(channel.id)
 
     async def __aenter__(self) -> None:
@@ -76,6 +76,13 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         cls, interaction: discord.Interaction["ChuniBot"], /
     ) -> Self:
         ctx = await super().from_interaction(interaction)
+
+        if interaction.response.type in (
+            discord.InteractionResponseType.channel_message,
+            discord.InteractionResponseType.deferred_channel_message,
+        ):
+            ctx.response = await interaction.original_response()
+
         ctx.user_config = await interaction.client.utils.fetch_user_config(
             interaction.user.id
         )
@@ -134,12 +141,39 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
         if self.response is not None:
             edit_kwargs = {
                 "content": content,
-                "embed": kwargs.get("embed", MISSING),
-                "embeds": kwargs.get("embeds", MISSING),
                 "attachments": kwargs.get("files", MISSING),
                 "view": kwargs.get("view", MISSING),
                 "allowed_mentions": kwargs.get("allowed_mentions", MISSING),
             }
+
+            embed = kwargs.get("embed", MISSING)
+            embeds = kwargs.get("embeds", MISSING)
+            file = kwargs.get("file", MISSING)
+            files = kwargs.get("files", MISSING)
+
+            if embed is not MISSING and embeds is not MISSING:
+                msg = "Cannot mix embed and embeds keyword arguments."
+                raise TypeError(msg)
+
+            if file is not MISSING and files is not MISSING:
+                msg = "Cannot mix file and files keyword arguments."
+                raise TypeError(msg)
+
+            if edit_kwargs["view"] is MISSING:
+                edit_kwargs["view"] = None
+
+            if file is not MISSING:
+                files = [file]
+            elif files is MISSING:
+                files = []
+
+            if embed is not MISSING:
+                embeds = [embed]
+            elif embeds is MISSING:
+                embeds = []
+
+            edit_kwargs["embeds"] = embeds
+            edit_kwargs["attachments"] = files
 
             if isinstance(self.response, discord.InteractionMessage):
                 edit_kwargs["delete_after"] = kwargs.get("delete_after")

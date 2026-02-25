@@ -12,6 +12,9 @@ class Cookie(Base):
     discord_id: Mapped[int] = mapped_column(UInt64Integer(), primary_key=True)
     cookie: Mapped[str] = mapped_column(String(64), nullable=False)
     kamaitachi_token: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    friend_code: Mapped[str | None] = mapped_column(
+        String(32), nullable=True, default=None, server_default=text("NULL")
+    )
     is_contributor: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("FALSE")
     )

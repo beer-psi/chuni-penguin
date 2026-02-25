@@ -72,6 +72,7 @@ generate-hashes = true
 members = ["packages/*"]
 
 [tool.uv.sources]
+discord-py = { git = "https://github.com/Rapptz/discord.py" }
 discord-ext-songbird = { index = "discord-ext-songbird" }
 penguin-native = { workspace = true }
 httpx-aiohttp = { workspace = true }

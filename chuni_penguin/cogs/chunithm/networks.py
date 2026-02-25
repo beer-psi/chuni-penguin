@@ -314,6 +314,8 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         pbs: list[PersonalBest] = []
 
         async with self.bot_network(kamaitachi=False) as client:
+            assert isinstance(client, ChunithmNet)
+
             bot_profile = await client.get_minimal_profile()
             friends = await client.get_friends()
             friend = next(
@@ -347,7 +349,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                     with contextlib.suppress(NetworkError):
                         await client.remove_friend_request(friend_code)
 
-                    msg = "Friend request was not accepted. Please try agian."
+                    msg = "Friend request was not accepted. Please try again."
                     raise commands.CommandError(msg)
 
             friend_code = friend.friend_code
@@ -383,9 +385,11 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                 await ctx.respond_or_edit(f"Fetching {difficulty} personal bests...")
 
                 try:
+                    # OPTIMIZATION: the bot's card should have no scores on it (or at least
+                    # no scores above 0), so enable lose_only to fetch fewer scores.
                     difficulty_pbs = (
                         await client.get_rival_personal_bests_by_difficulty(
-                            friend_code, difficulty
+                            friend_code, difficulty, lose_only=True
                         )
                     )
                 except ChuniNetError as e:

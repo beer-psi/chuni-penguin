@@ -441,17 +441,34 @@ class ChunithmNet(Network):
         )
 
     async def get_rival_personal_bests_by_difficulty(
-        self, identifier: str, difficulty: Difficulty
+        self,
+        identifier: str,
+        difficulty: Difficulty,
+        *,
+        exclude_unplayed: bool = False,
+        win_only: bool = False,
+        lose_only: bool = False,
     ) -> list[PersonalBest]:
+        data = {
+            "genre": "99",
+            "friend": identifier,
+            "radio_diff": str(difficulty.value),
+            "token": self._token,
+        }
+
+        if exclude_unplayed:
+            data["playCheck"] = "on"
+
+        if win_only:
+            data["winOnly"] = "on"
+
+        if lose_only:
+            data["loseOnly"] = "on"
+
         soup = await self._request_as_soup(
             "POST",
             "mobile/friend/genreVs/sendBattleStart/",
-            data={
-                "genre": "99",
-                "friend": identifier,
-                "radio_diff": str(difficulty.value),
-                "token": self._token,
-            },
+            data=data,
             headers={
                 "Referer": str(_BASE_URL.join("mobile/friend/genreVs")),
             },

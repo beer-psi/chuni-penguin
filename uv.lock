@@ -470,7 +470,7 @@ requires-dist = [
     { name = "ciso8601", marker = "extra == 'speedup'", specifier = "~=2.3" },
     { name = "discord-ext-songbird", specifier = "~=0.2.0a2", index = "https://beer-psi.github.io/discord-ext-songbird" },
     { name = "discord-ext-track-edits", specifier = "~=0.1.2" },
-    { name = "discord-py", specifier = "~=2.6" },
+    { name = "discord-py", git = "https://github.com/Rapptz/discord.py" },
     { name = "hishel", specifier = "==0.1.3" },
     { name = "httpx", specifier = "~=0.28.1" },
     { name = "httpx-aiohttp", editable = "packages/httpx-aiohttp" },
@@ -640,15 +640,11 @@ wheels = [
 
 [[package]]
 name = "discord-py"
-version = "2.6.4"
-source = { registry = "https://pypi.org/simple" }
+version = "2.7.0a5383+g79b70929"
+source = { git = "https://github.com/Rapptz/discord.py#79b709290cfbe7ee9bc7ca861c3db4c65299d9e5" }
 dependencies = [
     { name = "aiohttp" },
     { name = "audioop-lts" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ce/e7/9b1dbb9b2fc07616132a526c05af23cfd420381793968a189ee08e12e35f/discord_py-2.6.4.tar.gz", hash = "sha256:44384920bae9b7a073df64ae9b14c8cf85f9274b5ad5d1d07bd5a67539de2da9", size = 1092623, upload-time = "2025-10-08T21:45:43.593Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/ae/3d3a89b06f005dc5fa8618528dde519b3ba7775c365750f7932b9831ef05/discord_py-2.6.4-py3-none-any.whl", hash = "sha256:2783b7fb7f8affa26847bfc025144652c294e8fe6e0f8877c67ed895749eb227", size = 1209284, upload-time = "2025-10-08T21:45:41.679Z" },
 ]
 
 [[package]]

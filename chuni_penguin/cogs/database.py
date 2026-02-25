@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import (
 from chuni_penguin.config import config
 from chuni_penguin.database import (
     Chart,
+    Cookie,
     EasterEggFound,
     PendingKamaitachiImport,
     PersonalBest,
@@ -77,6 +78,34 @@ def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
 
         # Store temporary tables and indices in memory.
         cursor.execute("PRAGMA temp_store=MEMORY")
+
+
+class CookieQueries:
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        self._sessionmaker = sessionmaker
+
+    async def get_by_discord_id(self, discord_id: int):
+        async with self._sessionmaker() as session:
+            query = select(Cookie).where(Cookie.discord_id == discord_id)
+            return (await session.execute(query)).scalar_one_or_none()
+
+    async def set_friend_code(self, discord_id: int, friend_code: str):
+        async with self._sessionmaker() as session:
+            query = select(Cookie).where(Cookie.discord_id == discord_id)
+            cookie = (await session.execute(query)).scalar_one_or_none()
+
+            if cookie is not None:
+                cookie.friend_code = friend_code
+            else:
+                cookie = Cookie(
+                    discord_id=discord_id,
+                    cookie="",
+                    kamaitachi_token=None,
+                    friend_code=friend_code,
+                )
+
+            session.add(cookie)
+            await session.commit()
 
 
 class SongQueries:
@@ -322,6 +351,7 @@ class DatabaseCog(commands.Cog, name="Database"):
             self._engine, expire_on_commit=False
         )
 
+        self.cookies = CookieQueries(self._sessionmaker)
         self.songs = SongQueries(self._sessionmaker)
         self.charts = ChartQueries(self._sessionmaker)
         self.pending_kamaitachi_imports = PendingKamaitachiImportQueries(

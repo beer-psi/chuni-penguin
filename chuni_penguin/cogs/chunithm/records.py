@@ -82,6 +82,7 @@ from chuni_penguin.ui import (
     B30N20View,
     B30View,
     EmbedPaginationView,
+    FriendCodeOfferView,
     LeaderboardView,
     RecentRecordsView,
     ScoreCardEmbed,
@@ -760,6 +761,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 ctx, friend_code
             )
 
+        await self.bot.database.cookies.set_friend_code(ctx.author.id, friend_code)
+
         pbs.sort(
             key=lambda pb: (
                 pb.extras[KEY_PLAY_RATING],
@@ -823,6 +826,22 @@ class RecordsCog(commands.Cog, name="Records"):
         rating_system: Literal["naive", "ingame"] | None = None,
     ):
         target_id = ctx.author.id if user is None else user.id
+        cookie = await self.bot.database.cookies.get_by_discord_id(target_id)
+
+        if (
+            user is None
+            and not kamaitachi
+            and (
+                cookie is None
+                or (not cookie.cookie and cookie.kamaitachi_token is None)
+            )
+        ):
+            view = FriendCodeOfferView(
+                ctx, cookie.friend_code if cookie is not None else None
+            )
+            await view.start()
+            return
+
         records: list[PersonalBest] = []
         record_slots: int = 30
         new_records: list[PersonalBest] | None = []
@@ -1150,11 +1169,12 @@ class RecordsCog(commands.Cog, name="Records"):
         )
         generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
 
-        await ctx.reply(
-            file=discord.File(
-                b30_image, filename=f"chuni-penguin-b50-{generation_timestamp}.png"
-            ),
-            mention_author=False,
+        await ctx.respond_or_edit(
+            files=[
+                discord.File(
+                    b30_image, filename=f"chuni-penguin-b50-{generation_timestamp}.png"
+                )
+            ],
         )
 
     @flags.command("best50", aliases=["best30", "b30", "b50"])
@@ -2484,6 +2504,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
                     ctx, user
                 )
+                await self.bot.database.cookies.set_friend_code(ctx.author.id, user)
 
             await ctx.respond_or_edit(
                 f"Successfully synced CHUNITHM International scores for {escape_markdown(profile.username)}."
@@ -2491,6 +2512,21 @@ class RecordsCog(commands.Cog, name="Records"):
             return
 
         target_id = user.id if user is not None else ctx.author.id
+        cookie = await self.bot.database.cookies.get_by_discord_id(target_id)
+
+        if (
+            user is None
+            and not kamaitachi
+            and (
+                cookie is None
+                or (not cookie.cookie and cookie.kamaitachi_token is None)
+            )
+        ):
+            view = FriendCodeOfferView(
+                ctx, cookie.friend_code if cookie is not None else None
+            )
+            await view.start()
+            return
 
         async with (
             ctx.typing(),
