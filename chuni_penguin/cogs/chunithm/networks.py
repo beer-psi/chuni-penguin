@@ -44,10 +44,6 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
         self._chuni_net_sessions: dict[int, AsyncRcContextManager[ChunithmNet]] = {}
 
-        # You can only have 10 favorite friends, so this guards the friend code
-        # fetch method.
-        self._fetch_by_friend_code_semaphore: asyncio.Semaphore = asyncio.Semaphore(10)
-
     async def cog_load(self) -> None:
         self._update_user_agents.start()
 
@@ -356,34 +352,52 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
             friend_code = friend.friend_code
 
-            async with self._fetch_by_friend_code_semaphore:
-                if not friend.is_favorite:
-                    await client.add_favorite_friend(friend_code)
-
-                for difficulty in Difficulty:
-                    if difficulty == Difficulty.worlds_end:
-                        continue
-
+            if not friend.is_favorite:
+                if sum(friend.is_favorite or False for friend in friends) >= 10:
                     await ctx.respond_or_edit(
-                        f"Fetching {difficulty} personal bests..."
+                        "The bot has no favorite friend slots left. Please wait..."
                     )
+                    tries = 0
 
-                    try:
-                        difficulty_pbs = (
-                            await client.get_rival_personal_bests_by_difficulty(
-                                friend_code, difficulty
-                            )
+                    while (
+                        sum(friend.is_favorite or False for friend in friends) >= 10
+                        and tries <= 3
+                    ):
+                        friends = await client.get_friends()
+                        tries += 1
+                        await asyncio.sleep(30)
+
+                    if sum(friend.is_favorite or False for friend in friends) >= 10:
+                        with contextlib.suppress(NetworkError):
+                            await client.remove_friend(friend_code)
+
+                        msg = "Could not free up a favorite friend slot. Please try again later."
+                        raise commands.CommandError(msg)
+
+                await client.add_favorite_friend(friend_code)
+
+            for difficulty in Difficulty:
+                if difficulty == Difficulty.worlds_end:
+                    continue
+
+                await ctx.respond_or_edit(f"Fetching {difficulty} personal bests...")
+
+                try:
+                    difficulty_pbs = (
+                        await client.get_rival_personal_bests_by_difficulty(
+                            friend_code, difficulty
                         )
-                    except ChuniNetError as e:
-                        if e.code == 140101:
-                            msg = "Bot was unfriended before score fetch completed."
-                            raise commands.CommandError(msg) from None
+                    )
+                except ChuniNetError as e:
+                    if e.code == 140101:
+                        msg = "Bot was unfriended before score fetch completed."
+                        raise commands.CommandError(msg) from None
 
-                        raise
+                    raise
 
-                    pbs.extend(difficulty_pbs)
+                pbs.extend(difficulty_pbs)
 
-                await client.remove_friend(friend_code)
+            await client.remove_friend(friend_code)
 
         pbs = await ctx.bot.utils.process_records(ctx.author.id, client.NAME, pbs)
 
