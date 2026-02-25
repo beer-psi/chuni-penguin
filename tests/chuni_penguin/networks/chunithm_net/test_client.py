@@ -1361,3 +1361,55 @@ async def test_linked_gate_leaderboard(httpx_mock: HTTPXMock, jar: str, token: s
 
         assert leaderboard.ranking[41].position == 42
         assert leaderboard.ranking[41].link_level == LinkLevel.iv
+
+
+@pytest.mark.asyncio
+async def test_get_friends(httpx_mock: HTTPXMock, jar: str):
+    with (BASE_DIR / "assets" / "friends.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/friend/",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChunithmNet(jar) as client:
+        friends = await client.get_friends()
+
+    assert len(friends) == 1
+    assert friends[0].profile.username == "Ｘｙｒｏ＊"  # noqa: RUF001
+    assert friends[0].friend_code == "1234567891234"
+    assert friends[0].is_favorite
+    assert friends[0].is_rival
+
+
+@pytest.mark.asyncio
+async def test_get_rival_pbs_by_difficulty(httpx_mock: HTTPXMock, jar: str, token: str):
+    httpx_mock.add_response(
+        method="POST",
+        url="https://chunithm-net-eng.com/mobile/friend/genreVs/sendBattleStart/",
+        match_headers={"Content-Type": "application/x-www-form-urlencoded"},
+        match_content=f"genre=99&friend=1234567891234&radio_diff=3&token={token}".encode(
+            "utf-8"
+        ),
+        status_code=302,
+        headers={
+            "Location": "https://chunithm-net-eng.com/mobile/friend/genreVs/battleStart"
+        },
+    )
+
+    with (BASE_DIR / "assets" / "friend_vs.html").open("rb") as f:
+        httpx_mock.add_response(
+            method="GET",
+            url="https://chunithm-net-eng.com/mobile/friend/genreVs/battleStart",
+            status_code=200,
+            content=f.read(),
+        )
+
+    async with ChunithmNet(jar) as client:
+        pbs = await client.get_rival_personal_bests_by_difficulty(
+            "1234567891234", Difficulty.master
+        )
+        assert pbs[0].title == "きゅびずむ"
+        assert pbs[0].score == 1_009_943
+        assert pbs[0].combo_lamp == ComboLamp.all_justice

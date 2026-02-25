@@ -165,3 +165,11 @@ class Profile:
     last_played: datetime | None = None
 
     user_avatar: UserAvatar | None = None
+
+
+@dataclass(slots=True, kw_only=True)
+class Friend:
+    profile: Profile
+    friend_code: str
+    is_favorite: bool | None = None
+    is_rival: bool | None = None

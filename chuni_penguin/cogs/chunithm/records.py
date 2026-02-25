@@ -44,7 +44,7 @@ from chuni_penguin.converters import (
     RankConverter,
     VersionConverter,
 )
-from chuni_penguin.database import Chart, Song, SongJacket
+from chuni_penguin.database import Chart, Song, SongJacket, UserConfig
 from chuni_penguin.database import PersonalBest as DBPersonalBest
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.base import Network
@@ -63,7 +63,7 @@ from chuni_penguin.networks.consts import (
     KEY_SONG_ID,
     KEY_SONG_VERSION,
 )
-from chuni_penguin.networks.errors import ChartNotFound, SongNotFound
+from chuni_penguin.networks.errors import ChartNotFound, NetworkError, SongNotFound
 from chuni_penguin.networks.kamaitachi import Kamaitachi
 from chuni_penguin.networks.types import (
     ClearLamp,
@@ -72,6 +72,7 @@ from chuni_penguin.networks.types import (
     Genre,
     PersonalBest,
     Possession,
+    Profile,
     Rank,
     RecentScore,
     Score,
@@ -737,6 +738,78 @@ class RecordsCog(commands.Cog, name="Records"):
 
         await self._scores_inner(ctx, query, user, kamaitachi=kamaitachi)
 
+    async def _best50_from_friend_code(
+        self,
+        ctx: PenguinContext,
+        friend_code: str,
+        *,
+        classic: bool = False,
+        rating_system: Literal["naive", "ingame"] | None = None,
+    ):
+        pbs: list[PersonalBest] = []
+        records: list[PersonalBest] = []
+        record_slots: int = 30
+        new_records: list[PersonalBest] | None = None
+        new_record_slots: int = 20
+
+        (
+            profile,
+            pbs,
+        ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
+            ctx, friend_code
+        )
+
+        pbs.sort(
+            key=lambda pb: (
+                pb.extras[KEY_PLAY_RATING],
+                pb.score,
+                pb.combo_lamp,
+                pb.extras[KEY_INTERNAL_LEVEL],
+            ),
+            reverse=True,
+        )
+
+        if rating_system == "naive":
+            records = pbs[:50]
+            record_slots = 50
+            new_records = None
+            new_record_slots = 0
+            current_rating = None
+        else:
+            new_records = []
+            current_rating = profile.rating_systems[0].value
+
+            for pb in pbs:
+                if (
+                    pb.extras[KEY_SONG_VERSION] == CURRENT_CHUNITHM_VERSION
+                    and len(new_records) < new_record_slots
+                ):
+                    new_records.append(pb)
+
+                if (
+                    pb.extras[KEY_SONG_VERSION] != CURRENT_CHUNITHM_VERSION
+                    and len(records) < record_slots
+                ):
+                    records.append(pb)
+
+                if (
+                    len(records) >= record_slots
+                    and len(new_records) >= new_record_slots
+                ):
+                    break
+
+        await self._best50_respond(
+            ctx,
+            profile,
+            ctx.user_config,
+            current_rating,
+            records,
+            record_slots,
+            new_records,
+            new_record_slots,
+            classic=classic,
+        )
+
     async def _best50_inner(
         self,
         ctx: PenguinContext,
@@ -1009,65 +1082,78 @@ class RecordsCog(commands.Cog, name="Records"):
                 records = pbs[:50]
                 record_slots = 50
 
-                if current_rating is None:
-                    current_rating = float(
-                        floor_to_ndp(
-                            sum(
-                                [pb.extras[KEY_PLAY_RATING] for pb in records],
-                                Decimal(0),
-                            )
-                            / record_slots,
-                            2,
-                        )
-                    )
+            await self._best50_respond(
+                ctx,
+                profile,
+                user_config,
+                current_rating,
+                records,
+                record_slots,
+                new_records,
+                new_record_slots,
+                classic=classic,
+            )
 
-            if classic:
-                if new_records is not None:
-                    view = B30N20View(
-                        ctx,
-                        records,
-                        new_records,
-                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
-                    )
-                else:
-                    view = B30View(
-                        ctx,
-                        records,
-                        record_slots,
-                        show_reachable=False,
-                        synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
-                    )
-
-                await view.start()
-
-                return
-
-            uncross_verse = self._random.random() <= 0.1
-
-            if uncross_verse:
-                await self.bot.database.user_found_easter_egg(
-                    ctx.author.id, "chunithm-uncross-verse"
+    async def _best50_respond(
+        self,
+        ctx: PenguinContext,
+        profile: Profile,
+        user_config: UserConfig,
+        current_rating: float | None,
+        records: list[PersonalBest],
+        record_slots: int,
+        new_records: list[PersonalBest] | None,
+        new_record_slots: int,
+        *,
+        classic: bool,
+    ):
+        if classic:
+            if new_records is not None:
+                view = B30N20View(
+                    ctx,
+                    records,
+                    new_records,
+                    synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                )
+            else:
+                view = B30View(
+                    ctx,
+                    records,
+                    record_slots,
+                    show_reachable=False,
+                    synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
                 )
 
-            b30_image = await asyncio.to_thread(
-                render_b30,
-                profile.username,
-                records=records,
-                record_slots=record_slots,
-                new_records=new_records,
-                new_record_slots=new_record_slots,
-                current_rating=current_rating,
-                user_config=user_config,
-                uncross_verse=uncross_verse,
-            )
-            generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+            await view.start()
 
-            await ctx.reply(
-                file=discord.File(
-                    b30_image, filename=f"chuni-penguin-b50-{generation_timestamp}.png"
-                ),
-                mention_author=False,
+            return
+
+        uncross_verse = self._random.random() <= 0.1
+
+        if uncross_verse:
+            await self.bot.database.user_found_easter_egg(
+                ctx.author.id, "chunithm-uncross-verse"
             )
+
+        b30_image = await asyncio.to_thread(
+            render_b30,
+            profile.username,
+            records=records,
+            record_slots=record_slots,
+            new_records=new_records,
+            new_record_slots=new_record_slots,
+            current_rating=current_rating,
+            user_config=user_config,
+            uncross_verse=uncross_verse,
+        )
+        generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+
+        await ctx.reply(
+            file=discord.File(
+                b30_image, filename=f"chuni-penguin-b50-{generation_timestamp}.png"
+            ),
+            mention_author=False,
+        )
 
     @flags.command("best50", aliases=["best30", "b30", "b50"])
     @flags.argument("-c", "--classic", action="store_true")
@@ -1080,7 +1166,7 @@ class RecordsCog(commands.Cog, name="Records"):
         default=None,
         required=False,
     )
-    @flags.argument("user", nargs="?", default=None, type=MemberOrUserConverter)
+    @flags.argument("user", nargs="?", default=None)
     @commands.cooldown(15, 600, commands.BucketType.member)
     @logged_prefix_command
     async def best50(
@@ -1091,12 +1177,12 @@ class RecordsCog(commands.Cog, name="Records"):
         kamaitachi: bool = False,
         new_rating: bool = False,
         rating_system: Literal["naive", "ingame"] | None = None,
-        user: discord.Member | discord.User | None = None,
+        user: str | None = None,
     ):
         """View top 50 scores of you or another player.
 
         **Parameters**:
-        `user`: The user to get scores for.
+        `user`: The user to get scores for. Alternatively, a CHUNITHM International friend code is also accepted.
         `-c, --classic`: View your scores with Discord embeds instead of generating
         an image.
         `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
@@ -1109,26 +1195,44 @@ class RecordsCog(commands.Cog, name="Records"):
         if not classic and not ctx.bot_permissions.attach_files:
             raise commands.BotMissingPermissions(["attach_files"])
 
-        await self._best50_inner(
-            ctx,
-            user,
-            classic=classic,
-            kamaitachi=kamaitachi,
-            new_rating=new_rating,
-            rating_system=rating_system,
-        )
+        kwargs = {
+            "classic": classic,
+            "kamaitachi": kamaitachi,
+            "new_rating": new_rating,
+            "rating_system": rating_system,
+        }
+
+        if user is not None:
+            try:
+                discord_user = await MemberOrUserConverter().convert(ctx, user)
+
+                await self._best50_inner(ctx, discord_user, **kwargs)
+            except commands.UserNotFound:
+                if not user.isdigit():
+                    raise
+
+                await self._best50_from_friend_code(
+                    ctx, user, classic=classic, rating_system=rating_system
+                )
+        else:
+            await self._best50_inner(ctx, None, **kwargs)
 
     @app_commands.command(name="best50", description="View top plays")
     @app_commands.checks.cooldown(15, 600, key=lambda i: i.user.id)
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.describe(
         user="The user to get best50 for",
+        friend_code="The friend code to get best50 for",
         classic="View your best 50 scores using Discord embeds instead of an image",
         kamaitachi="Get your best 50 from Kamaitachi if linked",
         new_rating="(Kamaitachi) Calculates best30+new20 instead of best50",
         rating_system="The rating system to view the best50 for",
     )
-    @app_commands.rename(new_rating="new-rating", rating_system="rating-system")
+    @app_commands.rename(
+        friend_code="friend-code",
+        new_rating="new-rating",
+        rating_system="rating-system",
+    )
     @app_commands.choices(
         rating_system=[
             app_commands.Choice(name="In-game (Best 30 + New 20)", value="ingame"),
@@ -1141,6 +1245,7 @@ class RecordsCog(commands.Cog, name="Records"):
         interaction: Interaction["ChuniBot"],
         user: discord.User | discord.Member | None = None,
         *,
+        friend_code: str | None = None,
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
@@ -1148,14 +1253,22 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         ctx = await PenguinContext.from_interaction(interaction)
 
-        await self._best50_inner(
-            ctx,
-            user,
-            classic=classic,
-            kamaitachi=kamaitachi,
-            new_rating=new_rating,
-            rating_system=rating_system,
-        )
+        if friend_code is not None:
+            await self._best50_from_friend_code(
+                ctx,
+                friend_code,
+                classic=classic,
+                rating_system=rating_system,
+            )
+        else:
+            await self._best50_inner(
+                ctx,
+                user,
+                classic=classic,
+                kamaitachi=kamaitachi,
+                new_rating=new_rating,
+                rating_system=rating_system,
+            )
 
     @app_commands.command(name="top", description="View your best scores for a level.")
     @app_commands.describe(
@@ -1932,20 +2045,23 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         target_id = ctx.author.id if user is None else user.id
 
-        async with (
-            ctx.typing(),
-            self.bot.begin_db_session() as session,
-            self.bot.chunithm_networks.network(
+        try:
+            async with self.bot.chunithm_networks.network(
                 ctx, target_id, kamaitachi=kamaitachi
-            ) as client,
-        ):
-            profile = await client.get_minimal_profile()
+            ) as client:
+                profile = await client.get_minimal_profile()
+                username = profile.username
+                client_name = client.NAME
+        except (NetworkError, commands.CommandError):
+            username = ctx.author.display_name
+            client_name = Kamaitachi.NAME if kamaitachi else ChunithmNet.NAME
 
+        async with ctx.typing(), self.bot.begin_db_session() as session:
             pb_query = (
                 select(DBPersonalBest)
                 .where(
                     (DBPersonalBest.discord_id == target_id)
-                    & (DBPersonalBest.network == client.NAME)
+                    & (DBPersonalBest.network == client_name)
                 )
                 .join(Song, DBPersonalBest.song_id == Song.id)
                 .join(
@@ -1963,11 +2079,11 @@ class RecordsCog(commands.Cog, name="Records"):
                 .where(Chart.song_id.not_in([50, 81]))  # basic and master tutorials
             )
 
-            if isinstance(client, ChunithmNet):
+            if client_name == ChunithmNet.NAME:
                 cond = (Song.available == True) & (Chart.available == True)  # noqa: E712
                 pb_query = pb_query.where(cond)
                 chart_query = chart_query.where(cond)
-            elif isinstance(client, Kamaitachi):
+            elif client_name == Kamaitachi.NAME:
                 if not omnimix:
                     cond = Song.removed == False  # noqa: E712
                     pb_query = pb_query.where(cond)
@@ -2071,7 +2187,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
         embed = discord.Embed(
             color=discord.Color.yellow(),
-            title=f"{escape_markdown(profile.username)}'s folder statistics",
+            title=f"{escape_markdown(username)}'s folder statistics",
             timestamp=max(
                 (pb.last_played_at for pb in pbs if pb.last_played_at is not None),
                 default=None,
@@ -2296,15 +2412,13 @@ class RecordsCog(commands.Cog, name="Records"):
 
     @flags.command("sync", aliases=["refresh", "update"])
     @flags.argument("-k", "--kamaitachi", action="store_true")
-    @flags.argument(
-        "user", nargs=flags.OPTIONAL_INVISIBLE, default=None, type=MemberOrUserConverter
-    )
+    @flags.argument("user", nargs=flags.OPTIONAL_INVISIBLE, default=None)
     @commands.cooldown(2, 60, commands.BucketType.user)
     async def sync(
         self,
         ctx: PenguinContext,
         *,
-        user: discord.User | discord.Member | None = None,
+        user: str | None = None,
         kamaitachi: bool = False,
     ):
         """Sync scores with the bot.
@@ -2315,27 +2429,41 @@ class RecordsCog(commands.Cog, name="Records"):
 
         **Parameters**:
         `-k`: Sync the user's Kamaitachi scores.
-        `user`: The user to sync scores for. Yourself, if not specified.
+        `user`: The user to sync scores for. Yourself, if not specified. Alternatively, a CHUNITHM International friend code is also accepted.
         """
 
-        await self._sync_impl(ctx, user=user, kamaitachi=kamaitachi)
+        user_or_friend_code: discord.User | discord.Member | str | None = None
+
+        if user is not None:
+            try:
+                user_or_friend_code = await MemberOrUserConverter().convert(ctx, user)
+            except commands.UserNotFound:
+                if not user.isdigit():
+                    raise
+
+                user_or_friend_code = user
+
+        await self._sync_impl(ctx, user=user_or_friend_code, kamaitachi=kamaitachi)
 
     @app_commands.command(name="sync", description="Sync scores with the bot.")
     @app_commands.describe(
         user="The user to sync scores for.",
+        friend_code="The friend code to sync scores for.",
         kamaitachi="Sync the user's Kamaitachi scores.",
     )
+    @app_commands.rename(friend_code="friend-code")
     @app_commands.checks.cooldown(2, 60)
     async def sync_slash(
         self,
         interaction: discord.Interaction["ChuniBot"],
         *,
         user: discord.User | discord.Member | None = None,
+        friend_code: str | None = None,
         kamaitachi: bool = False,
     ):
         await self._sync_impl(
             await PenguinContext.from_interaction(interaction),
-            user=user,
+            user=friend_code or user,
             kamaitachi=kamaitachi,
         )
 
@@ -2343,9 +2471,22 @@ class RecordsCog(commands.Cog, name="Records"):
         self,
         ctx: PenguinContext,
         *,
-        user: discord.User | discord.Member | None = None,
+        user: discord.User | discord.Member | str | None = None,
         kamaitachi: bool = False,
     ):
+        if isinstance(user, str):
+            (
+                profile,
+                _,
+            ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
+                ctx, user
+            )
+
+            await ctx.respond_or_edit(
+                f"Successfully synced CHUNITHM International scores for {escape_markdown(profile.username)}."
+            )
+            return
+
         target_id = user.id if user is not None else ctx.author.id
 
         async with (

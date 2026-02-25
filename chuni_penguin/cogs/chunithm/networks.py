@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING
@@ -10,13 +11,20 @@ from discord.ext import commands, tasks
 from sqlalchemy import select, update
 
 from chuni_penguin.config import config
+from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Chart, Cookie
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.base import Network
-from chuni_penguin.networks.chunithm_net import ChunithmNet
-from chuni_penguin.networks.errors import AuthenticationError
+from chuni_penguin.networks.chunithm_net import ChuniNetError, ChunithmNet
+from chuni_penguin.networks.errors import (
+    AlreadyFriends,
+    AuthenticationError,
+    InvalidFriendCode,
+    NetworkError,
+)
 from chuni_penguin.networks.kamaitachi import Kamaitachi
-from chuni_penguin.networks.types import Difficulty
+from chuni_penguin.networks.types import Difficulty, PersonalBest
+from chuni_penguin.ui import FriendRequestWaitView
 from chuni_penguin.utils import AsyncRcContextManager
 
 if TYPE_CHECKING:
@@ -299,6 +307,101 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             password=config.credentials.sega_id_password,
         ) as client:
             yield client
+
+    async def fetch_chunithm_net_from_friend_code(
+        self, ctx: PenguinContext, friend_code: str
+    ):
+        pbs: list[PersonalBest] = []
+
+        async with self.bot_network(kamaitachi=False) as client:
+            bot_profile = await client.get_minimal_profile()
+            friends = await client.get_friends()
+            friend = next(
+                (friend for friend in friends if friend.friend_code == friend_code),
+                None,
+            )
+
+            if friend is None:
+                try:
+                    await client.send_friend_request(friend_code)
+                except AlreadyFriends:
+                    # This can also happen if we've submitted a friend request before
+                    # but the user hasn't accepted it.
+                    pass
+                except InvalidFriendCode:
+                    msg = "Could not find any users with the provided Discord user ID or friend code."
+                    raise commands.BadArgument(msg) from None
+
+                view = FriendRequestWaitView(ctx, bot_profile, timeout=180)
+
+                await view.start()
+                await view.wait()
+
+                friends = await client.get_friends()
+                friend = next(
+                    (friend for friend in friends if friend.friend_code == friend_code),
+                    None,
+                )
+
+                if friend is None:
+                    with contextlib.suppress(NetworkError):
+                        await client.remove_friend_request(friend_code)
+
+                    msg = "Friend request was not accepted. Please try agian."
+                    raise commands.CommandError(msg)
+
+            friend_code = friend.friend_code
+
+            if not friend.is_favorite:
+                if sum(friend.is_favorite or False for friend in friends) >= 10:
+                    await ctx.respond_or_edit(
+                        "The bot has no favorite friend slots left. Please wait..."
+                    )
+                    tries = 0
+
+                    while (
+                        sum(friend.is_favorite or False for friend in friends) >= 10
+                        and tries <= 3
+                    ):
+                        friends = await client.get_friends()
+                        tries += 1
+                        await asyncio.sleep(30)
+
+                    if sum(friend.is_favorite or False for friend in friends) >= 10:
+                        with contextlib.suppress(NetworkError):
+                            await client.remove_friend(friend_code)
+
+                        msg = "Could not free up a favorite friend slot. Please try again later."
+                        raise commands.CommandError(msg)
+
+                await client.add_favorite_friend(friend_code)
+
+            for difficulty in Difficulty:
+                if difficulty == Difficulty.worlds_end:
+                    continue
+
+                await ctx.respond_or_edit(f"Fetching {difficulty} personal bests...")
+
+                try:
+                    difficulty_pbs = (
+                        await client.get_rival_personal_bests_by_difficulty(
+                            friend_code, difficulty
+                        )
+                    )
+                except ChuniNetError as e:
+                    if e.code == 140101:
+                        msg = "Bot was unfriended before score fetch completed."
+                        raise commands.CommandError(msg) from None
+
+                    raise
+
+                pbs.extend(difficulty_pbs)
+
+            await client.remove_friend(friend_code)
+
+        pbs = await ctx.bot.utils.process_records(ctx.author.id, client.NAME, pbs)
+
+        return friend.profile, pbs
 
 
 async def setup(bot: "ChuniBot"):

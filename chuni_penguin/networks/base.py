@@ -6,6 +6,7 @@ from typing import ClassVar
 from .types import (
     CourseRecord,
     Difficulty,
+    Friend,
     Leaderboard,
     LinkedGate,
     LinkedGateLeaderboard,
@@ -122,9 +123,34 @@ class Network(ABC):
     This network supports :meth:`update_username`.
     """
 
-    SUPPORTS_SEND_FRIEND_REQUEST: ClassVar[bool] = False
+    SUPPORTS_FRIEND_REQUEST: ClassVar[bool] = False
     """
-    This network supports :meth:`send_friend_request`.
+    This network supports :meth:`send_friend_request` and :meth:`remove_friend_request`.
+    """
+
+    SUPPORTS_FRIENDS: ClassVar[bool] = False
+    """
+    This network supports :meth:`get_friends` and :meth:`remove_friend`.
+    """
+
+    SUPPORTS_FAVORITE_FRIENDS: ClassVar[bool] = False
+    """
+    This network supports :meth:`add_favorite_friend` and :meth:`remove_favorite_friend`.
+    """
+
+    SUPPORTS_RIVALS: ClassVar[bool] = False
+    """
+    This network supports :meth:`add_rival` and :meth:`remove_rival`.
+    """
+
+    SUPPORTS_RIVAL_PERSONAL_BESTS: ClassVar[bool] = False
+    """
+    This network supports :meth:`get_rival_personal_bests`.
+    """
+
+    SUPPORTS_RIVAL_PERSONAL_BESTS_BY_DIFFICULTY: ClassVar[bool] = False
+    """
+    This network supports :meth:`get_rival_personal_bests_by_difficulty`.
     """
 
     SUPPORTS_LINKED_VERSE_PROGRESS: ClassVar[bool] = False
@@ -260,6 +286,44 @@ class Network(ABC):
 
     async def send_friend_request(self, identifier: str) -> None:
         """Send a friend request to another player on the network."""
+        raise NotImplementedError
+
+    async def remove_friend_request(self, identifier: str) -> None:
+        """Send a friend request to another player on the network."""
+        raise NotImplementedError
+
+    async def get_friends(self) -> list[Friend]:
+        """Get the player's friends, including favorites and rivals if available."""
+        raise NotImplementedError
+
+    async def remove_friend(self, identifier: str) -> None:
+        """Remove a friend from the player's friend list."""
+        raise NotImplementedError
+
+    async def add_favorite_friend(self, identifier: str) -> None:
+        """Add the friend as a favorite friend."""
+        raise NotImplementedError
+
+    async def remove_favorite_friend(self, identifier: str) -> None:
+        """Remove the friend from favorites."""
+        raise NotImplementedError
+
+    async def add_rival(self, identifier: str) -> None:
+        """Add the friend as a rival."""
+        raise NotImplementedError
+
+    async def remove_rival(self, identifier: str) -> None:
+        """Remove the friend from rivals."""
+        raise NotImplementedError
+
+    async def get_rival_personal_bests(self, identifier: str) -> list[PersonalBest]:
+        """Get a rival's personal bests."""
+        raise NotImplementedError
+
+    async def get_rival_personal_bests_by_difficulty(
+        self, identifier: str, difficulty: Difficulty
+    ) -> list[PersonalBest]:
+        """Get a rival's personal bests by difficulty."""
         raise NotImplementedError
 
     async def get_linked_verse_progress(self) -> dict[LinkedGate, LinkedGateStatus]:

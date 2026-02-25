@@ -17,7 +17,6 @@ from chuni_penguin.calculation import (
 from chuni_penguin.config import config
 from chuni_penguin.database import Alias, Chart, Cookie, Song, UserConfig
 from chuni_penguin.database import PersonalBest as DBPersonalBest
-from chuni_penguin.errors import MissingDetailedParams
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.consts import (
     KEY_INTERNAL_LEVEL,
@@ -205,6 +204,7 @@ class UtilsCog(commands.Cog, name="Utils"):
     async def hydrate_records(self, records: Sequence[T]) -> list[T]:
         song_ids = set()
         jackets = set()
+        titles = set()
 
         for record in records:
             song_id = record.extras.get(KEY_SONG_ID)
@@ -220,12 +220,18 @@ class UtilsCog(commands.Cog, name="Utils"):
             elif record.jacket_url is not None:
                 jackets.add(record.jacket_url.split("/")[-1])
             else:
-                raise MissingDetailedParams
+                titles.add(record.title)
 
         async with self.bot.begin_db_session() as session:
             stmt = (
                 select(Song)
-                .where(Song.id.in_(song_ids) | Song.jacket.in_(jackets))
+                .where(
+                    Song.id.in_(song_ids)
+                    | Song.jacket.in_(jackets)
+                    # Not resolving WE charts on title since there can be multiple
+                    # of them and I'm not dealing with that shit
+                    | ((Song.id < 8000) & Song.title.in_(titles))
+                )
                 .options(joinedload(Song.charts))
             )
             songs = (await session.execute(stmt)).scalars().unique()
@@ -235,6 +241,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         for song in songs:
             song_lookup[song.id] = song
             song_lookup[song.jacket] = song
+            song_lookup[song.title] = song
 
         hydrated_records = []
 
@@ -246,7 +253,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             elif record.jacket_url is not None:
                 song = song_lookup.get(record.jacket_url.split("/")[-1])
             else:
-                raise MissingDetailedParams
+                song = song_lookup.get(record.title)
 
             if song is None:
                 await logger.awarning(
