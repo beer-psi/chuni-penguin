@@ -20,7 +20,7 @@ from .linked_verse import (
     LinkLevel,
 )
 from .login_bonus import DailyBonus, LoginBonus, LoginBonusItem, MonthlyLoginBonus
-from .profile import Currency, OverPower, Possession, Profile, RatingSystem
+from .profile import Currency, Friend, OverPower, Possession, Profile, RatingSystem
 from .score import (
     Judgements,
     NotePercentage,
@@ -41,6 +41,7 @@ __all__ = (
     "Currency",
     "DailyBonus",
     "Difficulty",
+    "Friend",
     "Genre",
     "Judgements",
     "Leaderboard",

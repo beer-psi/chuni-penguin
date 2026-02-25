@@ -4,6 +4,7 @@ from .components import ChartCardEmbed, ScoreCardEmbed
 from .confirmation import ConfirmationYesView
 from .courses import CourseListView
 from .embeds import EmbedPaginationView
+from .friend import FriendRequestWaitView
 from .gaming import GuessLeaderboardView, RetryGameButton
 from .leaderboard import LeaderboardView, LinkedGateLeaderboardView
 from .login import LoginFlowView
@@ -25,6 +26,7 @@ __all__ = (
     "ConfirmationYesView",
     "CourseListView",
     "EmbedPaginationView",
+    "FriendRequestWaitView",
     "GuessLeaderboardView",
     "LeaderboardView",
     "LinkedGateLeaderboardView",

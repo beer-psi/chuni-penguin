@@ -134,7 +134,7 @@ def parse_title(element: Tag) -> Title | None:
     return Title(content=title_content, rarity=title_rarity)
 
 
-def parse_player_card_and_avatar(soup: BeautifulSoup):
+def parse_player_card_and_avatar(soup: Tag):
     if (e := soup.select_one(".player_chara")) is not None:
         img = e.select_one("img")
         character = img.attrs["src"] if e else None
@@ -146,7 +146,15 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
         character = None
         character_frame = None
 
-    name = soup.select_one(".player_name_in").get_text()
+    name_elem = soup.select_one(".player_name_in")
+
+    if (form_elem := name_elem.select_one("form")) is not None:
+        name = form_elem.select_one("a").get_text()
+        friend_code = form_elem.select_one("input[name=idx]").attrs["value"]
+    else:
+        name = name_elem.get_text()
+        friend_code = None
+
     lv = chuni_int(soup.select_one(".player_lv").get_text())
 
     team_name_elem = soup.select_one(".player_team_name")
@@ -211,7 +219,7 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
     )
 
     avatar_group = soup.select_one(".avatar_group")
-    avatar = parse_avatar(avatar_group)
+    avatar = parse_avatar(avatar_group) if avatar_group is not None else None
 
     return Profile(
         username=name,
@@ -231,6 +239,7 @@ def parse_player_card_and_avatar(soup: BeautifulSoup):
         over_power=OverPower(value=overpower_value, percentage=overpower_progress),
         possession=possession,
         last_played=last_play_date,
+        friend_code=friend_code,
         user_avatar=avatar,
     )
 
@@ -754,3 +763,51 @@ def parse_linked_gate_leaderboard(soup: BeautifulSoup) -> LinkedGateLeaderboard:
         )
 
     return lb
+
+
+def parse_friend_vs(
+    soup: BeautifulSoup,
+) -> tuple[list[PersonalBest], list[PersonalBest]]:
+    your_pbs: list[PersonalBest] = []
+    their_pbs: list[PersonalBest] = []
+
+    for block in soup.select(".music_box"):
+        title = block.select_one(".block_underline > div").get_text()
+        difficulty = difficulty_from_imgurl(" ".join(block["class"]))
+        info_blocks = block.select(".vs_list_infoblock")
+
+        if len(info_blocks) != 2:
+            continue
+
+        your_block, their_block = info_blocks
+        your_score = chuni_int(
+            your_block.select_one(".play_musicdata_highscore").get_text()
+        )
+        your_lamps = get_rank_and_lamps(your_block.select_one(".vs_list_mybatch"))
+        your_pbs.append(
+            PersonalBest(
+                title=title,
+                difficulty=difficulty,
+                score=your_score,
+                clear_lamp=your_lamps[1],
+                combo_lamp=your_lamps[2],
+                chain_lamp=your_lamps[3],
+            )
+        )
+
+        their_score = chuni_int(
+            their_block.select_one(".play_musicdata_highscore").get_text()
+        )
+        their_lamps = get_rank_and_lamps(their_block.select_one(".vs_list_friendbatch"))
+        their_pbs.append(
+            PersonalBest(
+                title=title,
+                difficulty=difficulty,
+                score=their_score,
+                clear_lamp=their_lamps[1],
+                combo_lamp=their_lamps[2],
+                chain_lamp=their_lamps[3],
+            )
+        )
+
+    return (your_pbs, their_pbs)

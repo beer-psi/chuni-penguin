@@ -13,6 +13,7 @@ from chuni_penguin.networks.errors import AlreadyFriends, InvalidFriendCode
 from chuni_penguin.networks.types import (
     CourseRecord,
     Difficulty,
+    Friend,
     Leaderboard,
     LinkedGate,
     LinkedGateLeaderboard,
@@ -31,6 +32,7 @@ from .parser import (
     parse_collection_customize,
     parse_course_list,
     parse_detailed_recent_record,
+    parse_friend_vs,
     parse_leaderboard,
     parse_linked_gate_leaderboard,
     parse_linked_verse_progress,
@@ -65,7 +67,10 @@ class ChunithmNet(Network):
     SUPPORTS_COURSE_RECORDS = True
     SUPPORTS_LOGIN_BONUS_PROGRESS = True
     SUPPORTS_UPDATE_USERNAME = True
-    SUPPORTS_SEND_FRIEND_REQUEST = True
+    SUPPORTS_FRIEND_REQUEST = True
+    SUPPORTS_FRIENDS = True
+    SUPPORTS_FAVORITE_FRIENDS = True
+    SUPPORTS_RIVALS = True
     SUPPORTS_LINKED_VERSE_PROGRESS = True
     SUPPORTS_LINKED_GATE_LEADERBOARD = True
     SUPPORTS_FAVORITE_MUSIC = True
@@ -330,6 +335,130 @@ class ChunithmNet(Network):
                 "Referer": str(_BASE_URL.join("/mobile/friend/search/searchUser/"))
             },
         )
+
+    async def remove_friend_request(self, identifier: str) -> None:
+        await self._client.post(
+            "mobile/friend/invite/cancel/",
+            data={
+                "idx": identifier,
+                "token": self._token,
+            },
+            headers={
+                "Referer": str(_BASE_URL.join("mobile/index.php/friend/invite/")),
+            },
+        )
+
+    async def get_friends(self) -> list[Friend]:
+        soup = await self._request_as_soup("GET", "mobile/friend/")
+        friends: list[Friend] = []
+
+        for e in soup.select(".friend_block"):
+            profile_block = e.select_one(".box_playerprofile")
+
+            if profile_block is None:
+                continue
+
+            profile = parse_player_card_and_avatar(profile_block)
+            is_favorite = e.select_one(".friend_favorite_off") is not None
+            is_rival = e.select_one(".friend_score_off") is not None
+
+            assert profile.friend_code is not None
+
+            friends.append(
+                Friend(
+                    profile=profile,
+                    friend_code=profile.friend_code,
+                    is_favorite=is_favorite,
+                    is_rival=is_rival,
+                )
+            )
+
+        return friends
+
+    async def remove_friend(self, identifier: str) -> None:
+        await self._client.request(
+            "POST",
+            "mobile/friend/friendDetail/drop/",
+            data={
+                "idx": identifier,
+                "token": self._token,
+            },
+            headers={
+                "Referer": str(_BASE_URL.join("mobile/friend/friendDetail/")),
+            },
+        )
+
+    async def add_favorite_friend(self, identifier: str) -> None:
+        await self._client.request(
+            "POST",
+            "mobile/friend/favoriteOn/",
+            data={
+                "idx": identifier,
+                "token": self._token,
+            },
+            headers={
+                "Referer": str(_BASE_URL.join("mobile/friend")),
+            },
+        )
+
+    async def remove_favorite_friend(self, identifier: str) -> None:
+        await self._client.request(
+            "POST",
+            "mobile/friend/favoriteOff/",
+            data={
+                "idx": identifier,
+                "token": self._token,
+            },
+            headers={
+                "Referer": str(_BASE_URL.join("mobile/friend")),
+            },
+        )
+
+    async def add_rival(self, identifier: str) -> None:
+        await self._client.request(
+            "POST",
+            "mobile/friend/friendscoreOn/",
+            data={
+                "idx": identifier,
+                "token": self._token,
+            },
+            headers={
+                "Referer": str(_BASE_URL.join("mobile/friend")),
+            },
+        )
+
+    async def remove_rival(self, identifier: str) -> None:
+        await self._client.request(
+            "POST",
+            "mobile/friend/friendscoreOff/",
+            data={
+                "idx": identifier,
+                "token": self._token,
+            },
+            headers={
+                "Referer": str(_BASE_URL.join("mobile/friend")),
+            },
+        )
+
+    async def get_rival_personal_bests_by_difficulty(
+        self, identifier: str, difficulty: Difficulty
+    ) -> list[PersonalBest]:
+        soup = await self._request_as_soup(
+            "POST",
+            "mobile/friend/genreVs/sendBattleStart/",
+            data={
+                "genre": "99",
+                "friend": identifier,
+                "radio_diff": str(difficulty.value),
+                "token": self._token,
+            },
+            headers={
+                "Referer": str(_BASE_URL.join("mobile/friend/genreVs")),
+            },
+        )
+        _, pbs = parse_friend_vs(soup)
+
+        return [pb for pb in pbs if pb.score > 0]
 
     async def get_linked_verse_progress(self) -> dict[LinkedGate, LinkedGateStatus]:
         soup = await self._request_as_soup("GET", "mobile/home/linkedVerse/")

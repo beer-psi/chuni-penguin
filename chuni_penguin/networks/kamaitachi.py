@@ -32,6 +32,7 @@ from .types import (
     ClearLamp,
     ComboLamp,
     Difficulty,
+    Friend,
     Judgements,
     Leaderboard,
     LeaderboardEntry,
@@ -44,7 +45,7 @@ from .types import (
     SkillClass,
 )
 
-T = TypeVar("T", bound=msgspec.Struct)
+T = TypeVar("T")
 
 KTChunithmNoteLamp = Literal[
     "NONE", "FULL COMBO", "ALL JUSTICE", "ALL JUSTICE CRITICAL"
@@ -92,6 +93,10 @@ class KTChunithmClass(Enum):
 
 
 class KamaitachiError(NetworkError):
+    pass
+
+
+class Empty(msgspec.Struct):
     pass
 
 
@@ -576,6 +581,9 @@ class Kamaitachi(Network):
     SUPPORTS_PERSONAL_BESTS = True
     SUPPORTS_PERSONAL_BESTS_ON_SONG = True
     SUPPORTS_CHART_LEADERBOARD = True
+    SUPPORTS_FRIENDS = True
+    SUPPORTS_RIVALS = True
+    SUPPORTS_RIVAL_PERSONAL_BESTS = True
 
     __slots__ = (
         "_api_key",
@@ -654,19 +662,11 @@ class Kamaitachi(Network):
     def authentication(self) -> str:
         return self._api_key
 
-    async def get_minimal_profile(self) -> Profile:
-        resp = await self._client.get("/api/v1/users/me")
-        data = msgspec.json.decode(resp.content, type=KTResponse[KTUserProfile])
-
-        if not data.success:
-            raise KamaitachiError(data.description)
-
-        assert data.body is not None
-
-        user_id = data.body.id
-        username = data.body.username
-        custom_banner_location = data.body.custom_banner_location
-        custom_pfp_location = data.body.custom_pfp_location
+    async def _convert_to_minimal_profile(self, user: KTUserProfile) -> Profile:
+        user_id = user.id
+        username = user.username
+        custom_banner_location = user.custom_banner_location
+        custom_pfp_location = user.custom_pfp_location
 
         if config.web.is_accessible and custom_banner_location is not None:
             request = self._client.build_request(
@@ -715,10 +715,49 @@ class Kamaitachi(Network):
             ),
         )
 
-    async def get_profile(self) -> Profile:
-        profile = await self.get_minimal_profile()
+    async def get_minimal_profile(self) -> Profile:
+        resp = await self._client.get("/api/v1/users/me")
+        data = msgspec.json.decode(resp.content, type=KTResponse[KTUserProfile])
 
-        resp = await self._client.get("/api/v1/users/me/games/chunithm/Single")
+        if not data.success:
+            raise KamaitachiError(data.description)
+
+        assert data.body is not None
+        return await self._convert_to_minimal_profile(data.body)
+
+    def _convert_profile(
+        self, profile: Profile, ugpt_data: KTChunithmUserProfile
+    ) -> Profile:
+        profile.rating_systems = [
+            RatingSystem(
+                name="NaiveRating",
+                value=ugpt_data.game_stats.ratings.naive_rating,
+            )
+        ]
+        profile.total_scores = ugpt_data.total_scores
+        profile.extras = {
+            "Session Playtime": f"{(ugpt_data.playtime) // (60 * 60 * 1000)} hours",
+        }
+
+        if (dan := ugpt_data.game_stats.classes.dan) is not msgspec.UNSET:
+            profile.medal = getattr(SkillClass, dan.removeprefix("DAN_").lower())
+
+        if (emblem := ugpt_data.game_stats.classes.emblem) is not msgspec.UNSET:
+            profile.emblem = getattr(SkillClass, emblem.removeprefix("DAN_").lower())
+
+        if (most_recent_score := ugpt_data.most_recent_score) is not None:
+            profile.last_played = datetime.fromtimestamp(
+                (most_recent_score.time_achieved or most_recent_score.time_added)
+                / 1000,
+                tz=UTC,
+            )
+
+        return profile
+
+    async def _add_game_data_to_profile(self, profile: Profile) -> Profile:
+        resp = await self._client.get(
+            f"/api/v1/users/{profile.username}/games/chunithm/Single"
+        )
         ugpt_data = msgspec.json.decode(
             resp.content, type=KTResponse[KTChunithmUserProfile]
         )
@@ -727,32 +766,11 @@ class Kamaitachi(Network):
             raise KamaitachiError(ugpt_data.description)
 
         assert ugpt_data.body is not None
+        return self._convert_profile(profile, ugpt_data.body)
 
-        profile.rating_systems = [
-            RatingSystem(
-                name="NaiveRating",
-                value=ugpt_data.body.game_stats.ratings.naive_rating,
-            )
-        ]
-        profile.total_scores = ugpt_data.body.total_scores
-        profile.extras = {
-            "Session Playtime": f"{(ugpt_data.body.playtime) // (60 * 60 * 1000)} hours",
-        }
-
-        if (dan := ugpt_data.body.game_stats.classes.dan) is not msgspec.UNSET:
-            profile.medal = getattr(SkillClass, dan.removeprefix("DAN_").lower())
-
-        if (emblem := ugpt_data.body.game_stats.classes.emblem) is not msgspec.UNSET:
-            profile.emblem = getattr(SkillClass, emblem.removeprefix("DAN_").lower())
-
-        if (most_recent_score := ugpt_data.body.most_recent_score) is not None:
-            profile.last_played = datetime.fromtimestamp(
-                (most_recent_score.time_achieved or most_recent_score.time_added)
-                / 1000,
-                tz=UTC,
-            )
-
-        return profile
+    async def get_profile(self) -> Profile:
+        profile = await self.get_minimal_profile()
+        return await self._add_game_data_to_profile(profile)
 
     async def get_recent_scores(self) -> list[RecentScore]:
         resp = await self._client.get(
@@ -778,8 +796,10 @@ class Kamaitachi(Network):
         assert data.body is not None
         return convert_kt_pbs_to_records(data.body)
 
-    async def get_personal_bests(self) -> list[PersonalBest]:
-        resp = await self._client.get("/api/v1/users/me/games/chunithm/Single/pbs/all")
+    async def _get_personal_bests(self, user: str | int):
+        resp = await self._client.get(
+            f"/api/v1/users/{user}/games/chunithm/Single/pbs/all"
+        )
         data = msgspec.json.decode(resp.content, type=KTChunithmPersonalBestsResponse)
 
         if not data.success:
@@ -787,6 +807,9 @@ class Kamaitachi(Network):
 
         assert data.body is not None
         return convert_kt_pbs_to_records(data.body)
+
+    async def get_personal_bests(self) -> list[PersonalBest]:
+        return await self._get_personal_bests("me")
 
     async def get_personal_bests_on_song(self, song_id: int) -> list[PersonalBest]:
         chart_ids = await self.get_kt_chart_ids(song_id)
@@ -878,6 +901,98 @@ class Kamaitachi(Network):
                 for i, pb in enumerate(data.body.pbs)
             ],
         )
+
+    async def _convert_kt_profile_to_friend(self, kt_profile: KTUserProfile):
+        profile = await self._add_game_data_to_profile(
+            await self._convert_to_minimal_profile(kt_profile)
+        )
+
+        return Friend(profile=profile, friend_code=str(kt_profile.id), is_rival=True)
+
+    async def get_friends(self) -> list[Friend]:
+        # On Kamaitachi, /api/v1/users/me/following only retrieves profiles without
+        # any game-specific data. We could retrieve the game-specific data for each
+        # person, but this gets expensive really quickly, so we're limiting to only
+        # rivals.
+        resp = await self._client.get("/api/v1/users/me/games/chunithm/Single/rivals")
+        data = msgspec.json.decode(resp.content, type=KTResponse[list[KTUserProfile]])
+
+        if not data.success:
+            raise KamaitachiError(data.description)
+
+        assert data.body is not None
+
+        return await asyncio.gather(
+            *[self._convert_kt_profile_to_friend(p) for p in data.body]
+        )
+
+    async def remove_friend(self, identifier: str) -> None:
+        await self.remove_rival(identifier)
+
+    async def add_rival(self, identifier: str) -> None:
+        try:
+            user_id = int(identifier)
+        except ValueError as e:
+            msg = "user ID must be an integer"
+            raise ValueError(msg) from e
+
+        resp = await self._client.get("/api/v1/users/me/games/chunithm/Single/rivals")
+        data = msgspec.json.decode(resp.content, type=KTResponse[list[KTUserProfile]])
+
+        if not data.success:
+            raise KamaitachiError(data.description)
+
+        assert data.body is not None
+
+        rival_ids = {p.id for p in data.body}
+
+        if user_id in rival_ids:
+            return
+
+        rival_ids.add(user_id)
+
+        resp = await self._client.put(
+            "/api/v1/users/me/games/chunithm/Single/rivals",
+            json={"rivalIDs": list(rival_ids)},
+        )
+        rival_data = msgspec.json.decode(resp.content, type=KTResponse[Empty])
+
+        if not rival_data.success:
+            raise KamaitachiError(rival_data.description)
+
+    async def remove_rival(self, identifier: str) -> None:
+        try:
+            user_id = int(identifier)
+        except ValueError as e:
+            msg = "user ID must be an integer"
+            raise ValueError(msg) from e
+
+        resp = await self._client.get("/api/v1/users/me/games/chunithm/Single/rivals")
+        data = msgspec.json.decode(resp.content, type=KTResponse[list[KTUserProfile]])
+
+        if not data.success:
+            raise KamaitachiError(data.description)
+
+        assert data.body is not None
+
+        rival_ids = {p.id for p in data.body}
+
+        try:
+            rival_ids.remove(user_id)
+        except KeyError:
+            return
+
+        resp = await self._client.put(
+            "/api/v1/users/me/games/chunithm/Single/rivals",
+            json={"rivalIDs": list(rival_ids)},
+        )
+        rival_data = msgspec.json.decode(resp.content, type=KTResponse[Empty])
+
+        if not rival_data.success:
+            raise KamaitachiError(rival_data.description)
+
+    async def get_rival_personal_bests(self, identifier: str) -> list[PersonalBest]:
+        return await self._get_personal_bests(identifier)
 
     async def aclose(self) -> None:
         await self._client.aclose()
