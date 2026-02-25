@@ -752,12 +752,13 @@ class RecordsCog(commands.Cog, name="Records"):
         new_records: list[PersonalBest] | None = None
         new_record_slots: int = 20
 
-        (
-            profile,
-            pbs,
-        ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
-            ctx, friend_code
-        )
+        async with ctx.typing():
+            (
+                profile,
+                pbs,
+            ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
+                ctx, friend_code
+            )
 
         pbs.sort(
             key=lambda pb: (
@@ -798,17 +799,18 @@ class RecordsCog(commands.Cog, name="Records"):
                 ):
                     break
 
-        await self._best50_respond(
-            ctx,
-            profile,
-            ctx.user_config,
-            current_rating,
-            records,
-            record_slots,
-            new_records,
-            new_record_slots,
-            classic=classic,
-        )
+        async with ctx.typing():
+            await self._best50_respond(
+                ctx,
+                profile,
+                ctx.user_config,
+                current_rating,
+                records,
+                record_slots,
+                new_records,
+                new_record_slots,
+                classic=classic,
+            )
 
     async def _best50_inner(
         self,
@@ -2475,12 +2477,13 @@ class RecordsCog(commands.Cog, name="Records"):
         kamaitachi: bool = False,
     ):
         if isinstance(user, str):
-            (
-                profile,
-                _,
-            ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
-                ctx, user
-            )
+            async with ctx.typing():
+                (
+                    profile,
+                    _,
+                ) = await ctx.bot.chunithm_networks.fetch_chunithm_net_from_friend_code(
+                    ctx, user
+                )
 
             await ctx.respond_or_edit(
                 f"Successfully synced CHUNITHM International scores for {escape_markdown(profile.username)}."
