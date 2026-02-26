@@ -1228,7 +1228,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 await self._best50_inner(ctx, discord_user, **kwargs)
             except commands.UserNotFound:
-                if not user.isdigit():
+                if kamaitachi or not user.isdigit():
                     raise
 
                 await self._best50_from_friend_code(
@@ -1271,6 +1271,14 @@ class RecordsCog(commands.Cog, name="Records"):
         new_rating: bool = False,
         rating_system: Literal["naive", "ingame"] | None = None,
     ):
+        if friend_code is not None and user is not None:
+            msg = "Cannot specify both a user and a friend code."
+            raise commands.BadArgument(msg)
+
+        if friend_code is not None and not friend_code.isdigit():
+            msg = "Invalid friend code."
+            raise commands.BadArgument(msg)
+
         ctx = await PenguinContext.from_interaction(interaction)
 
         if friend_code is not None:
@@ -2458,7 +2466,7 @@ class RecordsCog(commands.Cog, name="Records"):
             try:
                 user_or_friend_code = await MemberOrUserConverter().convert(ctx, user)
             except commands.UserNotFound:
-                if not user.isdigit():
+                if kamaitachi or not user.isdigit():
                     raise
 
                 user_or_friend_code = user
@@ -2481,6 +2489,14 @@ class RecordsCog(commands.Cog, name="Records"):
         friend_code: str | None = None,
         kamaitachi: bool = False,
     ):
+        if friend_code is not None and user is not None:
+            msg = "Cannot specify both a user and a friend code."
+            raise commands.BadArgument(msg)
+
+        if friend_code is not None and not friend_code.isdigit():
+            msg = "Invalid friend code."
+            raise commands.BadArgument(msg)
+
         await self._sync_impl(
             await PenguinContext.from_interaction(interaction),
             user=friend_code or user,
