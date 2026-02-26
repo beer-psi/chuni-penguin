@@ -16,7 +16,7 @@ dependencies = [
     "msgspec~=0.20.0",
     "structlog~=25.5",
     "async-lru~=2.0",
-    "discord-ext-track-edits~=0.1.2",
+    "discord-ext-track-edits~=0.1.3",
     "hishel==0.1.3",
     "platformdirs~=4.5",
     "audioop-lts~=0.2.2; python_version >= '3.13'",
