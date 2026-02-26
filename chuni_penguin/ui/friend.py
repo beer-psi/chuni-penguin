@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext import commands
+from discord.ext.commands.core import hooked_wrapped_callback
 from discord.utils import MISSING, escape_markdown
 
 from chuni_penguin.context import PenguinContext
@@ -77,23 +78,22 @@ class FriendCodeEntryModal(discord.ui.Modal, title="Friend code"):
 
             try:
                 await self.ctx.command._do_call(self.ctx.interaction, kwargs)
-            except Exception as e:  # noqa: BLE001
-                await interaction.client.tree.on_error(
-                    self.ctx.interaction,
-                    discord.app_commands.CommandInvokeError(self.ctx.command, e),
-                )
+            except discord.app_commands.AppCommandError as e:
+                await interaction.client.tree.on_error(self.ctx.interaction, e)
         else:
             if "friend_code" in self.ctx.kwargs:
                 self.ctx.kwargs["friend_code"] = self.friend_code.value
             else:
                 self.ctx.kwargs["user"] = self.friend_code.value
 
+            injected = hooked_wrapped_callback(
+                self.ctx.command, self.ctx, self.ctx.command.callback
+            )
+
             try:
-                await self.ctx.command.callback(*self.ctx.args, **self.ctx.kwargs)
-            except Exception as e:  # noqa: BLE001
-                interaction.client.dispatch(
-                    "command_error", self.ctx, commands.errors.CommandInvokeError(e)
-                )
+                await injected(*self.ctx.args, **self.ctx.kwargs)
+            except commands.CommandError as e:
+                await self.ctx.command.dispatch_error(self.ctx, e)
 
         self.stop()
 

@@ -1,11 +1,16 @@
+import itertools
 import re
 from typing import TYPE_CHECKING, Any, List, Mapping, Optional, override
 
 import discord
+from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import Cog, Command, Group
+from discord.ext.commands import Cog, Command, Group, GroupMixin
+from discord.ext.commands.core import hooked_wrapped_callback
+from rapidfuzz import fuzz, process
 
 from chuni_penguin.config import config
+from chuni_penguin.constants import SIMILARITY_THRESHOLD
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -166,5 +171,78 @@ class HelpCommand(commands.HelpCommand):
         await self.context.reply(embed=embed, mention_author=False)
 
 
+async def help_command_autocomplete(
+    interaction: discord.Interaction["ChuniBot"], current: str
+) -> list[app_commands.Choice[str]]:
+    commands = itertools.chain(
+        *[cog.get_commands() for cog in interaction.client.cogs.values()]
+    )
+    command_names = [c.qualified_name for c in commands if not c.hidden]
+
+    if len(current) < 2:
+        return [app_commands.Choice(name=c, value=c) for c in command_names[:25]]
+
+    if (command := interaction.client.get_command(current)) is not None:
+        choices = [
+            app_commands.Choice(
+                name=command.qualified_name, value=command.qualified_name
+            )
+        ]
+
+        if isinstance(command, GroupMixin):
+            choices.extend(
+                app_commands.Choice(name=c.qualified_name, value=c.qualified_name)
+                for c in command.commands
+            )
+
+        if len(choices) > 25:
+            choices = choices[:25]
+
+        return choices
+
+    results = process.extract(
+        current,
+        command_names,
+        scorer=fuzz.QRatio,
+        limit=50,
+        score_cutoff=SIMILARITY_THRESHOLD,
+    )
+
+    return [app_commands.Choice(name=c, value=c) for c, _, _ in results[:25]]
+
+
+@app_commands.command(
+    name="help",
+    description="Display the list of commands, or help for a specific command.",
+)
+@app_commands.describe(command="The command to show help for.")
+@app_commands.autocomplete(command=help_command_autocomplete)
+async def help_slash(
+    interaction: discord.Interaction["ChuniBot"], command: str | None = None
+):
+    if (help_command := interaction.client.help_command) is None:
+        await interaction.response.send_message(
+            content="An internal error has occured.", ephemeral=True
+        )
+        return
+
+    interaction._baton = ctx = await interaction.client.get_context(interaction)
+    help_command = help_command.copy()
+    help_command.context = ctx
+    injected = hooked_wrapped_callback(
+        help_command._command_impl, ctx, help_command.command_callback
+    )
+
+    try:
+        await injected(ctx, command=command)
+    except commands.errors.CommandError as e:
+        await help_command._command_impl.dispatch_error(ctx, e)
+
+
 async def setup(bot: "ChuniBot"):
     bot.help_command = HelpCommand()
+    bot.tree.add_command(help_slash)
+
+
+async def teardown(bot: "ChuniBot"):
+    bot.tree.remove_command("help")
