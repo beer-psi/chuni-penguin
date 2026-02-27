@@ -62,7 +62,9 @@ for logger_name in ("chuni_penguin", "chunithm_net", "discord"):
     _logger.addHandler(handler)
     _logger.setLevel(log_level)
 
-logging.getLogger("songbird").setLevel(logging.WARNING)
+logging.getLogger("songbird").setLevel(
+    logging.DEBUG if config.dangerous.dev else logging.WARNING
+)
 logging.getLogger("songbird").addHandler(handler)
 
 logger: BoundLogger = structlog.get_logger("chuni_penguin")
