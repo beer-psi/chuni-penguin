@@ -397,6 +397,10 @@ class VoiceCog(commands.Cog, name="Voice"):
             songbird.TrackEvent.End,
             lambda _: self.radio_play_next_track(ctx, state),
         )
+        track_handle.add_event(
+            songbird.TrackEvent.Error,
+            lambda _, __: self.radio_play_next_track(ctx, state),
+        )
         track_handle.set_volume(state.volume / 100)
         track_handle.play()
 
