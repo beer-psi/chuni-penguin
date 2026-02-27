@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class FriendCodeEntryModal(discord.ui.Modal, title="Friend code"):
+    friend_code_help = discord.ui.TextDisplay(
+        content="To find your friend code, navigate to Friend -> Potential Friend on CHUNITHM-NET (or visit https://chunithm-net-eng.com/mobile/friend/search/)."
+    )
     friend_code = discord.ui.TextInput(label="Your friend code")
     remember_friend_code = discord.ui.Label(
         text="Remember friend code",
@@ -41,11 +44,39 @@ class FriendCodeEntryModal(discord.ui.Modal, title="Friend code"):
             await interaction.response.send_message(
                 content="A friend code was not provided.", ephemeral=True
             )
+            await self.ctx.respond_or_edit(
+                embed=discord.Embed(
+                    color=discord.Color.red(),
+                    title="Error",
+                    description="A friend code was not provided.",
+                )
+            )
+            return
+
+        if not self.friend_code.value.isdigit():
+            await interaction.response.send_message(
+                content="Invalid friend code. A friend code can only contain digits.",
+                ephemeral=True,
+            )
+            await self.ctx.respond_or_edit(
+                embed=discord.Embed(
+                    color=discord.Color.red(),
+                    title="Error",
+                    description="Invalid friend code. A friend code can only contain digits.",
+                )
+            )
             return
 
         if not isinstance(self.remember_friend_code.component, discord.ui.Checkbox):
             await interaction.response.send_message(
                 content="An internal error has occured.", ephemeral=True
+            )
+            await self.ctx.respond_or_edit(
+                embed=discord.Embed(
+                    color=discord.Color.red(),
+                    title="Error",
+                    description="An internal error has occured.",
+                )
             )
             return
 
@@ -57,6 +88,13 @@ class FriendCodeEntryModal(discord.ui.Modal, title="Friend code"):
         if self.ctx.command is None:
             await interaction.response.send_message(
                 content="An internal error has occured.", ephemeral=True
+            )
+            await self.ctx.respond_or_edit(
+                embed=discord.Embed(
+                    color=discord.Color.red(),
+                    title="Error",
+                    description="An internal error has occured.",
+                )
             )
             return
 
@@ -148,7 +186,18 @@ class FriendCodeOfferView(PenguinView[PenguinContext]):
         await interaction.response.send_modal(
             FriendCodeEntryModal(self.ctx, self.friend_code)
         )
+        self.clear_items()
         self.stop()
+
+        if self.message is not None:
+            await self.ctx.respond_or_edit(
+                embed=discord.Embed(
+                    color=discord.Color.yellow(),
+                    title="Not logged in",
+                    description="Waiting for friend code...",
+                ),
+                view=self,
+            )
 
 
 class FriendRequestWaitView(PenguinView[PenguinContext]):
