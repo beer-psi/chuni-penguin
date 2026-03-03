@@ -39,6 +39,8 @@ def patch_http_use_proxy(proxy: str):
 
 
 def patch_gateway_use_proxy(proxy: str):
+    import time
+
     import discord.client
     import discord.errors
     import discord.gateway
@@ -63,18 +65,12 @@ def patch_gateway_use_proxy(proxy: str):
 
             return data["shards"], proxy, data["session_start_limit"]
 
-    class ProxiedReconnectWebSocket(discord.gateway.ReconnectWebSocket):
-        def __init__(self, shard_id: int | None, *, resume: bool = False) -> None:
-            self.shard_id: int | None = shard_id
-            self.resume: bool = False
-            self.op: str = "IDENTIFY"
-
     class ProxiedGatewayRatelimiter(discord.gateway.GatewayRatelimiter):
         async def block(self) -> None:
             pass
 
-    original_from_client = discord.gateway.DiscordWebSocket.from_client
     original_init = discord.gateway.DiscordWebSocket.__init__
+    original_from_client = discord.gateway.DiscordWebSocket.from_client
     original_send_as_json = discord.gateway.DiscordWebSocket.send_as_json
 
     class TransparentCompressionContext:
@@ -82,6 +78,36 @@ def patch_gateway_use_proxy(proxy: str):
 
         def decompress(self, data: bytes, /) -> str | None:
             return data.decode("utf-8")
+
+    class SilentKeepAliveHandler(discord.gateway.KeepAliveHandler):
+        def ack(self) -> None:
+            ack_time = time.perf_counter()
+            self._last_ack = ack_time
+            self.latency = ack_time - self._last_send
+
+    class DummyKeepAliveHandler:
+        def __init__(
+            self,
+            *args: "Any",
+            ws: discord.gateway.DiscordWebSocket,
+            interval: float | None = None,
+            shard_id: int | None = None,
+            **kwargs: "Any",
+        ) -> None:
+            self.ws = ws
+
+        def start(self): ...
+        def stop(self): ...
+        def run(self): ...
+        def tick(self): ...
+        def ack(self): ...
+        def beat(self): ...
+
+        def get_payload(self):
+            return {
+                "op": self.ws.HEARTBEAT,
+                "d": self.ws.sequence,
+            }
 
     class ProxiedDiscordWebSocket(discord.gateway.DiscordWebSocket):
         DEFAULT_GATEWAY = yarl.URL(proxy)
@@ -136,8 +162,8 @@ def patch_gateway_use_proxy(proxy: str):
     discord.client.Client.before_identify_hook = ProxiedClient.before_identify_hook
     discord.client.Client.is_ws_ratelimited = ProxiedClient.is_ws_ratelimited
     discord.http.HTTPClient.get_bot_gateway = ProxiedHTTPClient.get_bot_gateway
-    discord.gateway.ReconnectWebSocket.__init__ = ProxiedReconnectWebSocket.__init__
     discord.gateway.GatewayRatelimiter.block = ProxiedGatewayRatelimiter.block
+    discord.gateway.KeepAliveHandler.ack = SilentKeepAliveHandler.ack
     discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = (
         ProxiedDiscordWebSocket.DEFAULT_GATEWAY
     )
