@@ -85,30 +85,6 @@ def patch_gateway_use_proxy(proxy: str):
             self._last_ack = ack_time
             self.latency = ack_time - self._last_send
 
-    class DummyKeepAliveHandler:
-        def __init__(
-            self,
-            *args: "Any",
-            ws: discord.gateway.DiscordWebSocket,
-            interval: float | None = None,
-            shard_id: int | None = None,
-            **kwargs: "Any",
-        ) -> None:
-            self.ws = ws
-
-        def start(self): ...
-        def stop(self): ...
-        def run(self): ...
-        def tick(self): ...
-        def ack(self): ...
-        def beat(self): ...
-
-        def get_payload(self):
-            return {
-                "op": self.ws.HEARTBEAT,
-                "d": self.ws.sequence,
-            }
-
     class ProxiedDiscordWebSocket(discord.gateway.DiscordWebSocket):
         DEFAULT_GATEWAY = yarl.URL(proxy)
 
