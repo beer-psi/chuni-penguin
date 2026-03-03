@@ -1,6 +1,10 @@
+# pyright: reportAttributeAccessIssue=false
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import asyncio
+
+    import aiohttp
     from discord.types.gateway import SessionStartLimit
 
 
@@ -34,24 +38,102 @@ def patch_http_use_proxy(proxy: str):
 
 
 def patch_gateway_use_proxy(proxy: str):
+    import discord.client
     import discord.errors
     import discord.gateway
     import discord.http
     import yarl
 
-    async def get_bot_gateway(
-        self: discord.http.HTTPClient,
-    ) -> tuple[int, str, "SessionStartLimit"]:
-        try:
-            data = await self.request(discord.http.Route("GET", "/gateway/bot"))
-        except discord.errors.HTTPException as exc:
-            raise discord.errors.GatewayNotFound from exc
+    class ProxiedClient(discord.client.Client):
+        async def before_identify_hook(
+            self, shard_id: int | None, *, initial: bool = False
+        ) -> None:
+            pass
 
-        return data["shards"], proxy, data["session_start_limit"]
+        def is_ws_ratelimited(self) -> bool:
+            return False
 
-    discord.http.HTTPClient.get_bot_gateway = get_bot_gateway
-    discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = yarl.URL(proxy)
-    discord.gateway.DiscordWebSocket.is_ratelimited = lambda self: False
+    class ProxiedHTTPClient(discord.http.HTTPClient):
+        async def get_bot_gateway(self) -> tuple[int, str, "SessionStartLimit"]:
+            try:
+                data = await self.request(discord.http.Route("GET", "/gateway/bot"))
+            except discord.errors.HTTPException as exc:
+                raise discord.errors.GatewayNotFound from exc
+
+            return data["shards"], proxy, data["session_start_limit"]
+
+    class ProxiedReconnectWebSocket(discord.gateway.ReconnectWebSocket):
+        def __init__(self, shard_id: int | None, *, resume: bool = False) -> None:
+            self.shard_id: int | None = shard_id
+            self.resume: bool = False
+            self.op: str = "IDENTIFY"
+
+    class ProxiedGatewayRatelimiter(discord.gateway.GatewayRatelimiter):
+        async def block(self) -> None:
+            pass
+
+    original_from_client = discord.gateway.DiscordWebSocket.from_client
+    original_init = discord.gateway.DiscordWebSocket.__init__
+
+    class TransparentCompressionContext:
+        COMPRESSION_TYPE = None
+
+        def decompress(self, data: bytes, /) -> str | None:
+            return data.decode("utf-8")
+
+    class ProxiedDiscordWebSocket(discord.gateway.DiscordWebSocket):
+        DEFAULT_GATEWAY = yarl.URL(proxy)
+
+        def __init__(
+            self,
+            socket: "aiohttp.ClientWebSocketResponse",
+            *,
+            loop: "asyncio.AbstractEventLoop",
+        ) -> None:
+            original_init(self, socket, loop=loop)
+            self._decompressor = TransparentCompressionContext()
+
+        @classmethod
+        async def from_client(
+            cls,
+            client: discord.client.Client,
+            *,
+            initial: bool = False,
+            gateway: yarl.URL | None = None,
+            shard_id: int | None = None,
+            session: str | None = None,
+            sequence: int | None = None,
+            resume: bool = False,
+            encoding: str = "json",
+            compress: bool = False,
+        ):
+            return await original_from_client(
+                client,
+                initial=initial,
+                gateway=gateway,
+                shard_id=shard_id,
+                session=session,
+                sequence=sequence,
+                resume=resume,
+                encoding=encoding,
+                compress=False,  # gateway-proxy doesn't like compression
+            )
+
+        def is_ratelimited(self) -> bool:
+            return False
+
+    discord.client.Client.before_identify_hook = ProxiedClient.before_identify_hook
+    discord.client.Client.is_ws_ratelimited = ProxiedClient.is_ws_ratelimited
+    discord.http.HTTPClient.get_bot_gateway = ProxiedHTTPClient.get_bot_gateway
+    discord.gateway.ReconnectWebSocket.__init__ = ProxiedReconnectWebSocket.__init__
+    discord.gateway.GatewayRatelimiter.block = ProxiedGatewayRatelimiter.block
+    discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = (
+        ProxiedDiscordWebSocket.DEFAULT_GATEWAY
+    )
+    discord.gateway.DiscordWebSocket.from_client = ProxiedDiscordWebSocket.from_client
+    discord.gateway.DiscordWebSocket.is_ratelimited = (
+        ProxiedDiscordWebSocket.is_ratelimited
+    )
 
 
 def patch_all():
