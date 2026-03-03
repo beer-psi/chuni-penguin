@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import asyncio
+    from typing import Any
 
     import aiohttp
     from discord.types.gateway import SessionStartLimit
@@ -74,6 +75,7 @@ def patch_gateway_use_proxy(proxy: str):
 
     original_from_client = discord.gateway.DiscordWebSocket.from_client
     original_init = discord.gateway.DiscordWebSocket.__init__
+    original_send_as_json = discord.gateway.DiscordWebSocket.send_as_json
 
     class TransparentCompressionContext:
         COMPRESSION_TYPE = None
@@ -122,6 +124,15 @@ def patch_gateway_use_proxy(proxy: str):
         def is_ratelimited(self) -> bool:
             return False
 
+        async def send_as_json(self, data: "Any") -> None:
+            try:
+                if data["op"] == self.IDENTIFY:
+                    data["d"]["compress"] = False
+            except KeyError:
+                pass
+
+            return await original_send_as_json(self, data)
+
     discord.client.Client.before_identify_hook = ProxiedClient.before_identify_hook
     discord.client.Client.is_ws_ratelimited = ProxiedClient.is_ws_ratelimited
     discord.http.HTTPClient.get_bot_gateway = ProxiedHTTPClient.get_bot_gateway
@@ -130,10 +141,12 @@ def patch_gateway_use_proxy(proxy: str):
     discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = (
         ProxiedDiscordWebSocket.DEFAULT_GATEWAY
     )
+    discord.gateway.DiscordWebSocket.__init__ = ProxiedDiscordWebSocket.__init__
     discord.gateway.DiscordWebSocket.from_client = ProxiedDiscordWebSocket.from_client
     discord.gateway.DiscordWebSocket.is_ratelimited = (
         ProxiedDiscordWebSocket.is_ratelimited
     )
+    discord.gateway.DiscordWebSocket.send_as_json = ProxiedDiscordWebSocket.send_as_json
 
 
 def patch_all():
