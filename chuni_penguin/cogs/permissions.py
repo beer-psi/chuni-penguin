@@ -157,8 +157,17 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         if ctx.author.guild_permissions.manage_guild:
             return True
 
+        if isinstance(ctx.command, discord.app_commands.Command):
+            cog_name = (
+                ctx.command.binding.qualified_name
+                if ctx.command.binding is not None
+                else None
+            )
+        else:
+            cog_name = ctx.command.cog_name
+
         permission = self.get_permission(
-            ctx.command.cog_name,
+            cog_name,
             ctx.command.qualified_name,
             ctx.guild.id,
             ctx.channel.id,
