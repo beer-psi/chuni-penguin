@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
@@ -75,7 +76,9 @@ class AskVoiceCallQuestionState(GuessingGameState):
 
         async def stop_music():
             await asyncio.sleep(audio_length)
-            track_handle.stop()
+
+            with contextlib.suppress(songbird.ControlError):
+                track_handle.stop()
 
         return WaitForAnswerState(
             self.session,

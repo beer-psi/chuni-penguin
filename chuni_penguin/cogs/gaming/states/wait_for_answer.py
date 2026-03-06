@@ -1,7 +1,10 @@
 import asyncio
+import contextlib
 import io
 import time
 from typing import TYPE_CHECKING, override
+
+from discord.ext import songbird
 
 from chuni_penguin.cogs.botutils import CachedAlias
 from chuni_penguin.database import Song
@@ -93,7 +96,8 @@ class WaitForAnswerState(GuessingGameSkippableState):
                 self._stop_music_task.cancel()
 
             if self.session.voice_client is not None:
-                self.session.voice_client.stop()
+                with contextlib.suppress(songbird.ControlError):
+                    self.session.voice_client.stop()
 
             self.session.questions_done += 1
 
