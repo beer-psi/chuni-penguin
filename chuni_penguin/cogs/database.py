@@ -1,5 +1,4 @@
 import contextlib
-import functools
 import sqlite3
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, override
@@ -8,7 +7,6 @@ import msgspec
 import sqlalchemy
 import sqlalchemy.event
 from discord.ext import commands, tasks
-from rapidfuzz import fuzz
 from sqlalchemy import case, delete, func, select, text
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
@@ -39,15 +37,11 @@ if TYPE_CHECKING:
 
 @sqlalchemy.event.listens_for(Engine, "connect")
 def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
-    conn.create_function(
-        "fuzz_qratio",
-        2,
-        functools.partial(fuzz.QRatio, processor=str.lower),  # type: ignore[reportCallIssue]
-    )
-
     # Disable allowing double quotes on strings
     conn._connection._connection.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DDL, 0)
     conn._connection._connection.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DML, 0)
+
+    conn.isolation_level = None
 
     with contextlib.closing(conn.cursor()) as cursor:
         # Turns on write-ahead logging: https://www.sqlite.org/wal.html
@@ -60,8 +54,8 @@ def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
         # Foreign keys need to be enabled to have an effect. https://www.sqlite.org/foreignkeys.html#fk_enable
         cursor.execute("PRAGMA foreign_keys=ON")
 
-        # Wait until database isn't locked any more for 5000ms before throwing "Database is busy" errors.
-        cursor.execute("PRAGMA busy_timeout=5000")
+        # Wait until database isn't locked any more for 10000ms before throwing "Database is busy" errors.
+        cursor.execute("PRAGMA busy_timeout=10000")
 
         # Enables query planner optimization.
         cursor.execute("PRAGMA optimize=0x10002")
@@ -78,6 +72,11 @@ def setup_database(conn: AsyncAdapt_aiosqlite_connection, _):
 
         # Store temporary tables and indices in memory.
         cursor.execute("PRAGMA temp_store=MEMORY")
+
+
+@sqlalchemy.event.listens_for(Engine, "begin")
+def do_begin(conn: sqlalchemy.Connection):
+    conn.exec_driver_sql("BEGIN IMMEDIATE")
 
 
 class CookieQueries:
