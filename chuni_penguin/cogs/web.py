@@ -465,8 +465,12 @@ if config.web.serve_assets and (ASSETS_DIR / "jackets").exists():
     router.static("/assets/jackets", ASSETS_DIR / "jackets")
 
 
-async def on_response_prepare(_: web.Request, response: web.StreamResponse):
+async def on_response_prepare(request: web.Request, response: web.StreamResponse):
     response.headers.add("x-content-type-options", "nosniff")
+
+    if request.path.startswith("/assets/jackets"):
+        response.headers.add("access-control-allow-origin", "*")
+
     if response.headers.get("server"):
         del response.headers["server"]
 
