@@ -1,10 +1,15 @@
 import contextlib
 from collections.abc import Generator
+from http.client import METHOD_NOT_ALLOWED
 
 import httpx
 from bs4 import BeautifulSoup
 
-from chuni_penguin.networks.errors import AuthenticationError, NoCardsRegistered
+from chuni_penguin.networks.errors import (
+    AuthenticationError,
+    MaintenanceError,
+    NoCardsRegistered,
+)
 
 from ._bs4 import BS4_FEATURE
 from .exceptions import ChuniNetError
@@ -112,6 +117,13 @@ class ChunithmNetAuth(httpx.Auth):
 
 
 async def raise_on_chunithm_net_error(response: httpx.Response):
+    # When trying to access the leaderboard during maintenance period
+    if (
+        response.request.url.path.startswith("/mobile/ranking/")
+        and response.status_code == METHOD_NOT_ALLOWED
+    ):
+        raise MaintenanceError
+
     if response.url.path != "/mobile/error/":
         return
 
