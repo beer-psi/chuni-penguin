@@ -520,7 +520,7 @@ class PersonalBestQueries:
 
             params.append(param)
 
-        result = await self._writer.execute(query.returning(PersonalBest))
+        result = await self._writer.execute(query.returning(PersonalBest), params)
 
         return result.scalars().all()
 
