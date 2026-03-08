@@ -371,6 +371,7 @@ class DatabaseCog(commands.Cog, name="Database"):
             config.bot.db_connection_string,
             hide_parameters=not config.dangerous.dev,
             pool_size=1,
+            max_overflow=0,
         )
 
         sqlalchemy.event.listens_for(self._engine.sync_engine, "connect")(
