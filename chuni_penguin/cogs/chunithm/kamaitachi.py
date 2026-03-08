@@ -113,7 +113,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
         if ctx.interaction is not None and ctx.guild is not None:
             await ctx.interaction.response.defer(ephemeral=True, thinking=True)
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
 
@@ -161,7 +161,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
 
             content = "Successfully linked with Kamaitachi."
 
-            async with self.bot.begin_db_session() as session, session.begin():
+            async with self.bot.begin_db_readwrite() as session, session.begin():
                 if cookie is None:
                     cookie = Cookie(
                         discord_id=ctx.author.id, cookie="", kamaitachi_token=token
@@ -206,7 +206,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
     async def kamaitachi_unlink(self, ctx: Context):
         """Unlinks your Kamaitachi account."""
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
 
@@ -216,7 +216,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
 
         cookie.kamaitachi_token = None
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_readwrite() as session:
             await session.merge(cookie)
             await session.commit()
 
@@ -241,7 +241,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
             Default is `recent`.
         """
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
 
@@ -486,7 +486,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
         This is automatically done daily, but this command allows users to speed that up.
         """
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
+        async with ctx.typing(), self.bot.begin_db_read() as session:
             query = select(Cookie).where(Cookie.discord_id == ctx.author.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
 

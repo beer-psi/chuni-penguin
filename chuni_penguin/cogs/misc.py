@@ -111,7 +111,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
         if revision != "unknown":
             version_field += f" [{revision}]"
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             users = await session.scalar(select(func.count()).select_from(Cookie))
 
         embed.add_field(name="Version", value=version_field, inline=False)
@@ -172,7 +172,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
                 default_prefix: str = config.bot.default_prefix
 
-                async with self.bot.begin_db_session() as session, session.begin():
+                async with self.bot.begin_db_readwrite() as session, session.begin():
                     if new_prefix == default_prefix:
                         stmt = delete(Prefix).where(Prefix.guild_id == ctx.guild.id)
                         await session.execute(stmt)
@@ -214,7 +214,7 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     @tasks.loop(minutes=3, reconnect=True)
     async def listening(self):
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = (
                 select(Song)
                 .where(Song.genre == "ORIGINAL")

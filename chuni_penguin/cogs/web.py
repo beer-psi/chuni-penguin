@@ -65,7 +65,7 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
         raise web.HTTPBadRequest(reason="Invalid context parameter") from None
 
     bot: ChuniBot = request.config_dict["bot"]
-    async with bot.begin_db_session() as db_session:
+    async with bot.begin_db_read() as db_session:
         stmt = select(Cookie).where(Cookie.discord_id == discord_id)
         cookie = (await db_session.execute(stmt)).scalar_one_or_none()
 
@@ -99,7 +99,7 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
 
     message = "Your accounts are now linked!"
 
-    async with bot.begin_db_session() as db_session, db_session.begin():
+    async with bot.begin_db_readwrite() as db_session, db_session.begin():
         if cookie is None:
             cookie = Cookie(discord_id=discord_id, cookie="", kamaitachi_token=token)
             db_session.add(cookie)
@@ -257,7 +257,7 @@ async def login(request: web.Request) -> web.Response:
 
 @alru_cache(maxsize=1, ttl=3600)
 async def _get_songlist(bot: "ChuniBot"):
-    async with bot.begin_db_session() as session:
+    async with bot.begin_db_read() as session:
         query = select(Song).options(
             joinedload(Song.charts).joinedload(Chart.sdvxin_chart_view),
             joinedload(Song.aliases),
@@ -353,7 +353,7 @@ async def redirect_to_youtube_search(request: web.Request) -> web.Response:
     difficulty = request.match_info["difficulty"]
     bot: ChuniBot = request.config_dict["bot"]
 
-    async with bot.begin_db_session() as session:
+    async with bot.begin_db_read() as session:
         query = select(Song).where(Song.id == song_id)
         song = (await session.execute(query)).scalar_one_or_none()
 
@@ -438,7 +438,7 @@ async def kofi_webhook(request: web.Request) -> web.Response:
 
     bot: ChuniBot = request.config_dict["bot"]
 
-    async with bot.begin_db_session() as session:
+    async with bot.begin_db_readwrite() as session:
         query = select(Cookie).where(Cookie.discord_id == discord_userid)
         result = (await session.execute(query)).scalar_one_or_none()
 

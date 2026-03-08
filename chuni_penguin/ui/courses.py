@@ -324,7 +324,7 @@ class CourseListView(PenguinLayoutView):
         for option in self.class_select.options:
             option.default = option.value == str(cls.value)
 
-        async with self.ctx.bot.begin_db_session() as session:
+        async with self.ctx.bot.begin_db_read() as session:
             query = (
                 select(Course)
                 .where((Course.version == version) & (Course.cls == cls))

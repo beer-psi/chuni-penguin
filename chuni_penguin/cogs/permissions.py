@@ -30,7 +30,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         else:
             self.permission_cache = {}
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(CommandPermission).order_by(
                 CommandPermission.guild_id, CommandPermission.index
             )
@@ -62,7 +62,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             secondary_target_type = SecondaryPermissionTarget.group
             secondary_target_name = secondary_target.qualified_name
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_readwrite() as session:
             query = select(func.max(CommandPermission.index)).where(
                 CommandPermission.guild_id == guild_id
             )
@@ -281,7 +281,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         source_idx = source - 1
         destination_idx = destination - 1
 
-        async with self.bot.begin_db_session() as session, ctx.typing():
+        async with self.bot.begin_db_readwrite() as session, ctx.typing():
             query = select(CommandPermission).where(
                 (CommandPermission.guild_id == ctx.guild.id)
                 & (CommandPermission.index == source_idx)
@@ -354,7 +354,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
 
         position_idx = position - 1
 
-        async with self.bot.begin_db_session() as session, ctx.typing():
+        async with self.bot.begin_db_readwrite() as session, ctx.typing():
             query = delete(CommandPermission).where(
                 (CommandPermission.guild_id == ctx.guild.id)
                 & (CommandPermission.index == position_idx)
@@ -382,7 +382,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
     async def permissions_reset(self, ctx: PenguinGuildContext):
         """Resets all permissions for this server."""
 
-        async with self.bot.begin_db_session() as session, ctx.typing():
+        async with self.bot.begin_db_readwrite() as session, ctx.typing():
             query = delete(CommandPermission).where(
                 CommandPermission.guild_id == ctx.guild.id
             )

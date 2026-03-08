@@ -95,7 +95,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         )
 
     async def _get_kt_chart_id(self, song_id: int, difficulty: Difficulty):
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(Chart).where(
                 (Chart.song_id == song_id) & (Chart.difficulty == difficulty.short())
             )
@@ -104,7 +104,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         return result.tachi_chart_id if result is not None else None
 
     async def _get_kt_chart_ids(self, song_id: int):
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(Chart).where(Chart.song_id == song_id)
             results = await session.execute(query)
 
@@ -152,7 +152,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             ]
 
         async def on_exit(session: ChunithmNet):
-            async with self.bot.begin_db_session() as db_session:
+            async with self.bot.begin_db_readwrite() as db_session:
                 await db_session.execute(
                     update(Cookie)
                     .where(Cookie.discord_id == user_id)
@@ -211,7 +211,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             msg = f"<@{target_id}> is not logged in."
             raise commands.CommandError(msg)
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = select(Cookie).where(Cookie.discord_id == target_id)
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
@@ -278,15 +278,16 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
             return
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = select(Cookie).where(Cookie.discord_id == self.bot.user.id)
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
-            if (
-                cookie is None
-                and config.credentials.sega_id_username is not None
-                and config.credentials.sega_id_password is not None
-            ):
+        if (
+            cookie is None
+            and config.credentials.sega_id_username is not None
+            and config.credentials.sega_id_password is not None
+        ):
+            async with self.bot.begin_db_readwrite() as session:
                 cookie = Cookie(
                     discord_id=self.bot.user.id,
                     cookie="#LWP-Cookies-2.0\n",
@@ -296,9 +297,9 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                 )
                 session.add(cookie)
                 await session.commit()
-            elif cookie is None:
-                msg = "Bot does not have a SEGA ID account configured."
-                raise AuthenticationError(msg)
+        elif cookie is None:
+            msg = "Bot does not have a SEGA ID account configured."
+            raise AuthenticationError(msg)
 
         async with self.chunithm_net(
             self.bot.user.id,

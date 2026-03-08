@@ -164,7 +164,7 @@ class ChuniBot(commands.AutoShardedBot):
                 )
 
         # Load guild prefixes
-        async with self.begin_db_session() as session:
+        async with self.begin_db_read() as session:
             prefixes = (await session.execute(select(Prefix))).scalars()
             denylist = (await session.execute(select(Denylist))).scalars()
 
@@ -182,20 +182,22 @@ class ChuniBot(commands.AutoShardedBot):
 
         # very much an abuse but i can't be asked to add yet another database table
         # nor use a temp file since i have to parse string back to number
-        async with self.begin_db_session() as session:
+        async with self.begin_db_read() as session:
             result = await session.execute(text("PRAGMA user_version"))
             old_tree_hash: int | None = result.scalar_one_or_none()
 
-            if old_tree_hash != current_tree_hash:
-                await logger.ainfo(
-                    "Command tree updated",
-                    tag="command_tree_updated",
-                    old_hash=old_tree_hash,
-                    new_hash=current_tree_hash,
-                )
+        if old_tree_hash != current_tree_hash:
+            await logger.ainfo(
+                "Command tree updated",
+                tag="command_tree_updated",
+                old_hash=old_tree_hash,
+                new_hash=current_tree_hash,
+            )
 
-                if not config.dangerous.dev:
-                    await self.tree.sync()
+            if not config.dangerous.dev:
+                await self.tree.sync()
+
+                async with self.begin_db_readwrite() as session:
                     await session.execute(
                         text(f"PRAGMA user_version={current_tree_hash}")
                     )
@@ -310,8 +312,12 @@ class ChuniBot(commands.AutoShardedBot):
         return cast("DatabaseCog", self.get_cog("Database")).engine
 
     @property
-    def begin_db_session(self):
-        return cast("DatabaseCog", self.get_cog("Database")).sessionmaker
+    def begin_db_readwrite(self):
+        return self.database.write_sessionmaker
+
+    @property
+    def begin_db_read(self):
+        return self.database.read_sessionmaker
 
     @property
     def app(self):

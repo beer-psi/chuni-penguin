@@ -110,7 +110,7 @@ class SearchCog(commands.Cog, name="Search"):
         else:
             stmt = stmt.where(Chart.level == level.level)
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
+        async with ctx.typing(), self.bot.begin_db_read() as session:
             charts = (await session.execute(stmt)).scalars().all()
 
             if len(charts) == 0:
@@ -179,81 +179,86 @@ class SearchCog(commands.Cog, name="Search"):
             msg = "ctx.guild == None and global_alias == True"
             raise RuntimeError(msg)
 
-        async with (
-            ctx.typing(),
-            self.bot.begin_db_session() as session,
-            session.begin(),
-        ):
-            stmt = (
-                select(Song).where(func.lower(Song.title) == added_alias_lower).limit(1)
-            )
-            song = (await session.execute(stmt)).scalar_one_or_none()
+        async with ctx.typing():
+            async with self.bot.begin_db_read() as session:
+                stmt = (
+                    select(Song)
+                    .where(func.lower(Song.title) == added_alias_lower)
+                    .limit(1)
+                )
+                song = (await session.execute(stmt)).scalar_one_or_none()
 
-            if song is not None:
-                msg = f"**{emd(added_alias)}** is already a song title."
-                raise commands.BadArgument(msg)
-
-            stmt = select(Song).where(
-                # Limit to non-WE entries. WE entries are redirected to
-                # their non-WE respectives when song-searching anyways.
-                (func.lower(Song.title) == source_alias_lower) & (Song.id < 8000)
-            )
-            song = (await session.execute(stmt)).scalar_one_or_none()
-
-            if song is None:
-                condition = func.lower(Alias.alias) == source_alias_lower
-
-                if not global_alias:
-                    condition = condition & (
-                        (Alias.guild_id == 0) | (Alias.guild_id == guild_id)
-                    )
-
-                stmt = select(Alias).where(condition).options(joinedload(Alias.song))
-                alias_unit = (await session.execute(stmt)).scalar_one_or_none()
-
-                if alias_unit is None:
-                    msg = f"**{emd(song_title_or_alias)}** does not exist."
+                if song is not None:
+                    msg = f"**{emd(added_alias)}** is already a song title."
                     raise commands.BadArgument(msg)
 
-                song = alias_unit.song
+                stmt = select(Song).where(
+                    # Limit to non-WE entries. WE entries are redirected to
+                    # their non-WE respectives when song-searching anyways.
+                    (func.lower(Song.title) == source_alias_lower) & (Song.id < 8000)
+                )
+                song = (await session.execute(stmt)).scalar_one_or_none()
+
+                if song is None:
+                    condition = func.lower(Alias.alias) == source_alias_lower
+
+                    if not global_alias:
+                        condition = condition & (
+                            (Alias.guild_id == 0) | (Alias.guild_id == guild_id)
+                        )
+
+                    stmt = (
+                        select(Alias).where(condition).options(joinedload(Alias.song))
+                    )
+                    alias_unit = (await session.execute(stmt)).scalar_one_or_none()
+
+                    if alias_unit is None:
+                        msg = f"**{emd(song_title_or_alias)}** does not exist."
+                        raise commands.BadArgument(msg)
+
+                    song = alias_unit.song
 
             if global_alias:
-                stmt = (
-                    select(Alias)
-                    .where(func.lower(Alias.alias) == added_alias_lower)
-                    .options(joinedload(Alias.song))
-                )
-                aliases = (await session.execute(stmt)).scalars().all()
+                async with self.bot.begin_db_read() as session:
+                    stmt = (
+                        select(Alias)
+                        .where(func.lower(Alias.alias) == added_alias_lower)
+                        .options(joinedload(Alias.song))
+                    )
+                    aliases = (await session.execute(stmt)).scalars().all()
 
                 if len(aliases) > 0 and aliases[0].guild_id == 0:
                     msg = f"**{emd(added_alias)}** already exists (global alias for **{emd(aliases[0].song.title)}**)."
                     raise commands.BadArgument(msg)
 
                 if len(aliases) > 0 and aliases[0].guild_id != 0:
-                    aliases[0].guild_id = 0
-                    aliases[0].owner_id = None
-                    aliases[0].song_id = song.id
-                    await session.merge(aliases[0])
+                    async with self.bot.begin_db_readwrite() as session:
+                        aliases[0].guild_id = 0
+                        aliases[0].owner_id = None
+                        aliases[0].song_id = song.id
+                        await session.merge(aliases[0])
 
-                    for x in aliases[1:]:
-                        await session.delete(x)
+                        for x in aliases[1:]:
+                            await session.delete(x)
 
-                    await session.commit()
+                        await session.commit()
+
                     await self.utils._reload_alias_cache()
                     return await ctx.reply(
                         f"**{emd(added_alias)}** already exists as a guild-only alias. Promoting to global alias.",
                         mention_author=False,
                     )
             else:
-                stmt = (
-                    select(Alias)
-                    .where(
-                        (func.lower(Alias.alias) == added_alias_lower)
-                        & ((Alias.guild_id == 0) | (Alias.guild_id == guild_id))
+                async with self.bot.begin_db_read() as session:
+                    stmt = (
+                        select(Alias)
+                        .where(
+                            (func.lower(Alias.alias) == added_alias_lower)
+                            & ((Alias.guild_id == 0) | (Alias.guild_id == guild_id))
+                        )
+                        .options(joinedload(Alias.song))
                     )
-                    .options(joinedload(Alias.song))
-                )
-                alias_unit = (await session.execute(stmt)).scalar_one_or_none()
+                    alias_unit = (await session.execute(stmt)).scalar_one_or_none()
 
                 if alias_unit is not None:
                     msg = (
@@ -262,17 +267,18 @@ class SearchCog(commands.Cog, name="Search"):
                     )
                     raise commands.BadArgument(msg)
 
-            session.add(
-                Alias(
-                    alias=added_alias,
-                    guild_id=guild_id,
-                    song_id=song.id,
-                    owner_id=None if global_alias else ctx.author.id,
+            async with self.bot.begin_db_readwrite() as session:
+                session.add(
+                    Alias(
+                        alias=added_alias,
+                        guild_id=guild_id,
+                        song_id=song.id,
+                        owner_id=None if global_alias else ctx.author.id,
+                    )
                 )
-            )
-            await session.commit()
+                await session.commit()
 
-        await self.utils._reload_alias_cache()
+            await self.utils._reload_alias_cache()
 
         alias_unit = "an alias" if not global_alias else "a global alias"
 
@@ -280,7 +286,6 @@ class SearchCog(commands.Cog, name="Search"):
             f"Added **{emd(added_alias)}** as {alias_unit} for **{emd(song_title_or_alias)}**.",
             mention_author=False,
         )
-
         return None
 
     @alias.command("remove", aliases=["delete"])
@@ -316,33 +321,30 @@ class SearchCog(commands.Cog, name="Search"):
             is_alias_manager or ctx.author.guild_permissions.manage_guild  # pyright: ignore[reportAttributeAccessIssue]
         )
 
-        async with (
-            ctx.typing(),
-            self.bot.begin_db_session() as session,
-            session.begin(),
-        ):
-            condition = func.lower(Alias.alias) == removed_alias.lower()
+        async with ctx.typing():
+            async with self.bot.begin_db_read() as session:
+                condition = func.lower(Alias.alias) == removed_alias.lower()
 
-            if is_alias_manager:
-                guild_condition = Alias.guild_id == 0
+                if is_alias_manager:
+                    guild_condition = Alias.guild_id == 0
 
-                if ctx.guild is not None:
-                    guild_condition |= Alias.guild_id == ctx.guild.id
+                    if ctx.guild is not None:
+                        guild_condition |= Alias.guild_id == ctx.guild.id
 
-                condition &= guild_condition
-            elif ctx.guild is not None:
-                condition &= Alias.guild_id == ctx.guild.id
+                    condition &= guild_condition
+                elif ctx.guild is not None:
+                    condition &= Alias.guild_id == ctx.guild.id
 
-            if not bypass_ownership_check:
-                condition &= Alias.owner_id == ctx.author.id
+                if not bypass_ownership_check:
+                    condition &= Alias.owner_id == ctx.author.id
 
-            stmt = select(Alias).where(condition)
+                stmt = select(Alias).where(condition)
 
-            # when searching for guild_id = ctx.guild.id or guild_id = 0, the cases that happen are
-            # - it is a global alias, in which case there is only *the* global alias
-            # - it is a guild alias, in which case the global alias doesn't exist
-            # therefore there should be only one or no aliases
-            alias = (await session.execute(stmt)).scalar_one_or_none()
+                # when searching for guild_id = ctx.guild.id or guild_id = 0, the cases that happen are
+                # - it is a global alias, in which case there is only *the* global alias
+                # - it is a guild alias, in which case the global alias doesn't exist
+                # therefore there should be only one or no aliases
+                alias = (await session.execute(stmt)).scalar_one_or_none()
 
             if alias is None:
                 msg = f"**{emd(removed_alias)}** does not exist"
@@ -354,12 +356,14 @@ class SearchCog(commands.Cog, name="Search"):
 
                 raise commands.CommandError(msg)
 
-            # if there is a suitable alias, then we can definitely remove it, since we
-            # have already matched all of the conditions above.
-            await session.delete(alias)
-            await session.commit()
+            async with self.bot.begin_db_readwrite() as session:
+                # if there is a suitable alias, then we can definitely remove it, since we
+                # have already matched all of the conditions above.
+                await session.delete(alias)
+                await session.commit()
 
-        await self.utils._reload_alias_cache()
+            await self.utils._reload_alias_cache()
+
         await ctx.reply(
             f"Removed {'global ' if alias.guild_id == 0 else ''}alias **{emd(removed_alias)}**.",
             mention_author=False,
@@ -386,7 +390,7 @@ class SearchCog(commands.Cog, name="Search"):
         if song is None:
             return
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = select(Alias).where(Alias.song_id == song.id)
             aliases = (await session.execute(stmt)).scalars().all()
 
@@ -529,7 +533,7 @@ class SearchCog(commands.Cog, name="Search"):
                     if client.SUPPORTS_COURSE_RECORDS:
                         course_records = await client.get_course_records()
 
-            async with self.bot.begin_db_session() as session:
+            async with self.bot.begin_db_read() as session:
                 # course IDs are prefixed by version, so 25xxx is sun plus, 30xxx is luminous,
                 # and so on. really convenient
                 query = select(Course.version).distinct().order_by(Course.id)

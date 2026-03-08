@@ -176,7 +176,7 @@ class VoiceCog(commands.Cog, name="Voice"):
         `-v`, `--versions`: Limit song pool to the provided versions.
         """
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(Song.id).where(Song.id < 8000)
 
             if genres is not None:
@@ -375,7 +375,7 @@ class VoiceCog(commands.Cog, name="Voice"):
             await voice_client.disconnect(force=False)
             return
 
-        async with ctx.bot.begin_db_session() as session:
+        async with ctx.bot.begin_db_read() as session:
             query = select(Song).where(Song.id == int(path.stem))
             song = (await session.execute(query)).scalar_one_or_none()
 

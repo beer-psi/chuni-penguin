@@ -47,7 +47,7 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
         self.bot = bot
 
     async def cog_load(self) -> None:
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(
                 DBLinkedGate.id, DBLinkedGate.name, DBLinkedGate.available
             ).order_by(DBLinkedGate.id)
@@ -67,7 +67,7 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
         )(self.linked_verse_leaderboard.app_command)
 
     async def get_linked_gates(self, whereclause):
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = (
                 select(DBLinkedGate)
                 .where(whereclause)

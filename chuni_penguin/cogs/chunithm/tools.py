@@ -418,7 +418,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             "wallpanic": "CLASS EXTRA - Wall Panic!: 400 LIFE, JUSTICE or lower -1, JUSTICE CRITICAL +1, field wall gets further back as LIFE decreases",
         }
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
+        async with ctx.typing(), self.bot.begin_db_read() as session:
             stmt = (
                 select(Chart)
                 .join(Song, Chart.song_id == Song.id)
@@ -634,7 +634,7 @@ class ToolsCog(commands.Cog, name="Tools"):
             else:
                 max_level = round(target_rating - 1.5, 2)
 
-            async with self.bot.begin_db_session() as session:
+            async with self.bot.begin_db_read() as session:
                 pb_cte = (
                     select(
                         PersonalBest.song_id,

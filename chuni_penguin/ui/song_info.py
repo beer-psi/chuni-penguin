@@ -171,7 +171,7 @@ class SongInfoPageSource(ListPageSource[Song]):
     ) -> FormatPageReturn:
         embeds: list[discord.Embed] = []
 
-        async with menu.ctx.bot.begin_db_session() as session:
+        async with menu.ctx.bot.begin_db_read() as session:
             for song in page:
                 stmt = (
                     select(Chart)

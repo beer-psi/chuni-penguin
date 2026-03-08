@@ -63,7 +63,7 @@ class AuthCog(commands.Cog, name="Auth"):
                     "However, your account has been deleted from our records."
                 )
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
+        async with ctx.typing(), self.bot.begin_db_readwrite() as session:
             stmt = (
                 update(Cookie)
                 .where(Cookie.discord_id == ctx.author.id)
@@ -106,7 +106,7 @@ class AuthCog(commands.Cog, name="Auth"):
             except NetworkError as e:
                 return e
 
-        async with self.bot.begin_db_session() as session, session.begin():
+        async with self.bot.begin_db_readwrite() as session, session.begin():
             await session.merge(Cookie(discord_id=id, cookie=client.authentication))
             return None
 

@@ -65,7 +65,7 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
     ):
         """Blocks users or guilds from using the bot globally."""
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_readwrite() as session:
             denylist_entry = Denylist(object_id=object.id, reason=reason)
             self.bot.denylist[object.id] = denylist_entry
 
@@ -81,7 +81,7 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
     ):
         """Unblocks users or guilds from using the bot globally."""
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_readwrite() as session:
             query = delete(Denylist).where(
                 Denylist.object_id.in_([object.id for object in objects])
             )

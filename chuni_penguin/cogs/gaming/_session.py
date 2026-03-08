@@ -222,7 +222,7 @@ class GuessingGameSession:
 
             condition &= reduce(operator.or_, level_conditions)
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = select(Song.id).where(condition)
 
             if self.levels is not None:
@@ -326,7 +326,7 @@ class GuessingGameSession:
 
         song_id = self.random.choice(self._song_ids)
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = (
                 select(Song)
                 .where(Song.id == song_id)
@@ -338,28 +338,28 @@ class GuessingGameSession:
             )
             song = (await session.execute(stmt)).scalars().unique().one()
 
-            aliases = [
+        aliases = [
+            CachedAlias(
+                id=None,
+                alias=song.title.lower(),
+                title=song.title,
+                song_id=song.id,
+                guild_id=0,
+            )
+        ]
+
+        aliases.extend(
+            [
                 CachedAlias(
-                    id=None,
-                    alias=song.title.lower(),
+                    id=alias.rowid,
+                    alias=alias.alias.lower(),
                     title=song.title,
                     song_id=song.id,
-                    guild_id=0,
+                    guild_id=alias.guild_id,
                 )
+                for alias in song.aliases
             ]
-
-            aliases.extend(
-                [
-                    CachedAlias(
-                        id=alias.rowid,
-                        alias=alias.alias.lower(),
-                        title=song.title,
-                        song_id=song.id,
-                        guild_id=alias.guild_id,
-                    )
-                    for alias in song.aliases
-                ]
-            )
+        )
 
         return song, aliases
 
@@ -533,7 +533,7 @@ class GuessingGameSession:
 
         guild_id = self.ctx.guild.id if self.ctx.guild else 0
 
-        async with self.bot.begin_db_session() as session, session.begin():
+        async with self.bot.begin_db_readwrite() as session, session.begin():
             stmt = insert(GuessScore).values(
                 discord_id=user_id,
                 guild_id=guild_id,
@@ -555,7 +555,7 @@ class GuessingGameSession:
             await session.commit()
 
     async def increment_alias_uses(self, alias_id: int):
-        async with self.bot.begin_db_session() as session, session.begin():
+        async with self.bot.begin_db_readwrite() as session, session.begin():
             stmt = (
                 update(Alias).where(Alias.rowid == alias_id).values(uses=Alias.uses + 1)
             )

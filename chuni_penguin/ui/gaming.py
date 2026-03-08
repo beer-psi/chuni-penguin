@@ -46,7 +46,7 @@ class GuessLeaderboardPageSource(ListPageSource[Difficulty | None]):
     async def get_page(self, page_index: int) -> Sequence[Row[tuple[int, int]]]:  # pyright: ignore[reportIncompatibleMethodOverride]
         difficulty = self.entries[page_index]
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             if difficulty is not None and self.game_type is not None:
                 stmt = (
                     select(

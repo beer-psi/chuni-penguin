@@ -363,7 +363,7 @@ class GamingCog(commands.Cog, name="Games"):
         The user invoking this command must have the Manage Server permission.
         """
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_readwrite() as session:
             await session.execute(
                 delete(GuessScore).where(GuessScore.guild_id == ctx.guild.id)
             )

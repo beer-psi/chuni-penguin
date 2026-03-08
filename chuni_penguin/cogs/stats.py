@@ -47,7 +47,7 @@ class StatsCog(commands.Cog, name="Stats"):
             if not self._stats_batch:
                 return
 
-            async with self.bot.begin_db_session() as session:
+            async with self.bot.begin_db_readwrite() as session:
                 await session.execute(insert(CommandUse), self._stats_batch)
                 await session.commit()
 

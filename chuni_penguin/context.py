@@ -308,7 +308,7 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
 
         song_ids = {s.id for s in result.songs}
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = (
                 select(Chart)
                 .where(

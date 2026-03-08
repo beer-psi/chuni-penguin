@@ -334,18 +334,18 @@ class RecordsCog(commands.Cog, name="Records"):
 
         async with (
             ctx.typing(),
-            self.bot.begin_db_session() as session,
             ctx.bot.chunithm_networks.network(
                 ctx, target_id, kamaitachi=kamaitachi
             ) as client,
         ):
-            sql = (
-                select(SongJacket)
-                .where(SongJacket.jacket_url.in_(message_images))
-                .group_by(SongJacket.song_id)
-                .options(joinedload(SongJacket.song).joinedload(Song.charts))
-            )
-            jackets = (await session.execute(sql)).scalars().unique().all()
+            async with self.bot.begin_db_read() as session:
+                sql = (
+                    select(SongJacket)
+                    .where(SongJacket.jacket_url.in_(message_images))
+                    .group_by(SongJacket.song_id)
+                    .options(joinedload(SongJacket.song).joinedload(Song.charts))
+                )
+                jackets = (await session.execute(sql)).scalars().unique().all()
 
             if len(jackets) == 0:
                 msg = "No songs found."
@@ -2073,368 +2073,378 @@ class RecordsCog(commands.Cog, name="Records"):
     ):
         target_id = ctx.author.id if user is None else user.id
 
-        try:
-            async with self.bot.chunithm_networks.network(
-                ctx, target_id, kamaitachi=kamaitachi
-            ) as client:
-                profile = await client.get_minimal_profile()
-                username = profile.username
-                client_name = client.NAME
-        except (NetworkError, commands.CommandError):
-            username = ctx.author.display_name
-            client_name = Kamaitachi.NAME if kamaitachi else ChunithmNet.NAME
+        async with ctx.typing():
+            try:
+                async with self.bot.chunithm_networks.network(
+                    ctx, target_id, kamaitachi=kamaitachi
+                ) as client:
+                    profile = await client.get_minimal_profile()
+                    username = profile.username
+                    client_name = client.NAME
+            except (NetworkError, commands.CommandError):
+                username = ctx.author.display_name
+                client_name = Kamaitachi.NAME if kamaitachi else ChunithmNet.NAME
 
-        async with ctx.typing(), self.bot.begin_db_session() as session:
-            pb_query = (
-                select(DBPersonalBest)
-                .where(
-                    (DBPersonalBest.discord_id == target_id)
-                    & (DBPersonalBest.network == client_name)
-                )
-                .join(Song, DBPersonalBest.song_id == Song.id)
-                .join(
-                    Chart,
-                    (DBPersonalBest.song_id == Chart.song_id)
-                    & (DBPersonalBest.difficulty == Chart.difficulty),
-                )
-                .order_by(
-                    DBPersonalBest.score.desc(), Chart.const.desc(), Chart.id.desc()
-                )
-            )
-            chart_query = (
-                select(Chart)
-                .join(Song, Chart.song_id == Song.id)
-                .where(Chart.song_id.not_in([50, 81]))  # basic and master tutorials
-            )
-
-            if client_name == ChunithmNet.NAME:
-                cond = (Song.available == True) & (Chart.available == True)  # noqa: E712
-                pb_query = pb_query.where(cond)
-                chart_query = chart_query.where(cond)
-            elif client_name == Kamaitachi.NAME:
-                if not omnimix:
-                    cond = Song.removed == False  # noqa: E712
-                    pb_query = pb_query.where(cond)
-                    chart_query = chart_query.where(cond)
-
-                cond = Chart.tachi_chart_id.is_not(None)
-                pb_query = pb_query.where(cond)
-                chart_query = chart_query.where(cond)
-
-            if isinstance(level, LevelRange):
-                if level.min_level is not None:
-                    cond = Chart.const >= (
-                        level.min_level.const or level.min_level.inferred_const
+            async with self.bot.begin_db_read() as session:
+                pb_query = (
+                    select(DBPersonalBest)
+                    .where(
+                        (DBPersonalBest.discord_id == target_id)
+                        & (DBPersonalBest.network == client_name)
                     )
+                    .join(Song, DBPersonalBest.song_id == Song.id)
+                    .join(
+                        Chart,
+                        (DBPersonalBest.song_id == Chart.song_id)
+                        & (DBPersonalBest.difficulty == Chart.difficulty),
+                    )
+                    .order_by(
+                        DBPersonalBest.score.desc(), Chart.const.desc(), Chart.id.desc()
+                    )
+                )
+                chart_query = (
+                    select(Chart)
+                    .join(Song, Chart.song_id == Song.id)
+                    .where(Chart.song_id.not_in([50, 81]))  # basic and master tutorials
+                )
+
+                if client_name == ChunithmNet.NAME:
+                    cond = (Song.available == True) & (Chart.available == True)  # noqa: E712
+                    pb_query = pb_query.where(cond)
+                    chart_query = chart_query.where(cond)
+                elif client_name == Kamaitachi.NAME:
+                    if not omnimix:
+                        cond = Song.removed == False  # noqa: E712
+                        pb_query = pb_query.where(cond)
+                        chart_query = chart_query.where(cond)
+
+                    cond = Chart.tachi_chart_id.is_not(None)
                     pb_query = pb_query.where(cond)
                     chart_query = chart_query.where(cond)
 
-                if level.max_level is not None:
-                    cond = Chart.const <= (
-                        level.max_level.const or level.max_level.inferred_max_const
-                    )
+                if isinstance(level, LevelRange):
+                    if level.min_level is not None:
+                        cond = Chart.const >= (
+                            level.min_level.const or level.min_level.inferred_const
+                        )
+                        pb_query = pb_query.where(cond)
+                        chart_query = chart_query.where(cond)
+
+                    if level.max_level is not None:
+                        cond = Chart.const <= (
+                            level.max_level.const or level.max_level.inferred_max_const
+                        )
+                        pb_query = pb_query.where(cond)
+                        chart_query = chart_query.where(cond)
+                elif level is not None:
+                    if level.const is not None:
+                        cond = Chart.const == level.const
+                    else:
+                        cond = Chart.level == level.level
+
                     pb_query = pb_query.where(cond)
                     chart_query = chart_query.where(cond)
-            elif level is not None:
-                if level.const is not None:
-                    cond = Chart.const == level.const
+
+                if difficulty is not None and isinstance(difficulty, Difficulty):
+                    cond = Chart.difficulty == difficulty.short()
+                elif difficulty is not None:
+                    cond = Chart.difficulty.in_(
+                        [Difficulty.master.short(), Difficulty.ultima.short()]
+                    )
                 else:
-                    cond = Chart.level == level.level
+                    cond = Chart.difficulty != Difficulty.worlds_end.short()
 
                 pb_query = pb_query.where(cond)
                 chart_query = chart_query.where(cond)
 
-            if difficulty is not None and isinstance(difficulty, Difficulty):
-                cond = Chart.difficulty == difficulty.short()
-            elif difficulty is not None:
-                cond = Chart.difficulty.in_(
-                    [Difficulty.master.short(), Difficulty.ultima.short()]
-                )
-            else:
-                cond = Chart.difficulty != Difficulty.worlds_end.short()
+                if genre is not None:
+                    cond = Song.genre == str(genre)
+                    pb_query = pb_query.where(cond)
+                    chart_query = chart_query.where(cond)
 
-            pb_query = pb_query.where(cond)
-            chart_query = chart_query.where(cond)
+                if version is not None:
+                    cond = Song.version == version
+                    pb_query = pb_query.where(cond)
+                    chart_query = chart_query.where(cond)
 
-            if genre is not None:
-                cond = Song.genre == str(genre)
-                pb_query = pb_query.where(cond)
-                chart_query = chart_query.where(cond)
+                pbs = (await session.execute(pb_query)).scalars().all()
+                charts = (await session.execute(chart_query)).scalars().all()
 
-            if version is not None:
-                cond = Song.version == version
-                pb_query = pb_query.where(cond)
-                chart_query = chart_query.where(cond)
+            chart_count = len(charts)
 
-            pbs = (await session.execute(pb_query)).scalars().all()
-            charts = (await session.execute(chart_query)).scalars().all()
+            if chart_count <= 0:
+                await ctx.respond_or_edit("No charts found for the given parameters.")
+                return
 
-        chart_count = len(charts)
-
-        if chart_count <= 0:
-            await ctx.respond_or_edit("No charts found for the given parameters.")
-            return
-
-        pb_count = len(pbs)
-        percentage_played = pb_count * 10000 // chart_count / 100
-        counts: Counter[Any] = Counter([chart.difficulty for chart in charts])
-
-        for pb in pbs:
-            pb_rank = Rank.from_score(pb.score)
-            pb_combo_lamp = ComboLamp(pb.combo_lamp)
-            pb_clear_lamp = ClearLamp(pb.clear_lamp)
-
-            # Checking for AJ is probably unnecessary since currently 1009900
-            # guarantees an AJ... until a chart with 5100+ notes is added
-            if pb.score >= 1009900 and pb_combo_lamp == ComboLamp.all_justice:
-                counts["99AJ"] += 1
-
-            for rank in (Rank.s, Rank.sp, Rank.ss, Rank.ssp, Rank.sss, Rank.sssp):
-                if pb_rank.value >= rank.value:
-                    counts[rank] += 1
-
-                    if rank.value >= Rank.s.value:
-                        counts[f"{pb.difficulty}_{rank}"] += 1
-
-            for combo_lamp in ComboLamp:
-                if combo_lamp == ComboLamp.none:
-                    continue
-
-                if pb_combo_lamp.value >= combo_lamp.value:
-                    counts[combo_lamp] += 1
-
-                    if combo_lamp == ComboLamp.all_justice:
-                        counts[f"{pb.difficulty}_{combo_lamp}"] += 1
-
-            for clear_lamp in ClearLamp:
-                if clear_lamp == ClearLamp.failed:
-                    continue
-
-                if pb_clear_lamp.value >= clear_lamp.value:
-                    counts[clear_lamp] += 1
-
-        embed = discord.Embed(
-            color=discord.Color.yellow(),
-            title=f"{escape_markdown(username)}'s folder statistics",
-            timestamp=max(
-                (pb.last_played_at for pb in pbs if pb.last_played_at is not None),
-                default=None,
-            ),
-        )
-        embed.set_footer(text=f"Use `{ctx.clean_prefix}sync` if statistics seem wrong.")
-
-        description_parts: list[str] = []
-
-        if level is not None:
-            description_parts.append(f"Level {level}")
-
-        if difficulty is not None:
-            description_parts.append(str(difficulty))
-
-        if genre is not None:
-            description_parts.append(str(genre))
-
-        if version is not None:
-            description_parts.append(version)
-
-        if omnimix:
-            description_parts.append("Omnimix")
-
-        embed.description = ", ".join(description_parts)
-
-        embed.add_field(
-            name="Played",
-            value=bold_if(
-                len(pbs) == chart_count,
-                f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
-            ),
-            inline=difficulty != Difficulty.worlds_end,
-        )
-
-        if difficulty != Difficulty.worlds_end:
-            charts_by_id_difficulty: dict[tuple[int, str], Chart] = {}
-            op_by_song: dict[int, Decimal] = {}
-            pb_op_by_song: dict[int, Decimal] = {}
-
-            for chart in charts:
-                charts_by_id_difficulty[(chart.song_id, chart.difficulty)] = chart
-
-                if chart.const is not None:
-                    op_by_song[chart.song_id] = max(
-                        op_by_song.get(chart.song_id, Decimal(0)),
-                        calculate_overpower_max(chart.const),
-                    )
+            pb_count = len(pbs)
+            percentage_played = pb_count * 10000 // chart_count / 100
+            counts: Counter[Any] = Counter([chart.difficulty for chart in charts])
 
             for pb in pbs:
+                pb_rank = Rank.from_score(pb.score)
                 pb_combo_lamp = ComboLamp(pb.combo_lamp)
-                chart = charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
+                pb_clear_lamp = ClearLamp(pb.clear_lamp)
 
-                if chart is None or chart.const is None:
-                    continue
+                # Checking for AJ is probably unnecessary since currently 1009900
+                # guarantees an AJ... until a chart with 5100+ notes is added
+                if pb.score >= 1009900 and pb_combo_lamp == ComboLamp.all_justice:
+                    counts["99AJ"] += 1
 
-                pb_op_by_song[chart.song_id] = max(
-                    pb_op_by_song.get(chart.song_id, Decimal(0)),
-                    calculate_play_overpower(
-                        calculate_overpower_base(pb.score, chart.const),
-                        pb_combo_lamp,
-                    ),
-                )
+                for rank in (Rank.s, Rank.sp, Rank.ss, Rank.ssp, Rank.sss, Rank.sssp):
+                    if pb_rank.value >= rank.value:
+                        counts[rank] += 1
 
-            op = floor_to_ndp(sum(pb_op_by_song.values(), Decimal(0)), 2)
-            total_op = floor_to_ndp(sum(op_by_song.values(), Decimal(0)), 2)
-            op_percent = (
-                floor_to_ndp(op * 100 / total_op, 2) if total_op > 0 else Decimal(0)
+                        if rank.value >= Rank.s.value:
+                            counts[f"{pb.difficulty}_{rank}"] += 1
+
+                for combo_lamp in ComboLamp:
+                    if combo_lamp == ComboLamp.none:
+                        continue
+
+                    if pb_combo_lamp.value >= combo_lamp.value:
+                        counts[combo_lamp] += 1
+
+                        if combo_lamp == ComboLamp.all_justice:
+                            counts[f"{pb.difficulty}_{combo_lamp}"] += 1
+
+                for clear_lamp in ClearLamp:
+                    if clear_lamp == ClearLamp.failed:
+                        continue
+
+                    if pb_clear_lamp.value >= clear_lamp.value:
+                        counts[clear_lamp] += 1
+
+            embed = discord.Embed(
+                color=discord.Color.yellow(),
+                title=f"{escape_markdown(username)}'s folder statistics",
+                timestamp=max(
+                    (pb.last_played_at for pb in pbs if pb.last_played_at is not None),
+                    default=None,
+                ),
+            )
+            embed.set_footer(
+                text=f"Use `{ctx.clean_prefix}sync` if statistics seem wrong."
             )
 
-            # TODO: update when new filters are added; embed colors are only calculated
-            # by possession rules on the full view
-            if (
-                level is None
-                and (difficulty is None or difficulty == "MASTER+ULTIMA")
-                and genre is None
-                and version is None
-            ):
-                total_mas_ult = counts["MAS"] + counts["ULT"]
+            description_parts: list[str] = []
 
-                # Don't bother with the rating check because if you S every MAS/ULT
-                # you're going to end up above 16 rating anyways.
-                if op_percent >= Decimal("99.5") and (
-                    counts[f"MAS_{Rank.sss}"] + counts[f"ULT_{Rank.sss}"]
-                    == total_mas_ult
+            if level is not None:
+                description_parts.append(f"Level {level}")
+
+            if difficulty is not None:
+                description_parts.append(str(difficulty))
+
+            if genre is not None:
+                description_parts.append(str(genre))
+
+            if version is not None:
+                description_parts.append(version)
+
+            if omnimix:
+                description_parts.append("Omnimix")
+
+            embed.description = ", ".join(description_parts)
+
+            embed.add_field(
+                name="Played",
+                value=bold_if(
+                    len(pbs) == chart_count,
+                    f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
+                ),
+                inline=difficulty != Difficulty.worlds_end,
+            )
+
+            if difficulty != Difficulty.worlds_end:
+                charts_by_id_difficulty: dict[tuple[int, str], Chart] = {}
+                op_by_song: dict[int, Decimal] = {}
+                pb_op_by_song: dict[int, Decimal] = {}
+
+                for chart in charts:
+                    charts_by_id_difficulty[(chart.song_id, chart.difficulty)] = chart
+
+                    if chart.const is not None:
+                        op_by_song[chart.song_id] = max(
+                            op_by_song.get(chart.song_id, Decimal(0)),
+                            calculate_overpower_max(chart.const),
+                        )
+
+                for pb in pbs:
+                    pb_combo_lamp = ComboLamp(pb.combo_lamp)
+                    chart = charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
+
+                    if chart is None or chart.const is None:
+                        continue
+
+                    pb_op_by_song[chart.song_id] = max(
+                        pb_op_by_song.get(chart.song_id, Decimal(0)),
+                        calculate_play_overpower(
+                            calculate_overpower_base(pb.score, chart.const),
+                            pb_combo_lamp,
+                        ),
+                    )
+
+                op = floor_to_ndp(sum(pb_op_by_song.values(), Decimal(0)), 2)
+                total_op = floor_to_ndp(sum(op_by_song.values(), Decimal(0)), 2)
+                op_percent = (
+                    floor_to_ndp(op * 100 / total_op, 2) if total_op > 0 else Decimal(0)
+                )
+
+                # TODO: update when new filters are added; embed colors are only calculated
+                # by possession rules on the full view
+                if (
+                    level is None
+                    and (difficulty is None or difficulty == "MASTER+ULTIMA")
+                    and genre is None
+                    and version is None
                 ):
+                    total_mas_ult = counts["MAS"] + counts["ULT"]
+
+                    # Don't bother with the rating check because if you S every MAS/ULT
+                    # you're going to end up above 16 rating anyways.
+                    if op_percent >= Decimal("99.5") and (
+                        counts[f"MAS_{Rank.sss}"] + counts[f"ULT_{Rank.sss}"]
+                        == total_mas_ult
+                    ):
+                        embed.color = Possession.rainbow.color
+                    elif op_percent >= 99 and (
+                        counts[f"MAS_{Rank.ss}"] + counts[f"ULT_{Rank.ss}"]
+                        == total_mas_ult
+                    ):
+                        embed.color = Possession.platinum.color
+                    elif op_percent >= Decimal("97.5") and (
+                        counts[f"MAS_{Rank.sp}"] + counts[f"ULT_{Rank.sp}"]
+                        == total_mas_ult
+                    ):
+                        embed.color = Possession.gold.color
+                    elif (
+                        counts[f"MAS_{Rank.s}"] + counts[f"ULT_{Rank.s}"]
+                        == total_mas_ult
+                    ):
+                        embed.color = Possession.silver.color
+                    else:
+                        embed.color = Possession.none.color
+                elif op_percent >= 95:
                     embed.color = Possession.rainbow.color
-                elif op_percent >= 99 and (
-                    counts[f"MAS_{Rank.ss}"] + counts[f"ULT_{Rank.ss}"] == total_mas_ult
-                ):
+                elif op_percent >= 90:
                     embed.color = Possession.platinum.color
-                elif op_percent >= Decimal("97.5") and (
-                    counts[f"MAS_{Rank.sp}"] + counts[f"ULT_{Rank.sp}"] == total_mas_ult
-                ):
+                elif op_percent >= 80:
                     embed.color = Possession.gold.color
-                elif counts[f"MAS_{Rank.s}"] + counts[f"ULT_{Rank.s}"] == total_mas_ult:
+                elif op_percent >= 70:
                     embed.color = Possession.silver.color
                 else:
                     embed.color = Possession.none.color
-            elif op_percent >= 95:
-                embed.color = Possession.rainbow.color
-            elif op_percent >= 90:
-                embed.color = Possession.platinum.color
-            elif op_percent >= 80:
-                embed.color = Possession.gold.color
-            elif op_percent >= 70:
-                embed.color = Possession.silver.color
-            else:
-                embed.color = Possession.none.color
+
+                embed.add_field(
+                    name="OVER POWER",
+                    value=bold_if(
+                        op == total_op, f"{op} / {total_op} ({op_percent:.2f}%)"
+                    ),
+                )
+                embed.add_field(name="\u3000", value="\u3000")
 
             embed.add_field(
-                name="OVER POWER",
-                value=bold_if(op == total_op, f"{op} / {total_op} ({op_percent:.2f}%)"),
+                name="Average score (played)",
+                value=f"{int(statistics.fmean(pb.score for pb in pbs)) if len(pbs) > 0 else 0}",
+            )
+            embed.add_field(
+                name="Average score (all)",
+                value=f"{int(sum(pb.score for pb in pbs) / chart_count)}",
             )
             embed.add_field(name="\u3000", value="\u3000")
-
-        embed.add_field(
-            name="Average score (played)",
-            value=f"{int(statistics.fmean(pb.score for pb in pbs)) if len(pbs) > 0 else 0}",
-        )
-        embed.add_field(
-            name="Average score (all)",
-            value=f"{int(sum(pb.score for pb in pbs) / chart_count)}",
-        )
-        embed.add_field(name="\u3000", value="\u3000")
-        embed.add_field(
-            name="Ranks",
-            value="\n".join(
-                [
-                    f"{config.icons.rank_icon(rank) if rank != '99AJ' else rank} ▸ {bold_if(counts[rank] == chart_count, counts[rank])}"
-                    for rank in (
-                        "99AJ",
-                        Rank.sssp,
-                        Rank.sss,
-                        Rank.ssp,
-                        Rank.ss,
-                        Rank.sp,
-                        Rank.s,
-                    )
-                ]
-            ),
-        )
-        embed.add_field(
-            name="Combo lamps",
-            value="\n".join(
-                reversed(
-                    [
-                        f"{combo_lamp.short()} ▸ {bold_if(counts[combo_lamp] == chart_count, counts[combo_lamp])}"
-                        for combo_lamp in ComboLamp
-                        if combo_lamp != ComboLamp.none
-                    ]
-                )
-            ),
-        )
-        embed.add_field(
-            name="Clear lamps",
-            value="\n".join(
-                reversed(
-                    [
-                        f"{clear_lamp.short()} ▸ {bold_if(counts[clear_lamp] == chart_count, counts[clear_lamp])}"
-                        for clear_lamp in ClearLamp
-                        if clear_lamp != ClearLamp.failed
-                    ]
-                )
-            ),
-        )
-
-        # TODO: update this if new filters are added; only the full version view should
-        # show title completion
-        if (
-            version is not None
-            and level is None
-            and difficulty is None
-            and genre is None
-        ):
             embed.add_field(
-                name="Title completion",
+                name="Ranks",
                 value="\n".join(
                     [
-                        (
-                            "`Total  ` ▸ "
-                            f"{Difficulty.basic.emoji()} {bold(counts[Difficulty.basic.short()])}"
-                            f" / {Difficulty.advanced.emoji()} {bold(counts[Difficulty.advanced.short()])}"
-                            f" / {Difficulty.expert.emoji()} {bold(counts[Difficulty.expert.short()])}"
-                            f" / {Difficulty.master.emoji()} {bold(counts[Difficulty.master.short()])}"
+                        f"{config.icons.rank_icon(rank) if rank != '99AJ' else rank} ▸ {bold_if(counts[rank] == chart_count, counts[rank])}"
+                        for rank in (
+                            "99AJ",
+                            Rank.sssp,
+                            Rank.sss,
+                            Rank.ssp,
+                            Rank.ss,
+                            Rank.sp,
+                            Rank.s,
                         )
-                    ]
-                    + [
-                        (
-                            f"{name} ▸ "
-                            f"{Difficulty.basic.emoji()} {bold_if(counts[f'{Difficulty.basic.short()}_{criteria}'] == counts[Difficulty.basic.short()], counts[f'{Difficulty.basic.short()}_{criteria}'])}"
-                            f" / {Difficulty.advanced.emoji()} {bold_if(counts[f'{Difficulty.advanced.short()}_{criteria}'] == counts[Difficulty.advanced.short()], counts[f'{Difficulty.advanced.short()}_{criteria}'])}"
-                            f" / {Difficulty.expert.emoji()} {bold_if(counts[f'{Difficulty.expert.short()}_{criteria}'] == counts[Difficulty.expert.short()], counts[f'{Difficulty.expert.short()}_{criteria}'])}"
-                            f" / {Difficulty.master.emoji()} {bold_if(counts[f'{Difficulty.master.short()}_{criteria}'] == counts[Difficulty.master.short()], counts[f'{Difficulty.master.short()}_{criteria}'])}"
-                        )
-                        for name, criteria in [
-                            ("`SPIRIT `", Rank.s),
-                            ("`TRIBUTE`", Rank.sss),
-                            ("`LEGEND `", ComboLamp.all_justice),
-                        ]
                     ]
                 ),
             )
-
-        embeds = [embed]
-        featured_scores: list[DBPersonalBest] = []
-
-        if len(pbs) >= 2:
-            featured_scores = [pbs[0], pbs[-1]]
-        elif len(pbs) > 0:
-            featured_scores = [pbs[0]]
-
-        embeds += [
-            ScoreCardEmbed(
-                await self.utils.convert_to_network_pb(pb),
-                synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+            embed.add_field(
+                name="Combo lamps",
+                value="\n".join(
+                    reversed(
+                        [
+                            f"{combo_lamp.short()} ▸ {bold_if(counts[combo_lamp] == chart_count, counts[combo_lamp])}"
+                            for combo_lamp in ComboLamp
+                            if combo_lamp != ComboLamp.none
+                        ]
+                    )
+                ),
             )
-            for pb in featured_scores
-        ]
+            embed.add_field(
+                name="Clear lamps",
+                value="\n".join(
+                    reversed(
+                        [
+                            f"{clear_lamp.short()} ▸ {bold_if(counts[clear_lamp] == chart_count, counts[clear_lamp])}"
+                            for clear_lamp in ClearLamp
+                            if clear_lamp != ClearLamp.failed
+                        ]
+                    )
+                ),
+            )
+
+            # TODO: update this if new filters are added; only the full version view should
+            # show title completion
+            if (
+                version is not None
+                and level is None
+                and difficulty is None
+                and genre is None
+            ):
+                embed.add_field(
+                    name="Title completion",
+                    value="\n".join(
+                        [
+                            (
+                                "`Total  ` ▸ "
+                                f"{Difficulty.basic.emoji()} {bold(counts[Difficulty.basic.short()])}"
+                                f" / {Difficulty.advanced.emoji()} {bold(counts[Difficulty.advanced.short()])}"
+                                f" / {Difficulty.expert.emoji()} {bold(counts[Difficulty.expert.short()])}"
+                                f" / {Difficulty.master.emoji()} {bold(counts[Difficulty.master.short()])}"
+                            )
+                        ]
+                        + [
+                            (
+                                f"{name} ▸ "
+                                f"{Difficulty.basic.emoji()} {bold_if(counts[f'{Difficulty.basic.short()}_{criteria}'] == counts[Difficulty.basic.short()], counts[f'{Difficulty.basic.short()}_{criteria}'])}"
+                                f" / {Difficulty.advanced.emoji()} {bold_if(counts[f'{Difficulty.advanced.short()}_{criteria}'] == counts[Difficulty.advanced.short()], counts[f'{Difficulty.advanced.short()}_{criteria}'])}"
+                                f" / {Difficulty.expert.emoji()} {bold_if(counts[f'{Difficulty.expert.short()}_{criteria}'] == counts[Difficulty.expert.short()], counts[f'{Difficulty.expert.short()}_{criteria}'])}"
+                                f" / {Difficulty.master.emoji()} {bold_if(counts[f'{Difficulty.master.short()}_{criteria}'] == counts[Difficulty.master.short()], counts[f'{Difficulty.master.short()}_{criteria}'])}"
+                            )
+                            for name, criteria in [
+                                ("`SPIRIT `", Rank.s),
+                                ("`TRIBUTE`", Rank.sss),
+                                ("`LEGEND `", ComboLamp.all_justice),
+                            ]
+                        ]
+                    ),
+                )
+
+            embeds = [embed]
+            featured_scores: list[DBPersonalBest] = []
+
+            if len(pbs) >= 2:
+                featured_scores = [pbs[0], pbs[-1]]
+            elif len(pbs) > 0:
+                featured_scores = [pbs[0]]
+
+            embeds += [
+                ScoreCardEmbed(
+                    await self.utils.convert_to_network_pb(pb),
+                    synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
+                )
+                for pb in featured_scores
+            ]
 
         await ctx.respond_or_edit(embeds=embeds)
 

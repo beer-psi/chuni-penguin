@@ -90,7 +90,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         await self._reload_alias_cache()
 
     async def _reload_alias_cache(self) -> None:
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = select(Song).options(joinedload(Song.aliases))
             songs = (await session.execute(stmt)).scalars().unique().all()
 
@@ -185,14 +185,14 @@ class UtilsCog(commands.Cog, name="Utils"):
         return clal
 
     async def fetch_user_config(self, id: int) -> UserConfig:
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = select(UserConfig).where(UserConfig.discord_id == id)
             return (await session.execute(stmt)).scalar_one_or_none() or UserConfig(
                 discord_id=id, synthesis_alt_jacket="default", privacy_mode=False
             )
 
     async def fetch_cookie(self, id: int) -> str | None:
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = select(Cookie).where(Cookie.discord_id == id)
             cookie = (await session.execute(stmt)).scalar_one_or_none()
 
@@ -222,7 +222,7 @@ class UtilsCog(commands.Cog, name="Utils"):
             else:
                 titles.add(record.title)
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             stmt = (
                 select(Song)
                 .where(
@@ -452,7 +452,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         )
         matching_alias = aliases[index]
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             condition = Song.id == matching_alias.song_id
 
             if worlds_end:
@@ -463,7 +463,8 @@ class UtilsCog(commands.Cog, name="Utils"):
             stmt = select(Song).where(condition)
             song = (await session.execute(stmt)).scalar_one_or_none()
 
-            if matching_alias.id is not None:
+        if matching_alias.id is not None:
+            async with self.bot.begin_db_readwrite() as session:
                 stmt = (
                     update(Alias)
                     .where(Alias.rowid == matching_alias.id)
@@ -472,8 +473,8 @@ class UtilsCog(commands.Cog, name="Utils"):
                 )
                 alias = (await session.execute(stmt)).scalar_one_or_none()
                 await session.commit()
-            else:
-                alias = None
+        else:
+            alias = None
 
         return song, alias, similarity
 
@@ -502,7 +503,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         )
         matching_alias = aliases[index]
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             cond = Song.title == matching_alias.title
 
             if available is not None:
@@ -520,7 +521,8 @@ class UtilsCog(commands.Cog, name="Utils"):
 
             songs = (await session.execute(stmt)).scalars().unique()
 
-            if matching_alias.id is not None:
+        if matching_alias.id is not None:
+            async with self.bot.begin_db_readwrite() as session:
                 stmt = (
                     update(Alias)
                     .where(Alias.rowid == matching_alias.id)
@@ -529,15 +531,15 @@ class UtilsCog(commands.Cog, name="Utils"):
                 )
                 alias = (await session.execute(stmt)).scalar_one_or_none()
                 await session.commit()
-            else:
-                alias = None
+        else:
+            alias = None
 
         return SongSearchResult(
             songs=list(songs), matched_alias=alias, similarity=similarity
         )
 
     async def convert_to_network_pb(self, db_pb: DBPersonalBest):
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = (
                 select(Chart)
                 .where(

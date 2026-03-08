@@ -211,7 +211,7 @@ class ProfileCog(commands.Cog, name="Profile"):
 
             profile = await client.get_profile()
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(Cookie).where(Cookie.discord_id == target.id)
             cookie = (await session.execute(query)).scalar_one_or_none()
 
@@ -340,7 +340,7 @@ class ProfileCog(commands.Cog, name="Profile"):
 
         new_config = False
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_read() as session:
             query = select(UserConfig).where(UserConfig.discord_id == ctx.author.id)
             result = await session.execute(query)
             user_config = result.scalar_one_or_none()
@@ -405,7 +405,7 @@ class ProfileCog(commands.Cog, name="Profile"):
 
             user_config.privacy_mode = value in ("1", "true", "t", "yes", "y", "on")
 
-        async with self.bot.begin_db_session() as session:
+        async with self.bot.begin_db_readwrite() as session:
             if new_config:
                 session.add(user_config)
             else:
