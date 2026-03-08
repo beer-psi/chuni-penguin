@@ -1098,6 +1098,9 @@ class ToolsCog(commands.Cog, name="Tools"):
                         accessory=discord.ui.Thumbnail(get_jacket_url(song)),
                     ),
                     discord.ui.MediaGallery(discord.components.MediaGalleryItem(file)),
+                    discord.ui.TextDisplay(
+                        "-# Chart view by [sdvx.in](https://sdvx.in/chunithm.html)"
+                    ),
                     accent_color=difficulty.color(),
                 )
             )
