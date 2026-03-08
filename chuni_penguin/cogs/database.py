@@ -398,7 +398,7 @@ class DatabaseCog(commands.Cog, name="Database"):
             self._engine, expire_on_commit=False
         )
         self._read_sessionmaker: async_sessionmaker[AsyncSession] = async_sessionmaker(
-            self._engine, expire_on_commit=False
+            self._read_engine, expire_on_commit=False
         )
 
         self.cookies = CookieQueries(self._write_sessionmaker, self._read_sessionmaker)
