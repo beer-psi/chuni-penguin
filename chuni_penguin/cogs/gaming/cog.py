@@ -363,12 +363,9 @@ class GamingCog(commands.Cog, name="Games"):
         The user invoking this command must have the Manage Server permission.
         """
 
-        async with self.bot.begin_db_readwrite() as session:
-            await session.execute(
-                delete(GuessScore).where(GuessScore.guild_id == ctx.guild.id)
-            )
-            await session.commit()
-
+        await self.bot.database.writer.execute(
+            delete(GuessScore).where(GuessScore.guild_id == ctx.guild.id)
+        )
         await ctx.message.add_reaction("✅")
 
     async def _clear_state(self, channel_id: int):

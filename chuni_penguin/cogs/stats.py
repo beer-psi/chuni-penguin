@@ -47,10 +47,9 @@ class StatsCog(commands.Cog, name="Stats"):
             if not self._stats_batch:
                 return
 
-            async with self.bot.begin_db_readwrite() as session:
-                await session.execute(insert(CommandUse), self._stats_batch)
-                await session.commit()
-
+            await self.bot.database.writer.execute(
+                insert(CommandUse), self._stats_batch
+            )
             await logger.adebug(
                 "Registered command uses to the database.",
                 tag="command_uses_saved",

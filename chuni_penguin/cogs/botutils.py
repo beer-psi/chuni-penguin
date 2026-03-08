@@ -464,15 +464,13 @@ class UtilsCog(commands.Cog, name="Utils"):
             song = (await session.execute(stmt)).scalar_one_or_none()
 
         if matching_alias.id is not None:
-            async with self.bot.begin_db_readwrite() as session:
-                stmt = (
-                    update(Alias)
-                    .where(Alias.rowid == matching_alias.id)
-                    .values(uses=Alias.uses + 1)
-                    .returning(Alias)
-                )
-                alias = (await session.execute(stmt)).scalar_one_or_none()
-                await session.commit()
+            stmt = (
+                update(Alias)
+                .where(Alias.rowid == matching_alias.id)
+                .values(uses=Alias.uses + 1)
+                .returning(Alias)
+            )
+            alias = (await self.bot.database.writer.execute(stmt)).scalar_one()
         else:
             alias = None
 
@@ -522,15 +520,13 @@ class UtilsCog(commands.Cog, name="Utils"):
             songs = (await session.execute(stmt)).scalars().unique()
 
         if matching_alias.id is not None:
-            async with self.bot.begin_db_readwrite() as session:
-                stmt = (
-                    update(Alias)
-                    .where(Alias.rowid == matching_alias.id)
-                    .values(uses=Alias.uses + 1)
-                    .returning(Alias)
-                )
-                alias = (await session.execute(stmt)).scalar_one_or_none()
-                await session.commit()
+            stmt = (
+                update(Alias)
+                .where(Alias.rowid == matching_alias.id)
+                .values(uses=Alias.uses + 1)
+                .returning(Alias)
+            )
+            alias = (await self.bot.database.writer.execute(stmt)).scalar_one_or_none()
         else:
             alias = None
 

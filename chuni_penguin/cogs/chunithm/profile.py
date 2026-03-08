@@ -405,13 +405,10 @@ class ProfileCog(commands.Cog, name="Profile"):
 
             user_config.privacy_mode = value in ("1", "true", "t", "yes", "y", "on")
 
-        async with self.bot.begin_db_readwrite() as session:
-            if new_config:
-                session.add(user_config)
-            else:
-                await session.merge(user_config)
-
-            await session.commit()
+        if new_config:
+            await self.bot.database.writer.add(user_config)
+        else:
+            await self.bot.database.writer.merge(user_config)
 
         await ctx.reply(
             content=f"Set your config for `{key}` to `{value}`.",

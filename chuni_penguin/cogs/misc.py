@@ -172,17 +172,16 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
                 default_prefix: str = config.bot.default_prefix
 
-                async with self.bot.begin_db_readwrite() as session, session.begin():
-                    if new_prefix == default_prefix:
-                        stmt = delete(Prefix).where(Prefix.guild_id == ctx.guild.id)
-                        await session.execute(stmt)
+                if new_prefix == default_prefix:
+                    stmt = delete(Prefix).where(Prefix.guild_id == ctx.guild.id)
+                    await self.bot.database.writer.execute(stmt)
 
-                        with contextlib.suppress(KeyError):
-                            del self.bot.prefixes[ctx.guild.id]
-                    else:
-                        prefix = Prefix(guild_id=ctx.guild.id, prefix=new_prefix)
-                        await session.merge(prefix)
-                        self.bot.prefixes[ctx.guild.id] = new_prefix
+                    with contextlib.suppress(KeyError):
+                        del self.bot.prefixes[ctx.guild.id]
+                else:
+                    prefix = Prefix(guild_id=ctx.guild.id, prefix=new_prefix)
+                    await self.bot.database.writer.merge(prefix)
+                    self.bot.prefixes[ctx.guild.id] = new_prefix
 
                 await ctx.reply(f"Prefix set to `{new_prefix}`", mention_author=False)
 

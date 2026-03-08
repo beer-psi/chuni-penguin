@@ -533,35 +533,29 @@ class GuessingGameSession:
 
         guild_id = self.ctx.guild.id if self.ctx.guild else 0
 
-        async with self.bot.begin_db_readwrite() as session, session.begin():
-            stmt = insert(GuessScore).values(
-                discord_id=user_id,
-                guild_id=guild_id,
-                difficulty=self.difficulty.value,
-                game_type=self.game_type.value,
-                score=1,
-            )
-            stmt = stmt.on_conflict_do_update(
-                index_elements=[
-                    GuessScore.discord_id,
-                    GuessScore.guild_id,
-                    GuessScore.difficulty,
-                    GuessScore.game_type,
-                ],
-                set_={"score": GuessScore.score + 1},
-            )
+        stmt = insert(GuessScore).values(
+            discord_id=user_id,
+            guild_id=guild_id,
+            difficulty=self.difficulty.value,
+            game_type=self.game_type.value,
+            score=1,
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[
+                GuessScore.discord_id,
+                GuessScore.guild_id,
+                GuessScore.difficulty,
+                GuessScore.game_type,
+            ],
+            set_={"score": GuessScore.score + 1},
+        )
 
-            await session.execute(stmt)
-            await session.commit()
+        await self.bot.database.writer.execute(stmt)
 
     async def increment_alias_uses(self, alias_id: int):
-        async with self.bot.begin_db_readwrite() as session, session.begin():
-            stmt = (
-                update(Alias).where(Alias.rowid == alias_id).values(uses=Alias.uses + 1)
-            )
+        stmt = update(Alias).where(Alias.rowid == alias_id).values(uses=Alias.uses + 1)
 
-            await session.execute(stmt)
-            await session.commit()
+        await self.bot.database.writer.execute(stmt)
 
     def print_score_list(self):
         if len(self.scores) == 0:

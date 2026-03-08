@@ -11,6 +11,7 @@ import msgspec
 from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import select
+from sqlalchemy.dialects.sqlite import insert
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
@@ -161,23 +162,22 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
 
             content = "Successfully linked with Kamaitachi."
 
-            async with self.bot.begin_db_readwrite() as session, session.begin():
-                if cookie is None:
-                    cookie = Cookie(
-                        discord_id=ctx.author.id, cookie="", kamaitachi_token=token
-                    )
-                    session.add(cookie)
-                else:
-                    cookie.kamaitachi_token = token
-                    await session.merge(cookie)
+            query = insert(Cookie).values(
+                discord_id=ctx.author.id, cookie="", kamaitachi_token=token
+            )
+            query = query.on_conflict_do_update(
+                index_elements=[Cookie.discord_id],
+                set_={"kamaitachi_token": query.excluded.kamaitachi_token},
+            ).returning(Cookie)
+            cookie = (await self.bot.database.writer.execute(query)).scalar_one()
 
-                    if cookie.cookie:
-                        content += (
-                            f"\nYou can now use `{ctx.clean_prefix}kamaitachi sync` to sync your recent scores.\n"
-                            "\n"
-                            f"**It is recommended that you run `{ctx.clean_prefix}kamaitachi sync` to sync your recent scores first, "
-                            f"before syncing your personal bests with `{ctx.clean_prefix}kamaitachi sync pb`.**"
-                        )
+            if cookie.cookie:
+                content += (
+                    f"\nYou can now use `{ctx.clean_prefix}kamaitachi sync` to sync your recent scores.\n"
+                    "\n"
+                    f"**It is recommended that you run `{ctx.clean_prefix}kamaitachi sync` to sync your recent scores first, "
+                    f"before syncing your personal bests with `{ctx.clean_prefix}kamaitachi sync pb`.**"
+                )
 
             return await ctx.reply(content=content, mention_author=False)
 
@@ -216,9 +216,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
 
         cookie.kamaitachi_token = None
 
-        async with self.bot.begin_db_readwrite() as session:
-            await session.merge(cookie)
-            await session.commit()
+        await self.bot.database.writer.merge(cookie)
 
         return await ctx.reply(
             content="Successfully unlinked with Kamaitachi.", mention_author=False

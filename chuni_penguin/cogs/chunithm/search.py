@@ -9,6 +9,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from discord.utils import escape_markdown as emd
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin.config import config
@@ -232,7 +233,8 @@ class SearchCog(commands.Cog, name="Search"):
                     raise commands.BadArgument(msg)
 
                 if len(aliases) > 0 and aliases[0].guild_id != 0:
-                    async with self.bot.begin_db_readwrite() as session:
+
+                    async def inner(session: AsyncSession):
                         aliases[0].guild_id = 0
                         aliases[0].owner_id = None
                         aliases[0].song_id = song.id
@@ -241,8 +243,7 @@ class SearchCog(commands.Cog, name="Search"):
                         for x in aliases[1:]:
                             await session.delete(x)
 
-                        await session.commit()
-
+                    await self.bot.database.writer.execute_fn(inner)
                     await self.utils._reload_alias_cache()
                     return await ctx.reply(
                         f"**{emd(added_alias)}** already exists as a guild-only alias. Promoting to global alias.",
@@ -267,17 +268,14 @@ class SearchCog(commands.Cog, name="Search"):
                     )
                     raise commands.BadArgument(msg)
 
-            async with self.bot.begin_db_readwrite() as session:
-                session.add(
-                    Alias(
-                        alias=added_alias,
-                        guild_id=guild_id,
-                        song_id=song.id,
-                        owner_id=None if global_alias else ctx.author.id,
-                    )
+            await self.bot.database.writer.add(
+                Alias(
+                    alias=added_alias,
+                    guild_id=guild_id,
+                    song_id=song.id,
+                    owner_id=None if global_alias else ctx.author.id,
                 )
-                await session.commit()
-
+            )
             await self.utils._reload_alias_cache()
 
         alias_unit = "an alias" if not global_alias else "a global alias"
@@ -356,12 +354,9 @@ class SearchCog(commands.Cog, name="Search"):
 
                 raise commands.CommandError(msg)
 
-            async with self.bot.begin_db_readwrite() as session:
-                # if there is a suitable alias, then we can definitely remove it, since we
-                # have already matched all of the conditions above.
-                await session.delete(alias)
-                await session.commit()
-
+            # if there is a suitable alias, then we can definitely remove it, since we
+            # have already matched all of the conditions above.
+            await self.bot.database.writer.delete(alias)
             await self.utils._reload_alias_cache()
 
         await ctx.reply(

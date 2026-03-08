@@ -11,6 +11,7 @@ from discord import Interaction, app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from sqlalchemy import update
+from sqlalchemy.dialects.sqlite import insert
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
@@ -63,14 +64,13 @@ class AuthCog(commands.Cog, name="Auth"):
                     "However, your account has been deleted from our records."
                 )
 
-        async with ctx.typing(), self.bot.begin_db_readwrite() as session:
+        async with ctx.typing():
             stmt = (
                 update(Cookie)
                 .where(Cookie.discord_id == ctx.author.id)
                 .values(cookie="")
             )
-            await session.execute(stmt)
-            await session.commit()
+            await self.bot.database.writer.execute(stmt)
 
         await ctx.reply(msg, mention_author=False)
 
@@ -106,9 +106,15 @@ class AuthCog(commands.Cog, name="Auth"):
             except NetworkError as e:
                 return e
 
-        async with self.bot.begin_db_readwrite() as session, session.begin():
-            await session.merge(Cookie(discord_id=id, cookie=client.authentication))
-            return None
+        query = insert(Cookie).values(
+            discord_id=id, cookie=client.authentication, kamaitachi_token=None
+        )
+        query = query.on_conflict_do_update(
+            index_elements=[Cookie.discord_id], set_={"cookie": query.excluded.cookie}
+        )
+        await self.bot.database.writer.execute(query)
+
+        return None
 
     @commands.hybrid_command("login")
     @logged_prefix_command

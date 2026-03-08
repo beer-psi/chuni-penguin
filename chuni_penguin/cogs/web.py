@@ -20,6 +20,7 @@ from discord.ext import commands
 from discord.utils import oauth_url
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy import select
+from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin.config import config
@@ -99,21 +100,20 @@ async def kamaitachi_oauth(request: web.Request) -> web.Response:
 
     message = "Your accounts are now linked!"
 
-    async with bot.begin_db_readwrite() as db_session, db_session.begin():
-        if cookie is None:
-            cookie = Cookie(discord_id=discord_id, cookie="", kamaitachi_token=token)
-            db_session.add(cookie)
-        else:
-            cookie.kamaitachi_token = token
-            await db_session.merge(cookie)
+    if cookie is None:
+        cookie = Cookie(discord_id=discord_id, cookie="", kamaitachi_token=token)
+        await bot.database.writer.add(cookie)
+    else:
+        cookie.kamaitachi_token = token
+        await bot.database.writer.merge(cookie)
 
-            if cookie.cookie:
-                message += (
-                    f"\nYou can now use `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores.\n"
-                    "\n"
-                    f"**It is recommended that you run `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores first, "
-                    f"before syncing your personal bests with `{config.bot.default_prefix}kamaitachi sync pb`.**"
-                )
+        if cookie.cookie:
+            message += (
+                f"\nYou can now use `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores.\n"
+                "\n"
+                f"**It is recommended that you run `{config.bot.default_prefix}kamaitachi sync` to sync your recent scores first, "
+                f"before syncing your personal bests with `{config.bot.default_prefix}kamaitachi sync pb`.**"
+            )
 
     return web.Response(text=message, content_type="text/plain")
 
@@ -437,26 +437,15 @@ async def kofi_webhook(request: web.Request) -> web.Response:
         raise web.HTTPBadRequest from None
 
     bot: ChuniBot = request.config_dict["bot"]
+    query = insert(Cookie).values(
+        discord_id=discord_userid, cookie="", kamaitachi_token=None, is_supporter=True
+    )
+    query = query.on_conflict_do_update(
+        index_elements=[Cookie.discord_id],
+        set_={"is_supporter": query.excluded.is_supporter},
+    )
 
-    async with bot.begin_db_readwrite() as session:
-        query = select(Cookie).where(Cookie.discord_id == discord_userid)
-        result = (await session.execute(query)).scalar_one_or_none()
-
-        if result is not None:
-            result.is_supporter = True
-            session.add(result)
-        else:
-            session.add(
-                Cookie(
-                    discord_id=discord_userid,
-                    cookie="",
-                    kamaitachi_token=None,
-                    is_contributor=False,
-                    is_supporter=True,
-                )
-            )
-
-        await session.commit()
+    await bot.database.writer.execute(query)
 
     return web.Response()
 

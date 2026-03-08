@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 import discord
 from discord.ext import commands
 from sqlalchemy import delete
+from sqlalchemy.dialects.sqlite import insert
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
@@ -65,12 +66,16 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
     ):
         """Blocks users or guilds from using the bot globally."""
 
-        async with self.bot.begin_db_readwrite() as session:
-            denylist_entry = Denylist(object_id=object.id, reason=reason)
-            self.bot.denylist[object.id] = denylist_entry
-
-            session.add(denylist_entry)
-            await session.commit()
+        query = (
+            insert(Denylist)
+            .values(object_id=object.id, reason=reason)
+            .on_conflict_do_update(
+                index_elements=[Denylist.object_id], set_={"reason": reason}
+            )
+            .returning(Denylist)
+        )
+        result = await self.bot.database.writer.execute(query)
+        self.bot.denylist[object.id] = result.scalar_one()
 
         await ctx.message.add_reaction("✅")
 
@@ -81,13 +86,10 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
     ):
         """Unblocks users or guilds from using the bot globally."""
 
-        async with self.bot.begin_db_readwrite() as session:
-            query = delete(Denylist).where(
-                Denylist.object_id.in_([object.id for object in objects])
-            )
-
-            await session.execute(query)
-            await session.commit()
+        query = delete(Denylist).where(
+            Denylist.object_id.in_([object.id for object in objects])
+        )
+        await self.bot.database.writer.execute(query)
 
         for object in objects:
             with contextlib.suppress(KeyError):

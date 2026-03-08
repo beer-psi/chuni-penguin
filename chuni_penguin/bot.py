@@ -196,11 +196,9 @@ class ChuniBot(commands.AutoShardedBot):
 
             if not config.dangerous.dev:
                 await self.tree.sync()
-
-                async with self.begin_db_readwrite() as session:
-                    await session.execute(
-                        text(f"PRAGMA user_version={current_tree_hash}")
-                    )
+                await self.database.writer.execute(
+                    text(f"PRAGMA user_version={current_tree_hash}"), transaction=False
+                )
 
         self.add_check(self.permissions.permissions_check)
 
@@ -306,14 +304,6 @@ class ChuniBot(commands.AutoShardedBot):
     @property
     def database(self) -> "DatabaseCog":
         return cast("DatabaseCog", self.get_cog("Database"))
-
-    @property
-    def engine(self):
-        return cast("DatabaseCog", self.get_cog("Database")).engine
-
-    @property
-    def begin_db_readwrite(self):
-        return self.database.write_sessionmaker
 
     @property
     def begin_db_read(self):

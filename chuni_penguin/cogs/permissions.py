@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from chuni_penguin.context import PenguinContext, PenguinGuildContext
 from chuni_penguin.converters import CommandOrGroupConverter
@@ -62,7 +63,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             secondary_target_type = SecondaryPermissionTarget.group
             secondary_target_name = secondary_target.qualified_name
 
-        async with self.bot.begin_db_readwrite() as session:
+        async def inner(session: AsyncSession):
             query = select(func.max(CommandPermission.index)).where(
                 CommandPermission.guild_id == guild_id
             )
@@ -87,8 +88,8 @@ class PermissionsCog(commands.Cog, name="Permissions"):
                 set_={"is_allowed": query.excluded.is_allowed},
             )
             await session.execute(query)
-            await session.commit()
 
+        await self.bot.database.writer.execute_fn(inner)
         await self._load_permissions(guild_id)
 
     async def cog_load(self) -> None:
@@ -281,7 +282,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         source_idx = source - 1
         destination_idx = destination - 1
 
-        async with self.bot.begin_db_readwrite() as session, ctx.typing():
+        async def inner(session: AsyncSession):
             query = select(CommandPermission).where(
                 (CommandPermission.guild_id == ctx.guild.id)
                 & (CommandPermission.index == source_idx)
@@ -335,9 +336,9 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             )
             await session.execute(query)
 
-            await session.commit()
-
-        await self._load_permissions(ctx.guild.id)
+        async with ctx.typing():
+            await self.bot.database.writer.execute_fn(inner)
+            await self._load_permissions(ctx.guild.id)
 
         await ctx.respond_or_edit(
             f"Moved permission at position {source} to position {destination}."
@@ -354,7 +355,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
 
         position_idx = position - 1
 
-        async with self.bot.begin_db_readwrite() as session, ctx.typing():
+        async def inner(session: AsyncSession):
             query = delete(CommandPermission).where(
                 (CommandPermission.guild_id == ctx.guild.id)
                 & (CommandPermission.index == position_idx)
@@ -374,7 +375,10 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             await session.execute(query)
             await session.commit()
 
-        await self._load_permissions(ctx.guild.id)
+        async with ctx.typing():
+            await self.bot.database.writer.execute_fn(inner)
+            await self._load_permissions(ctx.guild.id)
+
         await ctx.respond_or_edit(f"Deleted permission at position {position}.")
 
     @permissions.command("reset")
@@ -382,13 +386,10 @@ class PermissionsCog(commands.Cog, name="Permissions"):
     async def permissions_reset(self, ctx: PenguinGuildContext):
         """Resets all permissions for this server."""
 
-        async with self.bot.begin_db_readwrite() as session, ctx.typing():
-            query = delete(CommandPermission).where(
-                CommandPermission.guild_id == ctx.guild.id
-            )
-
-            await session.execute(query)
-            await session.commit()
+        query = delete(CommandPermission).where(
+            CommandPermission.guild_id == ctx.guild.id
+        )
+        await self.bot.database.writer.execute(query)
 
         self.permission_cache[ctx.guild.id] = []
 

@@ -152,13 +152,11 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             ]
 
         async def on_exit(session: ChunithmNet):
-            async with self.bot.begin_db_readwrite() as db_session:
-                await db_session.execute(
-                    update(Cookie)
-                    .where(Cookie.discord_id == user_id)
-                    .values(cookie=session.authentication)
-                )
-                await db_session.commit()
+            await self.bot.database.writer.execute(
+                update(Cookie)
+                .where(Cookie.discord_id == user_id)
+                .values(cookie=session.authentication)
+            )
 
             del self._chuni_net_sessions[user_id]
 
@@ -287,16 +285,15 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             and config.credentials.sega_id_username is not None
             and config.credentials.sega_id_password is not None
         ):
-            async with self.bot.begin_db_readwrite() as session:
-                cookie = Cookie(
-                    discord_id=self.bot.user.id,
-                    cookie="#LWP-Cookies-2.0\n",
-                    kamaitachi_token=None,
-                    is_contributor=False,
-                    is_supporter=False,
-                )
-                session.add(cookie)
-                await session.commit()
+            cookie = Cookie(
+                discord_id=self.bot.user.id,
+                cookie="#LWP-Cookies-2.0\n",
+                kamaitachi_token=None,
+                is_contributor=False,
+                is_supporter=False,
+            )
+
+            await self.bot.database.writer.add(cookie)
         elif cookie is None:
             msg = "Bot does not have a SEGA ID account configured."
             raise AuthenticationError(msg)
