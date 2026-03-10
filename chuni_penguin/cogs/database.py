@@ -258,7 +258,7 @@ class WriterQueue:
             transaction=transaction,
         )
 
-    async def merge[T: object](
+    def merge[T: object](
         self,
         instance: T,
         *,
