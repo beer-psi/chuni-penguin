@@ -109,6 +109,12 @@ def safe_set_exception(future: asyncio.Future, exception: Exception):
 
 
 class WriterQueue:
+    """
+    A queue for serializing SQLite writes to prevent "database is locked" errors.
+
+    :meth:`WriterQueue.start` must be called for queued statements to be executed.
+    """
+
     __slots__ = (
         "_engine",
         "_loop",
@@ -121,6 +127,15 @@ class WriterQueue:
     def __init__(
         self, engine: AsyncEngine, *, loop: asyncio.AbstractEventLoop | None = None
     ):
+        """
+        Create a writer queue from the provided :class:`sqlalchemy.ext.asyncio.AsyncEngine`.
+
+        The engine should be configured with `pool_size=1` and `max_overflow=0` to ensure
+        there is always only one active connection.
+
+        Requires an asyncio event loop to be running if the `loop` parameter is not provided.
+        """
+
         self._engine = engine
         self._loop = loop or asyncio.get_event_loop()
         self._sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
@@ -129,9 +144,11 @@ class WriterQueue:
         self._writer_task: asyncio.Task | None = None
 
     def start(self):
-        self._writer_task = asyncio.create_task(self.task())
+        """Starts the background task handling queued writes."""
 
-    async def task(self):
+        self._writer_task = asyncio.create_task(self._task())
+
+    async def _task(self):
         while not self._stop_event.is_set():
             try:
                 task = await asyncio.wait_for(self._queue.get(), timeout=0.2)
@@ -139,6 +156,7 @@ class WriterQueue:
                 continue
             else:
                 if task.future.done():  # weird, but okay
+                    self._queue.task_done()
                     return
 
                 try:
@@ -156,12 +174,42 @@ class WriterQueue:
                     task.future.get_loop().call_soon_threadsafe(
                         safe_set_result, task.future, result
                     )
+                finally:
+                    self._queue.task_done()
 
-    def stop(self):
+    async def stop(self):
+        """
+        Shuts down the queue and wait for all queued writes to finish, then disposes
+        the provided :class:`AsyncEngine`.
+        """
+
+        self._queue.shutdown(immediate=False)
+        await self._queue.join()
         self._stop_event.set()
+        await self._engine.dispose()
+
+    def execute_fn[T](
+        self, fn: Callable[[AsyncSession], Awaitable[T]], *, transaction: bool = True
+    ) -> asyncio.Future[T]:
+        """
+        Queues an asynchronous function which takes an :class:`AsyncSession`
+        for execution.
+
+        Returns a :class:`asyncio.Future` representing the eventual result of the query.
+        This future can be ignored if the result is not important, but you should use
+        :meth:`asyncio.Future.add_done_callback` to retrieve any exceptions, in order to
+        avoid "Future exception was never retrieved" logs.
+        """
+
+        future: asyncio.Future[T] = self._loop.create_future()
+        entry = WriteTask(fn, future, transaction=transaction)
+
+        self._queue.put_nowait(entry)
+
+        return future
 
     @overload
-    async def execute[T: Any](
+    def execute[T: Any](
         self,
         statement: TypedReturnsRows[T],
         params: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ...,
@@ -169,10 +217,10 @@ class WriterQueue:
         execution_options: Mapping[str, Any] = ...,
         bind_arguments: dict[str, Any] | None = ...,
         transaction: bool = ...,
-    ) -> Result[T]: ...
+    ) -> asyncio.Future[Result[T]]: ...
 
     @overload
-    async def execute(
+    def execute(
         self,
         statement: Executable,
         params: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ...,
@@ -180,9 +228,9 @@ class WriterQueue:
         execution_options: Mapping[str, Any] = ...,
         bind_arguments: dict[str, Any] | None = ...,
         transaction: bool = ...,
-    ) -> Result[Any]: ...
+    ) -> asyncio.Future[Result[Any]]: ...
 
-    async def execute(
+    def execute(
         self,
         statement: Executable,
         params: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = None,
@@ -190,8 +238,17 @@ class WriterQueue:
         execution_options: Mapping[str, Any] = sqlalchemy.util.EMPTY_DICT,
         bind_arguments: dict[str, Any] | None = None,
         transaction: bool = True,
-    ) -> Result[Any]:
-        return await self.execute_fn(
+    ) -> asyncio.Future[Result[Any]]:
+        """
+        Queues a statement for execution.
+
+        Returns a :class:`asyncio.Future` representing the eventual result of the query.
+        This future can be ignored if the result is not important, but you should use
+        :meth:`asyncio.Future.add_done_callback` to retrieve any exceptions, in order to
+        avoid "Future exception was never retrieved" logs.
+        """
+
+        return self.execute_fn(
             lambda session: session.execute(
                 statement,
                 params,
@@ -208,32 +265,26 @@ class WriterQueue:
         load: bool = True,
         options: Sequence[ORMOption] | None = None,
         transaction: bool = True,
-    ) -> T:
-        return await self.execute_fn(
+    ) -> asyncio.Future[T]:
+        return self.execute_fn(
             lambda session: session.merge(instance, load=load, options=options),
             transaction=transaction,
         )
 
-    async def add(self, instance: object, *, transaction: bool = True):
+    def add(
+        self, instance: object, *, transaction: bool = True
+    ) -> asyncio.Future[None]:
         async def inner(session: AsyncSession):
-            session.add(instance)
+            return session.add(instance)
 
-        return await self.execute_fn(inner, transaction=transaction)
+        return self.execute_fn(inner, transaction=transaction)
 
-    async def delete(self, instance: object, *, transaction: bool = True):
-        return await self.execute_fn(
+    def delete(
+        self, instance: object, *, transaction: bool = True
+    ) -> asyncio.Future[None]:
+        return self.execute_fn(
             lambda session: session.delete(instance), transaction=transaction
         )
-
-    def execute_fn[T](
-        self, fn: Callable[[AsyncSession], Awaitable[T]], *, transaction: bool = True
-    ) -> asyncio.Future[T]:
-        future: asyncio.Future[T] = self._loop.create_future()
-        entry = WriteTask(fn, future, transaction=transaction)
-
-        self._queue.put_nowait(entry)
-
-        return future
 
 
 class CookieQueries:
@@ -528,24 +579,6 @@ class PersonalBestQueries:
 class DatabaseCog(commands.Cog, name="Database"):
     def __init__(self, bot: "ChuniBot") -> None:
         self.bot = bot
-
-        self._readwrite_engine: AsyncEngine = create_async_engine(
-            config.bot.db_connection_string,
-            hide_parameters=not config.dangerous.dev,
-            pool_size=1,
-            max_overflow=0,
-        )
-
-        sqlalchemy.event.listens_for(self._readwrite_engine.sync_engine, "connect")(
-            setup_database
-        )
-        sqlalchemy.event.listens_for(self._readwrite_engine.sync_engine, "connect")(
-            disable_isolation_level
-        )
-        sqlalchemy.event.listens_for(self._readwrite_engine.sync_engine, "begin")(
-            emit_begin_immediate
-        )
-
         self.writer: WriterQueue = MISSING
 
         self._read_engine: AsyncEngine = create_async_engine(
@@ -570,7 +603,20 @@ class DatabaseCog(commands.Cog, name="Database"):
 
     @override
     async def cog_load(self) -> None:
-        self.writer = WriterQueue(self._readwrite_engine, loop=self.bot.loop)
+        engine: AsyncEngine = create_async_engine(
+            config.bot.db_connection_string,
+            hide_parameters=not config.dangerous.dev,
+            pool_size=1,
+            max_overflow=0,
+        )
+
+        sqlalchemy.event.listens_for(engine.sync_engine, "connect")(setup_database)
+        sqlalchemy.event.listens_for(engine.sync_engine, "connect")(
+            disable_isolation_level
+        )
+        sqlalchemy.event.listens_for(engine.sync_engine, "begin")(emit_begin_immediate)
+
+        self.writer = WriterQueue(engine, loop=self.bot.loop)
         self.writer.start()
 
         self.cookies = CookieQueries(self.writer, self._read_sessionmaker)
@@ -588,14 +634,9 @@ class DatabaseCog(commands.Cog, name="Database"):
         self._optimize_database.stop()
 
         await self.writer.execute(text("PRAGMA optimize"), transaction=False)
-        self.writer.stop()
+        await self.writer.stop()
 
         await self._read_engine.dispose()
-        await self._readwrite_engine.dispose()
-
-    @property
-    def readwrite_engine(self):
-        return self._readwrite_engine
 
     @property
     def read_engine(self):
