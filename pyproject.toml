@@ -38,10 +38,10 @@ speedup = [
     "penguin-native",
 ]
 web = ["aiohttp-remotes~=1.3"]
+jishaku = ["jishaku~=2.6", "pyotp~=2.9"]
 
 [dependency-groups]
 dev = [
-    "jishaku~=2.6",
     "ruff==0.13.3",
     "basedpyright==1.31.5",
     { include-group = "test" },

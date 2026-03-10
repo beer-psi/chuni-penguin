@@ -129,6 +129,7 @@ class LegalConfig(msgspec.Struct):
 
 class DangerousConfig(msgspec.Struct):
     dev: bool = False
+    debug_totp: str | None = None
 
 
 def config_dec_hook(ty: type, obj: Any):

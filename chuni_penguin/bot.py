@@ -122,8 +122,8 @@ class ChuniBot(commands.AutoShardedBot):
 
     async def setup_hook(self) -> None:
         # Database setup
-        if config.dangerous.dev:
-            await self.load_extension("jishaku")
+        with contextlib.suppress(commands.ExtensionNotFound, commands.ExtensionFailed):
+            await self.load_extension("chuni_penguin.cogs.debug")
 
         await self.add_cog(EditTrackerCog(self, max_duration=timedelta(minutes=5)))
 
