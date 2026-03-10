@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import discord
+import jishaku
 import pyotp
 from discord.ext import commands
 from discord.utils import MISSING
@@ -47,7 +48,7 @@ class DebugTOTPEntryView(PenguinView):
         await interaction.response.send_modal(self.modal)
 
 
-class DebugCog(*STANDARD_FEATURES, *OPTIONAL_FEATURES):
+class DebugCog(*OPTIONAL_FEATURES, *STANDARD_FEATURES):
     def __init__(self, bot: "ChuniBot") -> None:
         super().__init__(bot=bot)
 
@@ -97,4 +98,6 @@ class DebugCog(*STANDARD_FEATURES, *OPTIONAL_FEATURES):
 
 
 async def setup(bot: "ChuniBot"):
+    jishaku.Flags.HIDE = True
+    jishaku.Flags.ALWAYS_DM_TRACEBACK = True
     await bot.add_cog(DebugCog(bot))
