@@ -1,9 +1,11 @@
 import contextlib
+import re
 from collections.abc import Generator
 from http.client import METHOD_NOT_ALLOWED
 
 import httpx
 from bs4 import BeautifulSoup
+from bs4.filter import SoupStrainer
 
 from chuni_penguin.networks.errors import (
     AuthenticationError,
@@ -88,7 +90,9 @@ class ChunithmNetAuth(httpx.Auth):
             auth_response.url.host == _COMMON_AUTH_REDIRECT_URL.host
             and auth_response.url.path == _COMMON_AUTH_REDIRECT_URL.path
         ):
-            soup = BeautifulSoup(auth_response.content, BS4_FEATURE)
+            soup = BeautifulSoup(
+                auth_response.content, BS4_FEATURE, parse_only=SoupStrainer("form")
+            )
             form = soup.find("form")
 
             if (
@@ -127,7 +131,11 @@ async def raise_on_chunithm_net_error(response: httpx.Response):
     if response.url.path != "/mobile/error/":
         return
 
-    dom = BeautifulSoup(await response.aread(), BS4_FEATURE)
+    dom = BeautifulSoup(
+        await response.aread(),
+        BS4_FEATURE,
+        parse_only=SoupStrainer(class_=re.compile("(?:block text_l|text_l block)")),
+    )
     error_blocks = dom.select(".block.text_l .font_small")
     code = int(error_blocks[0].text.split(": ", 1)[1])
     description = error_blocks[1].text if len(error_blocks) > 1 else ""

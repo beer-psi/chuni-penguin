@@ -1,9 +1,11 @@
+import contextlib
 import string
+from collections.abc import Generator
 from datetime import datetime
 from typing import cast
 from zoneinfo import ZoneInfo
 
-from bs4.element import ResultSet, Tag
+from bs4.element import PageElement, ResultSet, Tag
 
 from chuni_penguin.networks.types import (
     ChainLamp,
@@ -130,3 +132,16 @@ def get_course_rank_and_lamps(soup: Tag):
         combo_type = ComboLamp.none
 
     return rank, clear_type, combo_type
+
+
+@contextlib.contextmanager
+def decomposing[T: PageElement](soup: T) -> Generator[T, None, None]:
+    """
+    Returns a context manager that decomposes :param:`soup`
+    upon completion of the block.
+    """
+
+    try:
+        yield soup
+    finally:
+        soup.decompose()
