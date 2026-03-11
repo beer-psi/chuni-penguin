@@ -234,7 +234,7 @@ class SearchCog(commands.Cog, name="Search"):
 
                 if len(aliases) > 0 and aliases[0].guild_id != 0:
 
-                    async def inner(session: AsyncSession):
+                    async def transaction(session: AsyncSession):
                         aliases[0].guild_id = 0
                         aliases[0].owner_id = None
                         aliases[0].song_id = song.id
@@ -243,7 +243,7 @@ class SearchCog(commands.Cog, name="Search"):
                         for x in aliases[1:]:
                             await session.delete(x)
 
-                    await self.bot.database.writer.execute_fn(inner)
+                    await self.bot.database.writer.execute_fn(transaction)
                     await self.utils._reload_alias_cache()
                     return await ctx.reply(
                         f"**{emd(added_alias)}** already exists as a guild-only alias. Promoting to global alias.",

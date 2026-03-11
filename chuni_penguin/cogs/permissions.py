@@ -63,7 +63,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             secondary_target_type = SecondaryPermissionTarget.group
             secondary_target_name = secondary_target.qualified_name
 
-        async def inner(session: AsyncSession):
+        async def transaction(session: AsyncSession):
             query = select(func.max(CommandPermission.index)).where(
                 CommandPermission.guild_id == guild_id
             )
@@ -89,7 +89,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             )
             await session.execute(query)
 
-        await self.bot.database.writer.execute_fn(inner)
+        await self.bot.database.writer.execute_fn(transaction)
         await self._load_permissions(guild_id)
 
     async def cog_load(self) -> None:
@@ -282,7 +282,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         source_idx = source - 1
         destination_idx = destination - 1
 
-        async def inner(session: AsyncSession):
+        async def transaction(session: AsyncSession):
             query = select(CommandPermission).where(
                 (CommandPermission.guild_id == ctx.guild.id)
                 & (CommandPermission.index == source_idx)
@@ -337,7 +337,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             await session.execute(query)
 
         async with ctx.typing():
-            await self.bot.database.writer.execute_fn(inner)
+            await self.bot.database.writer.execute_fn(transaction)
             await self._load_permissions(ctx.guild.id)
 
         await ctx.respond_or_edit(
@@ -355,7 +355,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
 
         position_idx = position - 1
 
-        async def inner(session: AsyncSession):
+        async def transaction(session: AsyncSession):
             query = delete(CommandPermission).where(
                 (CommandPermission.guild_id == ctx.guild.id)
                 & (CommandPermission.index == position_idx)
@@ -376,7 +376,7 @@ class PermissionsCog(commands.Cog, name="Permissions"):
             await session.commit()
 
         async with ctx.typing():
-            await self.bot.database.writer.execute_fn(inner)
+            await self.bot.database.writer.execute_fn(transaction)
             await self._load_permissions(ctx.guild.id)
 
         await ctx.respond_or_edit(f"Deleted permission at position {position}.")
