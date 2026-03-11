@@ -26,6 +26,10 @@ _COMMON_AUTH_REDIRECT_URL = httpx.URL(
     "https://lng-tgk-aime-gw.am-all.net/common_auth/redirect"
 )
 _ADD_ACCESS_CODE_URL = httpx.URL("https://common-access.am-all.net/access/code/add")
+_FORM_STRAINER = SoupStrainer("form")
+_ERROR_MESSAGE_STRAINER = SoupStrainer(
+    class_=re.compile("(?:block text_l|text_l block)")
+)
 
 
 class ChunithmNetAuth(httpx.Auth):
@@ -91,7 +95,7 @@ class ChunithmNetAuth(httpx.Auth):
             and auth_response.url.path == _COMMON_AUTH_REDIRECT_URL.path
         ):
             soup = BeautifulSoup(
-                auth_response.content, BS4_FEATURE, parse_only=SoupStrainer("form")
+                auth_response.content, BS4_FEATURE, parse_only=_FORM_STRAINER
             )
             form = soup.find("form")
 
@@ -132,9 +136,7 @@ async def raise_on_chunithm_net_error(response: httpx.Response):
         return
 
     dom = BeautifulSoup(
-        await response.aread(),
-        BS4_FEATURE,
-        parse_only=SoupStrainer(class_=re.compile("(?:block text_l|text_l block)")),
+        await response.aread(), BS4_FEATURE, parse_only=_ERROR_MESSAGE_STRAINER
     )
     error_blocks = dom.select(".block.text_l .font_small")
     code = int(error_blocks[0].text.split(": ", 1)[1])
