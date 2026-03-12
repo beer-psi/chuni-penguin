@@ -202,6 +202,9 @@ class PenguinContext(EditTrackableContext["ChuniBot"]):
             if isinstance(reference.resolved, discord.Message):
                 return reference.resolved
 
+            if (cached_message := reference.cached_message) is not None:
+                return cached_message
+
             if reference.message_id is not None:
                 try:
                     return await self.channel.fetch_message(reference.message_id)

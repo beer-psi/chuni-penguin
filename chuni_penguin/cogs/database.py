@@ -103,7 +103,7 @@ def safe_set_result[T](future: asyncio.Future[T], result: T):
         future.set_result(result)
 
 
-def safe_set_exception(future: asyncio.Future, exception: Exception):
+def safe_set_exception(future: asyncio.Future, exception: BaseException):
     if not future.done():
         future.set_exception(exception)
 
@@ -120,7 +120,6 @@ class WriterQueue:
         "_loop",
         "_queue",
         "_sessionmaker",
-        "_stop_event",
         "_writer_task",
     )
 
@@ -139,8 +138,7 @@ class WriterQueue:
         self._engine = engine
         self._loop = loop or asyncio.get_event_loop()
         self._sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
-        self._queue: asyncio.Queue[WriteTask] = asyncio.Queue()
-        self._stop_event: asyncio.Event = asyncio.Event()
+        self._queue: asyncio.Queue[WriteTask | None] = asyncio.Queue()
         self._writer_task: asyncio.Task | None = None
 
     def start(self):
@@ -149,14 +147,16 @@ class WriterQueue:
         self._writer_task = asyncio.create_task(self._writer_task_fn())
 
     async def _writer_task_fn(self):
-        while not self._stop_event.is_set():
+        while True:
             try:
-                task = await asyncio.wait_for(self._queue.get(), timeout=0.2)
-            except asyncio.TimeoutError:
-                continue
+                task = await self._queue.get()
             except asyncio.QueueShutDown:
                 break
             else:
+                if task is None:
+                    self._queue.task_done()
+                    break
+
                 if task.future.done():  # weird, but okay
                     self._queue.task_done()
                     return
@@ -168,7 +168,7 @@ class WriterQueue:
                     else:
                         async with self._sessionmaker() as session:
                             result = await task.fn(session)
-                except Exception as e:  # noqa: BLE001
+                except BaseException as e:  # noqa: BLE001
                     task.future.get_loop().call_soon_threadsafe(
                         safe_set_exception, task.future, e
                     )
@@ -185,9 +185,9 @@ class WriterQueue:
         the provided :class:`AsyncEngine`.
         """
 
+        self._queue.put_nowait(None)
         self._queue.shutdown(immediate=False)
         await self._queue.join()
-        self._stop_event.set()
         await self._engine.dispose()
 
     def execute_fn[T](
