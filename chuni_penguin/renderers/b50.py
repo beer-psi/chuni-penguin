@@ -1,10 +1,9 @@
 import binascii
 from datetime import UTC, datetime
 from decimal import Decimal
-from io import BytesIO
 from math import ceil
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, Any
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
@@ -458,15 +457,18 @@ def _render_b30_entry(
 
 
 def render_b30(
+    *,
     player_name: str,
+    output: IO[bytes],
     records: "Sequence[Score]",
     record_slots: int = 30,
     new_records: "Sequence[Score] | None" = None,
     new_record_slots: int = 20,
     current_rating: float | None = None,
     user_config: "UserConfig | None" = None,
-    *,
     uncross_verse: bool = False,
+    output_format: str = "PNG",
+    output_params: dict[str, Any] | None = None,
 ):
     if len(records) > record_slots:
         msg = "More records provided than number of record slots"
@@ -644,10 +646,15 @@ def render_b30(
 
             _render_b30_entry(b30_image, record, i, x, y, user_config)
 
-    buffer = BytesIO()
+    if output_params is None:
+        output_params = {}
 
-    b30_image.save(buffer, "PNG", compress_level=3)
-    buffer.seek(0)
-    b30_image.close()
+    if (
+        output_format == "PNG"
+        and "optimize" not in output_params
+        and "compress_level" not in output_params
+    ):
+        output_params["compress_level"] = 3
 
-    return buffer
+    b30_image.save(output, output_format, **output_params)
+    output.seek(0)

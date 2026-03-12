@@ -88,7 +88,7 @@ from chuni_penguin.ui import (
     ScoreCardEmbed,
     SelectToCompareView,
 )
-from chuni_penguin.utils import floor_to_ndp
+from chuni_penguin.utils import AsyncTemporaryFile, floor_to_ndp
 from chuni_penguin.utils.formatting import bold, bold_if
 from chuni_penguin.utils.misc import Reversor
 
@@ -1154,26 +1154,30 @@ class RecordsCog(commands.Cog, name="Records"):
                 ctx.author.id, "chunithm-uncross-verse"
             )
 
-        b30_image = await asyncio.to_thread(
-            render_b30,
-            profile.username,
-            records=records,
-            record_slots=record_slots,
-            new_records=new_records,
-            new_record_slots=new_record_slots,
-            current_rating=current_rating,
-            user_config=user_config,
-            uncross_verse=uncross_verse,
-        )
-        generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+        async with AsyncTemporaryFile() as f:
+            await asyncio.to_thread(
+                render_b30,
+                player_name=profile.username,
+                output=f,
+                records=records,
+                record_slots=record_slots,
+                new_records=new_records,
+                new_record_slots=new_record_slots,
+                current_rating=current_rating,
+                user_config=user_config,
+                uncross_verse=uncross_verse,
+            )
 
-        await ctx.respond_or_edit(
-            files=[
-                discord.File(
-                    b30_image, filename=f"chuni-penguin-b50-{generation_timestamp}.png"
-                )
-            ],
-        )
+            generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+
+            await ctx.respond_or_edit(
+                files=[
+                    discord.File(
+                        f,
+                        filename=f"chuni-penguin-b50-{profile.username}-{generation_timestamp}.png",
+                    )
+                ],
+            )
 
     @flags.command("best50", aliases=["best30", "b30", "b50"])
     @flags.argument("-c", "--classic", action="store_true")

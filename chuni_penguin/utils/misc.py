@@ -1,9 +1,24 @@
+import asyncio
+import contextlib
 import decimal
+import io
+import tempfile
+from collections.abc import AsyncIterator
 from functools import total_ordering
-from typing import TypeVar
+from typing import IO, TYPE_CHECKING, Any, Literal, TypeVar, overload
 from zoneinfo import ZoneInfo
 
 from discord.ext.commands.view import StringView
+from discord.utils import MISSING
+
+if TYPE_CHECKING:
+    from _typeshed import (
+        OpenBinaryMode,
+        OpenBinaryModeReading,
+        OpenBinaryModeUpdating,
+        OpenBinaryModeWriting,
+        OpenTextMode,
+    )
 
 T = TypeVar("T", float | decimal.Decimal, decimal.Decimal, float, str, int)
 TOKYO_TZ = ZoneInfo("Asia/Tokyo")
@@ -69,3 +84,127 @@ class Reversor:
             return value.obj < self.obj  # pyright: ignore[reportOperatorIssue]
 
         return value < self.obj  # pyright: ignore[reportOperatorIssue]
+
+
+@overload
+@contextlib.asynccontextmanager
+def AsyncTemporaryFile(
+    mode: "OpenTextMode",
+    buffering: int = -1,
+    encoding: str | None = None,
+    newline: str | None = None,
+    suffix: str | None = None,
+    prefix: str | None = None,
+    dir: str | None = None,
+    *,
+    errors: str | None = None,
+) -> AsyncIterator[io.TextIOWrapper]: ...
+
+
+@overload
+@contextlib.asynccontextmanager
+def AsyncTemporaryFile(
+    mode: "OpenBinaryMode",
+    buffering: Literal[0],
+    encoding: str | None = None,
+    newline: str | None = None,
+    suffix: str | None = None,
+    prefix: str | None = None,
+    dir: str | None = None,
+    *,
+    errors: str | None = None,
+) -> AsyncIterator[io.FileIO]: ...
+
+
+@overload
+@contextlib.asynccontextmanager
+def AsyncTemporaryFile(
+    *,
+    buffering: Literal[0],
+    encoding: str | None = None,
+    newline: str | None = None,
+    suffix: str | None = None,
+    prefix: str | None = None,
+    dir: str | None = None,
+    errors: str | None = None,
+) -> AsyncIterator[io.FileIO]: ...
+
+
+@overload
+@contextlib.asynccontextmanager
+def AsyncTemporaryFile(
+    mode: "OpenBinaryModeWriting",
+    buffering: Literal[-1, 1] = -1,
+    encoding: str | None = None,
+    newline: str | None = None,
+    suffix: str | None = None,
+    prefix: str | None = None,
+    dir: str | None = None,
+    *,
+    errors: str | None = None,
+) -> AsyncIterator[io.BufferedWriter]: ...
+
+
+@overload
+@contextlib.asynccontextmanager
+def AsyncTemporaryFile(
+    mode: "OpenBinaryModeReading",
+    buffering: Literal[-1, 1] = -1,
+    encoding: str | None = None,
+    newline: str | None = None,
+    suffix: str | None = None,
+    prefix: str | None = None,
+    dir: str | None = None,
+    *,
+    errors: str | None = None,
+) -> AsyncIterator[io.BufferedReader]: ...
+
+
+@overload
+@contextlib.asynccontextmanager
+def AsyncTemporaryFile(
+    mode: "OpenBinaryModeUpdating" = "w+b",
+    buffering: Literal[-1, 1] = -1,
+    encoding: str | None = None,
+    newline: str | None = None,
+    suffix: str | None = None,
+    prefix: str | None = None,
+    dir: str | None = None,
+    *,
+    errors: str | None = None,
+) -> AsyncIterator[io.BufferedRandom]: ...
+
+
+@contextlib.asynccontextmanager
+async def AsyncTemporaryFile(
+    mode: "OpenTextMode | OpenBinaryMode" = "w+b",
+    buffering: int = -1,
+    encoding: str | None = None,
+    newline: str | None = None,
+    suffix: str | None = None,
+    prefix: str | None = None,
+    dir: str | None = None,
+    *,
+    errors: str | None = None,
+) -> AsyncIterator[IO[Any]]:
+    """
+    A :class:`tempfile.TemporaryFile` that is opened and closed asynchronously.
+    """
+
+    fp = await asyncio.to_thread(
+        tempfile.TemporaryFile,
+        mode,
+        buffering,
+        encoding,
+        newline,
+        suffix,
+        prefix,
+        dir,
+        errors=errors,
+    )
+
+    try:
+        yield fp
+    finally:
+        if fp is not MISSING:
+            await asyncio.to_thread(fp.close)

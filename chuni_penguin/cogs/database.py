@@ -146,14 +146,16 @@ class WriterQueue:
     def start(self):
         """Starts the background task handling queued writes."""
 
-        self._writer_task = asyncio.create_task(self._task())
+        self._writer_task = asyncio.create_task(self._writer_task_fn())
 
-    async def _task(self):
+    async def _writer_task_fn(self):
         while not self._stop_event.is_set():
             try:
                 task = await asyncio.wait_for(self._queue.get(), timeout=0.2)
             except asyncio.TimeoutError:
                 continue
+            except asyncio.QueueShutDown:
+                break
             else:
                 if task.future.done():  # weird, but okay
                     self._queue.task_done()
