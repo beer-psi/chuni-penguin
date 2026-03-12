@@ -2,6 +2,7 @@
 import asyncio
 import itertools
 import random
+from contextlib import closing
 from decimal import Decimal
 from io import BytesIO
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
@@ -58,33 +59,51 @@ def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
         Image.open(BytesIO(bar)) as bar_img,
     ):
         if bg_img.mode != "RGBA":
-            bg_img = bg_img.convert("RGBA")
+            bg_img_new = bg_img.convert("RGBA")
+            bg_img.close()
+            bg_img = bg_img_new
 
         if data_img.mode != "RGBA":
-            data_img = data_img.convert("RGBA")
+            data_img_new = data_img.convert("RGBA")
+            data_img.close()
+            data_img = data_img_new
 
         if bar_img.mode != "RGBA":
-            bar_img = bar_img.convert("RGBA")
+            bar_img_new = bar_img.convert("RGBA")
+            bar_img.close()
+            bar_img = bar_img_new
 
-        background = Image.new("RGBA", bg_img.size, (0, 0, 0, 255))
-        result = Image.alpha_composite(background, bg_img)
+        with (
+            closing(Image.new("RGBA", bg_img.size, (0, 0, 0, 255))) as background,
+            closing(bg_img),
+        ):
+            result = Image.alpha_composite(background, bg_img)
 
         if data_img.size != bg_img.size:
             container = Image.new("RGBA", bg_img.size, (0, 0, 0, 0))
             container.paste(data_img, (0, 0), data_img)
+            data_img.close()
             data_img = container
 
-        result = Image.alpha_composite(result, data_img)
+        with closing(result), closing(data_img):
+            result = Image.alpha_composite(result, data_img)
 
         if bar_img.size != bg_img.size:
             container = Image.new("RGBA", bg_img.size, (0, 0, 0, 0))
             container.paste(bar_img, (0, 0), bar_img)
+            bar_img.close()
             bar_img = container
 
-        result = Image.alpha_composite(result, bar_img)
+        with closing(result), closing(bar_img):
+            result = Image.alpha_composite(result, bar_img)
 
         output = BytesIO()
-        result.convert("RGB").save(output, format="JPEG", quality=92)
+
+        with closing(result):
+            result_rgb = result.convert("RGB")
+
+            result_rgb.save(output, format="JPEG", quality=92)
+            result_rgb.close()
 
     output.seek(0)
 

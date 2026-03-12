@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import functools
 import io
 import re
@@ -300,17 +301,25 @@ class ProfileView(PenguinView):
                     ),
                 )
 
-                character = Image.open(io.BytesIO(character_resp.content))
-                charaframe = Image.open(io.BytesIO(charaframe_resp.content))
+                with (
+                    io.BytesIO(character_resp.content) as character_bio,
+                    io.BytesIO(charaframe_resp.content) as charaframe_bio,
+                    Image.open(character_bio) as character,
+                    Image.open(charaframe_bio) as charaframe,
+                ):
+                    with contextlib.closing(character):
+                        character = character.resize((87, 87), Image.Resampling.LANCZOS)
+                    with contextlib.closing(charaframe):
+                        charaframe = charaframe.resize(
+                            (98, 98), Image.Resampling.LANCZOS
+                        )
+                    with contextlib.closing(character):
+                        charaframe.paste(character, (6, 6), character)
 
-                character = character.resize((87, 87), Image.Resampling.LANCZOS)
-                charaframe = charaframe.resize((98, 98), Image.Resampling.LANCZOS)
-
-                charaframe.paste(character, (6, 6), character)
-
-                avatar = io.BytesIO()
-                charaframe.save(avatar, "WEBP", optimize=True)
-                avatar.seek(0)
+                    with contextlib.closing(charaframe):
+                        avatar = io.BytesIO()
+                        charaframe.save(avatar, "WEBP", optimize=True)
+                        avatar.seek(0)
 
                 files = [discord.File(avatar, filename="avatar.webp")]
                 embed.set_thumbnail(url="attachment://avatar.webp")

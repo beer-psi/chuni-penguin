@@ -1,3 +1,4 @@
+import asyncio
 import io
 from typing import TYPE_CHECKING, override
 
@@ -142,6 +143,6 @@ class ShowAnswerState(GuessingGameState):
             embed=embed,
             file=discord.File(self.answer_image, "image.webp"),
         )
-        self.answer_image.close()
+        await asyncio.to_thread(self.answer_image.close)
 
         return next_state

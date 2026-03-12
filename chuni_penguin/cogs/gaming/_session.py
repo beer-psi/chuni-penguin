@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import io
 import operator
 import random
@@ -7,6 +8,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from datetime import datetime
 from enum import Enum
 from functools import reduce
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import discord
@@ -363,6 +365,52 @@ class GuessingGameSession:
 
         return song, aliases
 
+    def _crop_question(self, jacket_path: Path, crop_width: int, crop_height: int):
+        with Image.open(jacket_path) as img:
+            x = self.random.randrange(0, img.width - crop_width)
+            y = self.random.randrange(0, img.height - crop_height)
+
+            with contextlib.closing(img):
+                img = img.crop((x, y, x + crop_width, y + crop_height))
+
+            if self.difficulty in {
+                Difficulty.expert,
+                Difficulty.master,
+                Difficulty.ultima,
+            }:
+                rotation = self.random.randrange(0, 4)
+
+                with contextlib.closing(img):
+                    img = img.rotate(90 * rotation)
+
+            if self.difficulty == Difficulty.ultima:
+                should_invert = self.random.random() < 0.5
+
+                if should_invert:
+                    with contextlib.closing(img):
+                        img = ImageOps.invert(img.convert("RGB"))
+
+            cropped_image_buffer = io.BytesIO()
+
+            img.save(cropped_image_buffer, format="WEBP", lossless=True)
+            img.close()
+            cropped_image_buffer.seek(0)
+
+        with Image.open(jacket_path) as img, contextlib.closing(img):
+            draw = ImageDraw.Draw(img)
+            draw.rectangle(
+                (x, y, x + crop_width, y + crop_height),
+                fill=None,
+                outline=(255, 0, 0),
+                width=3,
+            )
+
+            answer_image_buffer = io.BytesIO()
+            img.save(answer_image_buffer, format="WEBP", lossless=True)
+            answer_image_buffer.seek(0)
+
+        return cropped_image_buffer, answer_image_buffer
+
     async def get_image_question(self):
         # DANGER: this loops indefinitely if there are no assets filled. Consider
         # checking the assets for available audio/jackets instead of randomly
@@ -385,43 +433,9 @@ class GuessingGameSession:
             break
 
         crop_width, crop_height = self.get_crop_dimensions()
-
-        with Image.open(jacket_path) as img:
-            x = self.random.randrange(0, img.width - crop_width)
-            y = self.random.randrange(0, img.height - crop_height)
-
-            img = img.crop((x, y, x + crop_width, y + crop_height))
-
-            if self.difficulty in {
-                Difficulty.expert,
-                Difficulty.master,
-                Difficulty.ultima,
-            }:
-                rotation = self.random.randrange(0, 4)
-                img = img.rotate(90 * rotation)
-
-            if self.difficulty == Difficulty.ultima:
-                should_invert = self.random.random() < 0.5
-
-                if should_invert:
-                    img = ImageOps.invert(img.convert("RGB"))
-
-            cropped_image_buffer = io.BytesIO()
-            img.save(cropped_image_buffer, format="WEBP", lossless=True)
-            cropped_image_buffer.seek(0)
-
-        with Image.open(jacket_path) as img:
-            draw = ImageDraw.Draw(img)
-            draw.rectangle(
-                (x, y, x + crop_width, y + crop_height),
-                fill=None,
-                outline=(255, 0, 0),
-                width=3,
-            )
-
-            answer_image_buffer = io.BytesIO()
-            img.save(answer_image_buffer, format="WEBP", lossless=True)
-            answer_image_buffer.seek(0)
+        cropped_image_buffer, answer_image_buffer = await asyncio.to_thread(
+            self._crop_question, jacket_path, crop_width, crop_height
+        )
 
         return song, aliases, answer_image_buffer, cropped_image_buffer
 

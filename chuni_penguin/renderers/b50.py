@@ -1,4 +1,5 @@
 import binascii
+from contextlib import closing
 from datetime import UTC, datetime
 from decimal import Decimal
 from math import ceil
@@ -61,19 +62,25 @@ INVITE_LINK = "https://chunithm.beerpsi.cc/invite"
 
 def _make_background_image(file: Path, width: int, height: int):
     with Image.open(file) as im:
-        im = im.resize((im.width * height // im.height, height))
-        im = im.crop(
-            (
-                (im.width - width) / 2,
-                (im.height - height) / 2,
-                (im.width + width) / 2,
-                (im.height + height) / 2,
+        with closing(im):
+            im = im.resize((im.width * height // im.height, height))
+
+        with closing(im):
+            im = im.crop(
+                (
+                    (im.width - width) / 2,
+                    (im.height - height) / 2,
+                    (im.width + width) / 2,
+                    (im.height + height) / 2,
+                )
             )
-        )
-        im = im.filter(ImageFilter.GaussianBlur(5))
+
+        with closing(im):
+            im = im.filter(ImageFilter.GaussianBlur(5))
 
         if im.mode != "RGBA":
-            im = im.convert("RGBA")
+            with closing(im):
+                im = im.convert("RGBA")
 
     return im
 
@@ -83,13 +90,17 @@ def _paste_alpha_composite(
     im2: Image.Image,
     box: Image.Image | tuple[int, int] | tuple[int, int, int, int] | None = None,
 ):
-    if im1.mode != "RGBA":
-        im1 = im1.convert("RGBA")
+    im1_rgba = im1 if im1.mode == "RGBA" else im1.convert("RGBA")
 
-    im2_padded = Image.new("RGBA", im1.size)
-    im2_padded.paste(im2, box)
+    with closing(Image.new("RGBA", im1.size)) as im2_padded:
+        im2_padded.paste(im2, box)
 
-    return Image.alpha_composite(im1, im2_padded)
+        result = Image.alpha_composite(im1, im2_padded)
+
+        if im1.mode != "RGBA":
+            im1_rgba.close()
+
+        return result
 
 
 def _render_b30_template(
@@ -151,25 +162,33 @@ def _render_b30_template(
         b30_image_height += B30_OLD_NEW_SPACING + (B30_ENTRY_HEIGHT + 15) * new_row_num
 
     # draw background, copy so we can paste things on top of it
-    b30_image = _make_background_image(
-        ASSETS_DIR / "b50" / "b50_bg.webp", B30_IMAGE_WIDTH, b30_image_height
-    ).copy()
+    with closing(
+        _make_background_image(
+            ASSETS_DIR / "b50" / "b50_bg.webp", B30_IMAGE_WIDTH, b30_image_height
+        )
+    ) as im:
+        b30_image = im.copy()
 
     # draw background overlay
-    b30_overlay = _make_background_image(
-        ASSETS_DIR / "b50" / "b50_overlay.webp", b30_image.width, b30_image.height
-    )
-
-    b30_image_new = Image.alpha_composite(b30_image, b30_overlay)
-    b30_image.close()
-    b30_overlay.close()
-    b30_image = b30_image_new
+    with (
+        closing(b30_image),
+        closing(
+            _make_background_image(
+                ASSETS_DIR / "b50" / "b50_overlay.webp",
+                b30_image.width,
+                b30_image.height,
+            )
+        ) as b30_overlay,
+    ):
+        b30_image = Image.alpha_composite(b30_image, b30_overlay)
 
     # draw header overlay
-    with Image.open(ASSETS_DIR / "b50" / "b50_part_header.webp") as im:
-        b30_image_new = _paste_alpha_composite(b30_image, im, (0, 0))
-        b30_image.close()
-        b30_image = b30_image_new
+    with (
+        Image.open(ASSETS_DIR / "b50" / "b50_part_header.webp") as im,
+        closing(im),
+        closing(b30_image),
+    ):
+        b30_image = _paste_alpha_composite(b30_image, im, (0, 0))
 
     # draw logo
     if uncross_verse:
@@ -177,55 +196,64 @@ def _render_b30_template(
     else:
         logo_path = ASSETS_DIR / "b50" / "b50_logo.webp"
 
-    with Image.open(logo_path) as im:
-        b30_image_new = _paste_alpha_composite(
+    with Image.open(logo_path) as im, closing(im), closing(b30_image):
+        b30_image = _paste_alpha_composite(
             b30_image, im, (1442 + (400 - im.width) // 2, 10 + (289 - im.height) // 2)
         )
-        b30_image.close()
-        b30_image = b30_image_new
 
     # draw generated date overlay
-    with Image.open(ASSETS_DIR / "b50" / "b50_part_date.webp") as im:
-        b30_image_new = _paste_alpha_composite(b30_image, im, (1492, 310))
-        b30_image.close()
-        b30_image = b30_image_new
+    with (
+        Image.open(ASSETS_DIR / "b50" / "b50_part_date.webp") as im,
+        closing(im),
+        closing(b30_image),
+    ):
+        b30_image = _paste_alpha_composite(b30_image, im, (1492, 310))
 
     # draw semitransparent rectangles to darken footer
-    b30_semitransparent_base = Image.new("RGBA", b30_image.size)
-    b30_semitransparent_draw = ImageDraw.Draw(b30_semitransparent_base)
-    # draw footer separation line
-    b30_semitransparent_draw.rectangle(
-        (
-            0,
-            b30_image.height - B30_FOOTER_HEIGHT - 2,
-            b30_image.width,
-            b30_image.height - B30_FOOTER_HEIGHT,
-        ),
-        fill=(0, 0, 0, 200),
-    )
-    # darken footer
-    b30_semitransparent_draw.rectangle(
-        (0, b30_image.height - B30_FOOTER_HEIGHT, b30_image.width, b30_image.height),
-        fill=(0, 0, 0, 120),
-    )
+    with (
+        closing(b30_image),
+        closing(Image.new("RGBA", b30_image.size)) as b30_semitransparent_base,
+    ):
+        b30_semitransparent_draw = ImageDraw.Draw(b30_semitransparent_base)
+        # draw footer separation line
+        b30_semitransparent_draw.rectangle(
+            (
+                0,
+                b30_image.height - B30_FOOTER_HEIGHT - 2,
+                b30_image.width,
+                b30_image.height - B30_FOOTER_HEIGHT,
+            ),
+            fill=(0, 0, 0, 200),
+        )
+        # darken footer
+        b30_semitransparent_draw.rectangle(
+            (
+                0,
+                b30_image.height - B30_FOOTER_HEIGHT,
+                b30_image.width,
+                b30_image.height,
+            ),
+            fill=(0, 0, 0, 120),
+        )
 
-    # paste the darkened parts onto the image
-    b30_image_new = Image.alpha_composite(b30_image, b30_semitransparent_base)
-    b30_image.close()
-    b30_semitransparent_base.close()
-    b30_image = b30_image_new
+        # paste the darkened parts onto the image
+        b30_image = Image.alpha_composite(b30_image, b30_semitransparent_base)
 
     if new_record_slots is not None:
         # draw the "OLD CHARTS" and "NEW CHARTS" separators
-        with Image.open(ASSETS_DIR / "b50" / "b50_part_old.webp") as im:
-            b30_image_new = _paste_alpha_composite(b30_image, im, (0, 300))
-            b30_image.close()
-            b30_image = b30_image_new
+        with (
+            Image.open(ASSETS_DIR / "b50" / "b50_part_old.webp") as im,
+            closing(im),
+            closing(b30_image),
+        ):
+            b30_image = _paste_alpha_composite(b30_image, im, (0, 300))
 
-        with Image.open(ASSETS_DIR / "b50" / "b50_part_new.webp") as im:
-            b30_image_new = _paste_alpha_composite(b30_image, im, (0, 1870))
-            b30_image.close()
-            b30_image = b30_image_new
+        with (
+            Image.open(ASSETS_DIR / "b50" / "b50_part_new.webp") as im,
+            closing(im),
+            closing(b30_image),
+        ):
+            b30_image = _paste_alpha_composite(b30_image, im, (0, 1870))
 
     b30_draw = ImageDraw.Draw(b30_image)
 
@@ -296,7 +324,7 @@ def _render_b30_entry(
     )
 
     if prerendered_path.exists():
-        with Image.open(prerendered_path) as prerendered:
+        with Image.open(prerendered_path) as prerendered, closing(prerendered):
             b30_image.paste(prerendered, (x, y), prerendered)
     else:
         # draw the base image based on the difficulty
@@ -304,13 +332,13 @@ def _render_b30_entry(
             ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.webp"
         )
 
-        with Image.open(b30_base_image_path) as b30_base_image:
+        with Image.open(b30_base_image_path) as b30_base_image, closing(b30_base_image):
             b30_image.paste(b30_base_image, (x, y), b30_base_image)
 
         # we use try/catch on jacket processing to gracefully fail to a black image
         # if the jacket is missing or corrupted
         try:
-            with Image.open(jacket_path) as jacket:
+            with Image.open(jacket_path) as jacket, closing(jacket):
                 jacket = jacket.resize(
                     (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), Image.Resampling.LANCZOS
                 )
@@ -320,8 +348,8 @@ def _render_b30_entry(
             jacket = Image.new("RGB", (B30_JACKET_WIDTH, B30_JACKET_HEIGHT), 0)
 
         # draw the jacket art onto the card
-        b30_image.paste(jacket, (x + 10, y + 60))
-        jacket.close()
+        with closing(jacket):
+            b30_image.paste(jacket, (x + 10, y + 60))
 
     b30_draw = ImageDraw.Draw(b30_image)
 
@@ -560,10 +588,8 @@ def render_b30(
         )
         digit_path = ASSETS_DIR / "b50" / image_name
 
-        with Image.open(digit_path) as digit_im:
-            b30_image_new = _paste_alpha_composite(b30_image, digit_im, (digit_x, 58))
-            b30_image.close()
-            b30_image = b30_image_new
+        with Image.open(digit_path) as digit_im, closing(digit_im), closing(b30_image):
+            b30_image = _paste_alpha_composite(b30_image, digit_im, (digit_x, 58))
 
         digit_x += 40
 

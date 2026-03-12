@@ -17,7 +17,7 @@ from aiohttp import ClientSession, web
 from aiohttp.web import Application
 from async_lru import alru_cache
 from discord.ext import commands
-from discord.utils import oauth_url
+from discord.utils import MISSING, oauth_url
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy import select
 from sqlalchemy.dialects.sqlite import insert
@@ -155,18 +155,22 @@ async def kamaitachi_user_image(request: web.Request) -> web.Response:
 
     web_resp.headers["Cache-Control"] = "public, max-age=315360000"
     web_resp.headers["ETag"] = f'"{filename}"'
+    image: Image.Image = MISSING
 
     try:
         image = await asyncio.to_thread(Image.open, BytesIO(body))
     except UnidentifiedImageError:
         return web_resp
+    else:
+        if image.format is None:
+            return web_resp
 
-    if image.format is None:
+        web_resp.content_type = Image.MIME[image.format]
+
         return web_resp
-
-    web_resp.content_type = Image.MIME[image.format]
-
-    return web_resp
+    finally:
+        if image is not MISSING:
+            await asyncio.to_thread(image.close)
 
 
 @router.get("/invite")

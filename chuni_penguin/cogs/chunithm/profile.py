@@ -101,31 +101,48 @@ AVATAR_COORDS = {
 
 
 def render_avatar(items: dict[str, bytes]) -> BytesIO:
-    avatar = Image.open(BytesIO(items["base"]))
+    with (
+        BytesIO(items["base"]) as bio,
+        Image.open(bio) as avatar,
+        contextlib.closing(avatar),
+    ):
+        # crop out the USER AVATAR text at the top
+        avatar = avatar.crop((0, 20, avatar.width, avatar.height))
 
-    # crop out the USER AVATAR text at the top
-    avatar = avatar.crop((0, 20, avatar.width, avatar.height))
-
-    back = Image.open(BytesIO(items["back"]))
-
-    base_x = int((avatar.width - back.width) / 2)
-    avatar.paste(back, (base_x, 5), back)
+    with (
+        BytesIO(items["back"]) as bio,
+        Image.open(bio) as back,
+        contextlib.closing(back),
+    ):
+        base_x = (avatar.width - back.width) // 2
+        avatar.paste(back, (base_x, 5), back)
 
     for name, coords in AVATAR_COORDS.items():
-        image = Image.open(BytesIO(items[name]))
-        crop = image.crop(
-            (
-                coords.sx,
-                coords.sy,
-                coords.sx + coords.width,
-                coords.sy + coords.height,
-            )
-        ).rotate(coords.rotate, expand=True, resample=Image.Resampling.BICUBIC)
-        avatar.paste(crop, (base_x + coords.dx_offset, coords.dy), crop)
+        with BytesIO(items[name]) as bio, Image.open(bio) as image:
+            with contextlib.closing(image):
+                image = image.crop(
+                    (
+                        coords.sx,
+                        coords.sy,
+                        coords.sx + coords.width,
+                        coords.sy + coords.height,
+                    )
+                )
+
+            with contextlib.closing(image):
+                image = image.rotate(
+                    coords.rotate, expand=True, resample=Image.Resampling.BICUBIC
+                )
+
+            with contextlib.closing(image):
+                avatar.paste(image, (base_x + coords.dx_offset, coords.dy), image)
 
     buffer = BytesIO()
+
     avatar.save(buffer, "png", optimize=True)
+    avatar.close()
     buffer.seek(0)
+
     return buffer
 
 
