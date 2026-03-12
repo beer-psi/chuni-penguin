@@ -86,7 +86,9 @@ class DebugCog(*OPTIONAL_FEATURES, *STANDARD_FEATURES):
             raise commands.CommandError(msg)
 
         if not self._totp.verify(
-            view.modal.totp.value, for_time=view.modal.interaction.created_at
+            view.modal.totp.value,
+            for_time=view.modal.interaction.created_at,
+            valid_window=1,
         ):
             msg = "Invalid TOTP."
             raise commands.CommandError(msg)

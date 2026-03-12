@@ -3,7 +3,7 @@ from typing import override
 
 import discord
 from discord.ext.commands import Context
-from discord.utils import escape_markdown
+from discord.utils import escape_markdown, format_dt
 
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
@@ -85,7 +85,7 @@ class LeaderboardPageSource(ListPageSource):
                 description += f" (AJC: {record.ajc_count})"
 
             if record.achieved_at is not None:
-                description += f" ▸ <t:{int(record.achieved_at.timestamp())}:f>\n"
+                description += f" ▸ {format_dt(record.achieved_at, 'f')}\n"
             else:
                 description += "\n"
 
@@ -136,7 +136,7 @@ class LinkedGateLeaderboardPageSource(ListPageSource):
     ) -> FormatPageReturn:
         description = "\n".join(
             [
-                f"`{record.position: >3}` {record.player_name} ▸ {config.icons.icon(f'link_level_{record.link_level.name}', str(record.link_level))} ▸ <t:{int(record.achieved_at.timestamp())}:f>"
+                f"`{record.position: >3}` {record.player_name} ▸ {config.icons.icon(f'link_level_{record.link_level.name}', str(record.link_level))} ▸ {format_dt(record.achieved_at, 'f')}"
                 for record in page
             ]
         )

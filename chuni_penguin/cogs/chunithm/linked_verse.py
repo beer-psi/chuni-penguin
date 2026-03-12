@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Annotated, cast
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.utils import escape_markdown
+from discord.utils import escape_markdown, format_dt
 from sqlalchemy import func, select
 from sqlalchemy.orm import contains_eager, joinedload
 
@@ -36,8 +36,7 @@ def format_condition(condition: LinkedGateCondition):
     )
 
     if condition.end_date is not None:
-        ts = int(condition.end_date.timestamp())
-        result += f"\nLink LEVEL decreases at <t:{ts}:d> (<t:{ts}:R>)"
+        result += f"\nLink LEVEL decreases at {format_dt(condition.end_date, 'd')} ({format_dt(condition.end_date, 'R')})"
 
     return result
 

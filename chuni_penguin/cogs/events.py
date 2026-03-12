@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 import aiohttp
 import discord
 import httpx
-from discord import Webhook, app_commands
+from discord import DiscordServerError, Webhook, app_commands
 from discord.app_commands import AppCommandError
 from discord.ext import commands, songbird
 from discord.ext.commands import Context
@@ -219,7 +219,12 @@ class EventsCog(commands.Cog, name="Events"):
                 "```"
             )
 
-        if isinstance(
+        if isinstance(exc, DiscordServerError):
+            embed.description = "An internal server error occured in Discord's servers. This is not a problem with the bot."
+
+            embed.set_image(url=f"https://http.cat/{exc.code}.jpg")
+            embed.set_footer(text="Image from https://http.cat")
+        elif isinstance(
             exc, (commands.CommandOnCooldown, app_commands.CommandOnCooldown)
         ):
             embed.description = (

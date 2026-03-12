@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, override
 import discord.ui
 from discord import ButtonStyle, Interaction
 from discord.ext import commands
-from discord.utils import MISSING, escape_markdown
+from discord.utils import MISSING, escape_markdown, format_dt
 from PIL import Image
 
 from chuni_penguin.context import PenguinContext
@@ -262,9 +262,9 @@ class ProfileView(PenguinView):
             description_lines.append(f"▸ **{escape_markdown(k)}**: {v}")
 
         if self.profile.last_played is not None:
-            ts = int(self.profile.last_played.timestamp())
-
-            description_lines.append(f"▸ **Last played**: <t:{ts}:f> (<t:{ts}:R>)")
+            description_lines.append(
+                f"▸ **Last played**: {format_dt(self.profile.last_played, 'f')} ({format_dt(self.profile.last_played, 'R')})"
+            )
 
         embed.description = "\n".join(description_lines)
 
