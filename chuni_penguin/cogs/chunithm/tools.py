@@ -1010,12 +1010,37 @@ class ToolsCog(commands.Cog, name="Tools"):
                 return
 
             song = chart.song
-
             chart_display_name = f"{escape_markdown(song.title)} [{difficulty} {chart.const or chart.level}]"
+            yt_url = yt_search_link(song.title, chart.difficulty)
+
+            if len(yt_url) > 512:
+                yt_url = (
+                    f"{config.web.base_url}/youtube/{song.id}/{chart.difficulty}"
+                    if config.web.is_accessible
+                    else None
+                )
 
             if chart.sdvxin_chart_view is None:
-                msg = f"Chart view is not available for {chart_display_name} yet. Please try again later."
-                raise commands.CommandError(msg)
+                embed = discord.Embed(
+                    color=discord.Color.red(),
+                    title="Error",
+                    description=f"Chart view is not available for {chart_display_name} yet. Please try again later.",
+                )
+
+                if yt_url is not None:
+                    view = discord.ui.View(timeout=None)
+                    view.add_item(
+                        discord.ui.Button(
+                            style=discord.ButtonStyle.link,
+                            label="Search on YouTube",
+                            url=yt_url,
+                        )
+                    )
+                else:
+                    view = None
+
+                await ctx.respond_or_edit(embed=embed, view=view)
+                return
 
             sdvxin_id = chart.sdvxin_chart_view.id
 
@@ -1112,14 +1137,6 @@ class ToolsCog(commands.Cog, name="Tools"):
                     url=sdvxin_link(chart.sdvxin_chart_view),
                 )
             )
-            yt_url = yt_search_link(song.title, chart.difficulty)
-
-            if len(yt_url) > 512:
-                yt_url = (
-                    f"{config.web.base_url}/youtube/{song.id}/{chart.difficulty}"
-                    if config.web.is_accessible
-                    else None
-                )
 
             if yt_url is not None:
                 action_row.add_item(

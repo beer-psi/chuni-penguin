@@ -128,12 +128,11 @@ def _render_b30_template(
     cached_file = CACHE_DIR / "b50" / f"template_{cache_key}.webp"
 
     if cached_file.exists():
-        im = Image.open(cached_file)
+        with Image.open(cached_file) as im:
+            if im.mode != "RGBA":
+                im = im.convert("RGBA")
 
-        if im.mode != "RGBA":
-            im = im.convert("RGBA")
-
-        return im
+            return im
 
     row_num = ceil(record_slots / 5)
 
@@ -657,4 +656,5 @@ def render_b30(
         output_params["compress_level"] = 3
 
     b30_image.save(output, output_format, **output_params)
+    b30_image.close()
     output.seek(0)
