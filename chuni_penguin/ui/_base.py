@@ -8,6 +8,7 @@ from typing import (
     NotRequired,
     TypedDict,
     TypeVar,
+    cast,
     override,
 )
 
@@ -17,6 +18,7 @@ from chuni_penguin.config import config
 from chuni_penguin.logging import logger
 
 if TYPE_CHECKING:
+    from chuni_penguin.cogs.events import EventsCog
     from chuni_penguin.context import PenguinContext
 
 ContextT = TypeVar("ContextT", bound="PenguinContext", covariant=True)
@@ -112,6 +114,19 @@ class PenguinViewMixin(Generic[ContextT]):
         if isinstance(error, discord.NotFound):
             return
 
+        events_cog = cast("EventsCog | None", interaction.client.get_cog("Events"))
+
+        if events_cog is not None:
+            embed, _ = await events_cog._construct_error_embed(interaction, None, error)  # pyright: ignore[reportArgumentType]
+
+            if embed.description is not None:
+                if interaction.response.is_done():
+                    await interaction.followup.send(embed=embed, ephemeral=True)
+                else:
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+                return
+
         await logger.aexception(
             "Unhandled view error", tag="view_error", exc_info=error
         )
@@ -141,6 +156,9 @@ class PenguinViewMixin(Generic[ContextT]):
             await interaction.followup.send(embed=embed, ephemeral=True)
         else:
             await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        if events_cog is not None:
+            await events_cog._submit_error_to_webhook(interaction, error)
 
     async def edit_message(self, interaction: discord.Interaction, **kwargs: Any):
         if interaction.response.is_done() and self.message is not None:
