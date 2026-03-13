@@ -79,6 +79,13 @@ class ChuniBot(commands.AutoShardedBot):
         _BotBase__cogs: dict[str, commands.Cog]
 
     def __init__(self):
+        # Intents explanation:
+        # - Guilds: needed for basically anything and the library does not recommend
+        # turning it off
+        # - Voice states: Needed for c>guess voice and c>radio to handle bot moves, and
+        # to detect what VC the user is in
+        # - Messages/message content: Prefix command handling
+        # - Typing: c>guess activity detection
         super().__init__(
             command_prefix=guild_specific_prefix(config.bot.default_prefix),
             tree_cls=PenguinCommandTree,

@@ -1,6 +1,8 @@
 import asyncio
 import binascii
+import contextlib
 import struct
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, override
 
 import discord
@@ -9,6 +11,7 @@ from discord.app_commands import CommandTree
 
 from chuni_penguin.config import config
 from chuni_penguin.database import Denylist
+from chuni_penguin.logging import logger
 from chuni_penguin.ui.components import BannedEmbed
 
 if TYPE_CHECKING:
@@ -39,6 +42,26 @@ class PenguinCommandTree(CommandTree["ChuniBot"]):
     async def interaction_check(
         self, interaction: discord.Interaction["ChuniBot"], /
     ) -> bool:
+        delta = datetime.now(UTC) - interaction.created_at
+
+        if delta.total_seconds() >= 2.8:
+            await logger.awarning(
+                "Ignoring interaction, running late.",
+                tag="interaction_ignore_high_latency",
+                interaction_id=interaction.id,
+                latency=delta.total_seconds(),
+            )
+            return False
+
+        if not interaction.client.is_ready():
+            if interaction.type != discord.InteractionType.autocomplete:
+                with contextlib.suppress(discord.NotFound):
+                    await interaction.response.send_message(
+                        "The bot is currently starting, please wait...", ephemeral=True
+                    )
+
+            return False
+
         if await interaction.client.is_owner(interaction.user):
             return True
 

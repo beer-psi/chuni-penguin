@@ -24,6 +24,7 @@ from chuni_penguin.networks.errors import (
     InvalidFriendCode,
     MaintenanceError,
     NetworkError,
+    NoCardsRegistered,
 )
 
 if TYPE_CHECKING:
@@ -105,7 +106,10 @@ class EventsCog(commands.Cog, name="Events"):
         while hasattr(exc, "original"):
             exc = cast(Exception, exc.original)
 
-        if isinstance(exc, (commands.CommandNotFound, discord.NotFound)):
+        if isinstance(
+            exc,
+            (commands.CommandNotFound, app_commands.CommandNotFound, discord.NotFound),
+        ):
             return
 
         embed, delete_after = await self._construct_error_embed(
@@ -181,157 +185,177 @@ class EventsCog(commands.Cog, name="Events"):
                 context_or_interaction.clean_prefix or config.bot.default_prefix
             )
 
-        if isinstance(exc, MaintenanceError):
-            embed.description = "CHUNITHM-NET is currently undergoing maintenance. Please try again later."
-        elif isinstance(exc, ChuniNetError):
-            embed.description = f"CHUNITHM-NET error {exc.code}: {exc.description}"
-        elif isinstance(exc, AuthenticationError):
-            embed.description = (
-                f"The token has expired. Please log in again with `{prefix}login` in my DMs.\n"
-                "\n"
-                "To prevent being logged out constantly:\n"
-                "- Don't quickly switch between using the bot and visiting CHUNITHM-NET directly\n"
-                "- Log in using a separate incognito session\n"
-                "- Use SEGA ID instead of social media login (especially Twitter)"
-            )
-        elif isinstance(exc, InvalidFriendCode):
-            embed.description = "Could not find anyone with this friend code. Please double-check and try again."
-        elif isinstance(exc, HTTPError):
-            if exc.text is not None:
-                displayed_error = f"`{exc.code} {exc.text}`"
-            else:
-                displayed_error = f"`{exc.code}`"
-
-            embed.description = f"An HTTP error occured while communicating with the network: {displayed_error}"
-
-            if exc.code >= 500:
-                embed.description += "\nThis is likely not a problem with the bot."
-
-            embed.set_image(url=f"https://http.cat/{exc.code}.jpg")
-            embed.set_footer(text="Image from https://http.cat")
-        elif isinstance(exc, NetworkError):
-            embed.description = (
-                "An error occurred while communicating with the network. Please try again later (or re-login).\n"
-                "\n"
-                "Detailed error:\n"
-                "```python\n"
-                f"{traceback.format_exception_only(exc)}\n"
-                "```"
-            )
-
-        if isinstance(exc, DiscordServerError):
-            embed.description = "An internal server error occured in Discord's servers. This is not a problem with the bot."
-
-            embed.set_image(url=f"https://http.cat/{exc.code}.jpg")
-            embed.set_footer(text="Image from https://http.cat")
-        elif isinstance(
-            exc, (commands.CommandOnCooldown, app_commands.CommandOnCooldown)
-        ):
-            embed.description = (
-                f"You're too fast. Take a break for {exc.retry_after:.2f} seconds."
-            )
-            delete_after = exc.retry_after
-        elif isinstance(exc, commands.errors.ExpectedClosingQuoteError):
-            embed.description = "You're missing a quote somewhere. Perhaps you're using the wrong kind of quote (`\"` vs `”`)?"
-        elif isinstance(exc, commands.errors.UnexpectedQuoteError):
-            embed.description = (
-                f"Unexpected quote mark, {exc.quote!r}, in non-quoted string. If this was intentional, "
-                "escape the quote with a backslash (\\\\)."
-            )
-        elif isinstance(exc, commands.errors.InvalidEndOfQuotedStringError):
-            embed.description = str(exc)
-        elif isinstance(exc, CommandDisabled):
-            embed.description = str(exc)
-            delete_after = 5
-        elif isinstance(
-            exc,
-            (
-                commands.NotOwner,
-                commands.MissingPermissions,
-                app_commands.MissingPermissions,
-            ),
-        ):
-            embed.description = "Insufficient permissions."
-        elif isinstance(exc, commands.RangeError):
-            embed.description = (
-                str(exc)
-                + "\n"
-                + f"View help for this command with `{text_prefix}help {command_name}`."
-            )
-
-            if (
-                isinstance(context_or_interaction, Context)
-                and (parameter := context_or_interaction.current_parameter) is not None
-            ):
-                embed.description = embed.description.replace(
-                    "value", f"`{parameter.displayed_name or parameter.name}`", 1
+        match exc:
+            # Network adapter errors
+            case MaintenanceError():
+                embed.description = "CHUNITHM-NET is currently undergoing maintenance. Please try again later."
+            case ChuniNetError():
+                embed.description = f"CHUNITHM-NET error {exc.code}: {exc.description}"
+            case NoCardsRegistered():
+                embed.description = str(exc)
+            case AuthenticationError():
+                embed.description = (
+                    f"The token has expired. Please log in again with `{prefix}login` in my DMs.\n"
+                    "\n"
+                    "To prevent being logged out constantly:\n"
+                    "- Don't quickly switch between using the bot and visiting CHUNITHM-NET directly\n"
+                    "- Log in using a separate incognito session\n"
+                    "- Use SEGA ID instead of social media login (especially Twitter)"
                 )
-        elif isinstance(exc, commands.BadLiteralArgument):
-            to_string = [repr(x) for x in exc.literals]
-            if len(to_string) > 2:
-                fmt = "{}, or {}".format(", ".join(to_string[:-1]), to_string[-1])
-            else:
-                fmt = " or ".join(to_string)
-            embed.description = (
-                f"`{exc.param.displayed_name or exc.param.name}` must be one of {fmt}, received {exc.argument!r}\n"
-                f"View help for this command with `{text_prefix}help {command_name}`."
-            )
-        elif isinstance(exc, commands.BadArgument):
-            embed.description = (
-                f"Bad argument: {exc!s}\n"
-                f"View help for this command with `{text_prefix}help {command_name}`."
-            )
-        elif isinstance(exc, commands.MissingRequiredArgument):
-            embed.description = (
-                f"Missing required argument: `{exc.param.displayed_name or exc.param.name}`\n"
-                f"View help for this command with `{text_prefix}help {command_name}`."
-            )
-        elif isinstance(
-            exc, (commands.BotMissingPermissions, app_commands.BotMissingPermissions)
-        ):
-            missing = [
-                f"- {p.replace('_', ' ').replace('guild', 'server').title()}"
-                for p in exc.missing_permissions
-            ]
-            embed.description = (
-                f"I need the following permissions to run this command:\n"
-                f"{'\n'.join(missing)}\n"
-                "Please fix this and try again."
-            )
-        elif isinstance(
-            exc, (commands.CommandError, app_commands.AppCommandError)
-        ) and not isinstance(
-            exc,
-            (
-                commands.CommandNotFound,
-                commands.ConversionError,
-                app_commands.CommandNotFound,
-                app_commands.TransformerError,
-            ),
-        ):
-            embed.description = str(exc)
-        elif isinstance(exc, songbird.SongbirdError):
-            if (
-                context_or_interaction.guild is not None
-                and (voice := context_or_interaction.guild.voice_client) is not None
-            ):
-                with contextlib.suppress(songbird.SongbirdError):
-                    await voice.disconnect(force=True)
+            case InvalidFriendCode():
+                embed.description = "Could not find anyone with this friend code. Please double-check and try again."
+            case HTTPError():
+                if exc.text is not None:
+                    displayed_error = f"`{exc.code} {exc.text}`"
+                else:
+                    displayed_error = f"`{exc.code}`"
 
-            embed.description = f"Voice error: {exc!s}"
-        elif isinstance(
-            exc, (httpx.TimeoutException, aiohttp.ServerTimeoutError, TimeoutError)
-        ):
-            embed.description = "Timed out trying to connect to the network."
-        elif isinstance(exc, (httpx.TransportError, aiohttp.ClientConnectionError)):
-            embed.description = (
-                "An unknown network error occured trying to connect to the network.\n"
-                "\n"
-                "Detailed error:\n"
-                "```python\n"
-                f"{traceback.format_exception_only(exc)}\n"
-                "```"
-            )
+                embed.description = f"An HTTP error occured while communicating with the network: {displayed_error}"
+
+                if exc.code >= 500:
+                    embed.description += "\nThis is likely not a problem with the bot."
+
+                embed.set_image(url=f"https://http.cat/{exc.code}.jpg")
+                embed.set_footer(text="Image from https://http.cat")
+            case NetworkError():
+                embed.description = (
+                    "An error occurred while communicating with the network. Please try again later (or re-login).\n"
+                    "\n"
+                    "Detailed error:\n"
+                    "```python\n"
+                    f"{traceback.format_exception_only(exc)}\n"
+                    "```"
+                )
+
+            # Discord HTTP errors
+            case DiscordServerError():
+                embed.description = "An error occured in Discord's servers. This is not a problem with the bot."
+
+                embed.set_image(url=f"https://http.cat/{exc.code}.jpg")
+                embed.set_footer(text="Image from https://http.cat")
+            case discord.Forbidden():
+                embed.description = "The bot is missing permissions to do something."
+                await logger.awarning(
+                    "missing permissions",
+                    tag="missing_permissions",
+                    command=command_name,
+                    exc_info=exc,
+                )
+
+            # User input errors
+            case commands.ExpectedClosingQuoteError():
+                embed.description = "You're missing a quote somewhere. Perhaps you're using the wrong kind of quote (`\"` vs `”`)?"
+            case commands.UnexpectedQuoteError():
+                embed.description = (
+                    f"Unexpected quote mark, {exc.quote!r}, in non-quoted string. If this was intentional, "
+                    "escape the quote with a backslash (\\\\)."
+                )
+            case commands.InvalidEndOfQuotedStringError():
+                embed.description = str(exc)
+            case commands.RangeError():
+                embed.description = (
+                    str(exc)
+                    + "\n"
+                    + f"View help for this command with `{text_prefix}help {command_name}`."
+                )
+
+                if (
+                    isinstance(context_or_interaction, Context)
+                    and (parameter := context_or_interaction.current_parameter)
+                    is not None
+                ):
+                    embed.description = embed.description.replace(
+                        "value", f"`{parameter.displayed_name or parameter.name}`", 1
+                    )
+            case commands.BadLiteralArgument():
+                to_string = [repr(x) for x in exc.literals]
+                if len(to_string) > 2:
+                    fmt = "{}, or {}".format(", ".join(to_string[:-1]), to_string[-1])
+                else:
+                    fmt = " or ".join(to_string)
+                embed.description = (
+                    f"`{exc.param.displayed_name or exc.param.name}` must be one of {fmt}, received {exc.argument!r}\n"
+                    f"View help for this command with `{text_prefix}help {command_name}`."
+                )
+            case commands.BadArgument():
+                embed.description = (
+                    f"Bad argument: {exc!s}\n"
+                    f"View help for this command with `{text_prefix}help {command_name}`."
+                )
+            case commands.MissingRequiredArgument():
+                embed.description = (
+                    f"Missing required argument: `{exc.param.displayed_name or exc.param.name}`\n"
+                    f"View help for this command with `{text_prefix}help {command_name}`."
+                )
+
+            # Check failures
+            case CommandDisabled():
+                embed.description = str(exc)
+                delete_after = 5
+            case (
+                commands.NotOwner()
+                | commands.MissingPermissions()
+                | app_commands.MissingPermissions()
+            ):
+                embed.description = "Insufficient permissions."
+                delete_after = 5
+            case (
+                commands.BotMissingPermissions() | app_commands.BotMissingPermissions()
+            ):
+                missing = [
+                    f"- {p.replace('_', ' ').replace('guild', 'server').title()}"
+                    for p in exc.missing_permissions
+                ]
+                embed.description = (
+                    f"I need the following permissions to run this command:\n"
+                    f"{'\n'.join(missing)}\n"
+                    "Please fix this and try again."
+                )
+            case commands.CheckFailure() | app_commands.CheckFailure():
+                embed.description = "You are not allowed to use this command."
+                delete_after = 5
+
+            # Generic command errors
+            case commands.CommandOnCooldown() | app_commands.CommandOnCooldown():
+                embed.description = (
+                    f"You're too fast. Take a break for {exc.retry_after:.2f} seconds."
+                )
+                delete_after = exc.retry_after
+            case commands.ConversionError() | app_commands.TransformerError():
+                await logger.aerror(
+                    "unhandled conversion error",
+                    tag="error_converter_transformer",
+                    exc_info=exc,
+                )
+                embed.description = "One of the arguments provided cannot be parsed."
+            case commands.CommandError() | app_commands.AppCommandError():
+                embed.description = str(exc)
+
+            # Non-Discord errors
+            case songbird.SongbirdError():
+                if (
+                    context_or_interaction.guild is not None
+                    and (voice := context_or_interaction.guild.voice_client) is not None
+                ):
+                    with contextlib.suppress(songbird.SongbirdError):
+                        await voice.disconnect(force=True)
+
+                await logger.aerror("voice error", tag="error_voice", exc_info=exc)
+                embed.description = f"Voice error: {exc!s}"
+
+            case (
+                httpx.TimeoutException() | aiohttp.ServerTimeoutError() | TimeoutError()
+            ):
+                embed.description = "Timed out trying to connect to the network."
+            case httpx.TransportError() | aiohttp.ClientConnectionError():
+                embed.description = (
+                    "An unknown network error occured trying to connect to the network.\n"
+                    "\n"
+                    "Detailed error:\n"
+                    "```python\n"
+                    f"{traceback.format_exception_only(exc)}\n"
+                    "```"
+                )
 
         return embed, delete_after
 
