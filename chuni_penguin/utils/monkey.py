@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import asyncio
-    from typing import Any
 
     import aiohttp
     from discord.types.gateway import SessionStartLimit
@@ -39,7 +38,7 @@ def patch_http_use_proxy(proxy: str):
 
 
 def patch_gateway_use_proxy(proxy: str):
-    import time
+    import sys
 
     import discord.client
     import discord.errors
@@ -71,7 +70,6 @@ def patch_gateway_use_proxy(proxy: str):
 
     original_init = discord.gateway.DiscordWebSocket.__init__
     original_from_client = discord.gateway.DiscordWebSocket.from_client
-    original_send_as_json = discord.gateway.DiscordWebSocket.send_as_json
 
     class TransparentCompressionContext:
         COMPRESSION_TYPE = None
@@ -79,15 +77,7 @@ def patch_gateway_use_proxy(proxy: str):
         def decompress(self, data: bytes, /) -> str | None:
             return data.decode("utf-8")
 
-    class SilentKeepAliveHandler(discord.gateway.KeepAliveHandler):
-        def ack(self) -> None:
-            ack_time = time.perf_counter()
-            self._last_ack = ack_time
-            self.latency = ack_time - self._last_send
-
     class ProxiedDiscordWebSocket(discord.gateway.DiscordWebSocket):
-        DEFAULT_GATEWAY = yarl.URL(proxy)
-
         def __init__(
             self,
             socket: "aiohttp.ClientWebSocketResponse",
@@ -98,57 +88,62 @@ def patch_gateway_use_proxy(proxy: str):
             self._decompressor = TransparentCompressionContext()
 
         @classmethod
-        async def from_client(
-            cls,
-            client: discord.client.Client,
-            *,
-            initial: bool = False,
-            gateway: yarl.URL | None = None,
-            shard_id: int | None = None,
-            session: str | None = None,
-            sequence: int | None = None,
-            resume: bool = False,
-            encoding: str = "json",
-            compress: bool = False,
-        ):
-            return await original_from_client(
-                client,
-                initial=initial,
-                gateway=gateway,
-                shard_id=shard_id,
-                session=session,
-                sequence=sequence,
-                resume=resume,
-                encoding=encoding,
-                compress=False,  # gateway-proxy doesn't like compression
+        def from_client(cls, *args, **kwargs):
+            kwargs["compress"] = False
+
+            return original_from_client(*args, **kwargs)
+
+        async def identify(self) -> None:
+            from discord.gateway import _log
+
+            """Sends the IDENTIFY packet."""
+            payload = {
+                "op": self.IDENTIFY,
+                "d": {
+                    "token": self.token,
+                    "properties": {
+                        "os": sys.platform,
+                        "browser": "discord.py",
+                        "device": "discord.py",
+                    },
+                    "compress": False,  # disable compression in gateway-proxy too
+                    "large_threshold": 250,
+                },
+            }
+
+            if self.shard_id is not None and self.shard_count is not None:
+                payload["d"]["shard"] = [self.shard_id, self.shard_count]
+
+            state = self._connection
+            if state._activity is not None or state._status is not None:
+                payload["d"]["presence"] = {
+                    "status": state._status,
+                    "game": state._activity,
+                    "since": 0,
+                    "afk": False,
+                }
+
+            if state._intents is not None:
+                payload["d"]["intents"] = state._intents.value
+
+            await self.call_hooks(
+                "before_identify", self.shard_id, initial=self._initial_identify
             )
-
-        def is_ratelimited(self) -> bool:
-            return False
-
-        async def send_as_json(self, data: "Any") -> None:
-            try:
-                if data["op"] == self.IDENTIFY:
-                    data["d"]["compress"] = False
-            except KeyError:
-                pass
-
-            return await original_send_as_json(self, data)
+            await self.send_as_json(payload)
+            _log.debug("Shard ID %s has sent the IDENTIFY payload.", self.shard_id)
 
     discord.client.Client.before_identify_hook = ProxiedClient.before_identify_hook
     discord.client.Client.is_ws_ratelimited = ProxiedClient.is_ws_ratelimited
+
     discord.http.HTTPClient.get_bot_gateway = ProxiedHTTPClient.get_bot_gateway
+
     discord.gateway.GatewayRatelimiter.block = ProxiedGatewayRatelimiter.block
-    discord.gateway.KeepAliveHandler.ack = SilentKeepAliveHandler.ack
-    discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = (
-        ProxiedDiscordWebSocket.DEFAULT_GATEWAY
-    )
+
+    discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = yarl.URL(proxy)
     discord.gateway.DiscordWebSocket.__init__ = ProxiedDiscordWebSocket.__init__
     discord.gateway.DiscordWebSocket.from_client = ProxiedDiscordWebSocket.from_client
-    discord.gateway.DiscordWebSocket.is_ratelimited = (
-        ProxiedDiscordWebSocket.is_ratelimited
-    )
-    discord.gateway.DiscordWebSocket.send_as_json = ProxiedDiscordWebSocket.send_as_json
+    discord.gateway.DiscordWebSocket.is_ratelimited = lambda self: False
+    discord.gateway.DiscordWebSocket.identify = ProxiedDiscordWebSocket.identify
 
 
 def patch_all():

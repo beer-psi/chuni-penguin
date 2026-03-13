@@ -495,7 +495,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     return len(image_urls) > 0
 
-                messages = [x async for x in ctx.channel.history(limit=50) if check(x)]
+                message = await discord.utils.find(check, ctx.channel.history(limit=50))
             except discord.errors.Forbidden as e:
                 msg = "Bot requires the Read Message History permission to fetch recent scores."
 
@@ -504,11 +504,9 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 raise commands.CheckFailure(msg) from e
 
-            if len(messages) == 0:
+            if message is None:
                 msg = "No recent scores found."
                 raise commands.CommandError(msg)
-
-            message = messages[0]
 
         await self._compare_from_message(
             ctx,
