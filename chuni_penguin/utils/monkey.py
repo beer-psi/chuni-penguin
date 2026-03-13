@@ -38,14 +38,18 @@ def patch_http_use_proxy(proxy: str):
 
 
 def patch_gateway_use_proxy(proxy: str):
+    import asyncio
+    import concurrent.futures
     import sys
     import time
+    import traceback
 
     import discord.client
     import discord.errors
     import discord.gateway
     import discord.http
     import yarl
+    from discord.gateway import _log as _gateway_logger
 
     class ProxiedClient(discord.client.Client):
         async def before_identify_hook(
@@ -69,20 +73,78 @@ def patch_gateway_use_proxy(proxy: str):
         async def block(self) -> None:
             pass
 
-    original_init = discord.gateway.DiscordWebSocket.__init__
-    original_from_client = discord.gateway.DiscordWebSocket.from_client
-
     class TransparentCompressionContext:
         COMPRESSION_TYPE = None
 
         def decompress(self, data: bytes, /) -> str | None:
             return data.decode("utf-8")
 
-    class SilentKeepAliveHandler(discord.gateway.KeepAliveHandler):
-        def ack(self) -> None:
-            ack_time = time.perf_counter()
-            self._last_ack = ack_time
-            self.latency = ack_time - self._last_send
+    class KeepAliveHandler(discord.gateway.KeepAliveHandler):
+        def _heartbeat_send_done_callback(
+            self, future: concurrent.futures.Future[None]
+        ):
+            try:
+                if future.exception() is None:
+                    self._last_send = time.perf_counter()
+            except concurrent.futures.CancelledError:
+                pass
+
+        def run(self) -> None:
+            while not self._stop_ev.wait(self.interval):
+                if self._last_recv + self.heartbeat_timeout < time.perf_counter():
+                    _gateway_logger.warning(
+                        "Shard ID %s has stopped responding to the gateway. Closing and restarting.",
+                        self.shard_id,
+                    )
+                    coro = self.ws.close(4000)
+                    f = asyncio.run_coroutine_threadsafe(coro, loop=self.ws.loop)
+
+                    try:
+                        f.result()
+                    except Exception:  # noqa: BLE001
+                        _gateway_logger.exception(
+                            "An error occurred while stopping the gateway. Ignoring."
+                        )
+                    except BaseException as exc:  # noqa: BLE001
+                        _gateway_logger.debug(
+                            "A BaseException was raised while stopping the gateway",
+                            exc_info=exc,
+                        )
+                    finally:
+                        self.stop()
+                    return
+
+                data = self.get_payload()
+
+                _gateway_logger.debug(self.msg, self.shard_id, data["d"])
+
+                coro = self.ws.send_heartbeat(data)
+                f = asyncio.run_coroutine_threadsafe(coro, loop=self.ws.loop)
+
+                f.add_done_callback(self._heartbeat_send_done_callback)
+                try:
+                    # block until sending is complete
+                    total = 0
+                    while True:
+                        try:
+                            f.result(10)
+                            break
+                        except concurrent.futures.TimeoutError:
+                            total += 10
+                            try:
+                                frame = sys._current_frames()[self._main_thread_id]
+                            except KeyError:
+                                msg = self.block_msg
+                            else:
+                                stack = "".join(traceback.format_stack(frame))
+                                msg = f"{self.block_msg}\nLoop thread traceback (most recent call last):\n{stack}"
+                            _gateway_logger.warning(msg, self.shard_id, total)
+
+                except Exception:  # noqa: BLE001
+                    self.stop()
+
+    original_init = discord.gateway.DiscordWebSocket.__init__
+    original_from_client = discord.gateway.DiscordWebSocket.from_client
 
     class ProxiedDiscordWebSocket(discord.gateway.DiscordWebSocket):
         def __init__(
@@ -100,9 +162,9 @@ def patch_gateway_use_proxy(proxy: str):
 
             return original_from_client(*args, **kwargs)
 
+        # TODO: The only difference here is that we disable compression on gateway.
+        # It would be neat to not have to repeat all this code...
         async def identify(self) -> None:
-            from discord.gateway import _log
-
             """Sends the IDENTIFY packet."""
             payload = {
                 "op": self.IDENTIFY,
@@ -137,7 +199,9 @@ def patch_gateway_use_proxy(proxy: str):
                 "before_identify", self.shard_id, initial=self._initial_identify
             )
             await self.send_as_json(payload)
-            _log.debug("Shard ID %s has sent the IDENTIFY payload.", self.shard_id)
+            _gateway_logger.debug(
+                "Shard ID %s has sent the IDENTIFY payload.", self.shard_id
+            )
 
     discord.client.Client.before_identify_hook = ProxiedClient.before_identify_hook
     discord.client.Client.is_ws_ratelimited = ProxiedClient.is_ws_ratelimited
@@ -146,7 +210,10 @@ def patch_gateway_use_proxy(proxy: str):
 
     discord.gateway.GatewayRatelimiter.block = ProxiedGatewayRatelimiter.block
 
-    discord.gateway.KeepAliveHandler.ack = SilentKeepAliveHandler.ack
+    discord.gateway.KeepAliveHandler._heartbeat_send_done_callback = (
+        KeepAliveHandler._heartbeat_send_done_callback
+    )
+    discord.gateway.KeepAliveHandler.run = KeepAliveHandler.run
 
     discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = yarl.URL(proxy)
     discord.gateway.DiscordWebSocket.__init__ = ProxiedDiscordWebSocket.__init__
