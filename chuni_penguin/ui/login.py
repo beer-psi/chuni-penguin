@@ -13,7 +13,8 @@ from discord.utils import escape_markdown
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net._hooks import _AUTHENTICATION_URL
 
-from ._pagination import FormatPageReturn, ListPageSource, PaginationView
+from ._pagination import FormatPageReturn, PaginationView
+from .embeds import EmbedPageSource
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -154,7 +155,7 @@ class LoginWithSegaIDView(discord.ui.View):
         )
 
 
-class LoginFlowPageSource(ListPageSource[FormatPageReturn]):
+class LoginFlowPageSource(EmbedPageSource):
     def __init__(self, code: str, server: str | None) -> None:
         step_3_description = (
             "**Step 3**:\n"
@@ -173,53 +174,49 @@ class LoginFlowPageSource(ListPageSource[FormatPageReturn]):
             )
 
         fragment = f"#otp={code}&server={server}" if server is not None else ""
-        items: list[FormatPageReturn] = [
-            {
-                "content": "",
-                "embed": discord.Embed(
-                    color=discord.Color.yellow(),
-                    title="How to login",
-                    description=(
-                        "**Step 1:**\n"
-                        "Log into [CHUNITHM-NET](https://chunithm-net-eng.com) in an incognito/private window.\n"
-                        "(right click and copy link on desktop, long press and copy link on mobile)\n"
-                        "\n"
-                        "**Remember to enable auto login!**"
-                    ),
-                ).set_image(
-                    url="https://chuni-penguin.beerpsi.cc/assets/images/enable-auto-login.png"
+        entries: list[discord.Embed] = [
+            discord.Embed(
+                color=discord.Color.yellow(),
+                title="How to login",
+                description=(
+                    "**Step 1:**\n"
+                    "Log into [CHUNITHM-NET](https://chunithm-net-eng.com) in an incognito/private window.\n"
+                    "(right click and copy link on desktop, long press and copy link on mobile)\n"
+                    "\n"
+                    "**Remember to enable auto login!**"
                 ),
-            },
-            {
-                "content": "",
-                "embed": discord.Embed(
-                    color=discord.Color.yellow(),
-                    title="How to login",
-                    description=(
-                        "**Step 2**:\n"
-                        f"Copy [this link](https://lng-tgk-aime-gw.am-all.net/common_auth/{fragment}) and paste it in the incognito window.\n"
-                        'The website should display "Not found".'
-                    ),
-                ).set_image(
-                    url="https://chuni-penguin.beerpsi.cc/assets/images/login-not-found.png"
+            ).set_image(
+                url="https://chuni-penguin.beerpsi.cc/assets/images/enable-auto-login.png"
+            ),
+            discord.Embed(
+                color=discord.Color.yellow(),
+                title="How to login",
+                description=(
+                    "**Step 2**:\n"
+                    f"Copy [this link](https://lng-tgk-aime-gw.am-all.net/common_auth/{fragment}) and paste it in the incognito window.\n"
+                    'The website should display "Not found".'
                 ),
-            },
-            {
-                "content": "",
-                "embed": discord.Embed(
-                    color=discord.Color.yellow(),
-                    title="How to login",
-                    description=step_3_description,
-                ),
-            },
+            ).set_image(
+                url="https://chuni-penguin.beerpsi.cc/assets/images/login-not-found.png"
+            ),
+            discord.Embed(
+                color=discord.Color.yellow(),
+                title="How to login",
+                description=step_3_description,
+            ),
         ]
 
-        super().__init__(items, per_page=1)
+        super().__init__(entries, per_page=1)
 
     async def format_page(
-        self, menu: "PaginationView", page: Sequence[FormatPageReturn]
+        self, menu: "PaginationView", page: Sequence[discord.Embed]
     ) -> FormatPageReturn:
-        return page[0]
+        result = await super().format_page(menu, page)
+
+        assert isinstance(result, dict)
+        result["content"] = ""
+
+        return result
 
 
 class LoginFlowView(PaginationView):
