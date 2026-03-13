@@ -23,6 +23,7 @@ dependencies = [
     "discord-ext-songbird~=0.2.0a5",
     "httpx-aiohttp",
     "python-magic~=0.4.27",
+    "aiolimiter~=1.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.13"

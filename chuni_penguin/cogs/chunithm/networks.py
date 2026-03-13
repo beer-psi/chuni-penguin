@@ -3,6 +3,7 @@ import contextlib
 from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING
 
+import aiolimiter
 import discord
 import httpx
 import httpx_aiohttp
@@ -41,6 +42,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
     def __init__(self, bot: "ChuniBot"):
         self.bot = bot
         self.user_agents: KeiyoushiUserAgents | None = None
+        self.chunithm_net_limiter = aiolimiter.AsyncLimiter(10, 1)  # 10 reqs/sec
 
         self._chuni_net_sessions: dict[int, AsyncRcContextManager[ChunithmNet]] = {}
 
@@ -144,7 +146,12 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
             return
 
-        session = ChunithmNet(lwp_cookies, username=username, password=password)
+        session = ChunithmNet(
+            lwp_cookies,
+            username=username,
+            password=password,
+            limiter=self.chunithm_net_limiter,
+        )
 
         if session.RANDOMIZE_USER_AGENT and self.user_agents is not None:
             session.user_agent = self.user_agents.desktop[

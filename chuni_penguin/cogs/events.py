@@ -190,6 +190,13 @@ class EventsCog(commands.Cog, name="Events"):
             case MaintenanceError():
                 embed.description = "CHUNITHM-NET is currently undergoing maintenance. Please try again later."
             case ChuniNetError():
+                if exc.code == ChuniNetError.RATE_LIMIT_EXCEEDED:
+                    await logger.awarning(
+                        "CHUNITHM-NET rate limit exceeded",
+                        tag="chunithm_net_rate_limit_exceeded",
+                        exc_info=exc,
+                    )
+
                 embed.description = f"CHUNITHM-NET error {exc.code}: {exc.description}"
             case NoCardsRegistered():
                 embed.description = str(exc)

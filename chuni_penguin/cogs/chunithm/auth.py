@@ -100,7 +100,9 @@ class AuthCog(commands.Cog, name="Auth"):
         jar.set_cookie(cookie)
         raw_jar = f"#LWP-Cookies-2.0\n{jar.as_lwp_str()}"
 
-        async with ChunithmNet(raw_jar) as client:
+        async with ChunithmNet(
+            raw_jar, limiter=self.bot.chunithm_networks.chunithm_net_limiter
+        ) as client:
             try:
                 await client.get_minimal_profile()
             except NetworkError as e:

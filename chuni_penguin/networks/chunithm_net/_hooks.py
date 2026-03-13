@@ -3,6 +3,7 @@ import re
 from collections.abc import Generator
 from http.client import METHOD_NOT_ALLOWED
 
+import aiolimiter
 import httpx
 from bs4 import BeautifulSoup
 from bs4.filter import SoupStrainer
@@ -149,3 +150,10 @@ async def raise_on_chunithm_net_error(response: httpx.Response):
         or "chunithm_net_reauth" in response.request.extensions
     ):
         raise error
+
+
+def acquire_ratelimit(limiter: aiolimiter.AsyncLimiter):
+    async def inner(request: httpx.Request):
+        await limiter.acquire()
+
+    return inner

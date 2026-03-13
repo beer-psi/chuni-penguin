@@ -1,9 +1,10 @@
 import io
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from http.cookiejar import DefaultCookiePolicy, LWPCookieJar
 from typing import Any, override
 
+import aiolimiter
 import httpx
 import httpx_aiohttp
 from bs4 import BeautifulSoup
@@ -28,7 +29,7 @@ from chuni_penguin.networks.types import (
 )
 
 from ._bs4 import BS4_FEATURE
-from ._hooks import ChunithmNetAuth, raise_on_chunithm_net_error
+from ._hooks import ChunithmNetAuth, acquire_ratelimit, raise_on_chunithm_net_error
 from .consts import _KEY_DETAILED_PARAMS_IDX
 from .parser import (
     parse_basic_recent_record,
@@ -114,7 +115,15 @@ class ChunithmNet(Network):
         *,
         username: str | None = None,
         password: str | None = None,
+        limiter: aiolimiter.AsyncLimiter | None = None,
     ):
+        event_hooks: dict[str, list[Callable[..., Any]]] = {
+            "response": [raise_on_server_errors, raise_on_chunithm_net_error],
+        }
+
+        if limiter is not None:
+            event_hooks["request"] = [acquire_ratelimit(limiter)]
+
         self._jar = LWPCookieJar(policy=DefaultCookiePolicy(hide_cookie2=True))
         self._jar._really_load(  # type: ignore[reportAttributeAccessIssue]
             io.StringIO(authentication),
@@ -127,9 +136,7 @@ class ChunithmNet(Network):
             cookies=self._jar,
             timeout=httpx.Timeout(timeout=60.0),
             follow_redirects=True,
-            event_hooks={
-                "response": [raise_on_server_errors, raise_on_chunithm_net_error]
-            },
+            event_hooks=event_hooks,
             transport=httpx_aiohttp.AIOHTTPTransport(retries=5),
             headers={
                 # clients are recommended to update this user agent
