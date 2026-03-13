@@ -223,6 +223,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
         )
 
     @kamaitachi.command("sync", aliases=["s"], extras={"invoke_on_edit": False})
+    @commands.max_concurrency(2, commands.BucketType.user)
     @logged_prefix_command
     async def kamaitachi_sync(
         self, ctx: PenguinContext, sync: Literal["recent", "pb"] = "recent"
