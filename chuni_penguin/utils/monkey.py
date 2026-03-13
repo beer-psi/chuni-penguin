@@ -39,6 +39,7 @@ def patch_http_use_proxy(proxy: str):
 
 def patch_gateway_use_proxy(proxy: str):
     import sys
+    import time
 
     import discord.client
     import discord.errors
@@ -76,6 +77,12 @@ def patch_gateway_use_proxy(proxy: str):
 
         def decompress(self, data: bytes, /) -> str | None:
             return data.decode("utf-8")
+
+    class SilentKeepAliveHandler(discord.gateway.KeepAliveHandler):
+        def ack(self) -> None:
+            ack_time = time.perf_counter()
+            self._last_ack = ack_time
+            self.latency = ack_time - self._last_send
 
     class ProxiedDiscordWebSocket(discord.gateway.DiscordWebSocket):
         def __init__(
@@ -138,6 +145,8 @@ def patch_gateway_use_proxy(proxy: str):
     discord.http.HTTPClient.get_bot_gateway = ProxiedHTTPClient.get_bot_gateway
 
     discord.gateway.GatewayRatelimiter.block = ProxiedGatewayRatelimiter.block
+
+    discord.gateway.KeepAliveHandler.ack = SilentKeepAliveHandler.ack
 
     discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = yarl.URL(proxy)
     discord.gateway.DiscordWebSocket.__init__ = ProxiedDiscordWebSocket.__init__
