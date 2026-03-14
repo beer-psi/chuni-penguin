@@ -1,5 +1,5 @@
 # pyright: reportAttributeAccessIssue=false
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import asyncio
@@ -80,14 +80,9 @@ def patch_gateway_use_proxy(proxy: str):
             return data.decode("utf-8")
 
     class KeepAliveHandler(discord.gateway.KeepAliveHandler):
-        def _heartbeat_send_done_callback(
-            self, future: concurrent.futures.Future[None]
-        ):
-            try:
-                if future.exception() is None:
-                    self._last_send = time.perf_counter()
-            except concurrent.futures.CancelledError:
-                pass
+        async def _send_heartbeat(self, data: Any):
+            await self.ws.send_heartbeat(data)
+            self._last_send = time.perf_counter()
 
         def run(self) -> None:
             while not self._stop_ev.wait(self.interval):
@@ -118,10 +113,9 @@ def patch_gateway_use_proxy(proxy: str):
 
                 _gateway_logger.debug(self.msg, self.shard_id, data["d"])
 
-                coro = self.ws.send_heartbeat(data)
+                coro = self._send_heartbeat(data)
                 f = asyncio.run_coroutine_threadsafe(coro, loop=self.ws.loop)
 
-                f.add_done_callback(self._heartbeat_send_done_callback)
                 try:
                     # block until sending is complete
                     total = 0
@@ -210,9 +204,7 @@ def patch_gateway_use_proxy(proxy: str):
 
     discord.gateway.GatewayRatelimiter.block = ProxiedGatewayRatelimiter.block
 
-    discord.gateway.KeepAliveHandler._heartbeat_send_done_callback = (
-        KeepAliveHandler._heartbeat_send_done_callback
-    )
+    discord.gateway.KeepAliveHandler._send_heartbeat = KeepAliveHandler._send_heartbeat
     discord.gateway.KeepAliveHandler.run = KeepAliveHandler.run
 
     discord.gateway.DiscordWebSocket.DEFAULT_GATEWAY = yarl.URL(proxy)

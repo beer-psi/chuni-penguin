@@ -1,4 +1,5 @@
 # pyright: reportAttributeAccessIssue=false
+import contextlib
 import traceback
 from collections.abc import Sequence
 from typing import (
@@ -120,10 +121,13 @@ class PenguinViewMixin(Generic[ContextT]):
             embed, _ = await events_cog._construct_error_embed(interaction, None, error)  # pyright: ignore[reportArgumentType]
 
             if embed.description is not None:
-                if interaction.response.is_done():
-                    await interaction.followup.send(embed=embed, ephemeral=True)
-                else:
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                with contextlib.suppress(discord.NotFound):
+                    if interaction.response.is_done():
+                        await interaction.followup.send(embed=embed, ephemeral=True)
+                    else:
+                        await interaction.response.send_message(
+                            embed=embed, ephemeral=True
+                        )
 
                 return
 

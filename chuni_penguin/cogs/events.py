@@ -62,10 +62,11 @@ class EventsCog(commands.Cog, name="Events"):
         )
 
         if embed.description is not None:
-            if interaction.response.is_done():
-                await interaction.edit_original_response(embed=embed, view=None)
-            else:
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+            with contextlib.suppress(discord.NotFound):
+                if interaction.response.is_done():
+                    await interaction.edit_original_response(embed=embed, view=None)
+                else:
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
 
             return
 
@@ -380,14 +381,15 @@ class EventsCog(commands.Cog, name="Events"):
             or (not is_thread and ctx.bot_permissions.send_messages)
             or (is_thread and ctx.bot_permissions.send_messages_in_threads)
         ):
-            if ctx.bot_permissions.embed_links:
-                await ctx.respond_or_edit(
-                    embed=embed, delete_after=delete_after, view=None
-                )
-            else:
-                await ctx.respond_or_edit(
-                    embed.description, delete_after=delete_after, view=None
-                )
+            with contextlib.suppress(discord.NotFound):
+                if ctx.bot_permissions.embed_links:
+                    await ctx.respond_or_edit(
+                        embed=embed, delete_after=delete_after, view=None
+                    )
+                else:
+                    await ctx.respond_or_edit(
+                        embed.description, delete_after=delete_after, view=None
+                    )
         else:
             with contextlib.suppress(discord.HTTPException):
                 dm_channel = ctx.author.dm_channel

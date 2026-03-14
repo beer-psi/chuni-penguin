@@ -307,8 +307,10 @@ class GamingCog(commands.Cog, name="Games"):
         async def after(_):
             await self._clear_state(ctx.channel.id)
 
-            if voice_client is not None:
-                await self._clear_state(voice_client.channel.id)
+            voice_channel = voice_client.channel if voice_client is not None else None
+
+            if voice_channel is not None:
+                await self._clear_state(voice_channel.id)
 
         game_task = asyncio.create_task(
             session.run(after=after), name=f"chuni-penguin-guess-{ctx.channel.id}"
