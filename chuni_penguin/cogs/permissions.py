@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Annotated
+import contextlib
+from typing import TYPE_CHECKING, Annotated, override
 
 import discord
 from discord.ext import commands
@@ -8,12 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from chuni_penguin.context import PenguinContext, PenguinGuildContext
 from chuni_penguin.converters import CommandOrGroupConverter
-from chuni_penguin.database import CommandPermission
+from chuni_penguin.database import CommandPermission, Denylist
 from chuni_penguin.database.guilds import (
     PrimaryPermissionTarget,
     SecondaryPermissionTarget,
 )
-from chuni_penguin.errors import CommandDisabled
+from chuni_penguin.errors import Banned, CommandDisabled
 from chuni_penguin.ui.permissions import PermissionListView
 
 if TYPE_CHECKING:
@@ -24,6 +25,25 @@ class PermissionsCog(commands.Cog, name="Permissions"):
     def __init__(self, bot: "ChuniBot"):
         self.bot = bot
         self.permission_cache: dict[int, list[CommandPermission]] = {}
+        self.denylist: dict[int, Denylist] = {}
+
+    @override
+    async def cog_load(self) -> None:
+        await self._load_denylist()
+        await self._load_permissions()
+
+    @override
+    async def bot_check(self, ctx: "PenguinContext") -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+        if await self.bot.is_owner(ctx.author):
+            return True
+
+        return await self.denylist_check(ctx) and await self.permissions_check(ctx)
+
+    async def _load_denylist(self):
+        async with self.bot.begin_db_read() as session:
+            denylist = (await session.execute(select(Denylist))).scalars()
+
+        self.denylist = {d.object_id: d for d in denylist}
 
     async def _load_permissions(self, guild_id: int | None = None):
         if guild_id is not None:
@@ -92,8 +112,14 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         await self.bot.database.writer.execute_fn(transaction)
         await self._load_permissions(guild_id)
 
-    async def cog_load(self) -> None:
-        await self._load_permissions()
+    def get_denylist_entry(self, user_id: int, guild: discord.Guild | None = None):
+        if user_id in self.denylist:
+            return (self.denylist[user_id], None)
+
+        if guild is not None and guild.id in self.denylist:
+            return (self.denylist[guild.id], guild.name)
+
+        return None, None
 
     def get_permission(
         self,
@@ -146,6 +172,14 @@ class PermissionsCog(commands.Cog, name="Permissions"):
                 return permission
 
         return None
+
+    async def denylist_check(self, ctx: PenguinContext):
+        ban_entry, server_name = self.get_denylist_entry(ctx.author.id, ctx.guild)
+
+        if ban_entry is not None:
+            raise Banned(ban_entry, server_name)
+
+        return True
 
     async def permissions_check(self, ctx: PenguinContext):
         if ctx.command is None:
@@ -615,6 +649,44 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         await ctx.respond_or_edit(
             f"{enable_disable} all commands for the member {member.mention}."
         )
+
+    @commands.command("block")
+    @commands.is_owner()
+    async def block(
+        self, ctx: PenguinContext, object: discord.Object, *, reason: str | None = None
+    ):
+        """Blocks users or guilds from using the bot globally."""
+
+        query = (
+            insert(Denylist)
+            .values(object_id=object.id, reason=reason)
+            .on_conflict_do_update(
+                index_elements=[Denylist.object_id], set_={"reason": reason}
+            )
+            .returning(Denylist)
+        )
+        result = await self.bot.database.writer.execute(query)
+        self.denylist[object.id] = result.scalar_one()
+
+        await ctx.message.add_reaction("✅")
+
+    @commands.command("unblock")
+    @commands.is_owner()
+    async def unblock(
+        self, ctx: PenguinContext, objects: commands.Greedy[discord.Object]
+    ):
+        """Unblocks users or guilds from using the bot globally."""
+
+        query = delete(Denylist).where(
+            Denylist.object_id.in_([object.id for object in objects])
+        )
+        await self.bot.database.writer.execute(query)
+
+        for object in objects:
+            with contextlib.suppress(KeyError):
+                del self.denylist[object.id]
+
+        await ctx.message.add_reaction("✅")
 
 
 async def setup(bot: "ChuniBot"):

@@ -4,12 +4,9 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord.ext import commands
-from sqlalchemy import delete
-from sqlalchemy.dialects.sqlite import insert
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.database import Denylist
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -58,44 +55,6 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
                 ret += 1
 
         await ctx.respond_or_edit(f"Synced the tree to {ret}/{len(guilds)}.")
-
-    @commands.command("block")
-    @commands.is_owner()
-    async def block(
-        self, ctx: PenguinContext, object: discord.Object, *, reason: str | None = None
-    ):
-        """Blocks users or guilds from using the bot globally."""
-
-        query = (
-            insert(Denylist)
-            .values(object_id=object.id, reason=reason)
-            .on_conflict_do_update(
-                index_elements=[Denylist.object_id], set_={"reason": reason}
-            )
-            .returning(Denylist)
-        )
-        result = await self.bot.database.writer.execute(query)
-        self.bot.denylist[object.id] = result.scalar_one()
-
-        await ctx.message.add_reaction("✅")
-
-    @commands.command("unblock")
-    @commands.is_owner()
-    async def unblock(
-        self, ctx: PenguinContext, objects: commands.Greedy[discord.Object]
-    ):
-        """Unblocks users or guilds from using the bot globally."""
-
-        query = delete(Denylist).where(
-            Denylist.object_id.in_([object.id for object in objects])
-        )
-        await self.bot.database.writer.execute(query)
-
-        for object in objects:
-            with contextlib.suppress(KeyError):
-                del self.bot.denylist[object.id]
-
-        await ctx.message.add_reaction("✅")
 
     @commands.command("say")
     @commands.is_owner()

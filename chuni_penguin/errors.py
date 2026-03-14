@@ -1,6 +1,6 @@
 from discord.ext.commands import CheckFailure
 
-from chuni_penguin.database import CommandPermission
+from chuni_penguin.database import CommandPermission, Denylist
 from chuni_penguin.database.guilds import (
     PrimaryPermissionTarget,
     SecondaryPermissionTarget,
@@ -23,6 +23,14 @@ class MissingConfiguration(ChuniBotError):
 
     def __init__(self, key: str) -> None:
         super().__init__(f"Configuration file is missing key {key!r}.")
+
+
+class Banned(CheckFailure):
+    def __init__(self, denylist: Denylist, server_name: str | None = None):
+        self.denylist = denylist
+        self.server_name = server_name
+
+        super().__init__()
 
 
 class CommandDisabled(CheckFailure):

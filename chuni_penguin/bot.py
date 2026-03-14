@@ -14,14 +14,12 @@ from discord.ext import commands
 from discord.ext.track_edits import EditTrackerCog
 from sqlalchemy import select, text
 
-from chuni_penguin.ui.components import BannedEmbed
-
 from .cogs import COG_LIST
 from .command_tree import PenguinCommandTree
 from .config import config
 from .constants import CACHE_DIR
 from .context import PenguinContext, PenguinGuildContext
-from .database import Denylist, Prefix
+from .database import Prefix
 from .logging import logger
 from .utils import HishelMsgspecSerializer
 
@@ -104,7 +102,6 @@ class ChuniBot(commands.AutoShardedBot):
         self.launch_time: float = -1
         self.prefixes: dict[int, str] = {}
         self.command_start_time: dict[commands.Context, int] = {}
-        self.denylist: dict[int, Denylist] = {}
         self.caching_http_client = hishel.AsyncCacheClient(
             timeout=httpx.Timeout(timeout=60.0),
             follow_redirects=True,
@@ -173,10 +170,8 @@ class ChuniBot(commands.AutoShardedBot):
         # Load guild prefixes
         async with self.begin_db_read() as session:
             prefixes = (await session.execute(select(Prefix))).scalars()
-            denylist = (await session.execute(select(Denylist))).scalars()
 
         self.prefixes = {prefix.guild_id: prefix.prefix for prefix in prefixes}
-        self.denylist = {d.object_id: d for d in denylist}
 
         await logger.ainfo(
             "Loaded guild prefixes",
@@ -207,8 +202,6 @@ class ChuniBot(commands.AutoShardedBot):
                     text(f"PRAGMA user_version={current_tree_hash}"), transaction=False
                 )
 
-        self.add_check(self.permissions.permissions_check)
-
     @override
     async def get_context(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
@@ -231,49 +224,6 @@ class ChuniBot(commands.AutoShardedBot):
             ctx.user_config = await self.utils.fetch_user_config(ctx.author.id)
 
         return ctx
-
-    @override
-    async def process_commands(self, message: discord.Message, /) -> None:
-        if message.author.bot:
-            return
-
-        ctx = await self.get_context(message)
-
-        if await self.is_owner(ctx.author):
-            await self.invoke(ctx)
-            return
-
-        ban_entry: Denylist | None = None
-        server_name: str | None = None
-
-        if ctx.author.id in self.denylist:
-            ban_entry = self.denylist[ctx.author.id]
-        elif ctx.guild is not None and ctx.guild.id in self.denylist:
-            ban_entry = self.denylist[ctx.guild.id]
-            server_name = ctx.guild.name
-
-        if ban_entry is not None and ctx.invoked_with is not None:
-            with contextlib.suppress(discord.HTTPException):
-                dm_channel = ctx.author.dm_channel
-
-                if dm_channel is None:
-                    dm_channel = await ctx.author.create_dm()
-
-                embed = BannedEmbed(
-                    client=self,
-                    entry=ban_entry,
-                    server_name=server_name,
-                    support_server_invite=config.bot.support_server_invite,
-                )
-
-                if ctx.channel == dm_channel:
-                    await ctx.reply(embed=embed)
-                else:
-                    await dm_channel.send(embed=embed)
-
-            return
-
-        await self.invoke(ctx)
 
     @override
     async def _run_event(

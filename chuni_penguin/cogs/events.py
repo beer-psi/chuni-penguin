@@ -15,7 +15,7 @@ from discord.ext.commands import Context
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.errors import CommandDisabled
+from chuni_penguin.errors import Banned, CommandDisabled
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.chunithm_net import ChuniNetError
 from chuni_penguin.networks.errors import (
@@ -26,6 +26,7 @@ from chuni_penguin.networks.errors import (
     NetworkError,
     NoCardsRegistered,
 )
+from chuni_penguin.ui.components import BannedEmbed
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -297,6 +298,13 @@ class EventsCog(commands.Cog, name="Events"):
                 )
 
             # Check failures
+            case Banned():
+                return BannedEmbed(
+                    client=self.bot,
+                    entry=exc.denylist,
+                    server_name=exc.server_name,
+                    support_server_invite=config.bot.support_server_invite,
+                ), None
             case CommandDisabled():
                 embed.description = str(exc)
                 delete_after = 5
@@ -374,6 +382,20 @@ class EventsCog(commands.Cog, name="Events"):
         *,
         delete_after: float | None = None,
     ):
+        if isinstance(embed, BannedEmbed):
+            with contextlib.suppress(discord.HTTPException):
+                dm_channel = ctx.author.dm_channel
+
+                if dm_channel is None:
+                    dm_channel = await ctx.author.create_dm()
+
+                if ctx.channel == dm_channel:
+                    await ctx.reply(embed=embed)
+                else:
+                    await dm_channel.send(embed=embed)
+
+            return
+
         is_thread = isinstance(ctx.channel, discord.Thread)
 
         if (
@@ -384,11 +406,17 @@ class EventsCog(commands.Cog, name="Events"):
             with contextlib.suppress(discord.NotFound):
                 if ctx.bot_permissions.embed_links:
                     await ctx.respond_or_edit(
-                        embed=embed, delete_after=delete_after, view=None
+                        embed=embed,
+                        delete_after=delete_after,
+                        view=None,
+                        ephemeral=True,
                     )
                 else:
                     await ctx.respond_or_edit(
-                        embed.description, delete_after=delete_after, view=None
+                        embed.description,
+                        delete_after=delete_after,
+                        view=None,
+                        ephemeral=True,
                     )
         else:
             with contextlib.suppress(discord.HTTPException):

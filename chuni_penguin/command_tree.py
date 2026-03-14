@@ -10,7 +10,6 @@ import msgspec
 from discord.app_commands import CommandTree
 
 from chuni_penguin.config import config
-from chuni_penguin.database import Denylist
 from chuni_penguin.logging import logger
 from chuni_penguin.ui.components import BannedEmbed
 
@@ -65,17 +64,9 @@ class PenguinCommandTree(CommandTree["ChuniBot"]):
         if await interaction.client.is_owner(interaction.user):
             return True
 
-        ban_entry: Denylist | None = None
-        server_name: str | None = None
-
-        if interaction.user.id in interaction.client.denylist:
-            ban_entry = interaction.client.denylist[interaction.user.id]
-        elif (
-            interaction.guild is not None
-            and interaction.guild.id in interaction.client.denylist
-        ):
-            ban_entry = interaction.client.denylist[interaction.guild.id]
-            server_name = interaction.guild.name
+        ban_entry, server_name = interaction.client.permissions.get_denylist_entry(
+            interaction.user.id, interaction.guild
+        )
 
         if ban_entry is not None:
             await interaction.response.send_message(
