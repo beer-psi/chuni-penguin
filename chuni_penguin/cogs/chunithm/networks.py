@@ -26,7 +26,7 @@ from chuni_penguin.networks.errors import (
 from chuni_penguin.networks.kamaitachi import Kamaitachi
 from chuni_penguin.networks.types import Difficulty, PersonalBest
 from chuni_penguin.ui import FriendRequestWaitView
-from chuni_penguin.utils import AsyncRcContextManager
+from chuni_penguin.utils import AsyncRcContextManager, AsyncRWLockMapping
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -44,7 +44,9 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         self.user_agents: KeiyoushiUserAgents | None = None
         self.chunithm_net_limiter = aiolimiter.AsyncLimiter(10, 1)  # 10 reqs/sec
 
-        self._chuni_net_sessions: dict[int, AsyncRcContextManager[ChunithmNet]] = {}
+        self._chuni_net_sessions: AsyncRWLockMapping[
+            int, AsyncRcContextManager[ChunithmNet]
+        ] = AsyncRWLockMapping()
 
     async def cog_load(self) -> None:
         self._update_user_agents.start()
@@ -133,18 +135,19 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         username: str | None = None,
         password: str | None = None,
     ):
-        if (rc := self._chuni_net_sessions.get(user_id)) and rc.refcount > 0:
-            logger.debug(
-                "using cached chunithm-net session",
-                tag="cached_chunithm_net_session",
-                user_id=user_id,
-                refcount=rc.refcount,
-            )
+        async with self._chuni_net_sessions.read() as sessions:
+            if (rc := sessions.get(user_id)) and rc.refcount > 0:
+                logger.debug(
+                    "using cached chunithm-net session",
+                    tag="cached_chunithm_net_session",
+                    user_id=user_id,
+                    refcount=rc.refcount,
+                )
 
-            async with rc as session:
-                yield session
+                async with rc as session:
+                    yield session
 
-            return
+                return
 
         session = ChunithmNet(
             lwp_cookies,
@@ -159,19 +162,22 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             ]
 
         async def on_exit(session: ChunithmNet):
+            async with self._chuni_net_sessions.write() as sessions:
+                with contextlib.suppress(KeyError):
+                    del sessions[user_id]
+
             await self.bot.database.writer.execute(
                 update(Cookie)
                 .where(Cookie.discord_id == user_id)
                 .values(cookie=session.authentication)
             )
 
-            del self._chuni_net_sessions[user_id]
+        rc = AsyncRcContextManager(session, on_exit=[on_exit])
 
-        self._chuni_net_sessions[user_id] = AsyncRcContextManager(
-            session, on_exit=[on_exit]
-        )
+        async with self._chuni_net_sessions.write() as sessions:
+            sessions[user_id] = rc
 
-        async with self._chuni_net_sessions[user_id] as session:
+        async with rc as session:
             yield session
 
     def _get_not_logged_in_message(
