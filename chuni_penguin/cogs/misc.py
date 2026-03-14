@@ -9,9 +9,12 @@ from random import random
 from typing import TYPE_CHECKING, Optional
 
 import discord
+import httpx
+import yarl
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
 from discord.utils import oauth_url
+from httpx_aiohttp import AIOHTTPTransport
 from sqlalchemy import delete, func, select
 
 from chuni_penguin.config import config
@@ -132,15 +135,41 @@ class MiscCog(commands.Cog, name="Miscellaneous"):
 
     @commands.hybrid_command("ping")
     @logged_prefix_command
-    async def ping(self, ctx: PenguinGuildContext):
+    async def ping(self, ctx: PenguinContext):
         start = time.perf_counter_ns()
+
         await ctx.respond_or_edit("Ping...")
+
         end = time.perf_counter_ns()
         duration = (end - start) / 1_000_000
+        guild_shard_id = ctx.guild.shard_id if ctx.guild is not None else 0
+        latency: float = next(
+            latency
+            for shard_id, latency in self.bot.latencies
+            if shard_id == guild_shard_id
+        )
+
+        if (proxy := os.environ.get("DISCORD_GATEWAY_PROXY")) is not None:
+            url = yarl.URL(proxy).with_scheme("http").with_path("metrics")
+
+            async with httpx.AsyncClient(transport=AIOHTTPTransport()) as client:
+                try:
+                    resp = await client.get(str(url))
+                    resp.raise_for_status()
+                except httpx.HTTPError:
+                    pass
+                else:
+                    for line in resp.text.splitlines():
+                        if line.startswith(
+                            f'gateway_shard_latency{{shard="{guild_shard_id}"}}'
+                        ):
+                            latency = float(line.split(" ")[1])
+                            break
+
         await ctx.respond_or_edit(
             (
                 f"Pong! Took {duration:.2f}ms\n"
-                f"Websocket latency: {round(self.bot.latency * 1000, 2)}ms"
+                f"Gateway latency (shard {guild_shard_id}): {latency * 1000:.2f}ms"
             )
         )
 
