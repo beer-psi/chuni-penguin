@@ -240,8 +240,10 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         for song in songs:
             song_lookup[song.id] = song
-            song_lookup[song.jacket] = song
             song_lookup[song.title] = song
+
+            if song.jacket is not None:
+                song_lookup[song.jacket] = song
 
         hydrated_records = []
 
