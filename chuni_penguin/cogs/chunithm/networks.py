@@ -136,18 +136,24 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         password: str | None = None,
     ):
         async with self._chuni_net_sessions.read() as sessions:
-            if (rc := sessions.get(user_id)) and rc.refcount > 0:
-                logger.debug(
-                    "using cached chunithm-net session",
-                    tag="cached_chunithm_net_session",
-                    user_id=user_id,
-                    refcount=rc.refcount,
-                )
+            rc = sessions.get(user_id)
 
-                async with rc as session:
-                    yield session
+        if rc is not None and rc.refcount > 0:
+            await logger.adebug(
+                "using cached chunithm-net session",
+                tag="cached_chunithm_net_session",
+                user_id=user_id,
+                refcount=rc.refcount,
+            )
 
-                return
+            # In case it got removed between the read and here.
+            async with self._chuni_net_sessions.write() as sessions:
+                sessions[user_id] = rc
+
+            async with rc as session:
+                yield session
+
+            return
 
         session = ChunithmNet(
             lwp_cookies,
