@@ -42,7 +42,7 @@ class Typing(discord.context_managers.Typing):
         await typing(channel.id)
 
         while True:
-            await asyncio.sleep(4.5)
+            await asyncio.sleep(9.5)
             await typing(channel.id)
 
     async def __aenter__(self) -> None:
