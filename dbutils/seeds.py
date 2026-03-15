@@ -171,6 +171,10 @@ class SeedsCourseTrack(msgspec.Struct):
             msg = "Only `level` or `charts` can be specified, not both."
             raise ValueError(msg)
 
+        if self.charts is not msgspec.UNSET and len(self.charts) == 0:
+            msg = "Chart list is empty."
+            raise ValueError(msg)
+
 
 class SeedsCourse(msgspec.Struct):
     id: int
