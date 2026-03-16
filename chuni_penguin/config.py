@@ -54,6 +54,8 @@ class CredentialsConfig(msgspec.Struct):
     sega_id_username: str | None = None
     sega_id_password: str | None = None
     kofi_verification_token: str | None = None
+    git_auth_username: str | None = None
+    git_auth_password: str | None = None
 
 
 class IconsConfig(msgspec.Struct):
@@ -132,6 +134,17 @@ class DangerousConfig(msgspec.Struct):
     debug_totp: str | None = None
 
 
+class LocalSeedsConfig(msgspec.Struct, tag="local"):
+    path: Path
+
+
+class GitSeedsConfig(msgspec.Struct, tag="git"):
+    url: str
+    username: str
+    email: str
+    branch: str | msgspec.UnsetType = msgspec.UNSET
+
+
 def config_dec_hook(ty: type, obj: Any):
     # Handle generic types - these have __args__ for parameters and __origin__ for the
     # original type
@@ -144,12 +157,24 @@ def config_dec_hook(ty: type, obj: Any):
     if ty is CommaDelimitedSet and ty_arg is int and isinstance(obj, str):
         return CommaDelimitedSet(int(item.strip()) for item in obj.split(","))
 
+    if issubclass(ty, Path) and isinstance(obj, str):
+        return ty(obj)
+
     msg = f"Objects of type {obj.__class__.__name__} cannot be converted into type {ty}"
     raise NotImplementedError(msg)
 
 
 class Config:
-    __slots__ = ("_path", "bot", "credentials", "dangerous", "icons", "legal", "web")
+    __slots__ = (
+        "_path",
+        "bot",
+        "credentials",
+        "dangerous",
+        "icons",
+        "legal",
+        "seeds",
+        "web",
+    )
 
     def __init__(self, path: "str | Path") -> None:
         self._path = path
@@ -184,6 +209,16 @@ class Config:
             strict=False,
             dec_hook=config_dec_hook,
         )
+
+        if cfg.has_section("seeds"):
+            self.seeds = msgspec.convert(
+                cfg["seeds"],
+                type=LocalSeedsConfig | GitSeedsConfig,
+                strict=False,
+                dec_hook=config_dec_hook,
+            )
+        else:
+            self.seeds = LocalSeedsConfig(Path("chuni_penguin/database/seeds"))
 
 
 config = Config(Path(__file__).parent.parent / "bot.ini")

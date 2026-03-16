@@ -1,0 +1,4190 @@
+[
+    {
+        "id": 30000,
+        "cls": "i",
+        "name": "First Step",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 802,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2129,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2416,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30001,
+        "cls": "i",
+        "name": "はじまりのコース",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 1082,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 828,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 991,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30002,
+        "cls": "i",
+        "name": "読めたらクラス認定",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 433,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2326,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 67,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30003,
+        "cls": "i",
+        "name": "ADVANCED BOSS RUSH",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2161,
+                        "difficulty": "ADV"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2121,
+                        "difficulty": "ADV"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 788,
+                        "difficulty": "ADV"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30004,
+        "cls": "i",
+        "name": "クラス認定 - I - Random",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "10"
+            },
+            {
+                "level": "10+"
+            },
+            {
+                "level": "11"
+            }
+        ]
+    },
+    {
+        "id": 30005,
+        "cls": "ii",
+        "name": "イロドリミドリ Random",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": false,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 150,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 158,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 199,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 265,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 331,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 337,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 338,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 500,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 550,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 564,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 587,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 746,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 150,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 158,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 199,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 265,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 331,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 337,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 338,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 500,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 550,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 564,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 587,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 746,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 145,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 200,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 330,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 967,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30006,
+        "cls": "ii",
+        "name": "猫だらけ！？",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 845,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 574,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 265,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30007,
+        "cls": "ii",
+        "name": "隠れ光吉 Selection",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 69,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 776,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1039,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30008,
+        "cls": "ii",
+        "name": "放課後 Set",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 945,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2415,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 636,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30009,
+        "cls": "ii",
+        "name": "クラス認定 - Ⅱ - Random",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "11+"
+            },
+            {
+                "level": "12"
+            },
+            {
+                "level": "12+"
+            }
+        ]
+    },
+    {
+        "id": 30010,
+        "cls": "iii",
+        "name": "小鳥遊さん Set",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2244,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2287,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2132,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30011,
+        "cls": "iii",
+        "name": "→→→→→→→→",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2163,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2162,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 440,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30012,
+        "cls": "iii",
+        "name": "【Ⅲ】コース【CHUNITHM】",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2449,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 745,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 827,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30013,
+        "cls": "iii",
+        "name": "革命",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2018,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2030,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1012,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30014,
+        "cls": "iii",
+        "name": "クラス認定 - Ⅲ - Random",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "12+"
+            },
+            {
+                "level": "13"
+            },
+            {
+                "level": "13+"
+            }
+        ]
+    },
+    {
+        "id": 30015,
+        "cls": "iv",
+        "name": "アー、アー、アー",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 987,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 877,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 511,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30016,
+        "cls": "iv",
+        "name": "CRITICAL HARD CHALLENGE",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 16,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2189,
+                        "difficulty": "ADV"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2308,
+                        "difficulty": "ADV"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 840,
+                        "difficulty": "ADV"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30017,
+        "cls": "iv",
+        "name": "曲名覚えたらクラス認定",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 705,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 161,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 934,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30018,
+        "cls": "iv",
+        "name": "RAVE Selection",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2045,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 73,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 107,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30019,
+        "cls": "iv",
+        "name": "クラス認定 - Ⅳ - Random",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 500,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "13+"
+            },
+            {
+                "level": "14"
+            },
+            {
+                "level": "14+"
+            }
+        ]
+    },
+    {
+        "id": 30020,
+        "cls": "v",
+        "name": "Requiem Collection",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 300,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 699,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2300,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 619,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30021,
+        "cls": "v",
+        "name": "CRITICAL EX CHALLENGE",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 12,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 376,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2392,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2036,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30022,
+        "cls": "v",
+        "name": "[Ⅴ]コース[CHUNITHM]",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2039,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1094,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 559,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30023,
+        "cls": "v",
+        "name": "EXPERT BOSS RUSH",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 180,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 777,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2240,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30024,
+        "cls": "v",
+        "name": "クラス認定 - Ⅴ - Random",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 300,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "14"
+            },
+            {
+                "level": "14+"
+            },
+            {
+                "level": "14+"
+            }
+        ]
+    },
+    {
+        "id": 30025,
+        "cls": "infinite",
+        "name": "INNOVATION Set",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8227,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8281,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8282,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30026,
+        "cls": "infinite",
+        "name": "CRITICAL JUSTICE CHALLENGE",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 8,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2137,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 467,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 625,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30027,
+        "cls": "infinite",
+        "name": "infinite sprint",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2053,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2184,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2233,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30028,
+        "cls": "infinite",
+        "name": "クラス認定 - ∞ - Random",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 150,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "14"
+            },
+            {
+                "level": "14+"
+            },
+            {
+                "level": "15"
+            }
+        ]
+    },
+    {
+        "id": 30029,
+        "cls": "extra",
+        "name": "RANDOM",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "12"
+            },
+            {
+                "level": "13"
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8244,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8245,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8246,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8247,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8248,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8249,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30030,
+        "cls": "extra",
+        "name": "Wall Panic!",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 400,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 40,
+        "damage_attack": 15,
+        "damage_justice": 10,
+        "damage_jcrit": -1,
+        "tracks": [
+            {
+                "level": "10+"
+            },
+            {
+                "level": "11"
+            },
+            {
+                "level": "11+"
+            }
+        ]
+    },
+    {
+        "id": 30031,
+        "cls": "extra",
+        "name": "IRODORI LUNATIC!!",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 3000,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8116,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8078,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8025,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 30032,
+        "cls": "extra",
+        "name": "蔵出し Set",
+        "version": "LUMINOUS",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 50,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8269,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8253,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8216,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35001,
+        "cls": "i",
+        "name": "Saturn Set",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2450,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 303,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 290,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35002,
+        "cls": "i",
+        "name": "卯月 Set",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2358,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 245,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2002,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35003,
+        "cls": "ii",
+        "name": "魂音Set",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 438,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2487,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1083,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35004,
+        "cls": "ii",
+        "name": "Bad Apple!! Set",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 46,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 876,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2029,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35005,
+        "cls": "iii",
+        "name": "檸檬 Set",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2435,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2085,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1031,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35006,
+        "cls": "iii",
+        "name": "Over Set",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2160,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 696,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 616,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35007,
+        "cls": "iv",
+        "name": "!?!!!!?????",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 413,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 568,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2298,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35008,
+        "cls": "iv",
+        "name": "owl*tree -final set-",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2120,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2146,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 944,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35009,
+        "cls": "v",
+        "name": "[Ⅴ]コース[CHUNITHM]",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 397,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1094,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 559,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35010,
+        "cls": "v",
+        "name": "Triple Time Set",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 837,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 994,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 407,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35011,
+        "cls": "v",
+        "name": "Speed 202",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 713,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 999,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2442,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35012,
+        "cls": "infinite",
+        "name": "Sunset",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2279,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2407,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2339,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35013,
+        "cls": "extra",
+        "name": "KING of Performai The 6th 予選① EXPERT",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -50,
+        "damage_justice": -50,
+        "damage_jcrit": -50,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2270,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 981,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2650,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35014,
+        "cls": "extra",
+        "name": "KING of Performai The 6th 予選② EXPERT",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -50,
+        "damage_justice": -50,
+        "damage_jcrit": -50,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2171,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2461,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2340,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35015,
+        "cls": "extra",
+        "name": "KING of Performai The 6th 予選① MASTER",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -30,
+        "damage_justice": -30,
+        "damage_jcrit": -30,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2270,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 981,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2650,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35016,
+        "cls": "extra",
+        "name": "KING of Performai The 6th 予選② MASTER",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -30,
+        "damage_justice": -30,
+        "damage_jcrit": -30,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2171,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2461,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2340,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 35017,
+        "cls": "extra",
+        "name": "Irregular Speed",
+        "version": "LUMINOUS PLUS",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8051,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8271,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8277,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40000,
+        "cls": "i",
+        "name": "First Step",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 802,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2129,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2566,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40001,
+        "cls": "i",
+        "name": "Adventure Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2479,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 37,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 502,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40002,
+        "cls": "i",
+        "name": "Pianist Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2354,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 895,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 656,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40003,
+        "cls": "i",
+        "name": "カオス Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 407,
+                        "difficulty": "ADV"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2585,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2475,
+                        "difficulty": "ADV"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40004,
+        "cls": "i",
+        "name": "クラス認定 - I - Random",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "10"
+            },
+            {
+                "level": "10+"
+            },
+            {
+                "level": "11"
+            }
+        ]
+    },
+    {
+        "id": 40005,
+        "cls": "ii",
+        "name": "タオル Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2227,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2673,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8117,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40006,
+        "cls": "ii",
+        "name": "ゆっくりしていってね！",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 935,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 179,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2524,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40007,
+        "cls": "ii",
+        "name": "それ Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2542,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 738,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2546,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40008,
+        "cls": "ii",
+        "name": "そらいろカリン Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2381,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2468,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2251,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40009,
+        "cls": "ii",
+        "name": "クラス認定 - Ⅱ - Random",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "11+"
+            },
+            {
+                "level": "12"
+            },
+            {
+                "level": "12+"
+            }
+        ]
+    },
+    {
+        "id": 40010,
+        "cls": "iii",
+        "name": "インターネット Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2388,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2523,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2503,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40011,
+        "cls": "iii",
+        "name": "いよわ Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2657,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2435,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2317,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40012,
+        "cls": "iii",
+        "name": "ずんだもん PARTY",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2452,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2509,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2632,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40013,
+        "cls": "iii",
+        "name": "DRAGON Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 765,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 971,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 583,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40014,
+        "cls": "iii",
+        "name": "クラス認定 - Ⅲ - Random",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "12+"
+            },
+            {
+                "level": "13"
+            },
+            {
+                "level": "13+"
+            }
+        ]
+    },
+    {
+        "id": 40015,
+        "cls": "iv",
+        "name": "TAP TAP PARADISE Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2539,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2138,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 135,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40016,
+        "cls": "iv",
+        "name": "ULTIMATE SeelischTact Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 65,
+                        "difficulty": "ULT"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 95,
+                        "difficulty": "ULT"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 148,
+                        "difficulty": "ULT"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40017,
+        "cls": "iv",
+        "name": "cubesato Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2560,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2406,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 51,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40018,
+        "cls": "iv",
+        "name": "Scratch Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 797,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2540,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2542,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40019,
+        "cls": "iv",
+        "name": "クラス認定 - Ⅳ - Random",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 500,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "13+"
+            },
+            {
+                "level": "14"
+            },
+            {
+                "level": "14+"
+            }
+        ]
+    },
+    {
+        "id": 40020,
+        "cls": "v",
+        "name": "Boss Selection Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 226,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 201,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 180,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40021,
+        "cls": "v",
+        "name": "CRITICAL EX CHALLENGE",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 12,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2263,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2496,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2036,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40022,
+        "cls": "v",
+        "name": "WACCA BOSS Re:MIX",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 300,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2385,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2384,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2410,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40023,
+        "cls": "v",
+        "name": "おもしろ三国志 Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 1098,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 106,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1035,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40024,
+        "cls": "v",
+        "name": "クラス認定 - Ⅴ - Random",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 300,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "14"
+            },
+            {
+                "level": "14+"
+            },
+            {
+                "level": "15"
+            }
+        ]
+    },
+    {
+        "id": 40025,
+        "cls": "infinite",
+        "name": "INNOVATION Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8227,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8281,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8282,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40026,
+        "cls": "infinite",
+        "name": "CRITICAL JUSTICE CHALLENGE",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 8,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 1091,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2272,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 744,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40027,
+        "cls": "infinite",
+        "name": "Sukiyaki Boss Rush",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 150,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2208,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 777,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1017,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40028,
+        "cls": "infinite",
+        "name": "クラス認定 - ∞ - Random",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 200,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "level": "14+"
+            },
+            {
+                "level": "15"
+            },
+            {
+                "level": "15+"
+            }
+        ]
+    },
+    {
+        "id": 40029,
+        "cls": "extra",
+        "name": "RANDOM",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8244,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8245,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8246,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8247,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8248,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8249,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8244,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8245,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8246,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8247,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8248,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8249,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8244,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8245,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8246,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8247,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8248,
+                        "difficulty": "WE"
+                    },
+                    {
+                        "song_id": 8249,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40030,
+        "cls": "extra",
+        "name": "Split Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8280,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8185,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8268,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 40031,
+        "cls": "extra",
+        "name": "Wall Panic!",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 400,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 40,
+        "damage_attack": 15,
+        "damage_justice": 10,
+        "damage_jcrit": -1,
+        "tracks": [
+            {
+                "level": "10+"
+            },
+            {
+                "level": "11"
+            },
+            {
+                "level": "11+"
+            }
+        ]
+    },
+    {
+        "id": 40032,
+        "cls": "extra",
+        "name": "Decade Set",
+        "version": "VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 1000,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 180,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": -1,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 8303,
+                        "difficulty": "WE"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 317,
+                        "difficulty": "ULT"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8304,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43001,
+        "cls": "i",
+        "name": "Techno Kitchen Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 80,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 303,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2274,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43002,
+        "cls": "i",
+        "name": "東方Normal Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 549,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2412,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 930,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43003,
+        "cls": "ii",
+        "name": "イロドリミドリ Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 145,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 200,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 330,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43004,
+        "cls": "ii",
+        "name": "Happy Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 599,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 974,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2266,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43005,
+        "cls": "iii",
+        "name": "戦え…戦え… Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 1085,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 368,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 165,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43006,
+        "cls": "iii",
+        "name": "ギガ Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 515,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2303,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2807,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43007,
+        "cls": "iv",
+        "name": "シビュラ精霊記 Random Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 850,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 851,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 852,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 853,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 1029,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 1031,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2091,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2092,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2458,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2459,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 854,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 1030,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 1032,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 1033,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2090,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2093,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2457,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2460,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 918,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 2461,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43008,
+        "cls": "iv",
+        "name": "GIGA Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 787,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 157,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2537,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43009,
+        "cls": "v",
+        "name": "Adventure Boss Set",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 574,
+                        "difficulty": "ULT"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 455,
+                        "difficulty": "ULT"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8198,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43010,
+        "cls": "v",
+        "name": "ALL JUSTICE CHALLENGE",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 1,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 698,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 949,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 785,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43011,
+        "cls": "infinite",
+        "name": "千夏フルパワー！",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 80,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 1,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 1059,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2554,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 8252,
+                        "difficulty": "WE"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43012,
+        "cls": "extra",
+        "name": "DISTORTED JUSTICE",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 1000,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": -1,
+        "damage_jcrit": 1,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 89,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 328,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 638,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43013,
+        "cls": "extra",
+        "name": "KING of Performai The 7th 予選① EXPERT",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -50,
+        "damage_justice": -50,
+        "damage_jcrit": -50,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2876,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2533,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 180,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43014,
+        "cls": "extra",
+        "name": "KING of Performai The 7th 予選② EXPERT",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -50,
+        "damage_justice": -50,
+        "damage_jcrit": -50,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 469,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2660,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2407,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43015,
+        "cls": "extra",
+        "name": "KING of Performai The 7th 予選① MASTER",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -30,
+        "damage_justice": -30,
+        "damage_jcrit": -30,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2876,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2533,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 180,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 43016,
+        "cls": "extra",
+        "name": "KING of Performai The 7th 予選② MASTER",
+        "version": "X-VERSE",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": -30,
+        "damage_justice": -30,
+        "damage_jcrit": -30,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 469,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2660,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2407,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45001,
+        "cls": "i",
+        "name": "40mP Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 224,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 278,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 688,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45003,
+        "cls": "ii",
+        "name": "Christmas Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 588,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2309,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2416,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45005,
+        "cls": "iii",
+        "name": "名取さな Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2341,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2342,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2502,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45007,
+        "cls": "iv",
+        "name": "Slow Speed Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2449,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2612,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2358,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45009,
+        "cls": "v",
+        "name": "豪雪 Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2147,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2650,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2053,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    }
+]

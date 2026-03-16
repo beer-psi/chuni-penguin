@@ -35,11 +35,7 @@ You can clone from either the `develop` branch or the `trunk` branch. Only the
 1. Copy `bot.example.ini` to `bot.ini` and fill in values based on the comments.
 2. Run `uv sync` to install dependencies.
 3. Run `uv run python -m dbutils create` to create the database.
-4. Run `uv run python -m dbutils update chunirec` to populate the song database.
-   For this to work, `credentials.chunirec_token` **must** be set in `bot.ini`.
-   A pre-populated database is also provided
-   [here](https://nightly.link/beer-psi/chuni-penguin/workflows/test_creating_db.yaml/trunk/database.zip),
-   for your convenience.
+4. Run `uv run python -m dbutils seeds load` to populate the song database.
 5. `uv run launcher.py`
 
 ### Contributions

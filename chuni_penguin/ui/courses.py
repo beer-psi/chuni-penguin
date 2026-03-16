@@ -200,12 +200,19 @@ class CourseViewSongsButton(discord.ui.Button):
                 )
             elif len(track.charts) == 1:
                 chart = track.charts[0]
-                self.view.container.add_item(
-                    discord.ui.Section(
-                        discord.ui.TextDisplay(format_chart(chart)),
-                        accessory=discord.ui.Thumbnail(get_jacket_url(chart.song)),
+                jacket_url = get_jacket_url(chart.song)
+
+                if jacket_url is not None:
+                    self.view.container.add_item(
+                        discord.ui.Section(
+                            discord.ui.TextDisplay(format_chart(chart)),
+                            accessory=discord.ui.Thumbnail(jacket_url),
+                        )
                     )
-                )
+                else:
+                    self.view.container.add_item(
+                        discord.ui.TextDisplay(format_chart(chart))
+                    )
             elif len(track.charts) > 1:
                 chart_list: list[str] = []
 

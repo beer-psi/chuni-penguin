@@ -1135,11 +1135,17 @@ class ToolsCog(commands.Cog, name="Tools"):
             )
 
             view = discord.ui.LayoutView(timeout=None)
+            jacket_url = get_jacket_url(song)
+
             view.add_item(
                 discord.ui.Container(
-                    discord.ui.Section(
-                        discord.ui.TextDisplay(content),
-                        accessory=discord.ui.Thumbnail(get_jacket_url(song)),
+                    (
+                        discord.ui.Section(
+                            discord.ui.TextDisplay(content),
+                            accessory=discord.ui.Thumbnail(jacket_url),
+                        )
+                        if jacket_url is not None
+                        else discord.ui.TextDisplay(content)
                     ),
                     discord.ui.MediaGallery(discord.components.MediaGalleryItem(file)),
                     discord.ui.TextDisplay(

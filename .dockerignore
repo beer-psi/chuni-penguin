@@ -1,6 +1,7 @@
 *
 
 !/chuni_penguin
+/chuni_penguin/database/seeds
 !/dbutils
 !/packages
 !/patches

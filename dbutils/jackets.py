@@ -1,4 +1,3 @@
-import contextlib
 import re
 from typing import TypedDict
 
@@ -182,12 +181,14 @@ async def update_jackets(
 
     if config.web.serve_assets and config.web.base_url:
         for jacket in (ASSETS_DIR / "jackets").iterdir():
-            song_id_str = jacket.stem.split("_")[0]
-
-            with contextlib.suppress(ValueError):
+            try:
+                song_id = int(jacket.stem)
+            except ValueError:
+                continue
+            else:
                 jackets.append(
                     {
-                        "song_id": int(song_id_str),
+                        "song_id": song_id,
                         "jacket_url": f"{config.web.base_url}/assets/jackets/{jacket.name}",
                     }
                 )

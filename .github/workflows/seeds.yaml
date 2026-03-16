@@ -1,0 +1,79 @@
+name: "Seeds CI"
+
+on:
+  push:
+    branches:
+      - "develop"
+      - "trunk"
+    paths: &filelist
+      - ".github/workflows/ci.yaml"
+      - "chuni_penguin/database/seeds**"
+      - "dbutils/**"
+  pull_request:
+    branches:
+      - "develop"
+    paths: *filelist
+  workflow_dispatch:
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Check out repository"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd" # v6
+
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@e06108dd0aef18192324c70427afc47652e63a82" # v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: "Install dependencies"
+        run: "uv sync --frozen --all-extras"
+
+      - name: "Create dummy configuration"
+        run: "cp bot.example.ini bot.ini"
+
+      - name: "Test seeds"
+        run: "uv run python -m dbutils seeds check"
+
+  deploy:
+    runs-on: "ubuntu-latest"
+    needs: ["test"]
+    if: "github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
+    steps:
+      - name: "Tailscale"
+        uses: "tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8" # v4
+        with:
+          oauth-client-id: "${{ secrets.TS_OAUTH_CLIENT_ID }}"
+          oauth-secret: "${{ secrets.TS_OAUTH_SECRET }}"
+          tags: "tag:ci"
+          use-cache: "true"
+          ping: "${{ secrets.SSH_HOST }}"
+
+      - name: "Setup SSH"
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+        env:
+          SSH_PRIVATE_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
+          SSH_KNOWN_HOSTS: "${{ secrets.SSH_KNOWN_HOSTS }}"
+
+      - name: "Deploy staging"
+        if: "github.ref == 'refs/heads/develop'"
+        run: 'ssh beerpsi@"$SSH_HOST" /mnt/sdb1/chuni-penguin-develop/deploy-seeds.sh'
+        env:
+          SSH_HOST: "${{ secrets.SSH_HOST }}"
+
+      - name: "Deploy production"
+        if: "github.ref == 'refs/heads/trunk'"
+        run: 'ssh beerpsi@"$SSH_HOST" /mnt/sdb1/chuninewbot/deploy-seeds.sh'
+        env:
+          SSH_HOST: "${{ secrets.SSH_HOST }}"

@@ -45,7 +45,7 @@ def yt_search_link(title: str, difficulty: str) -> str:
     )
 
 
-def get_jacket_url(song: "Song") -> str:
+def get_jacket_url(song: "Song") -> str | None:
     from chuni_penguin.config import config
 
     current_time = datetime.now(ZoneInfo("Asia/Tokyo"))

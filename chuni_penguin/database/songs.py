@@ -52,7 +52,7 @@ class Song(Base):
     min_bpm: Mapped[Optional[int]] = mapped_column(nullable=True)
     max_bpm: Mapped[Optional[int]] = mapped_column(nullable=True)
 
-    jacket: Mapped[str] = mapped_column(nullable=False)
+    jacket: Mapped[str | None] = mapped_column(nullable=True)
 
     available: Mapped[bool] = mapped_column(nullable=False)
     removed: Mapped[bool] = mapped_column(nullable=False)
@@ -155,12 +155,6 @@ class Alias(Base):
         Index("ix_aliases_guild_id", "guild_id"),
         Index("ix_aliases_lower_alias", text("LOWER(alias)")),
         Index("ix_aliases_song_id", "song_id"),
-        Index(
-            "ix_aliases_lower_alias_guild_id",
-            text("LOWER(alias)"),
-            "guild_id",
-            unique=True,
-        ),
     )
 
     rowid: Mapped[int] = mapped_column(primary_key=True)
