@@ -35,6 +35,9 @@ jobs:
       - name: "Install dependencies"
         run: "uv sync --frozen --all-extras"
 
+      - name: "Create dummy configuration"
+        run: "cp bot.example.ini bot.ini"
+
       - name: "Test seeds"
         run: "uv run python -m dbutils seeds check"
 

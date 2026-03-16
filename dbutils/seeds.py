@@ -513,6 +513,8 @@ async def load_seeds(
         AsyncSession(connection, expire_on_commit=False) as session,
         session.begin(),
     ):
+        logger.info("song, charts, sdvx.in chart view, jackets, aliases")
+
         songs = seeds_repo.read("songs", list[SeedsSong])
 
         # Remove songs that are not part of seeds
@@ -676,9 +678,11 @@ async def load_seeds(
                 if a.guild_id == 0 and a.alias.lower() not in seeds_aliases:
                     await session.delete(a)
 
+        logger.info("updated", count=len(songs))
         del songs_by_id
         del songs
 
+        logger.info("courses")
         courses = seeds_repo.read("courses", list[SeedsCourse])
 
         # Delete courses that are not part of seeds
@@ -790,8 +794,10 @@ async def load_seeds(
             ),
             ctcs,
         )
+        logger.info("updated", count=len(courses))
         del courses
 
+        logger.info("linked gates")
         linked_gates = seeds_repo.read("linked-gates", list[SeedsLinkedGate])
 
         # Remove gates that are not part of seeds
@@ -870,6 +876,7 @@ async def load_seeds(
                 for condition in gate.conditions
             ],
         )
+        logger.info("updated", count=len(linked_gates))
         del linked_gates
 
 
