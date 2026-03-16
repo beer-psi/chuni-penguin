@@ -203930,7 +203930,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "07132",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -203973,7 +203976,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03172",
+                    "end_index": "3"
+                }
             }
         ],
         "jackets": [
@@ -204016,7 +204022,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10002",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
