@@ -157,6 +157,9 @@ def config_dec_hook(ty: type, obj: Any):
     if ty is CommaDelimitedSet and ty_arg is int and isinstance(obj, str):
         return CommaDelimitedSet(int(item.strip()) for item in obj.split(","))
 
+    if issubclass(ty, Path) and isinstance(obj, str):
+        return ty(obj)
+
     msg = f"Objects of type {obj.__class__.__name__} cannot be converted into type {ty}"
     raise NotImplementedError(msg)
 
