@@ -934,28 +934,13 @@
         "damage_jcrit": 0,
         "tracks": [
             {
-                "charts": [
-                    {
-                        "song_id": 2039,
-                        "difficulty": "EXP"
-                    }
-                ]
+                "charts": []
             },
             {
-                "charts": [
-                    {
-                        "song_id": 1094,
-                        "difficulty": "MAS"
-                    }
-                ]
+                "charts": []
             },
             {
-                "charts": [
-                    {
-                        "song_id": 559,
-                        "difficulty": "MAS"
-                    }
-                ]
+                "charts": []
             }
         ]
     },

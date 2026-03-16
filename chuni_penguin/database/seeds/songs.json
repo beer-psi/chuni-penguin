@@ -200534,7 +200534,7 @@
         "bpm": 196,
         "min_bpm": 48,
         "max_bpm": 196,
-        "jacket": null,
+        "jacket": "https://missless.b-cdn.net/chun/assets/a91232f7635c0fed421441c9fe0329aaebe537ae42287db4b7926fbb877428b7.png",
         "available": false,
         "removed": true,
         "is_hidden_on_chuninet": false,
@@ -200562,12 +200562,9 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/3932e97b0757b6ae.jpg",
-            "https://chunithm-net-eng.com/mobile/img/https://missless.b-cdn.net/chun/assets/a91232f7635c0fed421441c9fe0329aaebe537ae42287db4b7926fbb877428b7.png",
             "https://chunithm.beerpsi.cc/assets/jackets/8241.png",
             "https://chunithm.beerpsi.cc/assets/jackets/8241.webp",
-            "https://missless.b-cdn.net/chun/assets/a91232f7635c0fed421441c9fe0329aaebe537ae42287db4b7926fbb877428b7.png",
-            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/3932e97b0757b6ae.jpg",
-            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/https://missless.b-cdn.net/chun/assets/a91232f7635c0fed421441c9fe0329aaebe537ae42287db4b7926fbb877428b7.png"
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/3932e97b0757b6ae.jpg"
         ]
     },
     {
@@ -203933,10 +203930,7 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": {
-                    "id": "07132",
-                    "end_index": ""
-                }
+                "sdvxin": null
             }
         ],
         "jackets": [
@@ -203979,10 +203973,7 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": {
-                    "id": "03172",
-                    "end_index": "3"
-                }
+                "sdvxin": null
             }
         ],
         "jackets": [
@@ -204025,10 +204016,7 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": {
-                    "id": "10002",
-                    "end_index": ""
-                }
+                "sdvxin": null
             }
         ],
         "jackets": [
