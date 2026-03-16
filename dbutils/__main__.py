@@ -162,7 +162,7 @@ async def main():
                 url=args.url,
                 branch=args.branch,
                 username=args.git_username,
-                user_email=args.git_email,
+                email=args.git_email,
             )
         elif args.seeds_path is not None:
             seeds_config = LocalSeedsConfig(args.seeds_path)

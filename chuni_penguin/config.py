@@ -141,7 +141,7 @@ class LocalSeedsConfig(msgspec.Struct, tag="local"):
 class GitSeedsConfig(msgspec.Struct, tag="git"):
     url: str
     username: str
-    user_email: str
+    email: str
     branch: str | msgspec.UnsetType = msgspec.UNSET
 
 

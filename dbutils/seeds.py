@@ -965,7 +965,7 @@ async def backsync_seeds(
 
     seeds_repo.authenticate_git(
         seeds_config.username,
-        seeds_config.user_email,
+        seeds_config.email,
         str(
             yarl.URL(seeds_config.url)
             .with_user(git_username)
