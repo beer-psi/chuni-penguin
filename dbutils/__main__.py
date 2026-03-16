@@ -1,4 +1,7 @@
 import argparse
+import contextlib
+import sys
+from errno import EINVAL
 from pathlib import Path
 
 import alembic.command
@@ -9,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from chuni_penguin.config import config
+from chuni_penguin.config import GitSeedsConfig, LocalSeedsConfig, config
 from chuni_penguin.database.base import Base
 from chuni_penguin.logging import logger
 from chuni_penguin.utils import get_loop_factory
@@ -19,8 +22,27 @@ from .chunirec import update_db
 from .jackets import update_jackets
 from .merge_options import merge_options
 from .sdvxin import update_sdvxin
-from .seeds import dump_seeds, load_seeds, sort_seeds, validate_seeds
+from .seeds import (
+    backsync_seeds,
+    dump_seeds,
+    load_seeds,
+    pull_seeds_repository,
+    sort_seeds,
+    validate_seeds,
+)
 from .tachi import update_tachi
+
+
+def add_seeds_repo_arguments(
+    parser: argparse.ArgumentParser,
+):
+    parser.add_argument("-p", "--seeds-path", type=Path, default=None)
+    parser.add_argument("--url", default=None)
+    parser.add_argument("--branch", default=None)
+    parser.add_argument("--git-username", default=None)
+    parser.add_argument("--git-email", default=None)
+
+    return parser
 
 
 async def main():
@@ -61,15 +83,31 @@ async def main():
     )
 
     seeds = subparsers.add_parser("seeds", help="Seeds management commands")
+
     seeds_subparsers = seeds.add_subparsers(dest="seeds_command", required=True)
-    seeds_subparsers.add_parser(
-        "dump", help="Dump data from the database to seeds files"
+    add_seeds_repo_arguments(
+        seeds_subparsers.add_parser(
+            "dump", help="Dump data from the database to seeds files"
+        )
     )
-    seeds_subparsers.add_parser(
-        "load", help="Load data from the seeds files to the database"
+    add_seeds_repo_arguments(
+        seeds_subparsers.add_parser(
+            "load", help="Load data from the seeds files to the database"
+        )
     )
-    seeds_subparsers.add_parser("check", help="Verify database seeds integrity")
-    seeds_subparsers.add_parser("sort", help="Sort database seeds")
+    add_seeds_repo_arguments(
+        seeds_subparsers.add_parser("check", help="Verify database seeds integrity")
+    )
+    add_seeds_repo_arguments(
+        seeds_subparsers.add_parser("sort", help="Sort database seeds")
+    )
+    seeds_backsync_parser = add_seeds_repo_arguments(
+        seeds_subparsers.add_parser(
+            "backsync", help="Backsync database seeds to a Git repository"
+        )
+    )
+    seeds_backsync_parser.add_argument("--git-auth-username", default=None)
+    seeds_backsync_parser.add_argument("--git-auth-password", default=None)
 
     args = parser.parse_args()
 
@@ -114,14 +152,53 @@ async def main():
             )
 
     if args.command == "seeds":
-        if args.seeds_command == "dump":
-            await dump_seeds(logger, async_sessionmaker(engine, expire_on_commit=False))
-        if args.seeds_command == "load":
-            await load_seeds(logger, engine)
-        if args.seeds_command == "check":
-            validate_seeds(logger)
-        if args.seeds_command == "sort":
-            sort_seeds(logger)
+        if (
+            args.url is not None
+            and args.branch is not None
+            and args.git_username is not None
+            and args.git_email is not None
+        ):
+            seeds_config = GitSeedsConfig(
+                url=args.url,
+                branch=args.branch,
+                username=args.git_username,
+                user_email=args.git_email,
+            )
+        elif args.seeds_path is not None:
+            seeds_config = LocalSeedsConfig(args.seeds_path)
+        else:
+            seeds_config = config.seeds
+
+        seeds_repo = pull_seeds_repository(logger, seeds_config)
+
+        with contextlib.closing(seeds_repo):
+            if args.seeds_command == "dump":
+                await dump_seeds(
+                    logger,
+                    async_sessionmaker(engine, expire_on_commit=False),
+                    seeds_repo,
+                )
+            if args.seeds_command == "load":
+                await load_seeds(logger, engine, seeds_repo)
+            if args.seeds_command == "check":
+                await validate_seeds(logger, seeds_repo)
+            if args.seeds_command == "sort":
+                await sort_seeds(logger, seeds_repo)
+            if args.seeds_command == "backsync":
+                if not isinstance(seeds_config, GitSeedsConfig):
+                    logger.error(
+                        "Cannot backsync a local repository.", config=seeds_config
+                    )
+                    sys.exit(EINVAL)
+
+                await backsync_seeds(
+                    logger,
+                    async_sessionmaker(engine, expire_on_commit=False),
+                    seeds_config,
+                    seeds_repo,
+                    git_auth_username=args.git_auth_username,
+                    git_auth_password=args.git_auth_password,
+                )
 
     await engine.dispose()
 

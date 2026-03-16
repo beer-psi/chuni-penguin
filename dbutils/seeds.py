@@ -2,8 +2,12 @@ import contextlib
 import enum
 import json
 import operator
+import os
 import random
+import shutil
 import string
+import subprocess
+import tempfile
 from datetime import UTC, datetime
 from functools import reduce
 from pathlib import Path
@@ -11,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import discord
 import msgspec
+import yarl
 from sqlalchemy import (
     Column,
     Integer,
@@ -33,7 +38,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import contains_eager, joinedload
 from structlog.stdlib import BoundLogger
 
-from chuni_penguin.config import config
+from chuni_penguin.config import GitSeedsConfig, LocalSeedsConfig, config
 from chuni_penguin.constants import ChunithmVersion
 from chuni_penguin.database import (
     Alias,
@@ -216,9 +221,131 @@ class SeedsLinkedGate(msgspec.Struct):
     conditions: list[SeedsLinkedGateCondition]
 
 
+class SeedsRepository:
+    def __init__(self, logger: BoundLogger, base_dir: Path, *, is_local: bool = True):
+        self.logger = logger
+        self.base_dir = base_dir
+        self.is_local = is_local
+
+    def read[T: object](self, collection: str, typ: type[T]) -> T:
+        with (self.base_dir / collection).with_suffix(".json").open("rb") as f:
+            return msgspec.json.decode(f.read(), type=typ, dec_hook=msgspec_dec_hook)
+
+    def read_raw(self, collection: str) -> Any:
+        with (self.base_dir / collection).with_suffix(".json").open("rb") as f:
+            return msgspec.json.decode(f.read())
+
+    def write(self, collection: str, data: Any):
+        with (self.base_dir / collection).with_suffix(".json").open("w") as f:
+            json.dump(data, f, cls=SeedsJSONEncoder, indent=4, ensure_ascii=False)
+
+    def authenticate_git(
+        self, username: str, email: str, origin_url: str | None = None
+    ):
+        if self.is_local:
+            return
+
+        subprocess.check_call(
+            ["git", "config", "user.name", username], cwd=self.base_dir
+        )
+        subprocess.check_call(["git", "config", "user.email", email], cwd=self.base_dir)
+
+        if origin_url is not None:
+            subprocess.check_call(
+                ["git", "remote", "set-url", "origin", origin_url], cwd=self.base_dir
+            )
+
+    def commit_and_push_changes(self, message: str):
+        if self.is_local:
+            return
+
+        stdout = subprocess.check_output(
+            ["git", "status", "--porcelain"], cwd=self.base_dir
+        )
+
+        if not stdout:
+            self.logger.info("No changes, not committing anything back.")
+            return
+
+        self.logger.info("Changes detected.")
+
+        subprocess.check_call(["git", "add", "."], cwd=self.base_dir)
+        stdout = subprocess.check_output(
+            ["git", "commit", "-am", f"automated: {message}"], cwd=self.base_dir
+        )
+        subprocess.check_call(["git", "push"], cwd=self.base_dir)
+
+        self.logger.info("Committed and pushed", message=stdout)
+
+    def close(self):
+        if not self.is_local:
+            try:
+                base_dir = subprocess.check_output(
+                    ["git", "rev-parse", "--show-toplevel"], cwd=self.base_dir
+                ).strip()
+            except subprocess.CalledProcessError:
+                base_dir = self.base_dir
+
+            shutil.rmtree(base_dir)
+
+
+def pull_seeds_repository(
+    logger: BoundLogger, seeds: LocalSeedsConfig | GitSeedsConfig
+):
+    if isinstance(seeds, LocalSeedsConfig):
+        logger.info("opening local seeds repository", config=seeds.path)
+
+        return SeedsRepository(logger, seeds.path, is_local=True)
+
+    seeds_dir = tempfile.mkdtemp(prefix="chuni-penguin-seeds-")
+
+    logger.info("pulling remote seeds directory", destination=seeds_dir, url=seeds.url)
+
+    try:  # noqa: SIM105
+        shutil.rmtree(seeds_dir)
+    except FileNotFoundError:
+        pass
+
+    if seeds.branch is not msgspec.UNSET:
+        output = subprocess.check_output(
+            [
+                "git",
+                "clone",
+                "--filter=blob:none",
+                "--sparse",
+                seeds.url,
+                "-b",
+                seeds.branch,
+                seeds_dir,
+            ]
+        )
+    else:
+        output = subprocess.check_output(
+            ["git", "clone", "--filter=blob:none", "--sparse", seeds.url, seeds_dir]
+        )
+
+    if output:
+        raise Exception(output)  # noqa: TRY002
+
+    subprocess.check_call(
+        ["git", "sparse-checkout", "set", "--cone", "--sparse-index"], cwd=seeds_dir
+    )
+    output = subprocess.check_output(
+        ["git", "sparse-checkout", "add", "chuni_penguin/database/seeds"], cwd=seeds_dir
+    )
+
+    if output:
+        raise Exception(output)  # noqa: TRY002
+
+    return SeedsRepository(
+        logger, Path(seeds_dir) / "chuni_penguin" / "database" / "seeds", is_local=False
+    )
+
+
 async def dump_seeds(
     logger: BoundLogger,
     async_session: async_sessionmaker[AsyncSession],
+    seeds_repo: SeedsRepository,
 ):
     async with async_session() as session:
         result = await session.execute(
@@ -263,15 +390,8 @@ async def dump_seeds(
 
             songs.append(song)
 
-        with (SEEDS_DIR / "songs.json").open("w", encoding="utf-8") as f:
-            json.dump(
-                songs,
-                f,
-                cls=SeedsJSONEncoder,
-                indent=4,
-                ensure_ascii=False,
-            )
-
+        seeds_repo.write("songs", songs)
+        logger.info("Written songs to database seeds", count=len(songs))
         del songs
 
         result = await session.execute(
@@ -307,15 +427,8 @@ async def dump_seeds(
 
             courses.append(course)
 
-        with (SEEDS_DIR / "courses.json").open("w", encoding="utf-8") as f:
-            json.dump(
-                courses,
-                f,
-                cls=SeedsJSONEncoder,
-                indent=4,
-                ensure_ascii=False,
-            )
-
+        seeds_repo.write("courses", courses)
+        logger.info("Written courses to database seeds", count=len(courses))
         del courses
 
         result = await session.execute(
@@ -342,18 +455,11 @@ async def dump_seeds(
 
             linked_gates.append(linked_gate)
 
-        with (SEEDS_DIR / "linked-gates.json").open("w", encoding="utf-8") as f:
-            json.dump(
-                linked_gates,
-                f,
-                cls=SeedsJSONEncoder,
-                indent=4,
-                ensure_ascii=False,
-            )
-
+        seeds_repo.write("linked-gates", linked_gates)
+        logger.info("Written Linked GATEs to database seeds", count=len(linked_gates))
         del linked_gates
 
-    sort_seeds(logger)
+    await sort_seeds(logger, seeds_repo)
 
 
 async def delete_not_in_multiple_columns(
@@ -398,451 +504,457 @@ async def delete_not_in_multiple_columns(
     await connection.run_sync(metadata.drop_all, [temp])
 
 
-async def load_seeds(logger: BoundLogger, engine: AsyncEngine):
+async def load_seeds(
+    logger: BoundLogger, engine: AsyncEngine, seeds_repo: SeedsRepository
+):
     async with (
         engine.begin() as connection,
         AsyncSession(connection, expire_on_commit=False) as session,
         session.begin(),
     ):
-        if (SEEDS_DIR / "songs.json").exists():
-            with (SEEDS_DIR / "songs.json").open("rb") as f:
-                songs = msgspec.json.decode(
-                    f.read(), type=list[SeedsSong], dec_hook=msgspec_dec_hook
-                )
+        songs = seeds_repo.read("songs", list[SeedsSong])
 
-            # Remove songs that are not part of seeds
-            query = delete(Song).where(Song.id.not_in([s.id for s in songs]))
-            await session.execute(query)
+        # Remove songs that are not part of seeds
+        query = delete(Song).where(Song.id.not_in([s.id for s in songs]))
+        await session.execute(query)
 
-            # Upsert songs
-            query = insert(Song)
-            query = query.on_conflict_do_update(
-                index_elements=[Song.id],
-                set_={
-                    c.name: getattr(query.excluded, c.name)
-                    for c in Song.__table__.columns
-                },
+        # Upsert songs
+        query = insert(Song)
+        query = query.on_conflict_do_update(
+            index_elements=[Song.id],
+            set_={
+                c.name: getattr(query.excluded, c.name) for c in Song.__table__.columns
+            },
+        )
+
+        await session.execute(
+            query,
+            [
+                {
+                    "chunithm_catcode": song.chunithm_catcode.value,
+                    **{
+                        c.name: getattr(song, c.name)
+                        for c in Song.__table__.columns
+                        if c.name != "chunithm_catcode"
+                    },
+                }
+                for song in songs
+            ],
+        )
+
+        # Remove charts that are not part of seeds
+        await delete_not_in_multiple_columns(
+            connection,
+            session,
+            Chart,
+            Chart.metadata,
+            [
+                Column("song_id", Integer(), nullable=False),
+                Column("difficulty", String(), nullable=False),
+            ],
+            [
+                {"song_id": song.id, "difficulty": chart.difficulty.short()}
+                for song in songs
+                for chart in song.charts
+            ],
+        )
+
+        # Upsert charts
+        query = insert(Chart)
+        query = query.on_conflict_do_update(
+            index_elements=[Chart.song_id, Chart.difficulty],
+            set_={
+                c.name: getattr(query.excluded, c.name)
+                for c in Chart.__table__.columns
+                if c.name not in ("id", "song_id", "difficulty")
+            },
+        )
+        await session.execute(
+            query,
+            [
+                {
+                    "song_id": song.id,
+                    "difficulty": chart.difficulty.short(),
+                    **{
+                        c.name: getattr(chart, c.name)
+                        for c in Chart.__table__.columns
+                        if c.name not in ("id", "song_id", "difficulty")
+                    },
+                }
+                for song in songs
+                for chart in song.charts
+            ],
+        )
+
+        # Remove sdvx.in chart views that are not part of seeds
+        await delete_not_in_multiple_columns(
+            connection,
+            session,
+            SdvxinChartView,
+            SdvxinChartView.metadata,
+            [
+                Column("song_id", Integer(), nullable=False),
+                Column("difficulty", String(), nullable=False),
+            ],
+            [
+                {"song_id": song.id, "difficulty": chart.difficulty.short()}
+                for song in songs
+                for chart in song.charts
+                if chart.sdvxin is not None
+            ],
+        )
+
+        # Upsert sdvx.in chart views
+        query = insert(SdvxinChartView)
+        query = query.on_conflict_do_update(
+            index_elements=[SdvxinChartView.song_id, SdvxinChartView.difficulty],
+            set_={"id": query.excluded.id, "end_index": query.excluded.end_index},
+        )
+        await session.execute(
+            query,
+            [
+                {
+                    "id": chart.sdvxin.id,
+                    "song_id": song.id,
+                    "difficulty": chart.difficulty.short(),
+                    "end_index": chart.sdvxin.end_index,
+                }
+                for song in songs
+                for chart in song.charts
+                if chart.sdvxin is not None
+            ],
+        )
+
+        # Remove jacket URLs that are not part of seeds
+        await session.execute(
+            delete(SongJacket).where(
+                SongJacket.jacket_url.not_in([j for s in songs for j in s.jackets])
             )
+        )
 
-            await session.execute(
-                query,
-                [
-                    {
-                        "chunithm_catcode": song.chunithm_catcode.value,
-                        **{
-                            c.name: getattr(song, c.name)
-                            for c in Song.__table__.columns
-                            if c.name != "chunithm_catcode"
-                        },
-                    }
-                    for song in songs
-                ],
-            )
+        # Upsert jackets
+        query = insert(SongJacket)
+        query = query.on_conflict_do_update(
+            index_elements=[SongJacket.jacket_url],
+            set_={"song_id": query.excluded.song_id},
+        )
+        await session.execute(
+            query,
+            [{"song_id": s.id, "jacket_url": j} for s in songs for j in s.jackets],
+        )
 
-            # Remove charts that are not part of seeds
-            await delete_not_in_multiple_columns(
-                connection,
-                session,
-                Chart,
-                Chart.metadata,
-                [
-                    Column("song_id", Integer(), nullable=False),
-                    Column("difficulty", String(), nullable=False),
-                ],
-                [
-                    {"song_id": song.id, "difficulty": chart.difficulty.short()}
-                    for song in songs
-                    for chart in song.charts
-                ],
-            )
+        # Update charts, aliases and jackets
+        query = (
+            select(Song)
+            .outerjoin(Alias, (Song.id == Alias.song_id) & (Alias.guild_id == 0))
+            .options(contains_eager(Song.aliases))
+        )
+        result = await session.execute(query)
+        songs_by_id = {s.id: s for s in songs}
 
-            # Upsert charts
-            query = insert(Chart)
-            query = query.on_conflict_do_update(
-                index_elements=[Chart.song_id, Chart.difficulty],
-                set_={
-                    c.name: getattr(query.excluded, c.name)
-                    for c in Chart.__table__.columns
-                    if c.name not in ("id", "song_id", "difficulty")
-                },
-            )
-            await session.execute(
-                query,
-                [
-                    {
-                        "song_id": song.id,
-                        "difficulty": chart.difficulty.short(),
-                        **{
-                            c.name: getattr(chart, c.name)
-                            for c in Chart.__table__.columns
-                            if c.name not in ("id", "song_id", "difficulty")
-                        },
-                    }
-                    for song in songs
-                    for chart in song.charts
-                ],
-            )
+        for row in result.scalars().unique():
+            song = songs_by_id[row.id]
 
-            # Remove sdvx.in chart views that are not part of seeds
-            await delete_not_in_multiple_columns(
-                connection,
-                session,
-                SdvxinChartView,
-                SdvxinChartView.metadata,
-                [
-                    Column("song_id", Integer(), nullable=False),
-                    Column("difficulty", String(), nullable=False),
-                ],
-                [
-                    {"song_id": song.id, "difficulty": chart.difficulty.short()}
-                    for song in songs
-                    for chart in song.charts
-                    if chart.sdvxin is not None
-                ],
-            )
+            # ==== Aliases ====
+            existing_aliases = {a.alias.lower() for a in row.aliases}
+            seeds_aliases = {a.lower() for a in song.aliases}
 
-            # Upsert sdvx.in chart views
-            query = insert(SdvxinChartView)
-            query = query.on_conflict_do_update(
-                index_elements=[SdvxinChartView.song_id, SdvxinChartView.difficulty],
-                set_={"id": query.excluded.id, "end_index": query.excluded.end_index},
-            )
-            await session.execute(
-                query,
-                [
-                    {
-                        "id": chart.sdvxin.id,
-                        "song_id": song.id,
-                        "difficulty": chart.difficulty.short(),
-                        "end_index": chart.sdvxin.end_index,
-                    }
-                    for song in songs
-                    for chart in song.charts
-                    if chart.sdvxin is not None
-                ],
-            )
-
-            # Remove jacket URLs that are not part of seeds
-            await session.execute(
-                delete(SongJacket).where(
-                    SongJacket.jacket_url.not_in([j for s in songs for j in s.jackets])
-                )
-            )
-
-            # Upsert jackets
-            query = insert(SongJacket)
-            query = query.on_conflict_do_update(
-                index_elements=[SongJacket.jacket_url],
-                set_={"song_id": query.excluded.song_id},
-            )
-            await session.execute(
-                query,
-                [{"song_id": s.id, "jacket_url": j} for s in songs for j in s.jackets],
-            )
-
-            # Update charts, aliases and jackets
-            query = (
-                select(Song)
-                .outerjoin(Alias, (Song.id == Alias.song_id) & (Alias.guild_id == 0))
-                .options(contains_eager(Song.aliases))
-            )
-            result = await session.execute(query)
-            songs_by_id = {s.id: s for s in songs}
-
-            for row in result.scalars().unique():
-                song = songs_by_id[row.id]
-
-                # ==== Aliases ====
-                existing_aliases = {a.alias.lower() for a in row.aliases}
-                seeds_aliases = {a.lower() for a in song.aliases}
-
-                for a in song.aliases:
-                    if a.lower() not in existing_aliases:
-                        session.add(
-                            Alias(
-                                alias=a,
-                                guild_id=0,
-                                owner_id=None,
-                                song_id=row.id,
-                                uses=0,
-                            )
+            for a in song.aliases:
+                if a.lower() not in existing_aliases:
+                    session.add(
+                        Alias(
+                            alias=a,
+                            guild_id=0,
+                            owner_id=None,
+                            song_id=row.id,
+                            uses=0,
                         )
+                    )
 
-                for a in row.aliases:
-                    if a.guild_id == 0 and a.alias.lower() not in seeds_aliases:
-                        await session.delete(a)
+            for a in row.aliases:
+                if a.guild_id == 0 and a.alias.lower() not in seeds_aliases:
+                    await session.delete(a)
 
-            del songs_by_id
-            del songs
+        del songs_by_id
+        del songs
 
-        if (SEEDS_DIR / "courses.json").exists():
-            with (SEEDS_DIR / "courses.json").open("rb") as f:
-                courses = msgspec.json.decode(
-                    f.read(), type=list[SeedsCourse], dec_hook=msgspec_dec_hook
-                )
+        courses = seeds_repo.read("courses", list[SeedsCourse])
 
-            # Delete courses that are not part of seeds
-            query = delete(Course).where(Course.id.not_in([c.id for c in courses]))
-            result = await session.execute(query)
+        # Delete courses that are not part of seeds
+        query = delete(Course).where(Course.id.not_in([c.id for c in courses]))
+        result = await session.execute(query)
 
-            # Upsert courses
-            query = insert(Course)
-            query = query.on_conflict_do_update(
-                index_elements=[Course.id],
-                set_={
-                    c.name: getattr(query.excluded, c.name)
+        # Upsert courses
+        query = insert(Course)
+        query = query.on_conflict_do_update(
+            index_elements=[Course.id],
+            set_={
+                c.name: getattr(query.excluded, c.name)
+                for c in Course.__table__.columns
+            },
+        )
+
+        await session.execute(
+            query,
+            [
+                {
+                    c.name: (
+                        getattr(course, c.name)
+                        if c.name != "cls"
+                        else getattr(CourseClass, course.cls)
+                    )
                     for c in Course.__table__.columns
-                },
-            )
+                }
+                for course in courses
+            ],
+        )
 
-            await session.execute(
-                query,
-                [
-                    {
-                        c.name: (
-                            getattr(course, c.name)
-                            if c.name != "cls"
-                            else getattr(CourseClass, course.cls)
-                        )
-                        for c in Course.__table__.columns
-                    }
-                    for course in courses
-                ],
-            )
-
-            # Delete course tracks that are not part of seeds
-            await delete_not_in_multiple_columns(
-                connection,
-                session,
-                CourseTrack,
-                CourseTrack.metadata,
-                [
-                    Column("course_id", Integer(), nullable=False),
-                    Column("track", Integer(), nullable=False),
-                ],
-                [
-                    {
-                        "course_id": course.id,
-                        "track": track_no + 1,
-                    }
-                    for course in courses
-                    for track_no, _ in enumerate(course.tracks)
-                ],
-            )
-
-            # Upsert course tracks
-            query = insert(CourseTrack)
-            query = query.on_conflict_do_update(
-                index_elements=[CourseTrack.course_id, CourseTrack.track],
-                set_={"level": query.excluded.level},
-            )
-
-            await session.execute(
-                query,
-                [
-                    {
-                        "course_id": course.id,
-                        "track": track_no + 1,
-                        "level": track.level
-                        if track.level is not msgspec.UNSET
-                        else None,
-                    }
-                    for course in courses
-                    for track_no, track in enumerate(course.tracks)
-                ],
-            )
-
-            # Delete course track charts that are not part of seeds
-            ctcs = [
+        # Delete course tracks that are not part of seeds
+        await delete_not_in_multiple_columns(
+            connection,
+            session,
+            CourseTrack,
+            CourseTrack.metadata,
+            [
+                Column("course_id", Integer(), nullable=False),
+                Column("track", Integer(), nullable=False),
+            ],
+            [
                 {
                     "course_id": course.id,
                     "track": track_no + 1,
-                    "song_id": chart.song_id,
-                    "difficulty": chart.difficulty.short(),
+                }
+                for course in courses
+                for track_no, _ in enumerate(course.tracks)
+            ],
+        )
+
+        # Upsert course tracks
+        query = insert(CourseTrack)
+        query = query.on_conflict_do_update(
+            index_elements=[CourseTrack.course_id, CourseTrack.track],
+            set_={"level": query.excluded.level},
+        )
+
+        await session.execute(
+            query,
+            [
+                {
+                    "course_id": course.id,
+                    "track": track_no + 1,
+                    "level": track.level if track.level is not msgspec.UNSET else None,
                 }
                 for course in courses
                 for track_no, track in enumerate(course.tracks)
-                if track.charts is not msgspec.UNSET
-                for chart in track.charts
-            ]
+            ],
+        )
 
-            await delete_not_in_multiple_columns(
-                connection,
-                session,
-                course_track_charts,
-                course_track_charts.metadata,
-                [
-                    Column("course_id", Integer(), nullable=False),
-                    Column("track", Integer(), nullable=False),
-                    Column("song_id", Integer(), nullable=False),
-                    Column("difficulty", Integer(), nullable=False),
-                ],
-                ctcs,
-            )
+        # Delete course track charts that are not part of seeds
+        ctcs = [
+            {
+                "course_id": course.id,
+                "track": track_no + 1,
+                "song_id": chart.song_id,
+                "difficulty": chart.difficulty.short(),
+            }
+            for course in courses
+            for track_no, track in enumerate(course.tracks)
+            if track.charts is not msgspec.UNSET
+            for chart in track.charts
+        ]
 
-            # Upsert course track charts
-            await session.execute(
-                insert(course_track_charts).on_conflict_do_nothing(
-                    index_elements=[
-                        course_track_charts.c.course_id,
-                        course_track_charts.c.track,
-                        course_track_charts.c.song_id,
-                        course_track_charts.c.difficulty,
-                    ]
-                ),
-                ctcs,
-            )
-            del courses
+        await delete_not_in_multiple_columns(
+            connection,
+            session,
+            course_track_charts,
+            course_track_charts.metadata,
+            [
+                Column("course_id", Integer(), nullable=False),
+                Column("track", Integer(), nullable=False),
+                Column("song_id", Integer(), nullable=False),
+                Column("difficulty", Integer(), nullable=False),
+            ],
+            ctcs,
+        )
 
-        if (SEEDS_DIR / "linked-gates.json").exists():
-            with (SEEDS_DIR / "linked-gates.json").open("rb") as f:
-                linked_gates = msgspec.json.decode(
-                    f.read(), type=list[SeedsLinkedGate], dec_hook=msgspec_dec_hook
-                )
-
-            # Remove gates that are not part of seeds
-            query = delete(LinkedGate).where(
-                LinkedGate.id.not_in([g.id for g in linked_gates])
-            )
-            await session.execute(query)
-
-            # Upsert gates
-            query = insert(LinkedGate)
-            query = query.on_conflict_do_update(
-                index_elements=[LinkedGate.id],
-                set_={
-                    c.name: getattr(query.excluded, c.name)
-                    for c in LinkedGate.__table__.columns
-                    if c.name != "id"
-                },
-            )
-            await session.execute(
-                query,
-                [
-                    {c.name: getattr(g, c.name) for c in LinkedGate.__table__.columns}
-                    for g in linked_gates
-                ],
-            )
-
-            # Remove link levels that are not part of seeds
-            await delete_not_in_multiple_columns(
-                connection,
-                session,
-                LinkedGateCondition,
-                LinkedGateCondition.metadata,
-                [
-                    Column("linked_gate_id", Integer(), nullable=False),
-                    Column("level", Integer(), nullable=False),
-                    Column("region", String(), nullable=False),
-                ],
-                [
-                    {"linked_gate_id": g.id, "level": c.level.value, "region": c.region}
-                    for g in linked_gates
-                    for c in g.conditions
-                ],
-            )
-
-            # Upsert linked gate conditions
-            query = insert(LinkedGateCondition)
-            query = query.on_conflict_do_update(
+        # Upsert course track charts
+        await session.execute(
+            insert(course_track_charts).on_conflict_do_nothing(
                 index_elements=[
-                    LinkedGateCondition.linked_gate_id,
-                    LinkedGateCondition.level,
-                    LinkedGateCondition.region,
-                ],
-                set_={
-                    c.name: getattr(query.excluded, c.name)
-                    for c in LinkedGateCondition.__table__.columns
-                    if c.name not in ("linked_gate_id", "level", "region")
-                },
-            )
-            await session.execute(
-                query,
-                [
-                    {
-                        "linked_gate_id": gate.id,
-                        "level": condition.level.value,
-                        "region": condition.region,
-                        "difficulty": condition.difficulty.short(),
-                        "life": condition.life,
-                        "recovery_life": condition.recovery_life,
-                        "damage_miss": condition.damage_miss,
-                        "damage_attack": condition.damage_attack,
-                        "damage_justice": condition.damage_justice,
-                        "start_date": condition.start_date,
-                        "end_date": condition.end_date,
-                    }
-                    for gate in linked_gates
-                    for condition in gate.conditions
-                ],
-            )
+                    course_track_charts.c.course_id,
+                    course_track_charts.c.track,
+                    course_track_charts.c.song_id,
+                    course_track_charts.c.difficulty,
+                ]
+            ),
+            ctcs,
+        )
+        del courses
+
+        linked_gates = seeds_repo.read("linked-gates", list[SeedsLinkedGate])
+
+        # Remove gates that are not part of seeds
+        query = delete(LinkedGate).where(
+            LinkedGate.id.not_in([g.id for g in linked_gates])
+        )
+        await session.execute(query)
+
+        # Upsert gates
+        query = insert(LinkedGate)
+        query = query.on_conflict_do_update(
+            index_elements=[LinkedGate.id],
+            set_={
+                c.name: getattr(query.excluded, c.name)
+                for c in LinkedGate.__table__.columns
+                if c.name != "id"
+            },
+        )
+        await session.execute(
+            query,
+            [
+                {c.name: getattr(g, c.name) for c in LinkedGate.__table__.columns}
+                for g in linked_gates
+            ],
+        )
+
+        # Remove link levels that are not part of seeds
+        await delete_not_in_multiple_columns(
+            connection,
+            session,
+            LinkedGateCondition,
+            LinkedGateCondition.metadata,
+            [
+                Column("linked_gate_id", Integer(), nullable=False),
+                Column("level", Integer(), nullable=False),
+                Column("region", String(), nullable=False),
+            ],
+            [
+                {"linked_gate_id": g.id, "level": c.level.value, "region": c.region}
+                for g in linked_gates
+                for c in g.conditions
+            ],
+        )
+
+        # Upsert linked gate conditions
+        query = insert(LinkedGateCondition)
+        query = query.on_conflict_do_update(
+            index_elements=[
+                LinkedGateCondition.linked_gate_id,
+                LinkedGateCondition.level,
+                LinkedGateCondition.region,
+            ],
+            set_={
+                c.name: getattr(query.excluded, c.name)
+                for c in LinkedGateCondition.__table__.columns
+                if c.name not in ("linked_gate_id", "level", "region")
+            },
+        )
+        await session.execute(
+            query,
+            [
+                {
+                    "linked_gate_id": gate.id,
+                    "level": condition.level.value,
+                    "region": condition.region,
+                    "difficulty": condition.difficulty.short(),
+                    "life": condition.life,
+                    "recovery_life": condition.recovery_life,
+                    "damage_miss": condition.damage_miss,
+                    "damage_attack": condition.damage_attack,
+                    "damage_justice": condition.damage_justice,
+                    "start_date": condition.start_date,
+                    "end_date": condition.end_date,
+                }
+                for gate in linked_gates
+                for condition in gate.conditions
+            ],
+        )
+        del linked_gates
 
 
-def validate_seeds(logger: BoundLogger):
+async def validate_seeds(logger: BoundLogger, seeds_repo: SeedsRepository):
     files = {
-        "songs.json": list[SeedsSong],
-        "courses.json": list[SeedsCourse],
-        "linked-gates.json": list[SeedsLinkedGate],
+        "songs": list[SeedsSong],
+        "courses": list[SeedsCourse],
+        "linked-gates": list[SeedsLinkedGate],
     }
 
     for filename, type in files.items():
-        if (SEEDS_DIR / filename).exists():
-            with (SEEDS_DIR / filename).open("rb") as f:
-                _ = msgspec.json.decode(f.read(), type=type, dec_hook=msgspec_dec_hook)
-        else:
-            logger.warning("Missng seeds file", file=filename)
+        _ = seeds_repo.read(filename, type)
 
     logger.info("OK")
 
 
-def sort_seeds(logger: BoundLogger):
-    if (SEEDS_DIR / "songs.json").exists():
-        with (SEEDS_DIR / "songs.json").open("rb") as f:
-            songs = json.load(f)
+async def sort_seeds(logger: BoundLogger, seeds_repo: SeedsRepository):
+    songs = seeds_repo.read_raw("songs")
+    songs.sort(key=lambda s: s["id"])
 
-        songs.sort(key=lambda s: s["id"])
+    for song in songs:
+        song["charts"].sort(
+            key=lambda c: ["BAS", "ADV", "EXP", "MAS", "ULT", "WE"].index(
+                c["difficulty"]
+            )
+        )
+        song["jackets"].sort()
 
-        for song in songs:
-            song["charts"].sort(
-                key=lambda c: ["BAS", "ADV", "EXP", "MAS", "ULT", "WE"].index(
-                    c["difficulty"]
+    seeds_repo.write("songs", songs)
+
+    courses = seeds_repo.read_raw("courses")
+    courses.sort(key=lambda s: s["id"])
+
+    for course in courses:
+        with contextlib.suppress(KeyError):
+            course["charts"].sort(
+                key=lambda c: (
+                    c["song_id"],
+                    ["BAS", "ADV", "EXP", "MAS", "ULT", "WE"].index(c["difficulty"]),
                 )
             )
-            song["jackets"].sort()
 
-        with (SEEDS_DIR / "songs.json").open("w") as f:
-            json.dump(songs, f, indent=4, ensure_ascii=False)
+    seeds_repo.write("courses", courses)
 
-    if (SEEDS_DIR / "courses.json").exists():
-        with (SEEDS_DIR / "courses.json").open("rb") as f:
-            courses = json.load(f)
+    linked_gates = seeds_repo.read_raw("linked-gates")
+    linked_gates.sort(key=lambda s: s["id"])
 
-        courses.sort(key=lambda s: s["id"])
+    for linked_gate in linked_gates:
+        linked_gate["conditions"].sort(
+            key=lambda c: (c["region"], c["level"]), reverse=True
+        )
 
-        for course in courses:
-            with contextlib.suppress(KeyError):
-                course["charts"].sort(
-                    key=lambda c: (
-                        c["song_id"],
-                        ["BAS", "ADV", "EXP", "MAS", "ULT", "WE"].index(
-                            c["difficulty"]
-                        ),
-                    )
-                )
+    seeds_repo.write("linked-gates", linked_gates)
 
-        with (SEEDS_DIR / "courses.json").open("w") as f:
-            json.dump(courses, f, indent=4, ensure_ascii=False)
 
-    if (SEEDS_DIR / "linked-gates.json").exists():
-        with (SEEDS_DIR / "linked-gates.json").open("rb") as f:
-            linked_gates = json.load(f)
+async def backsync_seeds(
+    logger: BoundLogger,
+    async_session: async_sessionmaker[AsyncSession],
+    seeds_config: GitSeedsConfig,
+    seeds_repo: SeedsRepository,
+    git_auth_username: str | None = None,
+    git_auth_password: str | None = None,
+):
+    git_username = (
+        git_auth_username
+        or config.credentials.git_auth_username
+        or os.environ["GIT_USERNAME"]
+    )
+    git_password = (
+        git_auth_password
+        or config.credentials.git_auth_password
+        or os.environ["GIT_PASSWORD"]
+    )
 
-        linked_gates.sort(key=lambda s: s["id"])
+    await dump_seeds(logger, async_session, seeds_repo)
+    await sort_seeds(logger, seeds_repo)
 
-        for linked_gate in linked_gates:
-            linked_gate["conditions"].sort(
-                key=lambda c: (c["region"], c["level"]), reverse=True
-            )
-
-        with (SEEDS_DIR / "linked-gates.json").open("w") as f:
-            json.dump(linked_gates, f, indent=4, ensure_ascii=False)
+    seeds_repo.authenticate_git(
+        seeds_config.username,
+        seeds_config.user_email,
+        str(
+            yarl.URL(seeds_config.url)
+            .with_user(git_username)
+            .with_password(git_password)
+        ),
+    )
+    seeds_repo.commit_and_push_changes(
+        f"backsync database {datetime.now(UTC).isoformat()}"
+    )
