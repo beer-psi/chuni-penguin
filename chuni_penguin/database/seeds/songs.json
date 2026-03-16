@@ -200534,7 +200534,7 @@
         "bpm": 196,
         "min_bpm": 48,
         "max_bpm": 196,
-        "jacket": "https://missless.b-cdn.net/chun/assets/a91232f7635c0fed421441c9fe0329aaebe537ae42287db4b7926fbb877428b7.png",
+        "jacket": null,
         "available": false,
         "removed": true,
         "is_hidden_on_chuninet": false,
