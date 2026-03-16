@@ -7,6 +7,7 @@ import random
 import shutil
 import string
 import subprocess
+import sys
 import tempfile
 from datetime import UTC, datetime
 from functools import reduce
@@ -879,10 +880,19 @@ async def validate_seeds(logger: BoundLogger, seeds_repo: SeedsRepository):
         "linked-gates": list[SeedsLinkedGate],
     }
 
-    for filename, type in files.items():
-        _ = seeds_repo.read(filename, type)
+    failed = False
 
-    logger.info("OK")
+    for filename, type in files.items():
+        try:
+            _ = seeds_repo.read(filename, type)
+        except msgspec.DecodeError as e:
+            logger.exception("verification failed", exc_info=e, collection=filename)
+            failed = True
+        else:
+            logger.info("OK", collection=filename)
+
+    if failed:
+        sys.exit(1)
 
 
 async def sort_seeds(logger: BoundLogger, seeds_repo: SeedsRepository):
