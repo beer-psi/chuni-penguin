@@ -654,6 +654,8 @@ async def load_seeds(
         )
         result = await session.execute(query)
         songs_by_id = {s.id: s for s in songs}
+        aliases_added = 0
+        aliases_removed = 0
 
         for row in result.scalars().unique():
             song = songs_by_id[row.id]
@@ -673,12 +675,19 @@ async def load_seeds(
                             uses=0,
                         )
                     )
+                    aliases_added = 0
 
             for a in row.aliases:
                 if a.guild_id == 0 and a.alias.lower() not in seeds_aliases:
                     await session.delete(a)
+                    aliases_removed = 0
 
-        logger.info("updated", count=len(songs))
+        logger.info(
+            "updated",
+            count=len(songs),
+            aliases_added=aliases_added,
+            aliases_removed=aliases_removed,
+        )
         del songs_by_id
         del songs
 
