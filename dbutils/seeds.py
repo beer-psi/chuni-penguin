@@ -9,10 +9,11 @@ import string
 import subprocess
 import sys
 import tempfile
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from functools import reduce
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal, Protocol
 
 import discord
 import msgspec
@@ -72,20 +73,6 @@ class SeedsJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class SeedsSdvxin(msgspec.Struct):
-    id: str
-    end_index: str
-
-    def __post_init__(self):
-        if not self.id.isdigit():
-            msg = f"ID is not a numeric string, got {self.id}"
-            raise ValueError(msg)
-
-        if len(self.end_index) > 0 and not self.end_index.isdigit():
-            msg = f"WE index is not a numeric string, got {self.end_index}"
-            raise ValueError(msg)
-
-
 def msgspec_dec_hook(t: type, obj: Any) -> Any:
     if t is Difficulty and isinstance(obj, str):
         return t(obj)
@@ -100,26 +87,46 @@ def msgspec_dec_hook(t: type, obj: Any) -> Any:
     raise NotImplementedError(msg)
 
 
+NonNegativeInt = Annotated[int, msgspec.Meta(ge=0)]
+NonNegativeFloat = Annotated[float, msgspec.Meta(ge=0)]
+PositiveFloat = Annotated[float, msgspec.Meta(gt=0)]
+
+
+class SeedsSdvxin(msgspec.Struct):
+    id: Annotated[str, msgspec.Meta(pattern=r"^[0-9]{5}$")]
+    end_index: Annotated[str, msgspec.Meta(pattern="^[0-9]*$")]
+
+
 class SeedsChart(msgspec.Struct):
     difficulty: Difficulty
     level: str
-    const: float | None
-    maxcombo: int
-    tap: int
-    hold: int
-    slide: int
-    air: int
-    flick: int
+    const: NonNegativeFloat | None
+    maxcombo: NonNegativeInt
+    tap: NonNegativeInt
+    hold: NonNegativeInt
+    slide: NonNegativeInt
+    air: NonNegativeInt
+    flick: NonNegativeInt
     charter: str | None
     version: ChunithmVersion | None
     available: bool
-    tachi_chart_id: str | None
+    # フリーフォール BASIC chart ID is 39 characters?
+    tachi_chart_id: Annotated[str, msgspec.Meta(pattern=r"^[0-9a-f]{39,40}$")] | None
     sdvxin: SeedsSdvxin | None
+
+    def __post_init__(self):
+        if self.const is not None:
+            const10 = round(self.const * 10)
+            expected_level = f"{const10 // 10}{'+' if const10 % 10 >= 5 else ''}"
+
+            if expected_level != self.level:
+                msg = f"Level and chart constant do not agree with each other: level={self.level} const={self.const}"
+                raise ValueError(msg)
 
 
 class SeedsSong(msgspec.Struct):
     id: int
-    chunirec_id: str | None
+    chunirec_id: Annotated[str, msgspec.Meta(pattern=r"^[0-9a-f]{16}$")] | None
     title: str
     wikiwiki_title: str | None
     chunithm_catcode: Genre
@@ -135,10 +142,12 @@ class SeedsSong(msgspec.Struct):
     ]
     artist: str
     version: ChunithmVersion
-    release: str | None
-    bpm: float | None
-    min_bpm: float | None
-    max_bpm: float | None
+    release: (
+        Annotated[str, msgspec.Meta(pattern=r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")] | None
+    )
+    bpm: PositiveFloat | None
+    min_bpm: PositiveFloat | None
+    max_bpm: PositiveFloat | None
     jacket: str | None
     available: bool
     removed: bool
@@ -170,7 +179,9 @@ class ChartIdentifier(msgspec.Struct):
 
 class SeedsCourseTrack(msgspec.Struct):
     level: str | msgspec.UnsetType = msgspec.UNSET
-    charts: list[ChartIdentifier] | msgspec.UnsetType = msgspec.UNSET
+    charts: (
+        Annotated[list[ChartIdentifier], msgspec.Meta(min_length=1)] | msgspec.UnsetType
+    ) = msgspec.UNSET
 
     def __post_init__(self):
         if self.level is not msgspec.UNSET and self.charts is not msgspec.UNSET:
@@ -186,7 +197,7 @@ class SeedsCourse(msgspec.Struct):
     id: int
     cls: Literal["i", "ii", "iii", "iv", "v", "infinite", "extra"]
     name: str
-    version: str
+    version: ChunithmVersion
     is_duplicate_track_allowed: bool
     life: int
     recovery_life: int
@@ -214,7 +225,7 @@ class SeedsLinkedGateCondition(msgspec.Struct):
 class SeedsLinkedGate(msgspec.Struct):
     id: int
     name: str
-    color: str
+    color: Annotated[str, msgspec.Meta(pattern=r"^#[0-9a-fA-F]{6}$")]
     song_id: int
     available: bool
     open_condition: str
@@ -889,26 +900,112 @@ async def load_seeds(
         del linked_gates
 
 
-async def validate_seeds(logger: BoundLogger, seeds_repo: SeedsRepository):
-    files = {
-        "songs": list[SeedsSong],
-        "courses": list[SeedsCourse],
-        "linked-gates": list[SeedsLinkedGate],
-    }
+class HasId(Protocol):
+    id: int
 
-    failed = False
 
-    for filename, type in files.items():
-        try:
-            _ = seeds_repo.read(filename, type)
-        except msgspec.DecodeError as e:
-            logger.exception("verification failed", exc_info=e, collection=filename)
-            failed = True
+def check_duplicate_ids(
+    logger: BoundLogger, collection_name: str, collection: Sequence[HasId]
+):
+    duplicates = 0
+    ids: set[int] = set()
+
+    for item in collection:
+        if item.id in ids:
+            logger.error("Duplicate ID", collection=collection_name, id=item.id)
+            duplicates += 1
         else:
-            logger.info("OK", collection=filename)
+            ids.add(item.id)
 
-    if failed:
+    return duplicates
+
+
+async def validate_seeds(logger: BoundLogger, seeds_repo: SeedsRepository):
+    errors = 0
+    songs = seeds_repo.read("songs", list[SeedsSong])
+    courses = seeds_repo.read("courses", list[SeedsCourse])
+    linked_gates = seeds_repo.read("linked-gates", list[SeedsLinkedGate])
+
+    logger.info("Checking songs")
+    errors += check_duplicate_ids(logger, "songs", songs)
+
+    logger.info("Checking for unique charts")
+    song_ids: set[int] = set()
+    charts: set[tuple[int, Difficulty]] = set()
+
+    for song in songs:
+        song_ids.add(song.id)
+
+        for chart in song.charts:
+            if (song.id, chart.difficulty) in charts:
+                logger.error(
+                    "Duplicate difficulty", song_id=song.id, difficulty=chart.difficulty
+                )
+                errors += 1
+            else:
+                charts.add((song.id, chart.difficulty))
+
+    logger.info("Checking for unique jacket URLs")
+    jackets: set[str] = set()
+
+    for song in songs:
+        for jacket in song.jackets:
+            if jacket in jackets:
+                logger.error("Duplicate jacket URL", song_id=song.id, jacket=jacket)
+                errors += 1
+            else:
+                jackets.add(jacket)
+
+    logger.info("Checking courses")
+    errors += check_duplicate_ids(logger, "courses", courses)
+
+    for course in courses:
+        for track_idx, track in enumerate(course.tracks):
+            if track.charts is not msgspec.UNSET:
+                for chart in track.charts:
+                    if (chart.song_id, chart.difficulty) not in charts:
+                        logger.error(
+                            "Course track refers to non-existent chart",
+                            song_id=chart.song_id,
+                            difficulty=chart.difficulty,
+                            course_id=course.id,
+                            track_idx=track_idx,
+                        )
+                        errors += 1
+
+    logger.info("Checking Linked GATEs")
+    errors += check_duplicate_ids(logger, "linked-gates", linked_gates)
+
+    for linked_gate in linked_gates:
+        if linked_gate.song_id not in song_ids:
+            logger.error(
+                "Linked GATE refers to non-existent song",
+                linked_gate_id=linked_gate.id,
+                song_id=linked_gate.song_id,
+            )
+            errors += 1
+
+    logger.info("Checking for unique Link LEVELs")
+    link_levels: set[tuple[int, LinkLevel, str]] = set()
+
+    for linked_gate in linked_gates:
+        for level in linked_gate.conditions:
+            if (linked_gate.id, level.level, level.region) in link_levels:
+                logger.error(
+                    "Duplicate Link LEVEL",
+                    linked_gate_id=linked_gate.id,
+                    link_level=level.level,
+                    region=level.region,
+                )
+                errors += 1
+            else:
+                link_levels.add((linked_gate.id, level.level, level.region))
+
+    if errors > 0:
+        logger.error("Seeds validation failed", errors=errors)
         sys.exit(1)
+
+    logger.info("OK")
 
 
 async def sort_seeds(logger: BoundLogger, seeds_repo: SeedsRepository):
