@@ -262,7 +262,7 @@ class CourseListView(PenguinLayoutView):
     def __init__(
         self,
         ctx: "PenguinContext",
-        versions: Sequence[str],
+        version_groups: Sequence[Sequence[str]],
         course_records: list[CourseRecord] = MISSING,
         version_selected: str = MISSING,
         class_selected: CourseClass = MISSING,
@@ -274,21 +274,30 @@ class CourseListView(PenguinLayoutView):
         self.course_records_by_id = (
             {r.id: r for r in course_records} if course_records is not MISSING else {}
         )
-        self.version_selected = (
-            CURRENT_CHUNITHM_VERSION
-            if version_selected is MISSING
-            else version_selected
-        )
+        self.version_group_selected = 0
 
         self.ctx = ctx
-        self.version_select.options = [
-            discord.SelectOption(
-                label=version,
-                value=version,
-                default=version == self.version_selected,
+        self.version_groups = version_groups
+
+        version = (
+            version_selected
+            if version_selected is not MISSING
+            else CURRENT_CHUNITHM_VERSION
+        )
+
+        for i, version_group in enumerate(version_groups):
+            default = False
+
+            if version in version_group:
+                default = True
+                self.version_group_selected = i
+
+            self.version_select.options.append(
+                discord.SelectOption(
+                    label=version_group[0], value=str(i), default=default
+                )
             )
-            for version in versions
-        ]
+
         self.class_select.options = [
             discord.SelectOption(
                 label=f"CLASS {cls}",
@@ -318,15 +327,15 @@ class CourseListView(PenguinLayoutView):
         if len(self.class_select.values) <= 0:
             return
 
-        version = (
-            self.version_select.values[0]  # pyright: ignore[reportAttributeAccessIssue]
+        version_group_idx = (
+            int(self.version_select.values[0])  # pyright: ignore[reportAttributeAccessIssue]
             if len(self.version_select.values) > 0  # pyright: ignore[reportAttributeAccessIssue]
-            else self.version_selected
+            else self.version_group_selected
         )
         cls = CourseClass(int(self.class_select.values[0]))
 
         for option in self.version_select.options:
-            option.default = option.value == version
+            option.default = option.value == str(version_group_idx)
 
         for option in self.class_select.options:
             option.default = option.value == str(cls.value)
@@ -334,7 +343,10 @@ class CourseListView(PenguinLayoutView):
         async with self.ctx.bot.begin_db_read() as session:
             query = (
                 select(Course)
-                .where((Course.version == version) & (Course.cls == cls))
+                .where(
+                    Course.version.in_(self.version_groups[version_group_idx])
+                    & (Course.cls == cls)
+                )
                 .options(
                     joinedload(Course.tracks)
                     .joinedload(CourseTrack.charts)
@@ -346,7 +358,7 @@ class CourseListView(PenguinLayoutView):
             self.courses = list((await session.execute(query)).scalars().unique())
 
         heading = discord.ui.TextDisplay(
-            f"## Course List\nCHUNITHM {version} - CLASS {cls}"
+            f"## Course List\n{' / '.join(self.version_groups[version_group_idx])} - CLASS {cls}"
         )
         self.container.clear_items()
         self.container.add_item(heading)

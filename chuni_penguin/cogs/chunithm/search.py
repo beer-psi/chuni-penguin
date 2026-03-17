@@ -1,5 +1,6 @@
 import contextlib
 import hashlib
+import itertools
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Annotated, override
 
@@ -531,14 +532,22 @@ class SearchCog(commands.Cog, name="Search"):
             async with self.bot.begin_db_read() as session:
                 # course IDs are prefixed by version, so 25xxx is sun plus, 30xxx is luminous,
                 # and so on. really convenient
-                query = select(Course.version).distinct().order_by(Course.id)
-                versions = (await session.execute(query)).scalars().all()
+                query = (
+                    select(Course.id // 10000, Course.version)
+                    .distinct()
+                    .order_by(Course.id)
+                )
+                ids_versions = (await session.execute(query)).fetchall()
 
-        if len(versions) == 0:
+        if len(ids_versions) == 0:
             msg = "No course data."
             raise commands.CommandError(msg)
 
-        view = CourseListView(ctx, versions, course_records)
+        version_groups = [
+            [version[1] for version in group]
+            for _, group in itertools.groupby(ids_versions, key=lambda r: r[0])
+        ]
+        view = CourseListView(ctx, version_groups, course_records)
         await view.start()
 
     @commands.hybrid_command("jacket")
