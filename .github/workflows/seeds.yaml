@@ -46,7 +46,7 @@ jobs:
     needs: ["test"]
     if: "github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
     concurrency:
-      group: "deploy-${{ github.sha }}"
+      group: "deploy-${{ github.ref }}-${{ github.sha }}"
       cancel-in-progress: false
     steps:
       - name: "Tailscale"
