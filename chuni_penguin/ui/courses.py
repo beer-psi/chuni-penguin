@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from math import ceil
 from typing import TYPE_CHECKING, Any
 
 import discord
@@ -258,6 +259,7 @@ class CourseListView(PenguinLayoutView):
     )
     version_action_row = discord.ui.ActionRow()
     class_action_row = discord.ui.ActionRow()
+    pagination_action_row = discord.ui.ActionRow()
 
     def __init__(
         self,
@@ -308,6 +310,34 @@ class CourseListView(PenguinLayoutView):
         ]
         self.courses: list[Course] = []
 
+        self._current_page: int = 0
+        self.remove_item(self.pagination_action_row)
+        self._pagination_displayed: bool = False
+
+    @property
+    def current_page(self):
+        return self._current_page
+
+    @current_page.setter
+    def current_page(self, value: int):
+        self._current_page = value
+        self._update_labels(self._current_page)
+
+    def _update_labels(self, page_index: int):
+        max_pages = ceil(len(self.courses) / 5)
+
+        if max_pages is not None:
+            self.jump_to_page.label = f"{page_index + 1}/{max_pages}"
+        else:
+            self.jump_to_page.label = f"{page_index + 1}"
+
+        self.to_first_page.disabled = page_index == 0
+        self.to_previous_page.disabled = page_index == 0
+        self.to_next_page.disabled = (
+            max_pages is not None and (page_index + 1) >= max_pages
+        )
+        self.to_last_page.disabled = max_pages is None or (page_index + 1) >= max_pages
+
     @version_action_row.select(placeholder="Select a version...")
     async def version_select(
         self, interaction: discord.Interaction, select: discord.ui.Select
@@ -319,6 +349,73 @@ class CourseListView(PenguinLayoutView):
         self, interaction: discord.Interaction, select: discord.ui.Select
     ):
         await self._update_course_list(interaction)
+
+    @pagination_action_row.button(
+        label="<<", style=discord.ButtonStyle.grey, disabled=True
+    )
+    async def to_first_page(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
+        await self.show_page(interaction, 0)
+
+    @pagination_action_row.button(
+        label="<", style=discord.ButtonStyle.grey, disabled=True
+    )
+    async def to_previous_page(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
+        await self.show_page(interaction, max(self.current_page - 1, 0))
+
+    @pagination_action_row.button(
+        label="...", style=discord.ButtonStyle.grey, disabled=True
+    )
+    async def jump_to_page(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
+        pass
+
+    @pagination_action_row.button(label=">", style=discord.ButtonStyle.grey)
+    async def to_next_page(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
+        max_pages = ceil(len(self.courses) / 5)
+
+        if max_pages is not None:
+            await self.show_page(interaction, min(self.current_page + 1, max_pages - 1))
+        else:
+            await self.show_page(interaction, self.current_page + 1)
+
+    @pagination_action_row.button(label=">>", style=discord.ButtonStyle.grey)
+    async def to_last_page(
+        self, interaction: discord.Interaction, _: discord.ui.Button
+    ):
+        max_pages = ceil(len(self.courses) / 5)
+
+        # this should always happen since this button only shows up if there's a max page.
+        if max_pages is not None:
+            await self.show_page(interaction, max_pages - 1)
+
+    async def show_page(self, interaction: discord.Interaction, page_index: int):
+        self.current_page = page_index
+        version_group_idx = (
+            int(self.version_select.values[0])  # pyright: ignore[reportAttributeAccessIssue]
+            if len(self.version_select.values) > 0  # pyright: ignore[reportAttributeAccessIssue]
+            else self.version_group_selected
+        )
+        cls = CourseClass(int(self.class_select.values[0]))
+
+        for option in self.version_select.options:
+            option.default = option.value == str(version_group_idx)
+
+        for option in self.class_select.options:
+            option.default = option.value == str(cls.value)
+
+        await self._display_courses(
+            interaction,
+            " / ".join(self.version_groups[version_group_idx]),
+            cls,
+            self.courses[5 * page_index : 5 * (page_index + 1)],
+        )
 
     async def _update_course_list(self, interaction: discord.Interaction):
         if not interaction.response.is_done():
@@ -357,19 +454,42 @@ class CourseListView(PenguinLayoutView):
             )
             self.courses = list((await session.execute(query)).scalars().unique())
 
+        self.current_page = 0
+
+        if not self._pagination_displayed and len(self.courses) > 5:
+            self.add_item(self.pagination_action_row)
+            self._pagination_displayed = True
+        elif self._pagination_displayed and len(self.courses) <= 5:
+            self.remove_item(self.pagination_action_row)
+            self._pagination_displayed = False
+
+        await self._display_courses(
+            interaction,
+            " / ".join(self.version_groups[version_group_idx]),
+            cls,
+            self.courses[:5],
+        )
+
+    async def _display_courses(
+        self,
+        interaction: discord.Interaction,
+        version: str,
+        course_class: CourseClass,
+        courses: list[Course],
+    ):
         heading = discord.ui.TextDisplay(
-            f"## Course List\n{' / '.join(self.version_groups[version_group_idx])} - CLASS {cls}"
+            f"## Course List\n{version} - CLASS {course_class}"
         )
         self.container.clear_items()
         self.container.add_item(heading)
 
-        if len(self.courses) == 0:
+        if len(courses) == 0:
             heading.content += "\nNo courses found."
 
             await self.edit_message(interaction)
             return
 
-        for course in self.courses:
+        for course in courses:
             self.container.add_item(discord.ui.Separator())
             self.container.add_item(
                 discord.ui.Section(
