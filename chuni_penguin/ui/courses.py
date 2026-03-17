@@ -163,6 +163,22 @@ def format_course_heading(
     return course_heading
 
 
+class BackToCourseListButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.gray, label="Back")
+
+    async def callback(self, interaction: discord.Interaction) -> Any:
+        assert isinstance(self.view, CourseListView)
+
+        self.view.add_item(self.view.version_action_row)
+        self.view.add_item(self.view.class_action_row)
+
+        if self.view._pagination_displayed:
+            self.view.add_item(self.view.pagination_action_row)
+
+        await self.view.show_page(interaction, self.view.current_page)
+
+
 class CourseViewSongsButton(discord.ui.Button):
     def __init__(self, course: Course):
         self.course = course
@@ -172,8 +188,7 @@ class CourseViewSongsButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction["ChuniBot"]) -> Any:  # pyright: ignore[reportIncompatibleMethodOverride]
         assert isinstance(self.view, CourseListView)
 
-        back_to_list = discord.ui.Button(label="Back")
-        back_to_list.callback = self.view._update_course_list
+        back_to_list = BackToCourseListButton()
 
         self.view.container.clear_items()
         self.view.container.add_item(
@@ -247,6 +262,12 @@ class CourseViewSongsButton(discord.ui.Button):
                 discord.ui.TextDisplay("Back to course list"), accessory=back_to_list
             )
         )
+
+        self.view.remove_item(self.view.version_action_row)
+        self.view.remove_item(self.view.class_action_row)
+
+        if self.view._pagination_displayed:
+            self.view.remove_item(self.view.pagination_action_row)
 
         await self.view.edit_message(interaction)
 
