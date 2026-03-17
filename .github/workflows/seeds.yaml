@@ -7,7 +7,7 @@ on:
       - "trunk"
     paths: &filelist
       - ".github/workflows/ci.yaml"
-      - "chuni_penguin/database/seeds**"
+      - "chuni_penguin/database/seeds/**"
       - "dbutils/**"
   pull_request:
     branches:
