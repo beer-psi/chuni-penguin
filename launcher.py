@@ -1,4 +1,6 @@
 # ruff: noqa: E402
+import warnings
+
 from chuni_penguin.utils import monkey
 
 monkey.patch_all()
@@ -70,6 +72,8 @@ async def startup():
 
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore", r"'asyncio.iscoroutinefunction' is deprecated")
+
     with (
         contextlib.suppress(KeyboardInterrupt),
         asyncio.Runner(loop_factory=get_loop_factory()) as runner,
