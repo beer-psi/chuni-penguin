@@ -685,7 +685,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     )
                 )
 
-                charts: Sequence[Row[tuple[Chart, int]]] = (
+                charts: Sequence[Row[Chart, int]] = (
                     await session.execute(stmt)
                 ).all()
 

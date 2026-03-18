@@ -10,7 +10,7 @@ dependencies = [
     "aiosqlite~=0.22.0",
     "httpx~=0.28.1",
     "rapidfuzz~=3.14",
-    "sqlalchemy[asyncio]~=2.0.46",
+    "sqlalchemy[asyncio]~=2.1.0b1",
     "tzdata>=2024.2; sys_platform == 'win32'",
     "msgspec~=0.20.0",
     "structlog~=25.5",
@@ -23,7 +23,7 @@ dependencies = [
     "httpx-aiohttp",
     "python-magic~=0.4.27",
     "aiolimiter~=1.2",
-    "selectolax>=0.4.7",
+    "selectolax~=0.4.7",
 ]
 readme = "README.md"
 requires-python = ">= 3.14"
@@ -34,8 +34,8 @@ speedup = [
     "winloop~=0.4.1; sys_platform == 'win32' and implementation_name == 'cpython'",
     "aiodns~=3.6; sys_platform != 'win32'",
     # for when everything else gets freethreading
-    # "ciso8601-ft~=2.3; python_version >= '3.14'",
-    "ciso8601~=2.3",
+    "ciso8601-ft~=2.3; python_version >= '3.14'",
+    "ciso8601~=2.3; python_version < '3.14'",
     "penguin-native",
 ]
 web = ["aiohttp-remotes~=1.3"]
@@ -79,6 +79,7 @@ members = ["packages/*"]
 discord-ext-songbird = { index = "discord-ext-songbird" }
 penguin-native = { workspace = true }
 httpx-aiohttp = { workspace = true }
+selectolax = { git = "https://github.com/rushter/selectolax.git" }
 
 [[tool.uv.index]]
 name = "discord-ext-songbird"
