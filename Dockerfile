@@ -1,6 +1,6 @@
-ARG PYTHON_BUILD_VERSION=3.13
+ARG PYTHON_BUILD_VERSION=3.14
 
-FROM ghcr.io/astral-sh/uv:0.10.6-python${PYTHON_BUILD_VERSION}-alpine AS builder
+FROM ghcr.io/astral-sh/uv:0.10.10-python${PYTHON_BUILD_VERSION}-alpine AS builder
 ENV PYTHONOPTIMIZE=1 PYTHONNODEBUGRANGES=1 UV_LINK_MODE=copy
 
 # Disable Python downloads, because we want to use the system interpreter

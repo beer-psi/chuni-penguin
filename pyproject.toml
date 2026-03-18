@@ -26,14 +26,15 @@ dependencies = [
     "selectolax>=0.4.7",
 ]
 readme = "README.md"
-requires-python = ">= 3.13"
+requires-python = ">= 3.14"
 
 [project.optional-dependencies]
 speedup = [
     "uvloop~=0.22.1; sys_platform != 'win32' and implementation_name == 'cpython'",
     "winloop~=0.4.1; sys_platform == 'win32' and implementation_name == 'cpython'",
-    "zstandard~=0.25.0; python_version <= '3.13'",
     "aiodns~=3.6; sys_platform != 'win32'",
+    # for when everything else gets freethreading
+    # "ciso8601-ft~=2.3; python_version >= '3.14'",
     "ciso8601~=2.3",
     "penguin-native",
 ]

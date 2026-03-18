@@ -6,14 +6,14 @@ readme = "README.md"
 authors = [
     { name = "beerpsi", email = "beerpsi@duck.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "aiohttp>=3.12.15",
     "httpx>=0.28.1",
 ]
 
 [build-system]
-requires = ["uv_build>=0.9.5,<0.10.0"]
+requires = ["uv_build>=0.10.0,<0.11.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
