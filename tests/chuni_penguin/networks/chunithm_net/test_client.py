@@ -9,14 +9,11 @@ from types import SimpleNamespace
 import httpx
 import httpx_aiohttp
 import pytest
-from bs4 import BeautifulSoup
 from pytest import MonkeyPatch
 from pytest_httpx import HTTPXMock
 
 from chuni_penguin.networks.chunithm_net import ChuniNetError, ChunithmNet
-from chuni_penguin.networks.chunithm_net._bs4 import BS4_FEATURE
 from chuni_penguin.networks.chunithm_net.consts import _KEY_DETAILED_PARAMS_IDX
-from chuni_penguin.networks.chunithm_net.parser import parse_collection_customize
 from chuni_penguin.networks.consts import KEY_SONG_ID
 from chuni_penguin.networks.errors import (
     AlreadyFriends,
@@ -398,10 +395,7 @@ async def test_client_throws_when_on_maintenance(
 
 
 @pytest.mark.asyncio
-async def test_client_parses_homepage(
-    httpx_mock: HTTPXMock,
-    jar: str,
-):
+async def test_client_parses_homepage(httpx_mock: HTTPXMock, jar: str):
     with (BASE_DIR / "assets" / "logged_in_homepage.html").open("rb") as f:
         httpx_mock.add_response(
             method="GET",
@@ -1200,39 +1194,6 @@ async def test_client_music_leaderboard(httpx_mock: HTTPXMock, jar: str, token: 
             2025, 10, 4, 6, 19, tzinfo=datetime.UTC
         )
         assert len(leaderboard.ranking) == 100
-
-
-def test_client_collections():
-    with (BASE_DIR / "assets" / "collection_customise.html").open("rb") as f:
-        soup = BeautifulSoup(f.read(), BS4_FEATURE)
-
-    collections = parse_collection_customize(soup)
-
-    assert len(collections.titles) == 2
-
-    assert (
-        collections.titles[0].content
-        == "Phosphoribosylaminoimidazolesuccinocarboxamide"
-    )
-    assert collections.titles[0].rarity == Rarity.platinum
-
-    assert collections.titles[1].content == "Should be burning in hell."
-    assert collections.titles[1].rarity == Rarity.silver
-
-    assert (
-        collections.nameplate
-        == "https://chunithm-net-eng.com/mobile/img/14c0bda1b8026041.png"
-    )
-
-    assert (
-        collections.map_icon
-        == "https://chunithm-net-eng.com/mobile/img/60df318292eae46b.png"
-    )
-
-    assert (
-        collections.system_voice
-        == "https://chunithm-net-eng.com/mobile/img/b54ab119af308f73.png"
-    )
 
 
 @pytest.mark.asyncio

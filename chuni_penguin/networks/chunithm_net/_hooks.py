@@ -1,12 +1,10 @@
 import contextlib
-import re
 from collections.abc import Generator
 from http.client import METHOD_NOT_ALLOWED
 
 import aiolimiter
 import httpx
-from bs4 import BeautifulSoup
-from bs4.filter import SoupStrainer
+from selectolax.lexbor import LexborHTMLParser
 
 from chuni_penguin.networks.errors import (
     AuthenticationError,
@@ -14,7 +12,6 @@ from chuni_penguin.networks.errors import (
     NoCardsRegistered,
 )
 
-from ._bs4 import BS4_FEATURE
 from .exceptions import ChuniNetError
 
 _AUTHENTICATION_URL = httpx.URL(
@@ -27,10 +24,6 @@ _COMMON_AUTH_REDIRECT_URL = httpx.URL(
     "https://lng-tgk-aime-gw.am-all.net/common_auth/redirect"
 )
 _ADD_ACCESS_CODE_URL = httpx.URL("https://common-access.am-all.net/access/code/add")
-_FORM_STRAINER = SoupStrainer("form")
-_ERROR_MESSAGE_STRAINER = SoupStrainer(
-    class_=re.compile("(?:block text_l|text_l block)")
-)
 
 
 class ChunithmNetAuth(httpx.Auth):
@@ -95,14 +88,13 @@ class ChunithmNetAuth(httpx.Auth):
             auth_response.url.host == _COMMON_AUTH_REDIRECT_URL.host
             and auth_response.url.path == _COMMON_AUTH_REDIRECT_URL.path
         ):
-            soup = BeautifulSoup(
-                auth_response.content, BS4_FEATURE, parse_only=_FORM_STRAINER
-            )
-            form = soup.find("form")
+            soup = LexborHTMLParser(auth_response.content, is_fragment=False)
+            form = soup.css_first("form")
 
             if (
                 form is not None
-                and form["action"] == "https://common-access.am-all.net/access/code/add"
+                and form.attrs["action"]
+                == "https://common-access.am-all.net/access/code/add"
             ):
                 msg = (
                     "The account does not have any access codes registered. "
@@ -136,12 +128,10 @@ async def raise_on_chunithm_net_error(response: httpx.Response):
     if response.url.path != "/mobile/error/":
         return
 
-    dom = BeautifulSoup(
-        await response.aread(), BS4_FEATURE, parse_only=_ERROR_MESSAGE_STRAINER
-    )
-    error_blocks = dom.select(".block.text_l .font_small")
-    code = int(error_blocks[0].text.split(": ", 1)[1])
-    description = error_blocks[1].text if len(error_blocks) > 1 else ""
+    dom = LexborHTMLParser(await response.aread(), is_fragment=False)
+    error_blocks = dom.css(".block.text_l .font_small")
+    code = int(error_blocks[0].text().split(": ", 1)[1])
+    description = error_blocks[1].text() if len(error_blocks) > 1 else ""
 
     error = response.extensions["chunithm_net_error"] = ChuniNetError(code, description)
 

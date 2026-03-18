@@ -5,7 +5,6 @@ description = "Add your description here"
 authors = [{ name = "beerpsi", email = "beerpsi@duck.com" }]
 dependencies = [
     "discord-py~=2.7",
-    "beautifulsoup4~=4.14",
     "pillow~=12.0",
     "alembic~=1.17.2",
     "aiosqlite~=0.22.0",
@@ -24,13 +23,13 @@ dependencies = [
     "httpx-aiohttp",
     "python-magic~=0.4.27",
     "aiolimiter~=1.2",
+    "selectolax>=0.4.7",
 ]
 readme = "README.md"
 requires-python = ">= 3.13"
 
 [project.optional-dependencies]
 speedup = [
-    "lxml~=6.0",
     "uvloop~=0.22.1; sys_platform != 'win32' and implementation_name == 'cpython'",
     "winloop~=0.4.1; sys_platform == 'win32' and implementation_name == 'cpython'",
     "zstandard~=0.25.0; python_version <= '3.13'",
@@ -49,6 +48,7 @@ dev = [
 ]
 docs = [
     "mkdocs-material==9.6.21",
+    "beautifulsoup4~=4.14",
 ]
 test = [
     "pytest~=8.3",
@@ -56,6 +56,8 @@ test = [
     "pytest-cov~=6.0",
     "pytest-httpx~=0.35.0",
     "pytest-html~=4.1",
+    "pytest-benchmark>=5.2.3",
+    "pytest-memray>=1.8.0",
 ]
 
 
