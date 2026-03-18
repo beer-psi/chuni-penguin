@@ -30,7 +30,6 @@ requires-python = ">= 3.13"
 
 [project.optional-dependencies]
 speedup = [
-    "lxml~=6.0",
     "uvloop~=0.22.1; sys_platform != 'win32' and implementation_name == 'cpython'",
     "winloop~=0.4.1; sys_platform == 'win32' and implementation_name == 'cpython'",
     "zstandard~=0.25.0; python_version <= '3.13'",
