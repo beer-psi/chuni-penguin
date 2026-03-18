@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import cast
 
 import msgspec
-from bs4 import BeautifulSoup, Tag
+from selectolax.lexbor import LexborHTMLParser, LexborNode
 
 from chuni_penguin.networks.consts import KEY_SONG_ID
 from chuni_penguin.networks.types import (
@@ -73,27 +73,27 @@ with (Path(__file__).parent / "assets" / "titles.json").open(encoding="utf-8") a
     SPECIAL_TITLES = msgspec.json.decode(f.read(), type=dict[str, SpecialTitle])
 
 
-def parse_avatar(avatar_group: Tag) -> UserAvatar:
+def parse_avatar(avatar_group: LexborNode) -> UserAvatar:
     return UserAvatar(
         base="https://new.chunithm-net.com/chuni-mobile/html/mobile/images/avatar_base.png",
-        back=avatar_group.select_one(".avatar_back img")["src"],
-        skinfoot_r=avatar_group.select_one(".avatar_skinfoot_r img")["src"],
-        skinfoot_l=avatar_group.select_one(".avatar_skinfoot_l img")["src"],
-        skin=avatar_group.select_one(".avatar_skin img")["src"],
-        wear=avatar_group.select_one(".avatar_wear img")["src"],
-        face=avatar_group.select_one(".avatar_face img")["src"],
-        face_cover=avatar_group.select_one(".avatar_faceCover img")["src"],
-        head=avatar_group.select_one(".avatar_head img")["src"],
-        hand_r=avatar_group.select_one(".avatar_hand_r img")["src"],
-        hand_l=avatar_group.select_one(".avatar_hand_l img")["src"],
-        item_r=avatar_group.select_one(".avatar_item_r img")["src"],
-        item_l=avatar_group.select_one(".avatar_item_l img")["src"],
-        front=avatar_group.select_one(".avatar_front img")["src"],
+        back=avatar_group.css_first(".avatar_back img").attrs["src"],
+        skinfoot_r=avatar_group.css_first(".avatar_skinfoot_r img").attrs["src"],
+        skinfoot_l=avatar_group.css_first(".avatar_skinfoot_l img").attrs["src"],
+        skin=avatar_group.css_first(".avatar_skin img").attrs["src"],
+        wear=avatar_group.css_first(".avatar_wear img").attrs["src"],
+        face=avatar_group.css_first(".avatar_face img").attrs["src"],
+        face_cover=avatar_group.css_first(".avatar_faceCover img").attrs["src"],
+        head=avatar_group.css_first(".avatar_head img").attrs["src"],
+        hand_r=avatar_group.css_first(".avatar_hand_r img").attrs["src"],
+        hand_l=avatar_group.css_first(".avatar_hand_l img").attrs["src"],
+        item_r=avatar_group.css_first(".avatar_item_r img").attrs["src"],
+        item_l=avatar_group.css_first(".avatar_item_l img").attrs["src"],
+        front=avatar_group.css_first(".avatar_front img").attrs["src"],
     )
 
 
-def parse_title(element: Tag) -> Title | None:
-    title_style = element.get("style")
+def parse_title(element: LexborNode) -> Title | None:
+    title_style = element.attrs.get("style")
 
     if title_style is None:
         return None
@@ -112,7 +112,7 @@ def parse_title(element: Tag) -> Title | None:
         if title_rarity == "noSet":
             return None
 
-        title_content_elem = element.select_one(
+        title_content_elem = element.css_first(
             ".player_honor_text span, .honor_now_text span"
         )
 
@@ -120,7 +120,7 @@ def parse_title(element: Tag) -> Title | None:
             msg = "Invalid title (missing title content on normal titles)"
             raise ValueError(msg)
 
-        title_content = title_content_elem.get_text()
+        title_content = title_content_elem.text()
         title_rarity = Rarity(title_rarity)
     elif special_title := SPECIAL_TITLES.get(title_background_filename):
         title_content = special_title.content
@@ -134,9 +134,9 @@ def parse_title(element: Tag) -> Title | None:
     return Title(content=title_content, rarity=title_rarity)
 
 
-def parse_player_card_and_avatar(soup: Tag):
-    if (e := soup.select_one(".player_chara")) is not None:
-        img = e.select_one("img")
+def parse_player_card_and_avatar(soup: LexborHTMLParser | LexborNode):
+    if (e := soup.css_first(".player_chara")) is not None:
+        img = e.css_first("img")
         character = img.attrs["src"] if e else None
 
         character_frame = (
@@ -146,25 +146,25 @@ def parse_player_card_and_avatar(soup: Tag):
         character = None
         character_frame = None
 
-    name_elem = soup.select_one(".player_name_in")
+    name_elem = soup.css_first(".player_name_in")
 
-    if (form_elem := name_elem.select_one("form")) is not None:
-        name = form_elem.select_one("a").get_text()
-        friend_code = form_elem.select_one("input[name=idx]").attrs["value"]
+    if (form_elem := name_elem.css_first("form")) is not None:
+        name = form_elem.css_first("a").text()
+        friend_code = form_elem.css_first("input[name=idx]").attrs["value"]
     else:
-        name = name_elem.get_text()
+        name = name_elem.text()
         friend_code = None
 
-    lv = chuni_int(soup.select_one(".player_lv").get_text())
+    lv = chuni_int(soup.css_first(".player_lv").text())
 
-    team_name_elem = soup.select_one(".player_team_name")
-    team_name = team_name_elem.get_text() if team_name_elem else None
+    team_name_elem = soup.css_first(".player_team_name")
+    team_name = team_name_elem.text() if team_name_elem else None
 
-    team_emblem_elem = soup.select_one(
+    team_emblem_elem = soup.css_first(
         ".player_team_emblem_normal, .player_team_emblem_silver, .player_team_emblem_gold, .player_team_emblem_rainbow, .player_team_emblem_purple, .player_team_emblem_red, .player_team_emblem_yellow, .player_team_emblem_green"
     )
     team_emblem = (
-        TeamEmblem(extract_last_part(team_emblem_elem["class"][0]))
+        TeamEmblem(extract_last_part(team_emblem_elem.attrs["class"]))
         if team_emblem_elem
         else None
     )
@@ -174,51 +174,51 @@ def parse_player_card_and_avatar(soup: Tag):
     else:
         team = None
 
-    title_elements = soup.select(".player_honor_short")
+    title_elements = soup.css(".player_honor_short")
     titles: list[Title] = [
         title for elem in title_elements if (title := parse_title(elem)) is not None
     ]
 
-    rating = parse_player_rating(soup.select(".player_rating_num_block img"))
+    rating = parse_player_rating(soup.css(".player_rating_num_block img"))
 
-    overpower = soup.select_one(".player_overpower_text").get_text().split(" ")
+    overpower = soup.css_first(".player_overpower_text").text().split(" ")
     overpower_value = float(overpower[0])
     overpower_progress = float(
         overpower[1].replace("(", "").replace(")", "").replace("%", "")
     )
 
-    last_play_date_str = soup.select_one(".player_lastplaydate_text").get_text()
+    last_play_date_str = soup.css_first(".player_lastplaydate_text").text()
     last_play_date = parse_time(last_play_date_str)
 
-    reborn_elem = soup.select_one(".player_reborn")
-    reborn = chuni_int(reborn_elem.get_text()) if reborn_elem else 0
+    reborn_elem = soup.css_first(".player_reborn")
+    reborn = chuni_int(reborn_elem.text()) if reborn_elem else 0
 
-    possession_elem = soup.select_one(".box_playerprofile")
+    possession_elem = soup.css_first(".box_playerprofile")
     possession = (
-        Possession(extract_last_part(possession_elem["style"]))  # type: ignore[reportGeneralTypeIssues]
-        if possession_elem and possession_elem.has_attr("style")
+        Possession(extract_last_part(possession_elem.attrs["style"]))  # type: ignore[reportGeneralTypeIssues]
+        if possession_elem and "style" in possession_elem.attrs
         else Possession.none
     )
 
-    classemblem_base_elem = soup.select_one(".player_classemblem_base img")
+    classemblem_base_elem = soup.css_first(".player_classemblem_base img")
     emblem = (
         SkillClass(
-            chuni_int(extract_last_part(classemblem_base_elem["src"]))  # type: ignore[reportGeneralTypeIssues]
+            chuni_int(extract_last_part(classemblem_base_elem.attrs["src"]))  # type: ignore[reportGeneralTypeIssues]
         )
-        if classemblem_base_elem and classemblem_base_elem.has_attr("src")
+        if classemblem_base_elem and "src" in classemblem_base_elem.attrs
         else None
     )
 
-    classemblem_top_elem = soup.select_one(".player_classemblem_top img")
+    classemblem_top_elem = soup.css_first(".player_classemblem_top img")
     medal = (
         SkillClass(
-            chuni_int(extract_last_part(classemblem_top_elem["src"]))  # type: ignore[reportGeneralTypeIssues]
+            chuni_int(extract_last_part(classemblem_top_elem.attrs["src"]))  # type: ignore[reportGeneralTypeIssues]
         )
-        if classemblem_top_elem and classemblem_top_elem.has_attr("src")
+        if classemblem_top_elem and "src" in classemblem_top_elem.attrs
         else None
     )
 
-    avatar_group = soup.select_one(".avatar_group")
+    avatar_group = soup.css_first(".avatar_group")
     avatar = parse_avatar(avatar_group) if avatar_group is not None else None
 
     return Profile(
@@ -244,51 +244,47 @@ def parse_player_card_and_avatar(soup: Tag):
     )
 
 
-def parse_player_data(soup: BeautifulSoup) -> Profile:
+def parse_player_data(soup: LexborHTMLParser) -> Profile:
     data = parse_player_card_and_avatar(soup)
 
     owned_currency = chuni_int(
-        soup.select_one(".user_data_point .user_data_text").get_text()
+        soup.css_first(".user_data_point .user_data_text").text()
     )
     total_currency = chuni_int(
-        soup.select_one(".user_data_total_point .user_data_text").get_text()
+        soup.css_first(".user_data_total_point .user_data_text").text()
     )
     data.currency = Currency(owned_currency, total_currency)
 
     playcount = chuni_int(
-        soup.select_one(".user_data_play_count .user_data_text").get_text()
+        soup.css_first(".user_data_play_count .user_data_text").text()
     )
     data.total_credits = playcount
 
-    data.friend_code = soup.select_one(
+    data.friend_code = soup.css_first(
         ".user_data_friend_code .user_data_text span:not(.font_90)"
-    ).get_text()
+    ).text()
 
     return data
 
 
-def parse_basic_recent_record(record: Tag) -> RecentScore:
-    idx_elem = record.select_one("form input[name=idx]")
+def parse_basic_recent_record(record: LexborNode) -> RecentScore:
+    idx_elem = record.css_first("form input[name=idx]")
 
     assert idx_elem is not None
 
-    idx = int(cast(str, idx_elem["value"]))
+    idx = int(cast(str, idx_elem.attrs["value"]))
 
-    date = parse_time(
-        (record.select_one(".play_datalist_date, .box_inner01")).get_text()
-    )
-    jacket_elem = record.select_one(".play_jacket_img img")
-    if (jacket := cast(str | None, jacket_elem.get("data-original"))) is None:
-        jacket = cast(str, jacket_elem["src"])
-    track = int(record.select_one(".play_track_text").get_text().split(" ")[1])
-    title = record.select_one(".play_musicdata_title").get_text()
+    date = parse_time((record.css_first(".play_datalist_date, .box_inner01")).text())
+    jacket_elem = record.css_first(".play_jacket_img img")
+    if (jacket := jacket_elem.attrs.get("data-original")) is None:
+        jacket = cast(str, jacket_elem.attrs["src"])
+    track = int(record.css_first(".play_track_text").text().split(" ")[1])
+    title = record.css_first(".play_musicdata_title").text()
 
-    score = int(
-        record.select_one(".play_musicdata_score_text").get_text().replace(",", "")
-    )
-    new_record = record.select_one(".play_musicdata_score_img") is not None
+    score = int(record.css_first(".play_musicdata_score_text").text().replace(",", ""))
+    new_record = record.css_first(".play_musicdata_score_img") is not None
 
-    if (rank_elem := record.select_one(".play_musicdata_icon")) is not None:
+    if (rank_elem := record.css_first(".play_musicdata_icon")) is not None:
         rank, clear_lamp, combo_lamp, chain_lamp = get_rank_and_lamps(rank_elem)
     else:
         rank = Rank.d
@@ -299,7 +295,7 @@ def parse_basic_recent_record(record: Tag) -> RecentScore:
     score = RecentScore(
         title=title,
         difficulty=difficulty_from_imgurl(
-            cast(str, record.select_one(".play_track_result img")["src"])
+            cast(str, record.css_first(".play_track_result img").attrs["src"])
         ),
         score=score,
         jacket_url=jacket,
@@ -316,22 +312,24 @@ def parse_basic_recent_record(record: Tag) -> RecentScore:
     return score
 
 
-def parse_music_record(soup: BeautifulSoup, song_id: int) -> list[PersonalBest]:
+def parse_music_record(soup: LexborHTMLParser, song_id: int) -> list[PersonalBest]:
     jacket = (
-        str(elem["src"]) if (elem := soup.select_one(".play_jacket_img img")) else ""
+        str(elem.attrs["src"])
+        if (elem := soup.css_first(".play_jacket_img img"))
+        else ""
     )
     title = (
-        elem.get_text(strip=True)
+        elem.text(strip=True)
         if (
-            elem := soup.select_one(
+            elem := soup.css_first(
                 ".play_musicdata_title, .play_musicdata_worldsend_title"
             )
         )
         else ""
     )
     records = []
-    for block in soup.select(".music_box"):
-        if (musicdata := block.select_one(".play_musicdata_icon")) is not None:
+    for block in soup.css(".music_box"):
+        if (musicdata := block.css_first(".play_musicdata_icon")) is not None:
             rank, clear_lamp, combo_lamp, chain_lamp = get_rank_and_lamps(musicdata)
         else:
             rank = Rank.d
@@ -341,11 +339,10 @@ def parse_music_record(soup: BeautifulSoup, song_id: int) -> list[PersonalBest]:
 
         score = PersonalBest(
             title=title,
-            difficulty=difficulty_from_imgurl(" ".join(block["class"])),
+            difficulty=difficulty_from_imgurl(block.attrs["class"]),
             score=chuni_int(
-                elem.get_text()
-                if (elem := block.select_one(".musicdata_score_num .text_b"))
-                is not None
+                elem.text()
+                if (elem := block.css_first(".musicdata_score_num .text_b")) is not None
                 else "0"
             ),
             jacket_url=jacket,
@@ -354,17 +351,17 @@ def parse_music_record(soup: BeautifulSoup, song_id: int) -> list[PersonalBest]:
             combo_lamp=combo_lamp,
             chain_lamp=chain_lamp,
             play_count=chuni_int(
-                elem.get_text().replace("times", "")
+                elem.text().replace("times", "")
                 if (
-                    elem := block.select_one(
-                        ".musicdata_score_num .text_b:-soup-contains(times), .music_box .block_icon_text span:not([class])"
+                    elem := block.css_first(
+                        ".musicdata_score_num .text_b:lexbor-contains(times), .music_box .block_icon_text span:not([class])"
                     )
                 )
                 is not None
                 else "0"
             ),
-            ajc_count=chuni_int(elem.get_text())
-            if (elem := block.select_one(".musicdata_score_theory_num")) is not None
+            ajc_count=chuni_int(elem.text())
+            if (elem := block.css_first(".musicdata_score_theory_num")) is not None
             else None,
         )
         score.extras[KEY_SONG_ID] = song_id
@@ -374,13 +371,13 @@ def parse_music_record(soup: BeautifulSoup, song_id: int) -> list[PersonalBest]:
     return records
 
 
-def parse_music_for_rating(soup: BeautifulSoup) -> list[PersonalBest]:
+def parse_music_for_rating(soup: LexborHTMLParser) -> list[PersonalBest]:
     records = []
-    for x in soup.select("form:has(.w388.musiclist_box)"):
-        if (score_elem := x.select_one(".play_musicdata_highscore .text_b")) is None:
+    for x in soup.css("form:has(.w388.musiclist_box)"):
+        if (score_elem := x.css_first(".play_musicdata_highscore .text_b")) is None:
             continue
 
-        if (musicdata := x.select_one(".play_musicdata_icon")) is not None:
+        if (musicdata := x.css_first(".play_musicdata_icon")) is not None:
             rank, clear_lamp, combo_lamp, chain_lamp = get_rank_and_lamps(musicdata)
         else:
             rank = Rank.d
@@ -388,35 +385,35 @@ def parse_music_for_rating(soup: BeautifulSoup) -> list[PersonalBest]:
             combo_lamp = ComboLamp.none
             chain_lamp = ChainLamp.none
 
-        div = x.select_one(".w388.musiclist_box")
+        div = x.css_first(".w388.musiclist_box")
         score = PersonalBest(
-            title=x.select_one(".music_title, .musiclist_worldsend_title").get_text(),
-            difficulty=difficulty_from_imgurl(" ".join(div["class"])),
-            score=chuni_int(score_elem.get_text()),
+            title=x.css_first(".music_title, .musiclist_worldsend_title").text(),
+            difficulty=difficulty_from_imgurl(div.attrs["class"]),
+            score=chuni_int(score_elem.text()),
             rank=rank,
             clear_lamp=clear_lamp,
             combo_lamp=combo_lamp,
             chain_lamp=chain_lamp,
         )
         score.extras[KEY_SONG_ID] = int(
-            str(x.select_one("form input[name=idx]")["value"])
+            str(x.css_first("form input[name=idx]").attrs["value"])
         )
 
         records.append(score)
     return records
 
 
-def parse_detailed_recent_record(soup: BeautifulSoup) -> RecentScore:
+def parse_detailed_recent_record(soup: LexborHTMLParser) -> RecentScore:
     def get_judgement_count(class_name):
-        return chuni_int(soup.select_one(class_name).get_text().replace(",", ""))
+        return chuni_int(soup.css_first(class_name).text().replace(",", ""))
 
     def get_note_percentage(class_name):
-        return float(soup.select_one(class_name).get_text().replace("%", ""))
+        return float(soup.css_first(class_name).text().replace("%", ""))
 
-    record = parse_basic_recent_record(soup.select_one(".frame01_inside"))
+    record = parse_basic_recent_record(soup.css_first(".frame01_inside"))
 
     record.max_combo = chuni_int(
-        soup.select_one(".play_data_detail_maxcombo_block").get_text()
+        soup.css_first(".play_data_detail_maxcombo_block").text()
     )
 
     jcrit = get_judgement_count(".text_critical.play_data_detail_judge_text")
@@ -436,38 +433,38 @@ def parse_detailed_recent_record(soup: BeautifulSoup) -> RecentScore:
         tap=tap, hold=hold, slide=slide, air=air, flick=flick
     )
 
-    record.character = soup.select_one(".play_data_chara_name").get_text()
+    record.character = soup.css_first(".play_data_chara_name").text()
 
-    skill_name = soup.select_one(".play_data_skill_name").get_text()
+    skill_name = soup.css_first(".play_data_skill_name").text()
     record.skill = Skill(name=skill_name, grade=None)
 
-    if skill_grade := soup.select_one(".play_data_skill_grade"):
-        record.skill.grade = chuni_int(skill_grade.text)
+    if skill_grade := soup.css_first(".play_data_skill_grade"):
+        record.skill.grade = chuni_int(skill_grade.text())
 
     record.skill_result = chuni_int(
-        soup.select_one(".play_musicdata_skilleffect_text").get_text().replace("+", "")
+        soup.css_first(".play_musicdata_skilleffect_text").text().replace("+", "")
     )
     record.extras[KEY_SONG_ID] = int(
-        str(soup.select_one("form input[name=idx]")["value"])
+        str(soup.css_first("form input[name=idx]").attrs["value"])
     )
     return record
 
 
-def parse_course_list(soup: BeautifulSoup):
+def parse_course_list(soup: LexborHTMLParser):
     courses: list[CourseRecord] = []
 
-    for x in soup.select("form:has(.w388.musiclist_box)"):
-        if (score_elem := x.select_one(".play_musicdata_highscore .text_b")) is None:
+    for x in soup.css("form:has(.w388.musiclist_box)"):
+        if (score_elem := x.css_first(".play_musicdata_highscore .text_b")) is None:
             continue
 
-        if (musicdata_icon := x.select_one(".play_musicdata_icon")) is not None:
+        if (musicdata_icon := x.css_first(".play_musicdata_icon")) is not None:
             rank, clear_lamp, combo_lamp = get_course_rank_and_lamps(musicdata_icon)
         else:
             rank = Rank.d
             clear_lamp = ClearLamp.failed
             combo_lamp = ComboLamp.none
 
-        cls = extract_last_part(" ".join(x.select_one(".w388.musiclist_box")["class"]))
+        cls = extract_last_part(x.css_first(".w388.musiclist_box").attrs["class"])
 
         if cls == "class10":
             course_cls = CourseClass.i
@@ -488,10 +485,10 @@ def parse_course_list(soup: BeautifulSoup):
             raise ValueError(msg)
 
         course = CourseRecord(
-            id=int(str(x.select_one("form input[name=idx]")["value"])),
+            id=int(x.css_first("form input[name=idx]").attrs["value"]),
             cls=course_cls,
-            name=x.select_one(".music_title").get_text(),
-            score=chuni_int(score_elem.get_text()),
+            name=x.css_first(".music_title").text(),
+            score=chuni_int(score_elem.text()),
             rank=rank,
             clear_lamp=clear_lamp,
             combo_lamp=combo_lamp,
@@ -502,19 +499,19 @@ def parse_course_list(soup: BeautifulSoup):
     return courses
 
 
-def parse_collection_customize(soup: BeautifulSoup) -> PlayerCollections:
+def parse_collection_customize(soup: LexborHTMLParser) -> PlayerCollections:
     titles: list[Title] = [
         title
-        for elem in soup.select(".honor_now")
+        for elem in soup.css(".honor_now")
         if (title := parse_title(elem)) is not None
     ]
 
     return PlayerCollections(
-        avatar=parse_avatar(soup.select_one(".avatar_customise_group")),
+        avatar=parse_avatar(soup.css_first(".avatar_customise_group")),
         titles=titles,
-        nameplate=soup.select_one(".nameplate_now img")["src"],
-        map_icon=soup.select_one(".mapicon_now img")["src"],
-        system_voice=soup.select_one(".systemvoice_now img")["src"],
+        nameplate=soup.css_first(".nameplate_now img").attrs["src"],
+        map_icon=soup.css_first(".mapicon_now img").attrs["src"],
+        system_voice=soup.css_first(".systemvoice_now img").attrs["src"],
     )
 
 
@@ -529,44 +526,44 @@ WEEKDAY_MAP = {
 }
 
 
-def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
-    login_bonus_status = soup.select_one(
-        r':-soup-contains("Today\'s Login Bonus")'
-    ).get_text()
+def parse_login_bonus(soup: LexborHTMLParser) -> LoginBonus:
+    login_bonus_status = soup.css_first(
+        r':lexbor-contains("Today\'s Login Bonus")'
+    ).text()
     received_bonus_today = "Not achieved" not in login_bonus_status
 
     monthly_bonuses: list[MonthlyLoginBonus] = []
 
-    for monthly_bonus_elem in soup.select(".frame01_inside > div > div.w420"):
+    for monthly_bonus_elem in soup.css(".frame01_inside > div > div.w420"):
         monthly_login_bonus_name = (
-            monthly_bonus_elem.select(".box01_title")[0].get_text().strip()
+            monthly_bonus_elem.css_first(".box01_title").text().strip()
         )
 
         monthly_days_logged_in: int = 0
 
-        for e in monthly_bonus_elem.select(
+        for e in monthly_bonus_elem.css(
             ".monthly_cumulative_login_bonus_days_count_num img"
         ):
-            digit = extract_last_part(e["src"])
+            digit = extract_last_part(e.attrs["src"])
             monthly_days_logged_in = monthly_days_logged_in * 10 + int(digit)
 
         monthly_login_bonus_rewards: list[LoginBonusItem] = []
 
-        for e in monthly_bonus_elem.select(
+        for e in monthly_bonus_elem.css(
             ".monthly_cumulative_login_bonus_reward, .monthly_cumulative_login_bonus_reward_off"
         ):
-            bonus_days_block = e.select_one(".bonus_days_block")
+            bonus_days_block = e.css_first(".bonus_days_block")
 
             if bonus_days_block is None:
                 continue
 
-            day = chuni_int(bonus_days_block.get_text().removeprefix("Day "))
-            icon_url = e.select_one(".monthly_cumulative_login_bonus_reward_img img")[
-                "src"
-            ]
-            name = e.select_one(".bonus_reward_honor_text").get_text().strip()
+            day = chuni_int(bonus_days_block.text().removeprefix("Day "))
+            icon_url = e.css_first(
+                ".monthly_cumulative_login_bonus_reward_img img"
+            ).attrs["src"]
+            name = e.css_first(".bonus_reward_honor_text").text().strip()
             obtained = (
-                e.select_one(".monthly_cumulative_login_bonus_reward_get") is not None
+                e.css_first(".monthly_cumulative_login_bonus_reward_get") is not None
             )
 
             monthly_login_bonus_rewards.append(
@@ -588,16 +585,16 @@ def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
 
     login_bonus: list[LoginBonusItem] = []
 
-    for e in soup.select(".bonus_block_on, .bonus_block_off"):
-        bonus_days_block = e.select_one(".bonus_days_block")
+    for e in soup.css(".bonus_block_on, .bonus_block_off"):
+        bonus_days_block = e.css_first(".bonus_days_block")
 
         if bonus_days_block is None:
             continue
 
-        day = chuni_int(bonus_days_block.get_text().removeprefix("Day "))
-        icon_url = e.select_one(".bonus_reward_block img")["src"]
-        name = e.select_one(".bonus_reward_honor_text").get_text().strip()
-        obtained = e.select_one(".bonus_reward_get") is not None
+        day = chuni_int(bonus_days_block.text().removeprefix("Day "))
+        icon_url = e.css_first(".bonus_reward_block img").attrs["src"]
+        name = e.css_first(".bonus_reward_honor_text").text().strip()
+        obtained = e.css_first(".bonus_reward_get") is not None
 
         login_bonus.append(
             LoginBonusItem(
@@ -610,12 +607,12 @@ def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
 
     daily_bonus: list[DailyBonus] = []
 
-    for e in soup.select(".weekday_bonus_block, .weekday_bonus_today"):
-        weekday_name = e.select_one(".weekday_bonus_week").get_text()
+    for e in soup.css(".weekday_bonus_block, .weekday_bonus_today"):
+        weekday_name = e.css_first(".weekday_bonus_week").text()
         weekday = WEEKDAY_MAP[weekday_name]
-        icon_url = e.select_one(".weekday_bonus_info_icon img")["src"]
-        bonus = e.select_one(".weekday_bonus_info_text").get_text().strip()
-        is_today = "weekday_bonus_today" in e["class"]
+        icon_url = e.css_first(".weekday_bonus_info_icon img").attrs["src"]
+        bonus = e.css_first(".weekday_bonus_info_text").text().strip()
+        is_today = "weekday_bonus_today" in str(e.attrs["class"])
 
         daily_bonus.append(
             DailyBonus(
@@ -634,24 +631,24 @@ def parse_login_bonus(soup: BeautifulSoup) -> LoginBonus:
     )
 
 
-def parse_leaderboard(soup: BeautifulSoup) -> Leaderboard:
-    updated_at_elem = soup.select_one(".ranking_update")
+def parse_leaderboard(soup: LexborHTMLParser) -> Leaderboard:
+    updated_at_elem = soup.css_first(".ranking_update")
 
     if updated_at_elem is None:
         msg = "Could not find leaderboard update date."
         raise ValueError(msg)
 
     lb = Leaderboard(
-        updated_at=parse_time(updated_at_elem.text.removeprefix("Update on：")),  # noqa: RUF001
+        updated_at=parse_time(updated_at_elem.text().removeprefix("Update on：")),  # noqa: RUF001
         ranking=[],
     )
 
-    for entry in soup.select(".rank_block"):
-        position_elem = entry.select_one(".rank_block_rank")
-        player_name_elem = entry.select_one(".rank_block_name")
-        score_elem = entry.select_one(".rank_score_block .rank_block_num")
-        ajc_count_elem = entry.select_one(".rank_score_block .rank_block_theory_text")
-        last_raised_elem = entry.select_one(".rank_block_date, .rank_block_date_new")
+    for entry in soup.css(".rank_block"):
+        position_elem = entry.css_first(".rank_block_rank")
+        player_name_elem = entry.css_first(".rank_block_name")
+        score_elem = entry.css_first(".rank_score_block .rank_block_num")
+        ajc_count_elem = entry.css_first(".rank_score_block .rank_block_theory_text")
+        last_raised_elem = entry.css_first(".rank_block_date, .rank_block_date_new")
 
         if (
             position_elem is None
@@ -662,14 +659,14 @@ def parse_leaderboard(soup: BeautifulSoup) -> Leaderboard:
             continue
 
         lb_entry = LeaderboardEntry(
-            position=chuni_int(position_elem.text),
-            player_name=player_name_elem.text,
-            score=chuni_int(score_elem.text),
+            position=chuni_int(position_elem.text()),
+            player_name=player_name_elem.text(),
+            score=chuni_int(score_elem.text()),
             judgements=None,
-            ajc_count=chuni_int(ajc_count_elem.text)
+            ajc_count=chuni_int(ajc_count_elem.text())
             if ajc_count_elem is not None
             else None,
-            achieved_at=parse_time(last_raised_elem.text),
+            achieved_at=parse_time(last_raised_elem.text()),
         )
         lb.ranking.append(lb_entry)
 
@@ -677,16 +674,16 @@ def parse_leaderboard(soup: BeautifulSoup) -> Leaderboard:
 
 
 def parse_linked_verse_progress(
-    soup: BeautifulSoup,
+    soup: LexborHTMLParser,
 ) -> dict[LinkedGate, LinkedGateStatus]:
     result: dict[LinkedGate, LinkedGateStatus] = {}
 
     for gate, element in zip(
         LinkedGate,
-        soup.select(".linked_verse_icon_status_block .linked_verse_icon_block img"),
+        soup.css(".linked_verse_icon_status_block .linked_verse_icon_block img"),
         strict=False,
     ):
-        src = element.get("src")
+        src = element.attrs.get("src")
 
         if not isinstance(src, str):
             continue
@@ -702,12 +699,12 @@ def parse_linked_verse_progress(
     return result
 
 
-def parse_linked_gate_leaderboard(soup: BeautifulSoup) -> LinkedGateLeaderboard:
-    title_elem = soup.select_one(".course_musicdata_title_text")
-    artist_elem = soup.select_one(".course_musicdata_artist")
-    jacket_elem = soup.select_one(".play_jacket_img img")
-    clear_date_elem = soup.select_one(".course_playdata_leftside > .text_l > .text_b")
-    update_date_elem = soup.select_one(".ranking_update")
+def parse_linked_gate_leaderboard(soup: LexborHTMLParser) -> LinkedGateLeaderboard:
+    title_elem = soup.css_first(".course_musicdata_title_text")
+    artist_elem = soup.css_first(".course_musicdata_artist")
+    jacket_elem = soup.css_first(".play_jacket_img img")
+    clear_date_elem = soup.css_first(".course_playdata_leftside > .text_l > .text_b")
+    update_date_elem = soup.css_first(".ranking_update")
 
     if (
         title_elem is None
@@ -718,10 +715,10 @@ def parse_linked_gate_leaderboard(soup: BeautifulSoup) -> LinkedGateLeaderboard:
         msg = "Linked GATE leaderboard missing required information"
         raise ValueError(msg)
 
-    title = title_elem.text.strip()
-    artist = artist_elem.text
-    jacket_url = jacket_elem["src"]
-    clear_date = clear_date_elem.text.strip() if clear_date_elem is not None else None
+    title = title_elem.text().strip()
+    artist = artist_elem.text()
+    jacket_url = jacket_elem.attrs["src"]
+    clear_date = clear_date_elem.text().strip() if clear_date_elem is not None else None
 
     if clear_date == "----/--/-- --:--:--":
         clear_date = None
@@ -731,15 +728,17 @@ def parse_linked_gate_leaderboard(soup: BeautifulSoup) -> LinkedGateLeaderboard:
         artist=artist,
         jacket_url=jacket_url,
         cleared_at=parse_time(clear_date) if clear_date is not None else None,
-        updated_at=parse_time(update_date_elem.text.removeprefix("Update on：")),  # noqa: RUF001
+        updated_at=parse_time(
+            update_date_elem.text().removeprefix("Update on：")  # noqa: RUF001
+        ),
         ranking=[],
     )
 
-    for element in soup.select(".rank_block_s"):
-        position_elem = element.select_one(".rank_block_rank_s")
-        player_name_elem = element.select_one(".rank_block_name_unlock")
-        achieved_at_elem = element.select_one(".rank_block_num_linked")
-        link_level_elem = element.select_one(
+    for element in soup.css(".rank_block_s"):
+        position_elem = element.css_first(".rank_block_rank_s")
+        player_name_elem = element.css_first(".rank_block_name_unlock")
+        achieved_at_elem = element.css_first(".rank_block_num_linked")
+        link_level_elem = element.css_first(
             ".linked_verse_ranking_clear_course_level_img img"
         )
 
@@ -753,11 +752,11 @@ def parse_linked_gate_leaderboard(soup: BeautifulSoup) -> LinkedGateLeaderboard:
 
         lb.ranking.append(
             LinkedGateLeaderboardEntry(
-                position=chuni_int(position_elem.text),
-                player_name=player_name_elem.text,
-                achieved_at=parse_time(achieved_at_elem.text),
+                position=chuni_int(position_elem.text()),
+                player_name=player_name_elem.text(),
+                achieved_at=parse_time(achieved_at_elem.text()),
                 link_level=LinkLevel(
-                    chuni_int(extract_last_part(link_level_elem["src"]))
+                    chuni_int(extract_last_part(link_level_elem.attrs["src"]))
                 ),
             )
         )
@@ -766,24 +765,22 @@ def parse_linked_gate_leaderboard(soup: BeautifulSoup) -> LinkedGateLeaderboard:
 
 
 def parse_friend_vs(
-    soup: BeautifulSoup,
+    soup: LexborHTMLParser,
 ) -> tuple[list[PersonalBest], list[PersonalBest]]:
     your_pbs: list[PersonalBest] = []
     their_pbs: list[PersonalBest] = []
 
-    for block in soup.select(".music_box"):
-        title = block.select_one(".block_underline > div").get_text()
-        difficulty = difficulty_from_imgurl(" ".join(block["class"]))
-        info_blocks = block.select(".vs_list_infoblock")
+    for block in soup.css(".music_box"):
+        title = block.css_first(".block_underline > div").text()
+        difficulty = difficulty_from_imgurl(block.attrs["class"])
+        info_blocks = block.css(".vs_list_infoblock")
 
         if len(info_blocks) != 2:
             continue
 
         your_block, their_block = info_blocks
-        your_score = chuni_int(
-            your_block.select_one(".play_musicdata_highscore").get_text()
-        )
-        your_lamps = get_rank_and_lamps(your_block.select_one(".vs_list_mybatch"))
+        your_score = chuni_int(your_block.css_first(".play_musicdata_highscore").text())
+        your_lamps = get_rank_and_lamps(your_block.css_first(".vs_list_mybatch"))
         your_pbs.append(
             PersonalBest(
                 title=title,
@@ -796,9 +793,9 @@ def parse_friend_vs(
         )
 
         their_score = chuni_int(
-            their_block.select_one(".play_musicdata_highscore").get_text()
+            their_block.css_first(".play_musicdata_highscore").text()
         )
-        their_lamps = get_rank_and_lamps(their_block.select_one(".vs_list_friendbatch"))
+        their_lamps = get_rank_and_lamps(their_block.css_first(".vs_list_friendbatch"))
         their_pbs.append(
             PersonalBest(
                 title=title,

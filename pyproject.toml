@@ -24,6 +24,7 @@ dependencies = [
     "httpx-aiohttp",
     "python-magic~=0.4.27",
     "aiolimiter~=1.2",
+    "selectolax>=0.4.7",
 ]
 readme = "README.md"
 requires-python = ">= 3.13"
@@ -56,6 +57,8 @@ test = [
     "pytest-cov~=6.0",
     "pytest-httpx~=0.35.0",
     "pytest-html~=4.1",
+    "pytest-benchmark[aspect]>=5.2.3",
+    "pytest-memray>=1.8.0",
 ]
 
 

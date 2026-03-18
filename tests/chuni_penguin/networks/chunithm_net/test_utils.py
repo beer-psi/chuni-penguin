@@ -1,9 +1,8 @@
-import importlib.util
 import random
 import string
 
 import pytest
-from bs4 import BeautifulSoup
+from selectolax.lexbor import LexborHTMLParser
 
 from chuni_penguin.networks.chunithm_net.utils import (
     difficulty_from_imgurl,
@@ -130,9 +129,9 @@ from chuni_penguin.networks.types import (
     ],
 )
 def test_get_rank_and_cleartype(html, expected):
-    bs4_features = "lxml" if importlib.util.find_spec("lxml") else "html.parser"
-    soup = BeautifulSoup(html, bs4_features)
-    assert get_rank_and_lamps(soup) == expected
+    soup = LexborHTMLParser(html, is_fragment=True)
+    assert soup.root is not None
+    assert get_rank_and_lamps(soup.root) == expected
 
 
 @pytest.mark.parametrize(

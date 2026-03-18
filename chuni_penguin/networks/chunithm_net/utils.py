@@ -1,11 +1,9 @@
-import contextlib
 import string
-from collections.abc import Generator
 from datetime import datetime
 from typing import cast
 from zoneinfo import ZoneInfo
 
-from bs4.element import PageElement, ResultSet, Tag
+from selectolax.lexbor import LexborNode
 
 from chuni_penguin.networks.types import (
     ChainLamp,
@@ -29,10 +27,10 @@ def chuni_int(s: str) -> int:
     return int(s.replace(",", ""))
 
 
-def parse_player_rating(soup: ResultSet[Tag]) -> float:
+def parse_player_rating(soup: list[LexborNode]) -> float:
     rating = ""
     for x in soup:
-        digit = extract_last_part(cast(str, x["src"]))
+        digit = extract_last_part(cast(str, x.attrs["src"]))
         if digit == "comma":
             rating += "."
         else:
@@ -70,39 +68,41 @@ def difficulty_from_imgurl(url: str) -> Difficulty:
             raise ValueError(msg)
 
 
-def get_rank_and_lamps(soup: Tag) -> tuple[Rank, ClearLamp, ComboLamp, ChainLamp]:
-    if (rank_img_elem := soup.select_one("img[src*=_rank_]")) is not None:
-        rank_img_url = cast(str, rank_img_elem["src"])
+def get_rank_and_lamps(
+    soup: LexborNode,
+) -> tuple[Rank, ClearLamp, ComboLamp, ChainLamp]:
+    if (rank_img_elem := soup.css_first("img[src*=_rank_]")) is not None:
+        rank_img_url = cast(str, rank_img_elem.attrs["src"])
         rank = Rank(int(extract_last_part(rank_img_url)))
     else:
         rank = Rank.d
 
-    if soup.select_one("img[src*=clear]") is not None:
+    if soup.css_first("img[src*=clear]") is not None:
         clear_type = ClearLamp.clear
-    elif soup.select_one("img[src*=hard]") is not None:
+    elif soup.css_first("img[src*=hard]") is not None:
         clear_type = ClearLamp.hard
-    elif soup.select_one("img[src*=absolute]") is not None:
+    elif soup.css_first("img[src*=absolute]") is not None:
         clear_type = ClearLamp.absolute
-    elif soup.select_one("img[src*=brave]") is not None:
+    elif soup.css_first("img[src*=brave]") is not None:
         clear_type = ClearLamp.brave
-    elif soup.select_one("img[src*=catastrophy]") is not None:
+    elif soup.css_first("img[src*=catastrophy]") is not None:
         clear_type = ClearLamp.catastrophy
     else:
         clear_type = ClearLamp.failed
 
-    if soup.select_one("img[src*=fullchain2]") is not None:
+    if soup.css_first("img[src*=fullchain2]") is not None:
         chain_type = ChainLamp.full_chain
-    elif soup.select_one("img[src*=fullchain]") is not None:
+    elif soup.css_first("img[src*=fullchain]") is not None:
         chain_type = ChainLamp.full_chain_plus
     else:
         chain_type = ChainLamp.none
 
     # FC and AJ should override all other lamps.
-    if soup.select_one("img[src*=fullcombo]") is not None:
+    if soup.css_first("img[src*=fullcombo]") is not None:
         combo_type = ComboLamp.full_combo
-    elif soup.select_one("img[src*=alljusticecritical]") is not None:
+    elif soup.css_first("img[src*=alljusticecritical]") is not None:
         combo_type = ComboLamp.all_justice_critical
-    elif soup.select_one("img[src*=alljustice]") is not None:
+    elif soup.css_first("img[src*=alljustice]") is not None:
         combo_type = ComboLamp.all_justice
     else:
         combo_type = ComboLamp.none
@@ -110,38 +110,25 @@ def get_rank_and_lamps(soup: Tag) -> tuple[Rank, ClearLamp, ComboLamp, ChainLamp
     return rank, clear_type, combo_type, chain_type
 
 
-def get_course_rank_and_lamps(soup: Tag):
-    if (rank_img_elem := soup.select_one("img[src*=_rank_]")) is not None:
-        rank_img_url = cast(str, rank_img_elem["src"])
+def get_course_rank_and_lamps(soup: LexborNode):
+    if (rank_img_elem := soup.css_first("img[src*=_rank_]")) is not None:
+        rank_img_url = cast(str, rank_img_elem.attrs["src"])
         rank = Rank(int(extract_last_part(rank_img_url)))
     else:
         rank = Rank.d
 
-    if soup.select_one("img[src*=course_clear]") is not None:
+    if soup.css_first("img[src*=course_clear]") is not None:
         clear_type = ClearLamp.clear
     else:
         clear_type = ClearLamp.failed
 
-    if soup.select_one("img[src*=fullcombo]") is not None:
+    if soup.css_first("img[src*=fullcombo]") is not None:
         combo_type = ComboLamp.full_combo
-    elif soup.select_one("img[src*=alljusticecritical]") is not None:
+    elif soup.css_first("img[src*=alljusticecritical]") is not None:
         combo_type = ComboLamp.all_justice_critical
-    elif soup.select_one("img[src*=alljustice]") is not None:
+    elif soup.css_first("img[src*=alljustice]") is not None:
         combo_type = ComboLamp.all_justice
     else:
         combo_type = ComboLamp.none
 
     return rank, clear_type, combo_type
-
-
-@contextlib.contextmanager
-def decomposing[T: PageElement](soup: T) -> Generator[T, None, None]:
-    """
-    Returns a context manager that decomposes :param:`soup`
-    upon completion of the block.
-    """
-
-    try:
-        yield soup
-    finally:
-        soup.decompose()

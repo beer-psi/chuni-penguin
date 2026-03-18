@@ -1,12 +1,10 @@
 # ruff: noqa: RUF001
 
-import importlib.util
 import re
 from html import unescape
 
 import aiohttp
-from bs4 import BeautifulSoup
-from bs4.element import Comment
+from selectolax.lexbor import LexborHTMLParser
 from sqlalchemy import select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -140,8 +138,6 @@ TITLE_MAPPING = {
 async def update_sdvxin(
     logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
 ):
-    bs4_features = "lxml" if importlib.util.find_spec("lxml") else "html.parser"
-
     # sdvx.in ID, song_id, difficulty
     inserted_data: list[dict] = []
     async with (
@@ -157,31 +153,29 @@ async def update_sdvxin(
             else:
                 url = f"https://sdvx.in/chunithm/sort/{category}.htm"
             resp = await client.get(url)
-            soup = BeautifulSoup(await resp.text(), bs4_features)
+            soup = LexborHTMLParser(await resp.text(), is_fragment=False)
 
-            tables = soup.select("table:has(td.tbgl)")
+            tables = soup.css("table:has(td.tbgl)")
             if len(tables) == 0:
                 logger.error(f"Could not find table(s) for category {category}")
                 continue
 
             for table in tables:
-                scripts = table.select("script[src]")
+                scripts = table.css("script[src]")
 
                 for script in scripts:
-                    title = next(
-                        (
-                            str(x)
-                            for x in script.next_elements
-                            if isinstance(x, Comment)
-                        ),
-                        None,
-                    )
+                    title = None
+
+                    while (x := script.next) is not None:
+                        if x.is_comment_node:
+                            title = x.comment_content
+                            break
 
                     if title is None:
                         continue
 
                     title = TITLE_MAPPING.get(title, unescape(title))
-                    sdvx_in_id = str(script["src"]).split("/")[-1][
+                    sdvx_in_id = str(script.attrs["src"]).split("/")[-1][
                         :5
                     ]  # TODO: dont assume the ID is always 5 digits
 
@@ -199,7 +193,7 @@ async def update_sdvxin(
                             condition = Song.id == 8309
                         else:
                             script_resp = await client.get(
-                                f"https://sdvx.in{script['src']}"
+                                f"https://sdvx.in{script.attrs['src']}"
                             )
                             script_data = await script_resp.text()
 
@@ -241,7 +235,7 @@ async def update_sdvxin(
 
                     if script_data is None:
                         script_resp = await client.get(
-                            f"https://sdvx.in{script['src']}"
+                            f"https://sdvx.in{script.attrs['src']}"
                         )
                         script_data = await script_resp.text()
 
@@ -255,11 +249,11 @@ async def update_sdvxin(
                         # var LV00000W2
                         level = SDVXIN_DIFFICULTY_MAPPING[key[11]]
                         end_index = key[12] if len(key) > 12 else ""
-                        value_soup = BeautifulSoup(
-                            value.removeprefix('"').removesuffix('";'), bs4_features
+                        value_soup = LexborHTMLParser(
+                            value.removeprefix('"').removesuffix('";'), is_fragment=True
                         )
 
-                        if value_soup.select_one("a") is None:
+                        if value_soup.css_first("a") is None:
                             continue
 
                         inserted_data.append(
