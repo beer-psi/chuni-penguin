@@ -149021,8 +149021,7 @@
         "is_hidden_on_chuninet": false,
         "aliases": [
             "roar towards the future",
-            "Asu e no Houkou",
-            "mirai e no hoko"
+            "Asu e no Houkou"
         ],
         "charts": [
             {
@@ -189452,7 +189451,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10226",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -189468,7 +189470,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10226",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
