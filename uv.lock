@@ -172,18 +172,6 @@ wheels = [
 ]
 
 [[package]]
-name = "aspectlib"
-version = "2.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "fields" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/a0/d87a5c6a78634a7136fd7c1686f66b65bd7111517503b883408dca872131/aspectlib-2.0.0.tar.gz", hash = "sha256:a4b461b9da0b531aebcb93efcde3de808a72c60226dd8d902c467d13faf7ce92", size = 156591, upload-time = "2022-10-20T16:23:13.59Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/27/146806fa5c4823b61b30bbdf3f06a2adb9e475ea790539e7a00b6b6fa620/aspectlib-2.0.0-py3-none-any.whl", hash = "sha256:d549c64e9b0791449d2bafeb1aaf9db090af414b0a38967d313b77d2bf266628", size = 24231, upload-time = "2022-10-20T16:23:10.882Z" },
-]
-
-[[package]]
 name = "async-lru"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -450,7 +438,7 @@ dev = [
     { name = "basedpyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "pytest-benchmark", extra = ["aspect"] },
+    { name = "pytest-benchmark" },
     { name = "pytest-cov" },
     { name = "pytest-html" },
     { name = "pytest-httpx" },
@@ -464,7 +452,7 @@ docs = [
 test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "pytest-benchmark", extra = ["aspect"] },
+    { name = "pytest-benchmark" },
     { name = "pytest-cov" },
     { name = "pytest-html" },
     { name = "pytest-httpx" },
@@ -511,7 +499,7 @@ dev = [
     { name = "basedpyright", specifier = "==1.31.5" },
     { name = "pytest", specifier = "~=8.3" },
     { name = "pytest-asyncio", specifier = "~=0.24.0" },
-    { name = "pytest-benchmark", extras = ["aspect"], specifier = ">=5.2.3" },
+    { name = "pytest-benchmark", specifier = ">=5.2.3" },
     { name = "pytest-cov", specifier = "~=6.0" },
     { name = "pytest-html", specifier = "~=4.1" },
     { name = "pytest-httpx", specifier = "~=0.35.0" },
@@ -525,7 +513,7 @@ docs = [
 test = [
     { name = "pytest", specifier = "~=8.3" },
     { name = "pytest-asyncio", specifier = "~=0.24.0" },
-    { name = "pytest-benchmark", extras = ["aspect"], specifier = ">=5.2.3" },
+    { name = "pytest-benchmark", specifier = ">=5.2.3" },
     { name = "pytest-cov", specifier = "~=6.0" },
     { name = "pytest-html", specifier = "~=4.1" },
     { name = "pytest-httpx", specifier = "~=0.35.0" },
@@ -711,15 +699,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ef/57/9a2d9abdabdc9db8ef28ce0cf4129669e1c8717ba28d607b5ba357c4de3b/discord_py-2.7.1.tar.gz", hash = "sha256:24d5e6a45535152e4b98148a9dd6b550d25dc2c9fb41b6d670319411641249da", size = 1106326, upload-time = "2026-03-03T18:40:46.24Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f7/a7/17208c3b3f92319e7fad259f1c6d5a5baf8fd0654c54846ced329f83c3eb/discord_py-2.7.1-py3-none-any.whl", hash = "sha256:849dca2c63b171146f3a7f3f8acc04248098e9e6203412ce3cf2745f284f7439", size = 1227550, upload-time = "2026-03-03T18:40:44.492Z" },
-]
-
-[[package]]
-name = "fields"
-version = "5.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/18/68/b922b5b0b2c1d99171c0ed9ad10296b55ee644eb1fa2fd5e45cafe56ae33/fields-5.0.0.tar.gz", hash = "sha256:31d4aa03d8d44e35df13c431de35136997f047a924a597d84f7bc209e1be5727", size = 36232, upload-time = "2016-04-13T20:53:08.282Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9b/e8/47bd9a613a2a1ee0bd43498549cf1c828f9a9c8d6e82ea4eb46d3fcf5629/fields-5.0.0-py2.py3-none-any.whl", hash = "sha256:67bf7da6b848fc47bc41061bf3f847c5e040333a9d532f7c89cb4e9b5b2acab0", size = 19816, upload-time = "2016-04-13T20:52:11.515Z" },
 ]
 
 [[package]]
@@ -1697,11 +1676,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/24/34/9f732b76456d64faffbef6232f1f9dbec7a7c4999ff46282fa418bd1af66/pytest_benchmark-5.2.3.tar.gz", hash = "sha256:deb7317998a23c650fd4ff76e1230066a76cb45dcece0aca5607143c619e7779", size = 341340, upload-time = "2025-11-09T18:48:43.215Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/29/e756e715a48959f1c0045342088d7ca9762a2f509b945f362a316e9412b7/pytest_benchmark-5.2.3-py3-none-any.whl", hash = "sha256:bc839726ad20e99aaa0d11a127445457b4219bdb9e80a1afc4b51da7f96b0803", size = 45255, upload-time = "2025-11-09T18:48:39.765Z" },
-]
-
-[package.optional-dependencies]
-aspect = [
-    { name = "aspectlib" },
 ]
 
 [[package]]
