@@ -134,4 +134,9 @@ typeCheckingMode = "standard"
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
-filterwarnings = ["ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning"]
+filterwarnings = [
+    "error",
+    "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning",
+    "ignore:'asyncio.get_event_loop_policy' is deprecated:DeprecationWarning",
+    "ignore:'asyncio.set_event_loop_policy' is deprecated:DeprecationWarning"
+]

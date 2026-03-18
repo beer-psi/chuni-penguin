@@ -53,7 +53,7 @@ jobs:
         run: "uv run basedpyright"
 
       - name: "Run tests"
-        run: "uv run pytest -Werror -v --html=report.html --self-contained-html tests"
+        run: "uv run pytest -v --html=report.html --self-contained-html tests"
 
       - name: "Upload test report"
         if: "always()"
