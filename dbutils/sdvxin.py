@@ -45,6 +45,7 @@ TITLE_MAPPING = {
     "Athlete Killer ”Meteor”": 'Athlete Killer "Meteor"',
     "Aventyr": "Äventyr",
     "Blow my mind": "Blow My Mind",
+    "BOW AND ARROW（アニメ・オープニングver.）": "BOW AND ARROW （アニメ・オープニングver.）",
     "Chaotic Order": "Chaotic Ørder",
     "chronos": "χρόνος",
     "DAZZLING SEASON": "DAZZLING♡SEASON",
@@ -70,6 +71,7 @@ TITLE_MAPPING = {
     "L'epilogue": "L'épilogue",
     "Little ”Sister” Bitch": 'Little "Sister" Bitch',
     "Love's Theme of BADASS": "Love's Theme of BADASS ～バッド・アス 愛のテーマ～",
+    "M@GICAL☆CURE! LOVE SHOT!": "M@GICAL☆CURE! LOVE ♥ SHOT!",
     "Make Up Your World": "Make Up Your World feat. キョンシーのCiちゃん & らっぷびと",
     "Mass Destruction (''P3'' + ''P3F'' ver.)": 'Mass Destruction ("P3" + "P3F" ver.)',
     "MegiddO": "MegiddØ",
@@ -132,6 +134,8 @@ TITLE_MAPPING = {
     "[空虚] ～Pyrophilia": "〚空虚〛 ～Pyrophilia",
     "美少女無罪パイレーツ": "美少女無罪♡パイレーツ",
     "AMARA (大未来電脳)": "ÅMARA (大未来電脳)",
+    "ム責任集合体": "㋰責任集合体",
+    "ビッグブリッヂの死闘": "ビッグブリッヂの死闘 -シアトリズムFFAC Arrange- from FFV",
 }
 
 
@@ -165,11 +169,14 @@ async def update_sdvxin(
 
                 for script in scripts:
                     title = None
+                    x = script.next
 
-                    while (x := script.next) is not None:
+                    while x is not None:
                         if x.is_comment_node:
                             title = x.comment_content
                             break
+
+                        x = x.next
 
                     if title is None:
                         continue
