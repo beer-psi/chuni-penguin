@@ -101965,7 +101965,11 @@
             "https://chunithm.beerpsi.cc/assets/jackets/1100.png",
             "https://chunithm.beerpsi.cc/assets/jackets/1100.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/2d36794bff75ff22cf3455e1763c9654ef685e0150eb5a0559f31ca129a487d8.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/2bdedf907d00f9e47700ea07f6363581429813be65d92fb48f67022c80b73bd3.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/ff0ad6591835bc75a922e082e0b9d56cc31bf92fc2478cafc09a3b69043d3be2.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/d6b14454a1b5d260.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/d6b14454a1b5d260.png",
+            "https://mimixd.app/images/render/cover/d6b14454a1b5d260.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/1be50e1bc79b6c74.jpg"
         ]
     },
@@ -166037,7 +166041,8 @@
         "is_hidden_on_chuninet": false,
         "aliases": [
             "mondai nightripper",
-            "Mondainai Tripper"
+            "Mondainai Tripper",
+            "mondainai"
         ],
         "charts": [
             {
@@ -173228,6 +173233,7 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2758.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/fcbf6e8ff08a697feb52a8843b386ffc3960e5c173c3d73db3576c7738dcfdc4.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/7e6dbae884fa635981f6ff548378aeaf6286fb1ac2efee1582fce7a0f1fadcf2.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/8867eaa3485f47722773b6ffeb40560df17bb0ddb57c5e09ec052df3dba34f6f.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/463ca52e854f4869.png",
             "https://maimaidx.jp/maimai-mobile/img/Music/463ca52e854f4869.png",
             "https://mimixd.app/images/render/cover/463ca52e854f4869.png",
@@ -176287,7 +176293,11 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2805.png",
             "https://chunithm.beerpsi.cc/assets/jackets/2805.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/006114d4e0a932673cd312f93c1ef7e32147f91694f0f4c2787227a0d6722769.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/93d8b4c72a3e31d6a4e8fed965ad10adb11d6c1109c65fdf91c1f22ba46c715a.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/296c40c87dabb3be0c1a0a50ff5e85d42e0a07f78445614f12fffe2eeac80e4e.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/eb065aac3a8e4c07.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/eb065aac3a8e4c07.png",
+            "https://mimixd.app/images/render/cover/eb065aac3a8e4c07.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/b67a3cd749371d4c.jpg"
         ]
     },
@@ -183487,7 +183497,7 @@
         "min_bpm": 180,
         "max_bpm": 180,
         "jacket": "33d2f048744c3dc7.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -183507,7 +183517,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "71da4c8c5bdc6cdf03cc801f4e9b215ab0eb43b0",
                 "sdvxin": null
             },
@@ -183523,7 +183533,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "e5e6e3ebfbf2bfb8ec90875e6935424d4dbcfacf",
                 "sdvxin": null
             },
@@ -183539,7 +183549,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "98da66ee0214f538e98eb67ed80c00ae9380a6ea",
                 "sdvxin": {
                     "id": "10169",
@@ -183558,7 +183568,7 @@
                 "flick": 137,
                 "charter": "ミニミライト",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "ab19ed0c974d531309127e9f972f66dc3a58473d",
                 "sdvxin": {
                     "id": "10169",
@@ -183593,7 +183603,7 @@
         "min_bpm": 202,
         "max_bpm": 202,
         "jacket": "556239ee68f8398d.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -183612,7 +183622,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "5854dcab9ef0a2efa4d25aedea0bf176371b6c29",
                 "sdvxin": null
             },
@@ -183628,7 +183638,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "457872b5c15c9b805765eef28417f94f677f7d66",
                 "sdvxin": null
             },
@@ -183644,7 +183654,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "b45a9a14336d3956dd28100134c2db71ca6e2cf1",
                 "sdvxin": {
                     "id": "10170",
@@ -183663,7 +183673,7 @@
                 "flick": 67,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "9033f0bd22cd68adc42ca7beb5225f67c5a46b2e",
                 "sdvxin": {
                     "id": "10170",
@@ -183698,7 +183708,7 @@
         "min_bpm": 170,
         "max_bpm": 170,
         "jacket": "0f03de1a9e1c6f66.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -183717,7 +183727,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "cff7a9f1213f11d8bb7c3d69033b40414965e7c7",
                 "sdvxin": null
             },
@@ -183733,7 +183743,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "27675dce87d0fe66b94914b258a52edc869a9dba",
                 "sdvxin": null
             },
@@ -183749,7 +183759,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "aee0698cb5f7c727c75e9db0993f25d16bb359f7",
                 "sdvxin": {
                     "id": "10171",
@@ -183768,7 +183778,7 @@
                 "flick": 85,
                 "charter": "夕凪アロエ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "08ebc8baa4cf2f99f6ca5d986f1a3bc525fb034b",
                 "sdvxin": {
                     "id": "10171",
@@ -183803,7 +183813,7 @@
         "min_bpm": 134,
         "max_bpm": 268,
         "jacket": "beb522614da0812c.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -183822,7 +183832,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "6b60ed9ee7000be20b636fe6439c300bef27b912",
                 "sdvxin": null
             },
@@ -183838,7 +183848,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "67022a86762d49d24d76adeb85626097cd4fb850",
                 "sdvxin": null
             },
@@ -183854,7 +183864,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "e2a5f0fd5c3b2efafbf44fcbff1e0c258b4016e6",
                 "sdvxin": {
                     "id": "10172",
@@ -183873,7 +183883,7 @@
                 "flick": 182,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "a2cef0b76139bdc5bc825caa653886c832e2ee93",
                 "sdvxin": {
                     "id": "10172",
@@ -183904,7 +183914,7 @@
         "min_bpm": 207,
         "max_bpm": 207,
         "jacket": "7004f2e2d805252d.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -183926,7 +183936,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "a3dbd63239569a493a95e7badef1a595b47c9e11",
                 "sdvxin": null
             },
@@ -183942,7 +183952,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "9186f4715799db5ae7f10a7a6078fab5f5cbc756",
                 "sdvxin": null
             },
@@ -183958,7 +183968,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "500d5c4be713571e0cd474bd27d8b52531d4c5c3",
                 "sdvxin": {
                     "id": "10173",
@@ -183977,7 +183987,7 @@
                 "flick": 148,
                 "charter": "ぴちネコ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "1099d612cd78f403b394204ef77dc972a43bab43",
                 "sdvxin": {
                     "id": "10173",
@@ -184916,6 +184926,10 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2896.png",
             "https://chunithm.beerpsi.cc/assets/jackets/2896.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/ffd07a0aedc3403c95766e19d58266b9e3cea9e5f963f817ece7d7a53ee24272.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/c2797c73ba272177e492624d381022c6e23ffaf4302fb0182f9d88638436fff7.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/507087fbd047b4c8.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/507087fbd047b4c8.png",
+            "https://mimixd.app/images/render/cover/507087fbd047b4c8.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/8b1f25ededff1ff4.jpg"
         ]
     },
@@ -185413,6 +185427,7 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2901.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/07dbfd3fa3e2b0ca2a1236d30db62dc1f070f17710be6e56d8f38c2d1f2b0329.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/ea7e0de192e20fbb4a9207884a97e046c9ebace52df9697c885661c89fc36616.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/ccdcfb5a8825b3af7ac9adc5e15d639be6291ffce7c23c5ff61e5f1658179f17.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/fe60aa61adb158a1.png",
             "https://maimaidx.jp/maimai-mobile/img/Music/fe60aa61adb158a1.png",
             "https://mimixd.app/images/render/cover/fe60aa61adb158a1.png",
@@ -186060,6 +186075,10 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2907.png",
             "https://chunithm.beerpsi.cc/assets/jackets/2907.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/fc36ab3f962eb4fe4beb54e0a976db0449eb0c229513adff50f1305e5db6aff4.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/1a4741add589b6738cd70303ffb2c25227ddc8fa4dc92f8248c0bea87a4e0dd2.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/e59500f7da4b416e.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/e59500f7da4b416e.png",
+            "https://mimixd.app/images/render/cover/e59500f7da4b416e.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/75ac394edc1b6294.jpg"
         ]
     },
@@ -189685,7 +189704,11 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2945.png",
             "https://chunithm.beerpsi.cc/assets/jackets/2945.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/8b9a1b656d07889e4259d74aaf3f980e9417dbd78c87ae9cc0c6ef7b579ec2ef.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/cdc66217ac97b6c3c8aa38f9df5f448dbe54e2176f28b645a232bfc7de1b8ab1.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/a2bfa9225d750538c1148aa1eb978d61cf8304ea27fb6e82842060bcaf3df489.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/0f0673b653f293f3.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/0f0673b653f293f3.png",
+            "https://mimixd.app/images/render/cover/0f0673b653f293f3.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/786329418aa00b1b.jpg"
         ]
     },
@@ -189784,7 +189807,11 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2946.png",
             "https://chunithm.beerpsi.cc/assets/jackets/2946.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/b2c94c6c1e122f7b2e961a4e25b3ac629f7b68347db5827e8b0c997f4f716629.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/70fe5a6dfad42583c289f9b5b4e0a89ae752642f22e845bd7cae176f184c7b71.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/ce183de88a8bed452f3b6f89b1fa9cab7a1de64b5252381bc61a1549436c9cc8.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/572049dd1d06ddfc.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/572049dd1d06ddfc.png",
+            "https://mimixd.app/images/render/cover/572049dd1d06ddfc.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/50e6714eb0b9d1f7.jpg"
         ]
     },
@@ -189883,7 +189910,11 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2947.png",
             "https://chunithm.beerpsi.cc/assets/jackets/2947.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/443d3684b40e9d08eca2a91a2bb4d7a5c7869791024619d629177742193d48b3.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/7fef6b477579ca509d9d249e194f4070759a070aa4c8f4beba740af69f863134.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/c5dfa4c30c1213edbdf19f3ffa126b1177ae0abd8e89f52a21cf0e0c4883e810.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/d3a53ca803e76a6a.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/d3a53ca803e76a6a.png",
+            "https://mimixd.app/images/render/cover/d3a53ca803e76a6a.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/841a31d8f231cb51.jpg"
         ]
     },
@@ -203594,7 +203625,7 @@
         "min_bpm": 160,
         "max_bpm": 160,
         "jacket": "35e7324e46b3a22a.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -203611,7 +203642,7 @@
                 "flick": 214,
                 "charter": "狂っててごめん",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "09002",
@@ -203640,7 +203671,7 @@
         "min_bpm": 210,
         "max_bpm": 210,
         "jacket": "ea316bf9cb6234e0.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -203657,7 +203688,7 @@
                 "flick": 97,
                 "charter": "蔵BLAST",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "09062",
@@ -203686,7 +203717,7 @@
         "min_bpm": 203,
         "max_bpm": 203,
         "jacket": "1ddd5f3de0a9cea4.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -203703,7 +203734,7 @@
                 "flick": 8,
                 "charter": "SLIDE RACING",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "01047",
