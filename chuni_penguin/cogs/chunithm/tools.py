@@ -16,6 +16,7 @@ from PIL import Image
 from sqlalchemy import Row, func, select, text
 from sqlalchemy.orm import joinedload
 
+from chuni_penguin import flags
 from chuni_penguin.calculation import (
     calculate_border,
     calculate_overpower_base,
@@ -30,12 +31,13 @@ from chuni_penguin.constants import MAX_DIFFICULTY
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
+    AliasNameTransformer,
     DifficultyConverter,
     LevelRange,
     LevelRangeConverter,
 )
 from chuni_penguin.database import Chart, PersonalBest, Song
-from chuni_penguin.logging import logged_prefix_command
+from chuni_penguin.logging import logged_app_command, logged_prefix_command
 from chuni_penguin.networks.consts import KEY_PLAY_RATING
 from chuni_penguin.networks.types import ComboLamp, Difficulty, Rank
 from chuni_penguin.ui import ChartCardEmbed
@@ -989,8 +991,10 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         return resp
 
-    @commands.hybrid_command("chart")
-    @commands.bot_has_permissions(attach_files=True)
+    @app_commands.command(
+        name="chart",
+        description="Renders a chart view from sdvx.in for a given song and difficulty.",
+    )
     @app_commands.choices(
         difficulty=[
             app_commands.Choice(name="BASIC", value="BASIC"),
@@ -1002,13 +1006,46 @@ class ToolsCog(commands.Cog, name="Tools"):
         ]
     )
     @app_commands.autocomplete(query=song_title_autocomplete)
+    @logged_app_command
+    async def chart_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        difficulty: str,
+        query: Annotated[str, AliasNameTransformer(lower=True)],
+        *,
+        mirror: bool = False,
+    ):
+        ctx = await PenguinContext.from_interaction(interaction)
+        converted_difficulty = await DifficultyConverter().convert(ctx, difficulty)
+
+        await self._chart_impl(
+            ctx, difficulty=converted_difficulty, query=query, mirror=mirror
+        )
+
+    @flags.command("chart")
+    @flags.argument("-m", "--mirror", action="store_true")
+    @flags.argument("difficulty", type=DifficultyConverter)
+    @flags.argument("query", nargs="+")
     @logged_prefix_command
     async def chart(
         self,
         ctx: PenguinContext,
-        difficulty: Annotated[Difficulty, DifficultyConverter],
         *,
-        query: Annotated[str, AliasNameConverter(lower=True)],
+        difficulty: Difficulty,
+        query: list[str],
+        mirror: bool = False,
+    ):
+        q = await AliasNameConverter(lower=True).convert(ctx, " ".join(query))
+
+        await self._chart_impl(ctx, difficulty=difficulty, query=q, mirror=mirror)
+
+    async def _chart_impl(
+        self,
+        ctx: PenguinContext,
+        *,
+        difficulty: Difficulty,
+        query: str,
+        mirror: bool = False,
     ):
         """Renders a chart view from sdvx.in for a given song and difficulty.
 
@@ -1062,16 +1099,19 @@ class ToolsCog(commands.Cog, name="Tools"):
                 return
 
             sdvxin_id = chart.sdvxin_chart_view.id
+            data_key = "mirror" if mirror else "data"
 
             if chart.difficulty == "WE":
                 end_index = chart.sdvxin_chart_view.end_index
 
                 bg_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bg.png"
-                data_url = f"https://sdvx.in/chunithm/end/obj/data{sdvxin_id}end{end_index}.png"
+                data_url = f"https://sdvx.in/chunithm/end/obj/{data_key}{sdvxin_id}end{end_index}.png"
                 bar_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bar.png"
             elif chart.difficulty == "ULT":
                 bg_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
-                data_url = f"https://sdvx.in/chunithm/ult/obj/data{sdvxin_id}ult.png"
+                data_url = (
+                    f"https://sdvx.in/chunithm/ult/obj/{data_key}{sdvxin_id}ult.png"
+                )
                 bar_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
             else:
                 sdvxin_difficulty = (
@@ -1080,7 +1120,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 bg_url = (
                     f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png"
                 )
-                data_url = f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/obj/data{sdvxin_id}{sdvxin_difficulty}.png"
+                data_url = f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/obj/{data_key}{sdvxin_id}{sdvxin_difficulty}.png"
                 bar_url = (
                     f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
                 )
@@ -1149,7 +1189,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     ),
                     discord.ui.MediaGallery(discord.components.MediaGalleryItem(file)),
                     discord.ui.TextDisplay(
-                        "-# Chart view by [sdvx.in](https://sdvx.in/chunithm.html)"
+                        f"-# {'MIRROR  •  ' if mirror else ''}Chart view by [sdvx.in](https://sdvx.in/chunithm.html)"
                     ),
                     accent_color=difficulty.color(),
                 )
