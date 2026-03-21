@@ -9486,7 +9486,9 @@
         "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
-        "aliases": [],
+        "aliases": [
+            "wgj"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
