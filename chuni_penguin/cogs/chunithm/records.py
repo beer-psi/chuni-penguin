@@ -2228,40 +2228,38 @@ class RecordsCog(commands.Cog, name="Records"):
                 text=f"Use `{ctx.clean_prefix}sync` if statistics seem wrong."
             )
 
+            option_parts: list[str] = []
             description_parts: list[str] = []
 
             if level is not None:
-                description_parts.append(f"Level {level}")
+                option_parts.append(f"Level {level}")
 
             if difficulty is not None:
-                description_parts.append(str(difficulty))
+                option_parts.append(str(difficulty))
 
             if genre is not None:
-                description_parts.append(str(genre))
+                option_parts.append(str(genre))
 
             if version is not None:
-                description_parts.append(version)
+                option_parts.append(version)
 
             if omnimix:
-                description_parts.append("Omnimix")
+                option_parts.append("Omnimix")
 
-            embed.description = ", ".join(description_parts)
-
-            embed.add_field(
-                name="Played",
-                value=bold_if(
-                    len(pbs) == chart_count,
-                    f"{len(pbs)} / {chart_count} ({percentage_played:.2f}%)",
-                ),
-                inline=difficulty != Difficulty.worlds_end,
+            description_parts.append(", ".join(option_parts))
+            description_parts.append(
+                f"\n▸ **Played**: {bold_if(len(pbs) == chart_count, f'{len(pbs)} / {chart_count} ({percentage_played:.2f}%)')}\n"
             )
 
-            if difficulty != Difficulty.worlds_end:
+            if any(chart.const is not None for chart in charts):
                 charts_by_id_difficulty: dict[tuple[int, str], Chart] = {}
                 op_by_song: dict[int, Decimal] = {}
                 pb_op_by_song: dict[int, Decimal] = {}
 
                 for chart in charts:
+                    if chart.const is None:
+                        continue
+
                     charts_by_id_difficulty[(chart.song_id, chart.difficulty)] = chart
 
                     if chart.const is not None:
@@ -2287,8 +2285,24 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 op = floor_to_ndp(sum(pb_op_by_song.values(), Decimal(0)), 2)
                 total_op = floor_to_ndp(sum(op_by_song.values(), Decimal(0)), 2)
+                total_played_op = floor_to_ndp(
+                    sum(
+                        (
+                            max_op
+                            for song_id, max_op in op_by_song.items()
+                            if song_id in pb_op_by_song
+                        ),
+                        Decimal(0),
+                    ),
+                    2,
+                )
                 op_percent = (
                     floor_to_ndp(op * 100 / total_op, 2) if total_op > 0 else Decimal(0)
+                )
+                op_played_percent = (
+                    floor_to_ndp(op * 100 / total_played_op, 2)
+                    if total_played_op > 0
+                    else Decimal(0)
                 )
 
                 # TODO: update when new filters are added; embed colors are only calculated
@@ -2325,74 +2339,49 @@ class RecordsCog(commands.Cog, name="Records"):
                         embed.color = Possession.silver.color
                     else:
                         embed.color = Possession.none.color
-                elif op_percent >= 95:
-                    embed.color = Possession.rainbow.color
-                elif op_percent >= 90:
-                    embed.color = Possession.platinum.color
-                elif op_percent >= 80:
-                    embed.color = Possession.gold.color
-                elif op_percent >= 70:
-                    embed.color = Possession.silver.color
-                else:
-                    embed.color = Possession.none.color
 
-                embed.add_field(
-                    name="OVER POWER",
-                    value=bold_if(
-                        op == total_op, f"{op} / {total_op} ({op_percent:.2f}%)"
-                    ),
+                description_parts.append(
+                    f"▸ **OVER POWER**: {bold_if(op == total_op, f'{op} / {total_op} ({op_percent:.2f}%)')}\n"
+                    f"▸ **OVER POWER (played)**: {bold_if(op == total_played_op, f'{op} / {total_played_op} ({op_played_percent:.2f}%)')}\n"
                 )
-                embed.add_field(name="\u3000", value="\u3000")
 
-            embed.add_field(
-                name="Average score (played)",
-                value=f"{int(statistics.fmean(pb.score for pb in pbs)) if len(pbs) > 0 else 0}",
+            description_parts.append(
+                f"▸ **Average score (played)**: {int(statistics.fmean(pb.score for pb in pbs)) if len(pbs) > 0 else 0}\n"
+                f"▸ **Average score (all)**: {int(sum(pb.score for pb in pbs) / chart_count)}\n"
             )
-            embed.add_field(
-                name="Average score (all)",
-                value=f"{int(sum(pb.score for pb in pbs) / chart_count)}",
+
+            rank_parts = [
+                f"{config.icons.rank_icon(rank) if rank != '99AJ' else rank} {bold_if(counts[rank] == chart_count, counts[rank])}"
+                for rank in (
+                    "99AJ",
+                    Rank.sssp,
+                    Rank.sss,
+                    Rank.ssp,
+                    Rank.ss,
+                    Rank.sp,
+                    Rank.s,
+                )
+            ]
+            description_parts.append(f"▸ **Ranks**: {' / '.join(rank_parts)}")
+
+            combo_lamp_parts = [
+                f"{combo_lamp.short()} {bold_if(counts[combo_lamp] == chart_count, counts[combo_lamp])}"
+                for combo_lamp in ComboLamp
+                if combo_lamp != ComboLamp.none
+            ]
+            combo_lamp_parts.reverse()
+            description_parts.append(
+                f"▸ **Combo lamps**: {' / '.join(combo_lamp_parts)}"
             )
-            embed.add_field(name="\u3000", value="\u3000")
-            embed.add_field(
-                name="Ranks",
-                value="\n".join(
-                    [
-                        f"{config.icons.rank_icon(rank) if rank != '99AJ' else rank} ▸ {bold_if(counts[rank] == chart_count, counts[rank])}"
-                        for rank in (
-                            "99AJ",
-                            Rank.sssp,
-                            Rank.sss,
-                            Rank.ssp,
-                            Rank.ss,
-                            Rank.sp,
-                            Rank.s,
-                        )
-                    ]
-                ),
-            )
-            embed.add_field(
-                name="Combo lamps",
-                value="\n".join(
-                    reversed(
-                        [
-                            f"{combo_lamp.short()} ▸ {bold_if(counts[combo_lamp] == chart_count, counts[combo_lamp])}"
-                            for combo_lamp in ComboLamp
-                            if combo_lamp != ComboLamp.none
-                        ]
-                    )
-                ),
-            )
-            embed.add_field(
-                name="Clear lamps",
-                value="\n".join(
-                    reversed(
-                        [
-                            f"{clear_lamp.short()} ▸ {bold_if(counts[clear_lamp] == chart_count, counts[clear_lamp])}"
-                            for clear_lamp in ClearLamp
-                            if clear_lamp != ClearLamp.failed
-                        ]
-                    )
-                ),
+
+            clear_lamp_parts = [
+                f"{clear_lamp.short()} {bold_if(counts[clear_lamp] == chart_count, counts[clear_lamp])}"
+                for clear_lamp in ClearLamp
+                if clear_lamp != ClearLamp.failed
+            ]
+            clear_lamp_parts.reverse()
+            description_parts.append(
+                f"▸ **Clear lamps**: {' / '.join(clear_lamp_parts)}\n"
             )
 
             # TODO: update this if new filters are added; only the full version view should
@@ -2403,35 +2392,32 @@ class RecordsCog(commands.Cog, name="Records"):
                 and difficulty is None
                 and genre is None
             ):
-                embed.add_field(
-                    name="Title completion",
-                    value="\n".join(
-                        [
-                            (
-                                "`Total  ` ▸ "
-                                f"{Difficulty.basic.emoji()} {bold(counts[Difficulty.basic.short()])}"
-                                f" / {Difficulty.advanced.emoji()} {bold(counts[Difficulty.advanced.short()])}"
-                                f" / {Difficulty.expert.emoji()} {bold(counts[Difficulty.expert.short()])}"
-                                f" / {Difficulty.master.emoji()} {bold(counts[Difficulty.master.short()])}"
-                            )
+                description_parts.append("▸ **Title completion**:")
+                description_parts.append(
+                    "`Total  ` ▸ "
+                    f"{Difficulty.basic.emoji()} {bold(counts[Difficulty.basic.short()])}"
+                    f" / {Difficulty.advanced.emoji()} {bold(counts[Difficulty.advanced.short()])}"
+                    f" / {Difficulty.expert.emoji()} {bold(counts[Difficulty.expert.short()])}"
+                    f" / {Difficulty.master.emoji()} {bold(counts[Difficulty.master.short()])}"
+                )
+                description_parts.extend(
+                    [
+                        (
+                            f"{name} ▸ "
+                            f"{Difficulty.basic.emoji()} {bold_if(counts[f'{Difficulty.basic.short()}_{criteria}'] == counts[Difficulty.basic.short()], counts[f'{Difficulty.basic.short()}_{criteria}'])}"
+                            f" / {Difficulty.advanced.emoji()} {bold_if(counts[f'{Difficulty.advanced.short()}_{criteria}'] == counts[Difficulty.advanced.short()], counts[f'{Difficulty.advanced.short()}_{criteria}'])}"
+                            f" / {Difficulty.expert.emoji()} {bold_if(counts[f'{Difficulty.expert.short()}_{criteria}'] == counts[Difficulty.expert.short()], counts[f'{Difficulty.expert.short()}_{criteria}'])}"
+                            f" / {Difficulty.master.emoji()} {bold_if(counts[f'{Difficulty.master.short()}_{criteria}'] == counts[Difficulty.master.short()], counts[f'{Difficulty.master.short()}_{criteria}'])}"
+                        )
+                        for name, criteria in [
+                            ("`SPIRIT `", Rank.s),
+                            ("`TRIBUTE`", Rank.sss),
+                            ("`LEGEND `", ComboLamp.all_justice),
                         ]
-                        + [
-                            (
-                                f"{name} ▸ "
-                                f"{Difficulty.basic.emoji()} {bold_if(counts[f'{Difficulty.basic.short()}_{criteria}'] == counts[Difficulty.basic.short()], counts[f'{Difficulty.basic.short()}_{criteria}'])}"
-                                f" / {Difficulty.advanced.emoji()} {bold_if(counts[f'{Difficulty.advanced.short()}_{criteria}'] == counts[Difficulty.advanced.short()], counts[f'{Difficulty.advanced.short()}_{criteria}'])}"
-                                f" / {Difficulty.expert.emoji()} {bold_if(counts[f'{Difficulty.expert.short()}_{criteria}'] == counts[Difficulty.expert.short()], counts[f'{Difficulty.expert.short()}_{criteria}'])}"
-                                f" / {Difficulty.master.emoji()} {bold_if(counts[f'{Difficulty.master.short()}_{criteria}'] == counts[Difficulty.master.short()], counts[f'{Difficulty.master.short()}_{criteria}'])}"
-                            )
-                            for name, criteria in [
-                                ("`SPIRIT `", Rank.s),
-                                ("`TRIBUTE`", Rank.sss),
-                                ("`LEGEND `", ComboLamp.all_justice),
-                            ]
-                        ]
-                    ),
+                    ]
                 )
 
+            embed.description = "\n".join(description_parts)
             embeds = [embed]
             featured_scores: list[DBPersonalBest] = []
 
