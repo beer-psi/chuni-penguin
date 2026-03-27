@@ -348,6 +348,13 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                     # but the user hasn't accepted it.
                     pass
                 except InvalidFriendCode:
+                    # unset the friend code if it was set in the database
+                    await self.bot.database.writer.execute(
+                        update(Cookie)
+                        .values(friend_code=None)
+                        .where(Cookie.friend_code == friend_code)
+                    )
+
                     msg = "Could not find any users with the provided Discord user ID or friend code."
                     raise commands.BadArgument(msg) from None
 
