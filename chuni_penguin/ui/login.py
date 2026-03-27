@@ -57,7 +57,7 @@ class SegaIDLoginModal(discord.ui.Modal, title="Login with SEGA ID"):
             await client.get(_AUTHENTICATION_URL)
 
             resp = await client.post(
-                "https://lng-tgk-aime-gw.am-all.net/common_auth/login/sid/",
+                "https://lng-tgk-aime-gw.am-all.net/common_auth/login/sid",
                 data={
                     "retention": "1",
                     "sid": self.username.value,

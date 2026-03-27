@@ -69,7 +69,7 @@ class ChunithmNetAuth(httpx.Auth):
 
             auth_response = yield self.client.build_request(
                 "POST",
-                "https://lng-tgk-aime-gw.am-all.net/common_auth/login/sid/",
+                "https://lng-tgk-aime-gw.am-all.net/common_auth/login/sid",
                 data={
                     "retention": "1",
                     "sid": self.username,
@@ -82,6 +82,10 @@ class ChunithmNetAuth(httpx.Auth):
                 and auth_response.url.path == _AUTHENTICATION_URL.path
             ):
                 msg = "The provided username or password is invalid, or the account has TOTP enabled."
+                raise AuthenticationError(msg)
+
+            if auth_response.url.host == _AUTHENTICATION_URL.host:
+                msg = "Could not log in for unknown reasons."
                 raise AuthenticationError(msg)
 
         if (
