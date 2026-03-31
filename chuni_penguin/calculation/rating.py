@@ -85,33 +85,13 @@ def calculate_ongeki_platinum_rating(score: int, internal_level: float):
     il10 = int((internal_level or 0) * 10)
     rank = 0
 
-    # Player hits can be modeled using the normal distribution with a mean of 0.
-    # You can then binary search the standard deviation of those hits (in ms) required
-    # to reach the desired pscore% (see https://github.com/zkldi/esd-js).
-    # However, since holds, slides, airs and flicks are easy to reach higher judgements,
-    # we assume that they will always be justice heaven/platinum break for easier math.
-    # So, the pscore% that we want to search for is the pscore% on taps:
-    #     target_pscore = ceil(max_pscore * 0.98)
-    #     pscore_loss = max_pscore - target_pscore
-    #     percentage = (max_pscore_tap - pscore_loss) / max_pscore_tap
-    #     esd = calculate_expected_stddev(percentage)
-    # From the stddev, you can then find the J count:
-    #     dist = statistics.NormalDistribution(0, esd)
-    #     jcount = 2 * (dist.cdf(float("inf")) - dist.cdf(33.333))
-    # And from the J count, you can calculate the score, assuming an AJ.
-    # I did this for all charts and took their averages, which gave this result:
-    #     5* score threshold: 1009986.7790882586
-    #     4* score threshold: 1009981.4776040287
-    #     3* score threshold: 1009964.4843625762
-    #     2* score threshold: 1009937.7137556322
-    #     1* score threshold: 1009901.2593426981
-    if score >= 1009986:
+    if score >= 1009980:
         rank = 5
-    elif score >= 1009981:
+    elif score >= 1009960:
         rank = 4
-    elif score >= 1009964:
+    elif score >= 1009940:
         rank = 3
-    elif score >= 1009937:
+    elif score >= 1009920:
         rank = 2
     elif score >= 1009900:
         rank = 1
