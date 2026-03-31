@@ -48,11 +48,11 @@ def calculate_whole_ongeki_rating(
 
     # assume FB
     if combo_lamp == ComboLamp.all_justice_critical:
-        lamp_bonus = 400
+        lamp_bonus = 4000
     elif combo_lamp == ComboLamp.all_justice:
-        lamp_bonus = 350
+        lamp_bonus = 3500
     elif combo_lamp == ComboLamp.full_combo:
-        lamp_bonus = 150
+        lamp_bonus = 1500
 
     if score == 1_010_000:
         return il10000 + lamp_bonus + 20_000
