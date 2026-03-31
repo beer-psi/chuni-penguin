@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from chuni_penguin.networks.types import ComboLamp
 from chuni_penguin.utils import round_to_nearest
 
 
@@ -37,6 +38,85 @@ def calculate_whole_rating(score: int, internal_level: float | None) -> int:
 
 def calculate_rating(score: int, internal_level: float | None) -> Decimal:
     return Decimal(calculate_whole_rating(score, internal_level) // 100) / 100
+
+
+def calculate_whole_ongeki_rating(
+    score: int, internal_level: float | None, combo_lamp: ComboLamp
+) -> int:
+    il10000 = int((internal_level or 0) * 10000)
+    lamp_bonus = 0
+
+    # assume FB
+    if combo_lamp == ComboLamp.all_justice_critical:
+        lamp_bonus = 400
+    elif combo_lamp == ComboLamp.all_justice:
+        lamp_bonus = 350
+    elif combo_lamp == ComboLamp.full_combo:
+        lamp_bonus = 150
+
+    if score == 1_010_000:
+        return il10000 + lamp_bonus + 20_000
+    if score >= 1_009_000:
+        return il10000 + lamp_bonus + 17_500 + (score - 1_009_000) * 2500 // 1000
+    if score >= 1_007_500:
+        return il10000 + lamp_bonus + 12_500 + (score - 1_007_500) * 5000 // 1500
+    if score >= 1_000_000:
+        return il10000 + lamp_bonus + 7_500 + (score - 1_000_000) * 5000 // 7500
+    if score >= 975_000:
+        return il10000 + lamp_bonus + (score - 975_000) * 7500 // 25_000
+    if score >= 925_000:
+        return il10000 + lamp_bonus - 40_000 + (score - 925_000) * 40_000 // 50_000
+    if score >= 800_000:
+        return il10000 + lamp_bonus - 60_000 + (score - 800_000) * 20_000 // 125_000
+
+    return 0
+
+
+def calculate_ongeki_rating(
+    score: int, internal_level: float | None, combo_lamp: ComboLamp
+) -> Decimal:
+    return (
+        Decimal(calculate_whole_ongeki_rating(score, internal_level, combo_lamp) // 10)
+        / 1000
+    )
+
+
+def calculate_ongeki_platinum_rating(score: int, internal_level: float):
+    il10 = int((internal_level or 0) * 10)
+    rank = 0
+
+    # Player hits can be modeled using the normal distribution with a mean of 0.
+    # You can then binary search the standard deviation of those hits (in ms) required
+    # to reach the desired pscore% (see https://github.com/zkldi/esd-js).
+    # However, since holds, slides, airs and flicks are easy to reach higher judgements,
+    # we assume that they will always be justice heaven/platinum break for easier math.
+    # So, the pscore% that we want to search for is the pscore% on taps:
+    #     target_pscore = ceil(max_pscore * 0.98)
+    #     pscore_loss = max_pscore - target_pscore
+    #     percentage = (max_pscore_tap - pscore_loss) / max_pscore_tap
+    #     esd = calculate_expected_stddev(percentage)
+    # From the stddev, you can then find the J count:
+    #     dist = statistics.NormalDistribution(0, esd)
+    #     jcount = 2 * (dist.cdf(float("inf")) - dist.cdf(33.333))
+    # And from the J count, you can calculate the score, assuming an AJ.
+    # I did this for all charts and took their averages, which gave this result:
+    #     5* score threshold: 1009986.7790882586
+    #     4* score threshold: 1009981.4776040287
+    #     3* score threshold: 1009964.4843625762
+    #     2* score threshold: 1009937.7137556322
+    #     1* score threshold: 1009901.2593426981
+    if score >= 1009986:
+        rank = 5
+    elif score >= 1009981:
+        rank = 4
+    elif score >= 1009964:
+        rank = 3
+    elif score >= 1009937:
+        rank = 2
+    elif score >= 1009900:
+        rank = 1
+
+    return Decimal(rank * il10 * il10 // 100) / 1000
 
 
 def calculate_score_for_rating(rating: float, internal_level: float) -> int | None:

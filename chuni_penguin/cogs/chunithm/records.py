@@ -24,6 +24,10 @@ from chuni_penguin.calculation.overpower import (
     calculate_overpower_max,
     calculate_play_overpower,
 )
+from chuni_penguin.calculation.rating import (
+    calculate_ongeki_platinum_rating,
+    calculate_ongeki_rating,
+)
 from chuni_penguin.config import config
 from chuni_penguin.constants import (
     CACHE_DIR,
@@ -58,6 +62,7 @@ from chuni_penguin.networks.consts import (
     KEY_LEVEL,
     KEY_OVERPOWER,
     KEY_OVERPOWER_MAX,
+    KEY_PLATINUM_RATING,
     KEY_PLAY_RATING,
     KEY_SONG_GENRE,
     KEY_SONG_ID,
@@ -78,6 +83,7 @@ from chuni_penguin.networks.types import (
     Score,
 )
 from chuni_penguin.renderers.b50 import render_b30
+from chuni_penguin.renderers.b50_ongeki import render_b30 as render_b30_ongeki
 from chuni_penguin.ui import (
     B30N20View,
     B30View,
@@ -737,13 +743,150 @@ class RecordsCog(commands.Cog, name="Records"):
 
         await self._scores_inner(ctx, query, user, kamaitachi=kamaitachi)
 
+    async def _best50_ongeki(
+        self,
+        ctx: PenguinContext,
+        profile: Profile,
+        pbs: list[PersonalBest],
+        rating_system: Literal["ongeki", "ongeki-naive"],
+        user_config: UserConfig | None = None,
+    ):
+        for pb in pbs:
+            pb.extras[KEY_PLAY_RATING] = calculate_ongeki_rating(
+                pb.score, pb.extras[KEY_INTERNAL_LEVEL], pb.combo_lamp
+            )
+            pb.extras[KEY_PLATINUM_RATING] = calculate_ongeki_platinum_rating(
+                pb.score, pb.extras[KEY_INTERNAL_LEVEL]
+            )
+
+        pbs.sort(
+            key=lambda pb: (
+                pb.extras[KEY_PLAY_RATING],
+                pb.score,
+                pb.combo_lamp,
+                pb.extras[KEY_INTERNAL_LEVEL],
+            ),
+            reverse=True,
+        )
+
+        if rating_system == "ongeki":
+            records = [
+                pb
+                for pb in pbs
+                if pb.extras[KEY_SONG_VERSION] != CURRENT_CHUNITHM_VERSION
+            ][:50]
+            record_slots = 50
+
+            new_records = [
+                pb
+                for pb in pbs
+                if pb.extras[KEY_SONG_VERSION] == CURRENT_CHUNITHM_VERSION
+            ][:10]
+            new_record_slots = 10
+        else:
+            records = pbs[:60]
+            record_slots = 60
+
+            new_records = None
+            new_record_slots = 0
+
+        platinum_pbs = [pb for pb in pbs if pb.extras[KEY_PLATINUM_RATING] > 0]
+        platinum_pbs.sort(
+            key=lambda pb: (
+                pb.extras[KEY_PLATINUM_RATING],
+                pb.score,
+                pb.combo_lamp,
+                pb.extras[KEY_INTERNAL_LEVEL],
+            ),
+            reverse=True,
+        )
+        platinum_pbs = platinum_pbs[:50]
+
+        if new_records is not None:
+            current_rating = float(
+                floor_to_ndp(
+                    (
+                        sum(
+                            [r.extras[KEY_PLAY_RATING] for r in records],
+                            start=Decimal(0),
+                        )
+                        / record_slots
+                    )
+                    + (
+                        sum(
+                            [r.extras[KEY_PLAY_RATING] for r in new_records],
+                            start=Decimal(0),
+                        )
+                        / new_record_slots
+                        / 5
+                    )
+                    + (
+                        sum(
+                            [r.extras[KEY_PLATINUM_RATING] for r in platinum_pbs],
+                            start=Decimal(0),
+                        )
+                        / 50
+                    ),
+                    3,
+                )
+            )
+        else:
+            current_rating = float(
+                floor_to_ndp(
+                    floor_to_ndp(
+                        sum(
+                            [r.extras[KEY_PLAY_RATING] for r in records],
+                            start=Decimal(0),
+                        )
+                        / record_slots
+                        * Decimal("1.2"),
+                        3,
+                    )
+                    + (
+                        sum(
+                            [r.extras[KEY_PLATINUM_RATING] for r in platinum_pbs],
+                            start=Decimal(0),
+                        )
+                        / 50
+                    ),
+                    3,
+                )
+            )
+
+        async with AsyncTemporaryFile() as f:
+            await asyncio.to_thread(
+                render_b30_ongeki,
+                player_name=profile.username,
+                output=f,
+                records=records,
+                record_slots=record_slots,
+                new_records=new_records,
+                new_record_slots=new_record_slots,
+                platinum_records=platinum_pbs,
+                platinum_record_slots=50,
+                current_rating=current_rating,
+                user_config=user_config or ctx.user_config,
+            )
+
+            generation_timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
+
+            await ctx.respond_or_edit(
+                files=[
+                    discord.File(
+                        f,
+                        filename=f"chuni-penguin-b50-{profile.username}-{generation_timestamp}.png",
+                    )
+                ],
+            )
+
     async def _best50_from_friend_code(
         self,
         ctx: PenguinContext,
         friend_code: str,
         *,
         classic: bool = False,
-        rating_system: Literal["naive", "ingame"] | None = None,
+        rating_system: Literal["naive", "ingame", "ongeki", "ongeki-naive"]
+        | None = None,
     ):
         pbs: list[PersonalBest] = []
         records: list[PersonalBest] = []
@@ -775,6 +918,9 @@ class RecordsCog(commands.Cog, name="Records"):
             new_records = None
             new_record_slots = 0
             current_rating = None
+        elif rating_system in ("ongeki", "ongeki-naive"):
+            await self._best50_ongeki(ctx, profile, pbs, rating_system, ctx.user_config)
+            return
         else:
             new_records = []
             current_rating = profile.rating_systems[0].value
@@ -819,7 +965,8 @@ class RecordsCog(commands.Cog, name="Records"):
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
-        rating_system: Literal["naive", "ingame"] | None = None,
+        rating_system: Literal["naive", "ingame", "ongeki", "ongeki-naive"]
+        | None = None,
     ):
         target_id = ctx.author.id if user is None else user.id
         cookie = await self.bot.database.cookies.get_by_discord_id(target_id)
@@ -854,7 +1001,17 @@ class RecordsCog(commands.Cog, name="Records"):
             profile = await client.get_profile()
 
             if rating_system is None:
-                if new_rating or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20):
+                if (
+                    client.SUPPORTS_PERSONAL_BESTS
+                    or client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
+                ):
+                    rating_system = (
+                        "ongeki"
+                        if new_rating
+                        or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20)
+                        else "ongeki-naive"
+                    )
+                elif new_rating or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20):
                     rating_system = "ingame"
                 else:
                     rating_system = "naive"
@@ -1098,6 +1255,19 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 records = pbs[:50]
                 record_slots = 50
+            elif rating_system in ("ongeki", "ongeki-naive"):
+                if (
+                    not client.SUPPORTS_PERSONAL_BESTS
+                    and not client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
+                ):
+                    msg = "Network does not support fetching personal bests for this rating system."
+                    raise commands.CommandError(msg)
+
+                pbs = await self._get_all_personal_bests(client)
+                pbs = await self.utils.process_records(target_id, client.NAME, pbs)
+
+                await self._best50_ongeki(ctx, profile, pbs, rating_system, user_config)
+                return
 
             await self._best50_respond(
                 ctx,
@@ -1184,7 +1354,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.argument(
         "-r",
         "--rating-system",
-        choices=["naive", "ingame"],
+        choices=["naive", "ingame", "ongeki", "ongeki-naive"],
         default=None,
         required=False,
     )
@@ -1198,7 +1368,8 @@ class RecordsCog(commands.Cog, name="Records"):
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
-        rating_system: Literal["naive", "ingame"] | None = None,
+        rating_system: Literal["naive", "ingame", "ongeki", "ongeki-naive"]
+        | None = None,
         user: str | None = None,
     ):
         """View top 50 scores of you or another player.
@@ -1259,6 +1430,13 @@ class RecordsCog(commands.Cog, name="Records"):
         rating_system=[
             app_commands.Choice(name="In-game (Best 30 + New 20)", value="ingame"),
             app_commands.Choice(name="Naive (Best 50)", value="naive"),
+            app_commands.Choice(
+                name='O.N.G.E.K.I. (Best 50 + New 10 + "Platinum 50")', value="ongeki"
+            ),
+            app_commands.Choice(
+                name='O.N.G.E.K.I. Naive (Best 60 + "Platinum 50")',
+                value="ongeki-naive",
+            ),
         ]
     )
     @logged_app_command
@@ -1271,7 +1449,8 @@ class RecordsCog(commands.Cog, name="Records"):
         classic: bool = False,
         kamaitachi: bool = False,
         new_rating: bool = False,
-        rating_system: Literal["naive", "ingame"] | None = None,
+        rating_system: Literal["naive", "ingame", "ongeki", "ongeki-naive"]
+        | None = None,
     ):
         if friend_code is not None and user is not None:
             msg = "Cannot specify both a user and a friend code."
