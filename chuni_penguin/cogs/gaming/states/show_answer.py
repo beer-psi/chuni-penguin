@@ -8,7 +8,7 @@ from discord.utils import escape_markdown
 from rapidfuzz import fuzz
 
 from chuni_penguin.cogs.botutils import CachedAlias
-from chuni_penguin.database import Song
+from chuni_penguin.database import Character, Song
 
 from .base import GuessingGameState
 from .end_game import (
@@ -144,5 +144,91 @@ class ShowAnswerState(GuessingGameState):
             file=discord.File(self.answer_image, "image.webp"),
         )
         await asyncio.to_thread(self.answer_image.close)
+
+        return next_state
+
+
+class ShowCharacterAgeAnswerState(GuessingGameState):
+    __slots__ = (
+        "accepted_answer",
+        "character",
+        "guess_time",
+        "session",
+        "skipped",
+        "timed_out",
+    )
+
+    def __init__(
+        self,
+        session: "GuessingGameSession",
+        character: Character,
+        accepted_answer: discord.Message | None,
+        guess_time: float | None = None,
+        *,
+        timed_out: bool = False,
+        skipped: bool = False,
+    ) -> None:
+        self.session = session
+        self.character = character
+        self.accepted_answer = accepted_answer
+        self.guess_time = guess_time
+        self.timed_out = timed_out
+        self.skipped = skipped
+
+    @override
+    async def __call__(self) -> "GuessingGameState | None":
+        if self.accepted_answer is not None:
+            accepted_user = self.accepted_answer.author
+
+            await self.accepted_answer.add_reaction("✅")
+            await self.session.increment_score(accepted_user.id)
+
+            if accepted_user.id not in self.session.scores:
+                self.session.scores[accepted_user.id] = 1
+            else:
+                self.session.scores[accepted_user.id] += 1
+
+            content = f"{accepted_user.mention} has the correct answer!"
+            color = discord.Color.green()
+        elif self.timed_out:
+            content = "Time's up!"
+            color = discord.Color.red()
+        elif self.skipped:
+            content = "Skipped!"
+            color = discord.Color.red()
+        else:
+            content = "Unknown reason."
+            color = discord.Color.red()
+
+        embed = discord.Embed(
+            title=self.character.name,
+            color=color,
+            description=(
+                f"**Age**: {escape_markdown(self.character.age_text)}\n"
+                f"**Accepted answers**: {', '.join([str(a) for a in self.character.ages])}"  # pyright: ignore[reportOptionalIterable]
+            ),
+        )
+        # embed.set_image(url="attachment://image.webp")
+
+        if self.guess_time is not None:
+            embed.set_footer(text=f"Guessed in {self.guess_time:.2f} seconds")
+
+        if self.session.stopped_by:
+            next_state = EndGameUserCanceled(self.session)
+        elif self.session.check_score_limit_reached():
+            next_state = EndGameReachedScoreLimit(self.session)
+        elif self.session.check_question_limit_reached():
+            next_state = EndGameReachedQuestionLimit(self.session)
+        elif self.session.check_wrong_answers_limit_reached():
+            next_state = EndGameTooManyWrongAnswers(self.session)
+        elif self.session.questions_timed_out >= 3:
+            next_state = EndGameTimedOut(self.session, 3)
+        else:
+            content += " Next question in 3 seconds..."
+            next_state = WaitState(
+                self.session, 3, self.session.question_state_cls(self.session)
+            )
+
+        await self.session.channel.send(content=content, embed=embed)
 
         return next_state

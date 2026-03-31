@@ -17,6 +17,8 @@ class StartState(GuessingGameState):
 
     @override
     async def __call__(self) -> "GuessingGameState | None":
+        from chuni_penguin.cogs.gaming._session import GuessingGameType
+
         embed = discord.Embed(
             color=discord.Color.yellow(),
             title="A new game is starting in 5 seconds!",
@@ -31,9 +33,12 @@ class StartState(GuessingGameState):
         embed.add_field(
             name="Game type", value=self.session.game_type.value, inline=True
         )
-        embed.add_field(
-            name="Difficulty", value=str(self.session.difficulty), inline=True
-        )
+
+        if self.session.game_type != GuessingGameType.CHARACTER_AGE:
+            embed.add_field(
+                name="Difficulty", value=str(self.session.difficulty), inline=True
+            )
+
         embed.add_field(
             name="Time to answer",
             value=str(self.session.time_per_question),
@@ -61,12 +66,18 @@ class StartState(GuessingGameState):
         if self.session.hardcore_mode:
             embed.add_field(name="Hardcore mode", value="Enabled", inline=True)
 
-        if self.session.genres is not None:
+        if (
+            self.session.genres is not None
+            and self.session.game_type != GuessingGameType.CHARACTER_AGE
+        ):
             embed.add_field(
                 name="Genres", value=", ".join([str(g) for g in self.session.genres])
             )
 
-        if self.session.levels is not None:
+        if (
+            self.session.levels is not None
+            and self.session.game_type != GuessingGameType.CHARACTER_AGE
+        ):
             embed.add_field(
                 name="Levels",
                 value=", ".join([str(level) for level in self.session.levels]),
@@ -75,5 +86,10 @@ class StartState(GuessingGameState):
         if self.session.seeded:
             embed.add_field(name="Seed", value=self.session.seed)
 
-        await self.session.ctx.send(embed=embed)
+        if self.session.game_type != GuessingGameType.CHARACTER_AGE:
+            content = f"try the limited time gamemode `{self.session.ctx.clean_prefix}guess character-age`"
+        else:
+            content = None
+
+        await self.session.ctx.send(content=content, embed=embed)
         return WaitState(self.session, 5, self.session.question_state_cls(self.session))

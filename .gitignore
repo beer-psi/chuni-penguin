@@ -5,6 +5,9 @@ database/*.sqlite3-*
 discord.log
 assets/jackets
 assets/audio
+assets/characters
+assets/ranks
+chuni_penguin/locales
 options
 
 # Created by https://www.toptal.com/developers/gitignore/api/python

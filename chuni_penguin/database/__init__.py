@@ -1,4 +1,5 @@
 from .bot import Denylist
+from .characters import Character
 from .courses import Course, CourseTrack, course_track_charts
 from .guilds import CommandPermission, Prefix
 from .kamaitachi import PendingKamaitachiImport
@@ -10,6 +11,7 @@ from .users import CommandUse, Cookie, EasterEggFound, UserConfig
 
 __all__ = (
     "Alias",
+    "Character",
     "Chart",
     "CommandPermission",
     "CommandUse",

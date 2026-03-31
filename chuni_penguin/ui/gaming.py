@@ -223,7 +223,7 @@ class GuessLeaderboardView(PaginationView):
 
 class RetryGameButton(
     discord.ui.DynamicItem[discord.ui.Button],
-    template=r"retryguess(?P<mode>[012]):(?P<difficulty>\d+):(?P<questions>\d+):(?P<score>\d*):(?P<time>\d+):(?P<wrong>\d*):(?P<hardcore>[01]):(?P<genres>[\d,]*)(?::(?P<volume>\d+))?(?::(?P<levels>[\d\-+.,]*))?(?::(?P<seed>[A-NP-Z1-9]{8})?)?",
+    template=r"retryguess(?P<mode>[0123]):(?P<difficulty>\d+):(?P<questions>\d+):(?P<score>\d*):(?P<time>\d+):(?P<wrong>\d*):(?P<hardcore>[01]):(?P<genres>[\d,]*)(?::(?P<volume>\d+))?(?::(?P<levels>[\d\-+.,]*))?(?::(?P<seed>[A-NP-Z1-9]{8})?)?",
 ):
     def __init__(
         self,
@@ -247,6 +247,8 @@ class RetryGameButton(
             mode_id = "1"
         elif mode == GuessingGameType.VOICE_CHANNEL:
             mode_id = "2"
+        elif mode == GuessingGameType.CHARACTER_AGE:
+            mode_id = "3"
         else:
             msg = f"Unknown guess game mode: {mode}"
             raise ValueError(msg)
@@ -304,6 +306,8 @@ class RetryGameButton(
             mode = GuessingGameType.VOICE_MESSAGE
         elif match["mode"] == "2":
             mode = GuessingGameType.VOICE_CHANNEL
+        elif match["mode"] == "3":
+            mode = GuessingGameType.CHARACTER_AGE
         else:
             msg = f"Unknown guess mode ID: {match['mode']}"
             raise ValueError(msg)

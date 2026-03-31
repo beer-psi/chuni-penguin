@@ -12,13 +12,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import discord
-import rapidfuzz
 import sqlalchemy
 from discord.ext import songbird
 from discord.ext.commands import Context
 from PIL import Image, ImageDraw, ImageOps
-from rapidfuzz import fuzz
-from sqlalchemy import ColumnElement, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql import update
@@ -27,12 +25,13 @@ from chuni_penguin.cogs.botutils import CachedAlias
 from chuni_penguin.cogs.events import EventsCog
 from chuni_penguin.constants import ASSETS_DIR
 from chuni_penguin.converters import Level, LevelRange
-from chuni_penguin.database import Alias, Chart, GuessScore, Song
+from chuni_penguin.database import Alias, Character, Chart, GuessScore, Song
 from chuni_penguin.logging import logger
 from chuni_penguin.networks.types import Difficulty, Genre
 from chuni_penguin.oggopus import crop_audio, get_audio_duration
 
 from .states.base import GuessingGameSkippableState, GuessingGameState
+from .states.character_age import AskCharacterAgeQuestionState
 from .states.image import AskImageQuestionState
 from .states.start import StartState
 from .states.voice_call import AskVoiceCallQuestionState
@@ -46,6 +45,7 @@ class GuessingGameType(Enum):
     IMAGE = "Jacket"
     VOICE_MESSAGE = "Audio"
     VOICE_CHANNEL = "Voice"
+    CHARACTER_AGE = "Character age"
 
     def question_state_cls(self):
         if self == GuessingGameType.IMAGE:
@@ -56,6 +56,9 @@ class GuessingGameType(Enum):
 
         if self == GuessingGameType.VOICE_CHANNEL:
             return AskVoiceCallQuestionState
+
+        if self == GuessingGameType.CHARACTER_AGE:
+            return AskCharacterAgeQuestionState
 
         msg = "Unknown game mode"
         raise ValueError(msg)
@@ -514,6 +517,17 @@ class GuessingGameSession:
 
         return (song, aliases, output, jacket_art)
 
+    async def get_character_question(self):
+        async with self.bot.begin_db_read() as session:
+            stmt = (
+                select(Character)
+                .where(Character.ages.is_not(None))
+                .order_by(func.random())
+                .limit(1)
+            )
+
+            return (await session.execute(stmt)).scalar_one()
+
     def check_score_limit_reached(self):
         if self.score_limit is None:
             return False
@@ -589,7 +603,7 @@ class GuessingGameSession:
 
         return score_list
 
-    def create_wait_for_answer_task(self, aliases: list[CachedAlias]):
+    def create_wait_for_answer_task(self, check: Callable[[discord.Message], bool]):
         self.last_question_was_answered = False
         self._hardcore_mode_ignores.clear()
 
@@ -614,15 +628,7 @@ class GuessingGameSession:
             if m.channel != self.channel:
                 return False
 
-            content_lower = m.content.lower()
-
-            result = rapidfuzz.process.extractOne(
-                content_lower,
-                [alias.alias for alias in aliases],
-                scorer=fuzz.QRatio,
-                score_cutoff=80,
-            )
-            is_correct_answer = result is not None
+            is_correct_answer = check(m)
 
             if not is_correct_answer and self.hardcore_mode:
                 reaction_task = asyncio.create_task(m.add_reaction("❌"))
@@ -631,17 +637,6 @@ class GuessingGameSession:
                 reaction_task.add_done_callback(self._tasks.discard)
 
                 self._hardcore_mode_ignores.add(m.author.id)
-
-            if is_correct_answer:
-                alias = aliases[result[2]]
-
-                if alias.id is not None:
-                    update_uses_task = asyncio.create_task(
-                        self.increment_alias_uses(alias.id)
-                    )
-
-                    self._tasks.add(update_uses_task)
-                    update_uses_task.add_done_callback(self._tasks.discard)
 
             return is_correct_answer
 

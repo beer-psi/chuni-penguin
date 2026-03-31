@@ -251,6 +251,34 @@ class GamingCog(commands.Cog, name="Games"):
         async with self.game_sessions.write() as game_sessions:
             game_sessions[ctx.voice_client.channel.id] = session
 
+    @guess.command(
+        "character-age",
+        aliases=["age"],
+        usage="[-h] [-q <questions>] [-s <score>] [-t <time>] [-w <wrong>] [--seed <seed>]",
+    )
+    @commands.guild_only()
+    @commands.bot_has_permissions(
+        add_reactions=True,
+        read_messages=True,
+        attach_files=True,
+    )
+    @logged_prefix_command
+    async def guess_character_age(
+        self, ctx: PenguinGuildContext, *, arguments: str = ""
+    ):
+        """Starts a character age guessing game.
+
+        **Parameters**
+        `-q`, `--questions`: The number of questions for this game. Default is 20 questions.
+        `-s`, `--score`: The score limit before this game is stopped. Default is no limit.
+        `-t`, `--time`: The time (in seconds) for each question. Defaults to the audio length + 5 seconds.
+        `-w`, `--wrong`: The number of questions to get wrong before the game is stopped. Default is unlimited.
+        `-h`, `--hardcore`: Hardcore mode, each player gets one chance to answer each question correctly.
+        `--seed`: Specify a seed for the game. A seed contains 8 uppercase characters and digits (except `O` and `0`). A seed only gives the same game if all other options are the same. A seed does not guarantee the same game as new songs get added. **Games played with this option will not be counted towards the leaderboard!**
+        """
+
+        await self._guess_common(ctx, GuessingGameType.CHARACTER_AGE, arguments)
+
     async def _guess_common(
         self,
         ctx: PenguinContext,
@@ -289,7 +317,10 @@ class GamingCog(commands.Cog, name="Games"):
             )
 
         if session.time_per_question is MISSING:
-            if session.game_type == GuessingGameType.IMAGE:
+            if session.game_type in (
+                GuessingGameType.IMAGE,
+                GuessingGameType.CHARACTER_AGE,
+            ):
                 session.time_per_question = 20
             elif session.game_type in (
                 GuessingGameType.VOICE_MESSAGE,

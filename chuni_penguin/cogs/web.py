@@ -454,14 +454,16 @@ async def kofi_webhook(request: web.Request) -> web.Response:
     return web.Response()
 
 
-if config.web.serve_assets and (ASSETS_DIR / "jackets").exists():
-    router.static("/assets/jackets", ASSETS_DIR / "jackets")
+if config.web.serve_assets:
+    for dir in ("jackets", "characters"):
+        if (ASSETS_DIR / dir).exists():
+            router.static(f"/assets/{dir}", ASSETS_DIR / dir)
 
 
 async def on_response_prepare(request: web.Request, response: web.StreamResponse):
     response.headers.add("x-content-type-options", "nosniff")
 
-    if request.path.startswith("/assets/jackets"):
+    if request.path.startswith(("/assets/jackets", "/assets/characters")):
         response.headers.add("access-control-allow-origin", "*")
 
     if response.headers.get("server"):
@@ -600,7 +602,12 @@ class WebCog(commands.Cog, name="Web"):
                     session,
                     config.web.goatcounter,
                     config.credentials.goatcounter_api_key,
-                    ["/kamaitachi/users/*", "/assets/jackets/*", "/kofi"],
+                    [
+                        "/kamaitachi/users/*",
+                        "/assets/jackets/*",
+                        "/assets/characters/*",
+                        "/kofi",
+                    ],
                 )
             )
 
