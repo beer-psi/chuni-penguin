@@ -55,7 +55,7 @@ def calculate_whole_ongeki_rating(
         lamp_bonus = 1500
 
     if score == 1_010_000:
-        return il10000 + lamp_bonus + 20_000
+        return il10000 + 3000 + lamp_bonus + 20_000
     if score >= 1_009_000:
         return il10000 + 3000 + lamp_bonus + 17_500 + (score - 1_009_000) * 2500 // 1000
     if score >= 1_007_500:
