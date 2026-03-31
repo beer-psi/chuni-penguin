@@ -751,6 +751,8 @@ class RecordsCog(commands.Cog, name="Records"):
         rating_system: Literal["ongeki", "ongeki-naive"],
         user_config: UserConfig | None = None,
     ):
+        pbs = [pb for pb in pbs if pb.difficulty != Difficulty.worlds_end]
+
         for pb in pbs:
             pb.extras[KEY_PLAY_RATING] = calculate_ongeki_rating(
                 pb.score, pb.extras[KEY_INTERNAL_LEVEL], pb.combo_lamp
