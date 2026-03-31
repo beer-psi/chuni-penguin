@@ -912,6 +912,9 @@ class RecordsCog(commands.Cog, name="Records"):
             reverse=True,
         )
 
+        if rating_system is None:
+            rating_system = "ongeki"
+
         if rating_system == "naive":
             records = pbs[:50]
             record_slots = 50
