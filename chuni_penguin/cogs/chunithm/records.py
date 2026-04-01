@@ -1368,13 +1368,10 @@ class RecordsCog(commands.Cog, name="Records"):
 
         **Parameters**:
         `user`: The user to get scores for. Alternatively, a CHUNITHM International friend code is also accepted.
-        `-c, --classic`: View your scores with Discord embeds instead of generating
-        an image.
-        `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user
-        has that linked.
+        `-c, --classic`: View your scores with Discord embeds instead of generating an image.
+        `-k, --kamaitachi`: Get the best 50 scores from Kamaitachi, if the user has that linked.
         `-n, --new-rating`: Calculates best30 + new20 instead of best50.
-        `-r, --rating-system`: Choose between `ingame` (best30 + new20) and `naive` (best50)
-        rating systems. `-r ingame` is functionally equivalent to `-n`.
+        `-r, --rating-system`: Choose from: `ingame` (best30 + new20), `naive` (best50), `ongeki` (best50 + new10 + "platinum50" with ongeki formula), `ongeki-naive` (best60 + "platinum50" with ongeki formula). `-r ingame` is functionally equivalent to `-n`.
         """
 
         if not classic and not ctx.bot_permissions.attach_files:

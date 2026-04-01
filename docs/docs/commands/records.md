@@ -6,7 +6,7 @@ View the rating breakdown of a player.
 
 === "Text command"
 
-    `c>best50 [-c] [-k] [-n] [user]`
+    `c>best50 [-c] [-k] [-n] [-r RATING_SYSTEM] [user]`
 
     <h3>Options</h3>
 
@@ -16,10 +16,14 @@ View the rating breakdown of a player.
     - `-k, --kamaitachi`: View the user's breakdown on Kamaitachi, if available.
     - `-n, --new-rating`: When viewing on Kamaitachi, calculate a best30+new20 split
     instead of best50.
+    - `-r, --rating-system`: Choose from: `ingame` (best30 + new20), `naive` (best50),
+    `ongeki` (best50 + new10 + "platinum50" with ongeki formula), `ongeki-naive`
+    (best60 + "platinum50" with ongeki formula). `-r ingame` is functionally equivalent
+    to `-n`.
 
 === "Slash command"
 
-    `/best50 [user:<user>] [classic:<True|False>] [kamaitachi:<True|False>] [new-rating:<True|False>]`
+    `/best50 [user:<user>] [classic:<True|False>] [kamaitachi:<True|False>] [new-rating:<True|False>] [rating-system:<...>]`
 
     <h3>Options</h3>
 
@@ -30,6 +34,7 @@ View the rating breakdown of a player.
     Kamaitachi, if available.
     - `new-rating`: <small>(default: False)</small> When viewing on Kamaitachi,
     calculate a best30+new20 split instead of best50.
+    - `rating-system`: The rating system to view your best50 breakdown in.
 
 ## compare
 
