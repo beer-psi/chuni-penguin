@@ -659,9 +659,9 @@
         "name": "Linked GATE PARADISE",
         "color": "#979C9F",
         "song_id": 2891,
-        "available": false,
+        "available": true,
         "open_condition": "Finish VERSE ep. PARADISE.",
-        "unlock_condition": "Play one song from each artist of 祈 -我ら神祖と共に歩む者なり-:\n- **光吉猛修**: __怒槌__ / __キュアリアス光吉古牌　－祭－__ / __「四季」より「冬」__\n- **穴山大輔**: __混沌を越えし我らが神聖なる調律主を讃えよ__ / __幻想即興曲__\n- **Kai**: __Rebellion__ / __管弦楽組曲 第3番 ニ長調「第2曲（G線上のアリア）」BWV.1068-2__\n- **水野健治**: __≠彡\"/了→__\n- **大国奏音**: __封焔の135秒__ / __月の光__",
+        "unlock_condition": "Play one song from each artist of 祈 -我ら神祖と共に歩む者なり-:\n- **光吉猛修**: __怒槌__ / __キュアリアス光吉古牌　－祭－__ / __「四季」より「冬」__\n  - International can also play __Burning Hearts ～炎のANGEL～__ / __マツケンサンバⅡ__\n- **穴山大輔**: __混沌を越えし我らが神聖なる調律主を讃えよ__ / __幻想即興曲__\n- **Kai**: __Rebellion__ / __Candyland Symphony__\n- **水野健治**: __≠彡\"/了→__\n- **大国奏音**: __封焔の135秒__ / __月の光__",
         "conditions": [
             {
                 "level": 5,
@@ -721,6 +721,66 @@
                 "damage_attack": 50,
                 "damage_justice": 50,
                 "start_date": "2025-12-24T21:00:00+00:00",
+                "end_date": null
+            },
+            {
+                "level": 5,
+                "region": "intl",
+                "difficulty": "MAS",
+                "life": 300,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-03-31T21:00:00+00:00",
+                "end_date": "2026-04-04T21:00:00+00:00"
+            },
+            {
+                "level": 4,
+                "region": "intl",
+                "difficulty": "MAS",
+                "life": 1000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-04T21:00:00+00:00",
+                "end_date": "2026-04-07T21:00:00+00:00"
+            },
+            {
+                "level": 3,
+                "region": "intl",
+                "difficulty": "MAS",
+                "life": 2000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-07T21:00:00+00:00",
+                "end_date": "2026-04-11T21:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "intl",
+                "difficulty": "EXP",
+                "life": 3000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-11T21:00:00+00:00",
+                "end_date": "2026-04-14T21:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "intl",
+                "difficulty": "BAS",
+                "life": 3000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-14T21:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -863,6 +923,77 @@
                 "damage_attack": 100,
                 "damage_justice": 50,
                 "start_date": "2026-03-04T21:00:00+00:00",
+                "end_date": null
+            }
+        ]
+    },
+    {
+        "id": 10009,
+        "name": "Linked GATE LUMINOUS",
+        "color": "#F990DA",
+        "song_id": 2954,
+        "available": false,
+        "open_condition": "Finish VERSE ep. LUMINOUS.",
+        "unlock_condition": "Obtain 100 points in カイナン・メルヴィアス's CHUNITHM mission. This will award the \"MISSION still in progress\" title, which unlocks the hidden map Secret Area：LUMINOUS. Finish the hidden map to obtain the access card.",
+        "conditions": [
+            {
+                "level": 5,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 1000,
+                "recovery_life": 30,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-03-18T21:00:00+00:00",
+                "end_date": "2026-03-25T21:00:00+00:00"
+            },
+            {
+                "level": 4,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 3000,
+                "recovery_life": 90,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-03-25T21:00:00+00:00",
+                "end_date": "2026-04-01T21:00:00+00:00"
+            },
+            {
+                "level": 3,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 5000,
+                "recovery_life": 180,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-04-01T21:00:00+00:00",
+                "end_date": "2026-04-08T21:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "jp",
+                "difficulty": "EXP",
+                "life": 5000,
+                "recovery_life": 200,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-04-08T21:00:00+00:00",
+                "end_date": "2026-04-15T21:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "jp",
+                "difficulty": "BAS",
+                "life": 5000,
+                "recovery_life": 200,
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "start_date": "2026-04-15T21:00:00+00:00",
                 "end_date": null
             }
         ]
