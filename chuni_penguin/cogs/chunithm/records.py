@@ -914,9 +914,6 @@ class RecordsCog(commands.Cog, name="Records"):
             reverse=True,
         )
 
-        if rating_system is None:
-            rating_system = "ongeki"
-
         if rating_system == "naive":
             records = pbs[:50]
             record_slots = 50
@@ -1006,17 +1003,7 @@ class RecordsCog(commands.Cog, name="Records"):
             profile = await client.get_profile()
 
             if rating_system is None:
-                if (
-                    client.SUPPORTS_PERSONAL_BESTS
-                    or client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-                ):
-                    rating_system = (
-                        "ongeki"
-                        if new_rating
-                        or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20)
-                        else "ongeki-naive"
-                    )
-                elif new_rating or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20):
+                if new_rating or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20):
                     rating_system = "ingame"
                 else:
                     rating_system = "naive"
