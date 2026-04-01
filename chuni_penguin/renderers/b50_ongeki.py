@@ -526,7 +526,7 @@ def _render_b30_entry(
     rating_value_color = "#FFFFFF"
 
     if (
-        rating_key is KEY_PLATINUM_RATING and record.score >= 1_009_986
+        rating_key is KEY_PLATINUM_RATING and record.score >= 1_009_980
     ) or record.score == 1_010_000:
         rating_value_color = "#FAFFA5"
 
