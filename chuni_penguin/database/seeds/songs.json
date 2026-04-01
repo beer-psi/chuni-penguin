@@ -20969,6 +20969,7 @@
             "https://chunithm.beerpsi.cc/assets/jackets/226.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/6bf9a0a2e0746827cfa98a7a3d496d62b6911563d43ce8f1ddb56db295d47d62.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/2fd925d0bc0256851e1c4c80354c792af803f98e057c95972873b5dd352b6a8f.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/7b5d83331157c908b9e3c2a805dc497a564966c35c04a4d6fb2902d6d5f2f679.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/f9ba3b7be84bfafb02894c2dbd6a2a08294184c94ad49e93ad2de0a4ec1617de.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/a259af51e0b9d863.png",
             "https://maimaidx.jp/maimai-mobile/img/Music/a259af51e0b9d863.png",
@@ -94798,7 +94799,8 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
-            "ShuwaSupa Daisakusen"
+            "ShuwaSupa Daisakusen",
+            "ShuwaSupa"
         ],
         "charts": [
             {
@@ -184466,7 +184468,9 @@
         "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
-        "aliases": [],
+        "aliases": [
+            "kaleido"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -190357,7 +190361,13 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/74c743afe44f45d5.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2951.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2951.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/d651a0c42c1fff90706ec6d14b16e3a0d79f668eeb585c081fc60f5ab317f4e3.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/74c743afe44f45d5.jpg"
+        ]
     },
     {
         "id": 2952,
@@ -190451,7 +190461,13 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/39631322c7453d61.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2952.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2952.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/09077ff29ed03536573c55af0a125b60ea7c70ffc780a6467779b89db3b52c6b.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/39631322c7453d61.jpg"
+        ]
     },
     {
         "id": 2953,
@@ -190543,7 +190559,13 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/2ccb91f3bb3d9356.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2953.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2953.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/be2561af479cfd97b9ebce62937e5f80c3ec41ee42d7a6f1dc9e0a67d058b536.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/2ccb91f3bb3d9356.jpg"
+        ]
     },
     {
         "id": 2954,
@@ -190638,7 +190660,13 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/691d65ce2e1e4129.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2954.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2954.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/cfe52447e28aa68675e31cbfe163709cacbf3ff08fb5fc8e7df5979b8ea4a927.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/691d65ce2e1e4129.jpg"
+        ]
     },
     {
         "id": 2955,
@@ -190824,7 +190852,17 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/65007fbd8e46057f.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2956.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2956.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/e5c2df6a0559e4b4774167c399446af1ce4baa3358e1b9a2ae1cb791222ac5d6.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/77f5f78a3acebd261eff2a8ced3b7ef913866a8f14b4a1decc6a134b9eed0f8d.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/a9dee04030e6eedd.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/a9dee04030e6eedd.png",
+            "https://mimixd.app/images/render/cover/a9dee04030e6eedd.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/65007fbd8e46057f.jpg"
+        ]
     },
     {
         "id": 2957,
@@ -190912,7 +190950,13 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/4db514baa6eac479.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2957.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2957.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/ad3a60d7103df9112ac09058beb37465765e466e9175f3bb5d193da0c462beec.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/4db514baa6eac479.jpg"
+        ]
     },
     {
         "id": 2958,
@@ -191000,7 +191044,13 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/9005b60621dcc779.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2958.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2958.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/c62ac4c52ee241e71ce621c3fc92c352e46c80531066e63b62d746930ced42db.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/9005b60621dcc779.jpg"
+        ]
     },
     {
         "id": 3003,
@@ -204787,7 +204837,12 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/8bdf60548f88a503.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8321.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8321.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/8bdf60548f88a503.jpg"
+        ]
     },
     {
         "id": 8322,
@@ -204825,7 +204880,12 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/d7c1f9ad9b27714a.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8322.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8322.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/d7c1f9ad9b27714a.jpg"
+        ]
     },
     {
         "id": 8323,
@@ -204863,7 +204923,12 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/7c61807e6c1cf0b3.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8323.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8323.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/7c61807e6c1cf0b3.jpg"
+        ]
     },
     {
         "id": 8324,
@@ -204901,6 +204966,11 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/f7b2061df398527a.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8324.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8324.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/f7b2061df398527a.jpg"
+        ]
     }
 ]
