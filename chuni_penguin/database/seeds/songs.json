@@ -190833,7 +190833,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10240",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -190849,7 +190852,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10240",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -190931,7 +190937,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10241",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -190947,7 +190956,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10241",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -191025,7 +191037,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10239",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -191041,7 +191056,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10239",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
