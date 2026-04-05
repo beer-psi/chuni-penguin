@@ -41,14 +41,19 @@ LINKED_VERSE_PROGRESS_BADGES: dict[str, tuple[LinkedGate | None, LinkedGateStatu
     ),
     "P09LZYXJHAG7F78TE43DGH826GAD2H2C": (LinkedGate.crystal, LinkedGateStatus.linkable),
     "TEFG9MDNMX2X5IYPRYJYCUDNC8X3E49U": (LinkedGate.crystal, LinkedGateStatus.clear),
-    # They reuse the same not_found badge from CRYSTAL for PARADISE for some reason?
-    "TCMI6URY6CA2DZGOPNQ13KRE1A8V3UC8": (LinkedGate.new, LinkedGateStatus.not_found),
-    "QF07NCIW9AQKZOUF2OXP0MWLWG1BLBCM": (LinkedGate.sun, LinkedGateStatus.not_found),
-    "7FFQEALW1J8TXTOG2ONB6PHPNA2252Q2": (
-        LinkedGate.luminous,
+    "TCMI6URY6CA2DZGOPNQ13KRE1A8V3UC8": (
+        LinkedGate.paradise,
         LinkedGateStatus.not_found,
     ),
-    "2VG92AY9AH7IX5UQF3HK4HHDAOFJLQ9I": (LinkedGate.verse, LinkedGateStatus.not_found),
+    "DEYNZGCQYL3JD92F3CN6T5SDCC8FOM84": (
+        LinkedGate.paradise,
+        LinkedGateStatus.under_analysis,
+    ),
+    "BT1DOY9LQFQGG712ZZ2LIU8UZCID5X23": (
+        LinkedGate.paradise,
+        LinkedGateStatus.linkable,
+    ),
+    "GBJ90ERPKKNSJXO7O5P6IRP9QAP8BYLO": (LinkedGate.paradise, LinkedGateStatus.clear),
 }
 
 _KEY_DETAILED_PARAMS_IDX = TypePairedDictKey[int]("_DETAILED_PARAMS")
