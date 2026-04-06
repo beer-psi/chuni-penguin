@@ -356,6 +356,12 @@ class RetryGameButton(
 
     @override
     async def callback(self, interaction: discord.Interaction["ChuniBot"]) -> Any:  # pyright: ignore[reportIncompatibleMethodOverride]
+        if self.mode == GuessingGameType.CHARACTER_AGE:
+            await interaction.response.send_message(
+                content="See you next April Fools!", ephemeral=True
+            )
+            return
+
         gaming = cast("GamingCog | None", interaction.client.get_cog("Games"))
 
         if gaming is None:
