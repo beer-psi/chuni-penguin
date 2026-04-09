@@ -1,7 +1,5 @@
-from chuni_penguin.networks.types import LinkedGate, LinkedGateStatus, TypePairedDictKey
+from chuni_penguin.types import LinkedGate, LinkedGateStatus
 
-JACKET_BASE = "https://new.chunithm-net.com/chuni-mobile/html/mobile/img"
-INTERNATIONAL_JACKET_BASE = "https://chunithm-net-eng.com/mobile/img"
 LINKED_VERSE_PROGRESS_BADGES: dict[str, tuple[LinkedGate | None, LinkedGateStatus]] = {
     "Y9BRPL5DR4EDEOH06QV5OUPD2WYFF14I": (LinkedGate.origin, LinkedGateStatus.not_found),
     "WVJF8TJO9A8D4NHZRWBEXW3Z4MTUG6GZ": (
@@ -55,5 +53,3 @@ LINKED_VERSE_PROGRESS_BADGES: dict[str, tuple[LinkedGate | None, LinkedGateStatu
     ),
     "GBJ90ERPKKNSJXO7O5P6IRP9QAP8BYLO": (LinkedGate.paradise, LinkedGateStatus.clear),
 }
-
-_KEY_DETAILED_PARAMS_IDX = TypePairedDictKey[int]("_DETAILED_PARAMS")

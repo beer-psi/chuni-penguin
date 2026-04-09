@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm.interfaces import ORMOption
 from sqlalchemy.sql.selectable import TypedReturnsRows
 
+from chuni_penguin.adapters.kamaitachi.types import KTBatchManualChunithm
 from chuni_penguin.config import config
 from chuni_penguin.database import (
     Chart,
@@ -31,9 +32,7 @@ from chuni_penguin.database import (
     PersonalBest,
     Song,
 )
-from chuni_penguin.networks.consts import KEY_SONG_ID
-from chuni_penguin.networks.kamaitachi import KTBatchManualChunithm
-from chuni_penguin.networks.types import Difficulty, RecentScore, Score
+from chuni_penguin.types import Difficulty, RecentScore, Score
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -543,14 +542,11 @@ class PersonalBestQueries:
         params: list[dict[str, Any]] = []
 
         for score in scores:
-            if KEY_SONG_ID not in score.extras:
-                continue
-
             param = {
                 "discord_id": discord_id,
                 "network": network,
-                "song_id": score.extras[KEY_SONG_ID],
-                "difficulty": score.difficulty.short(),
+                "song_id": score.song.id,
+                "difficulty": score.chart.difficulty.short(),
                 "score": score.score,
                 "max_combo": score.max_combo,
                 "clear_lamp": score.clear_lamp.value,

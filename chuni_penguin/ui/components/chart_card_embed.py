@@ -9,7 +9,7 @@ from chuni_penguin.calculation import (
     calculate_score_deduction_per_judgement,
 )
 from chuni_penguin.config import config
-from chuni_penguin.networks.types import Difficulty
+from chuni_penguin.types import Difficulty
 from chuni_penguin.utils import (
     floor_to_ndp,
     get_jacket_url,

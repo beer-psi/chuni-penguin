@@ -5,17 +5,13 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord.ext.commands import Context
 
-from chuni_penguin.networks.consts import (
-    KEY_INTERNAL_LEVEL,
-    KEY_PLAY_RATING,
-)
 from chuni_penguin.utils import floor_to_ndp
 
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 from .components.score_card_embed import ScoreCardEmbed
 
 if TYPE_CHECKING:
-    from chuni_penguin.networks.types import Score
+    from chuni_penguin.types import Score
 
 
 class B30PageSource(ListPageSource["Score"]):
@@ -43,17 +39,17 @@ class B30PageSource(ListPageSource["Score"]):
         super().__init__(records, per_page=per_page)
 
         total_rating = sum(
-            (record.extras[KEY_PLAY_RATING] for record in records),
+            (record.rating or Decimal(0) for record in records),
             start=Decimal(0),
         )
         max_play_rating = max(
-            (record.extras[KEY_PLAY_RATING] for record in records), default=Decimal(0)
+            (record.rating or Decimal(0) for record in records), default=Decimal(0)
         )
 
         self.average = floor_to_ndp(total_rating / rating_slots, 4)
         self.reachable = floor_to_ndp(total_rating / 40 + max_play_rating / 4, 4)
         self.has_estimated_play_rating = any(
-            record.extras.get(KEY_INTERNAL_LEVEL) is None for record in records
+            record.chart.internal_level is None for record in records
         )
         self.show_average = show_average
         self.show_reachable = show_reachable

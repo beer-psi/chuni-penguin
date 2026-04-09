@@ -4,18 +4,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from math import ceil
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any
+from typing import IO, TYPE_CHECKING, Any, Literal
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from chuni_penguin.constants import ASSETS_DIR, CACHE_DIR
-from chuni_penguin.networks.consts import (
-    KEY_INTERNAL_LEVEL,
-    KEY_PLATINUM_RATING,
-    KEY_PLAY_RATING,
-    KEY_SONG_ID,
-)
-from chuni_penguin.networks.types import ComboLamp, Score, TypePairedDictKey
+from chuni_penguin.types import ComboLamp, Score
 from chuni_penguin.utils import floor_to_ndp
 
 if TYPE_CHECKING:
@@ -360,10 +354,10 @@ def _render_b30_entry(
     x: int,
     y: int,
     user_config: "UserConfig | None" = None,
-    rating_key: TypePairedDictKey[Decimal] = KEY_PLAY_RATING,
+    rating_key: Literal["ongeki_rating", "ongeki_platinum_rating"] = "ongeki_rating",
 ):
     # get the jacket
-    song_id = record.extras[KEY_SONG_ID]
+    song_id = record.song.id
     jacket_basename = f"{song_id}"
 
     if song_id == 2698 and user_config is not None:
@@ -374,7 +368,9 @@ def _render_b30_entry(
 
     jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.webp"
     prerendered_path = (
-        ASSETS_DIR / "jackets" / f"{jacket_basename}_{record.difficulty.value}.webp"
+        ASSETS_DIR
+        / "jackets"
+        / f"{jacket_basename}_{record.chart.difficulty.value}.webp"
     )
 
     if prerendered_path.exists():
@@ -383,7 +379,7 @@ def _render_b30_entry(
     else:
         # draw the base image based on the difficulty
         b30_base_image_path = (
-            ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.webp"
+            ASSETS_DIR / "b50" / f"b50_base_{record.chart.difficulty.value}.webp"
         )
 
         with Image.open(b30_base_image_path) as b30_base_image, closing(b30_base_image):
@@ -408,7 +404,7 @@ def _render_b30_entry(
     b30_draw = ImageDraw.Draw(b30_image)
 
     # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
-    title = record.title
+    title = record.song.title
     title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
 
     while title_length > B30_ENTRY_WIDTH - 25:
@@ -418,11 +414,11 @@ def _render_b30_entry(
     # draw the title
     b30_draw.text(
         (x + 10, y),
-        title + ("..." if title != record.title else ""),
+        title + ("..." if title != record.song.title else ""),
         fill="#FFFFFF",
         font=(
             NOTO_SANS_JP_32_BOLD
-            if record.extras[KEY_SONG_ID] != 2831  # Street - χρόνος
+            if record.song.id != 2831  # Street - χρόνος
             else NOTO_SANS_32_BOLD
         ),
     )
@@ -515,18 +511,18 @@ def _render_b30_entry(
     # draw the internal level
     b30_draw.text(
         (x + 132, y + 128),
-        f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f}",
+        f"{record.chart.internal_level:.1f}",
         fill="#FFFFFF",
         font=NOTO_SANS_JP_28_MEDIUM,
     )
 
     # draw the rating value
-    rating_text = f"{record.extras.get(rating_key):.3f}"
+    rating_text = f"{getattr(record, rating_key, None):.3f}"
     rating_text_length = b30_draw.textlength(rating_text, NOTO_SANS_JP_32_BOLD)
     rating_value_color = "#FFFFFF"
 
     if (
-        rating_key is KEY_PLATINUM_RATING and record.score >= 1_009_980
+        rating_key == "ongeki_platinum_rating" and record.score >= 1_009_980
     ) or record.score == 1_010_000:
         rating_value_color = "#FAFFA5"
 
@@ -580,11 +576,11 @@ def render_b30(
 
     # get rating values
     total_rating = sum(
-        (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
+        (item.ongeki_rating or Decimal(0) for item in records), start=Decimal(0)
     )
     total_platinum_rating = (
         sum(
-            (item.extras[KEY_PLATINUM_RATING] for item in platinum_records),
+            (item.ongeki_platinum_rating or Decimal(0) for item in platinum_records),
             start=Decimal(0),
         )
         if platinum_records is not None
@@ -599,7 +595,7 @@ def render_b30(
         final_rating = floor_to_ndp(average, 2)
     else:
         new_total_rating = sum(
-            (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
+            (item.ongeki_rating or Decimal(0) for item in new_records), start=Decimal(0)
         )
         new_average = floor_to_ndp(
             new_total_rating / new_record_slots,
@@ -697,7 +693,7 @@ def render_b30(
             + (i // 5) * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
         )
 
-        _render_b30_entry(b30_image, record, i, x, y, user_config, KEY_PLAY_RATING)
+        _render_b30_entry(b30_image, record, i, x, y, user_config, "ongeki_rating")
 
     if new_records is not None:
         b30_draw = ImageDraw.Draw(b30_image)
@@ -728,7 +724,7 @@ def render_b30(
                 + (i // 5) * (B30_ENTRY_HEIGHT + B30_ENTRY_HEIGHT_SPACING)
             )
 
-            _render_b30_entry(b30_image, record, i, x, y, user_config, KEY_PLAY_RATING)
+            _render_b30_entry(b30_image, record, i, x, y, user_config, "ongeki_rating")
 
     if platinum_records is not None:
         b30_draw = ImageDraw.Draw(b30_image)
@@ -768,7 +764,7 @@ def render_b30(
             )
 
             _render_b30_entry(
-                b30_image, record, i, x, y, user_config, KEY_PLATINUM_RATING
+                b30_image, record, i, x, y, user_config, "ongeki_platinum_rating"
             )
 
     if output_params is None:

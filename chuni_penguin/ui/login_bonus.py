@@ -7,7 +7,7 @@ from discord.utils import MISSING, escape_markdown
 
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.networks.types import LoginBonus, LoginBonusItem
+from chuni_penguin.types import LoginBonus, LoginBonusItem
 
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 from .embeds import EmbedPageSource

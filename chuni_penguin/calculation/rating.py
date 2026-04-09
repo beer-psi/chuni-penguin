@@ -1,7 +1,8 @@
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from chuni_penguin.networks.types import ComboLamp
-from chuni_penguin.utils import round_to_nearest
+if TYPE_CHECKING:
+    from chuni_penguin.types import ComboLamp
 
 
 def calculate_whole_rating(score: int, internal_level: float | None) -> int:
@@ -41,8 +42,10 @@ def calculate_rating(score: int, internal_level: float | None) -> Decimal:
 
 
 def calculate_whole_ongeki_rating(
-    score: int, internal_level: float | None, combo_lamp: ComboLamp
+    score: int, internal_level: float | None, combo_lamp: "ComboLamp"
 ) -> int:
+    from chuni_penguin.types import ComboLamp
+
     il10000 = int((internal_level or 0) * 10000)
     lamp_bonus = 0
 
@@ -73,7 +76,7 @@ def calculate_whole_ongeki_rating(
 
 
 def calculate_ongeki_rating(
-    score: int, internal_level: float | None, combo_lamp: ComboLamp
+    score: int, internal_level: float | None, combo_lamp: "ComboLamp"
 ) -> Decimal:
     return (
         Decimal(calculate_whole_ongeki_rating(score, internal_level, combo_lamp) // 10)
@@ -136,6 +139,8 @@ def calculate_score_for_rating(rating: float, internal_level: float) -> int | No
 
     # Fix rounding issues
     if req is not None:
+        from chuni_penguin.utils import round_to_nearest
+
         return round_to_nearest(int(req), 50)
 
     return None

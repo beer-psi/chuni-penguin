@@ -6,8 +6,8 @@ from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
 from chuni_penguin.database import Chart
-from chuni_penguin.networks.types import Difficulty
-from chuni_penguin.utils import yt_search_link
+from chuni_penguin.types import Difficulty
+from chuni_penguin.utils import sdvxin_link, yt_search_link
 
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
@@ -25,7 +25,7 @@ class SonglistPageSource(ListPageSource[Chart]):
 
         for idx, chart in enumerate(page):
             url = (
-                chart.sdvxin_chart_view.url
+                sdvxin_link(chart.sdvxin_chart_view)
                 if chart.sdvxin_chart_view is not None
                 else yt_search_link(chart.song.title, chart.difficulty)
             )

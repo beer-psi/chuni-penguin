@@ -56,3 +56,6 @@ VERSION_NAMES = {
 
 ASSETS_DIR = Path(__file__).parent.parent / "assets"
 CACHE_DIR = Path(platformdirs.user_cache_dir("chuni-penguin", "beerpsi"))
+
+JACKET_BASE = "https://new.chunithm-net.com/chuni-mobile/html/mobile/img"
+INTERNATIONAL_JACKET_BASE = "https://chunithm-net-eng.com/mobile/img"

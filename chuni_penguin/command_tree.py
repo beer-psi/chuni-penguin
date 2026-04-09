@@ -11,7 +11,6 @@ from discord.app_commands import CommandTree
 
 from chuni_penguin.config import config
 from chuni_penguin.logging import logger
-from chuni_penguin.ui.components import BannedEmbed
 
 if TYPE_CHECKING:
     from .bot import ChuniBot
@@ -69,6 +68,8 @@ class PenguinCommandTree(CommandTree["ChuniBot"]):
         )
 
         if ban_entry is not None:
+            from chuni_penguin.ui.components import BannedEmbed
+
             await interaction.response.send_message(
                 embed=BannedEmbed(
                     client=interaction.client,

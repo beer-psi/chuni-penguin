@@ -6,11 +6,12 @@ from pathlib import Path
 from typing import cast
 
 import msgspec
+from discord.utils import MISSING
 from selectolax.lexbor import LexborHTMLParser, LexborNode
 
-from chuni_penguin.networks.consts import KEY_SONG_ID
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     ChainLamp,
+    Chart,
     ClearLamp,
     ComboLamp,
     CourseClass,
@@ -35,18 +36,20 @@ from chuni_penguin.networks.types import (
     Possession,
     Profile,
     Rank,
-    Rarity,
     RatingSystem,
+    RatingType,
     RecentScore,
     Skill,
     SkillClass,
+    Song,
     Team,
     TeamEmblem,
     Title,
+    TitleRarity,
     UserAvatar,
 )
 
-from .consts import _KEY_DETAILED_PARAMS_IDX, LINKED_VERSE_PROGRESS_BADGES
+from .consts import LINKED_VERSE_PROGRESS_BADGES
 from .utils import (
     chuni_int,
     difficulty_from_imgurl,
@@ -121,10 +124,10 @@ def parse_title(element: LexborNode) -> Title | None:
             raise ValueError(msg)
 
         title_content = title_content_elem.text()
-        title_rarity = Rarity(title_rarity)
+        title_rarity = TitleRarity(title_rarity)
     elif special_title := SPECIAL_TITLES.get(title_background_filename):
         title_content = special_title.content
-        title_rarity = Rarity(special_title.rarity)
+        title_rarity = TitleRarity(special_title.rarity)
     else:
         _logger.warning(
             "Ignoring unknown special title with URL %s", title_background_url
@@ -235,7 +238,7 @@ def parse_player_card_and_avatar(soup: LexborHTMLParser | LexborNode):
         emblem=emblem,
         reincarnation_stars=reborn,
         level=lv,
-        rating_systems=[RatingSystem(name="Rating", value=rating)],
+        rating_systems=[RatingSystem(type=RatingType.in_game, value=rating)],
         over_power=OverPower(value=overpower_value, percentage=overpower_progress),
         possession=possession,
         last_played=last_play_date,
@@ -292,13 +295,17 @@ def parse_basic_recent_record(record: LexborNode) -> RecentScore:
         combo_lamp = ComboLamp.none
         chain_lamp = ChainLamp.none
 
-    score = RecentScore(
-        title=title,
+    song = Song(id=MISSING, title=title, jacket_url=jacket)
+    chart = Chart(
         difficulty=difficulty_from_imgurl(
             cast(str, record.css_first(".play_track_result img").attrs["src"])
-        ),
+        )
+    )
+
+    return RecentScore(
+        song=song,
+        chart=chart,
         score=score,
-        jacket_url=jacket,
         rank=rank,
         clear_lamp=clear_lamp,
         combo_lamp=combo_lamp,
@@ -306,10 +313,8 @@ def parse_basic_recent_record(record: LexborNode) -> RecentScore:
         achieved_at=date,
         track_no=track,
         is_new_record=new_record,
+        _memo=idx,
     )
-    score.extras[_KEY_DETAILED_PARAMS_IDX] = idx
-
-    return score
 
 
 def parse_music_record(soup: LexborHTMLParser, song_id: int) -> list[PersonalBest]:
@@ -337,15 +342,17 @@ def parse_music_record(soup: LexborHTMLParser, song_id: int) -> list[PersonalBes
             combo_lamp = ComboLamp.none
             chain_lamp = ChainLamp.none
 
+        song = Song(id=song_id, title=title, jacket_url=jacket)
+        chart = Chart(difficulty=difficulty_from_imgurl(block.attrs["class"]))
+
         score = PersonalBest(
-            title=title,
-            difficulty=difficulty_from_imgurl(block.attrs["class"]),
+            song=song,
+            chart=chart,
             score=chuni_int(
                 elem.text()
                 if (elem := block.css_first(".musicdata_score_num .text_b")) is not None
                 else "0"
             ),
-            jacket_url=jacket,
             rank=rank,
             clear_lamp=clear_lamp,
             combo_lamp=combo_lamp,
@@ -364,7 +371,6 @@ def parse_music_record(soup: LexborHTMLParser, song_id: int) -> list[PersonalBes
             if (elem := block.css_first(".musicdata_score_theory_num")) is not None
             else None,
         )
-        score.extras[KEY_SONG_ID] = song_id
 
         records.append(score)
 
@@ -386,17 +392,19 @@ def parse_music_for_rating(soup: LexborHTMLParser) -> list[PersonalBest]:
             chain_lamp = ChainLamp.none
 
         div = x.css_first(".w388.musiclist_box")
-        score = PersonalBest(
+        song = Song(
+            id=int(str(x.css_first("form input[name=idx]").attrs["value"])),
             title=x.css_first(".music_title, .musiclist_worldsend_title").text(),
-            difficulty=difficulty_from_imgurl(div.attrs["class"]),
+        )
+        chart = Chart(difficulty=difficulty_from_imgurl(div.attrs["class"]))
+        score = PersonalBest(
+            song=song,
+            chart=chart,
             score=chuni_int(score_elem.text()),
             rank=rank,
             clear_lamp=clear_lamp,
             combo_lamp=combo_lamp,
             chain_lamp=chain_lamp,
-        )
-        score.extras[KEY_SONG_ID] = int(
-            str(x.css_first("form input[name=idx]").attrs["value"])
         )
 
         records.append(score)
@@ -444,9 +452,7 @@ def parse_detailed_recent_record(soup: LexborHTMLParser) -> RecentScore:
     record.skill_result = chuni_int(
         soup.css_first(".play_musicdata_skilleffect_text").text().replace("+", "")
     )
-    record.extras[KEY_SONG_ID] = int(
-        str(soup.css_first("form input[name=idx]").attrs["value"])
-    )
+    record.song.id = int(str(soup.css_first("form input[name=idx]").attrs["value"]))
     return record
 
 
@@ -771,8 +777,8 @@ def parse_friend_vs(
     their_pbs: list[PersonalBest] = []
 
     for block in soup.css(".music_box"):
-        title = block.css_first(".block_underline > div").text()
-        difficulty = difficulty_from_imgurl(block.attrs["class"])
+        song = Song(id=MISSING, title=block.css_first(".block_underline > div").text())
+        chart = Chart(difficulty=difficulty_from_imgurl(block.attrs["class"]))
         info_blocks = block.css(".vs_list_infoblock")
 
         if len(info_blocks) != 2:
@@ -783,8 +789,8 @@ def parse_friend_vs(
         your_lamps = get_rank_and_lamps(your_block.css_first(".vs_list_mybatch"))
         your_pbs.append(
             PersonalBest(
-                title=title,
-                difficulty=difficulty,
+                song=song,
+                chart=chart,
                 score=your_score,
                 clear_lamp=your_lamps[1],
                 combo_lamp=your_lamps[2],
@@ -798,8 +804,8 @@ def parse_friend_vs(
         their_lamps = get_rank_and_lamps(their_block.css_first(".vs_list_friendbatch"))
         their_pbs.append(
             PersonalBest(
-                title=title,
-                difficulty=difficulty,
+                song=song,
+                chart=chart,
                 score=their_score,
                 clear_lamp=their_lamps[1],
                 combo_lamp=their_lamps[2],

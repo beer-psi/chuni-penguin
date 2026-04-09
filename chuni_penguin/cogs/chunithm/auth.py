@@ -13,12 +13,13 @@ from discord.ext.commands import Context
 from sqlalchemy import update
 from sqlalchemy.dialects.sqlite import insert
 
+from chuni_penguin.adapters.chunithm_net import ChunithmNetAdapter
+from chuni_penguin.adapters.chunithm_net.utils import is_valid_clal
+from chuni_penguin.adapters.errors import AuthenticationError, NetworkError
 from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_app_command, logged_prefix_command, logger
-from chuni_penguin.networks.chunithm_net import ChunithmNet, is_valid_clal
-from chuni_penguin.networks.errors import AuthenticationError, NetworkError
 from chuni_penguin.ui import LoginFlowView
 
 if TYPE_CHECKING:
@@ -100,8 +101,11 @@ class AuthCog(commands.Cog, name="Auth"):
         jar.set_cookie(cookie)
         raw_jar = f"#LWP-Cookies-2.0\n{jar.as_lwp_str()}"
 
-        async with ChunithmNet(
-            raw_jar, limiter=self.bot.chunithm_networks.chunithm_net_limiter
+        async with ChunithmNetAdapter(
+            self.bot.database,
+            id,
+            raw_jar,
+            limiter=self.bot.chunithm_networks.chunithm_net_limiter,
         ) as client:
             try:
                 await client.get_minimal_profile()
@@ -109,7 +113,7 @@ class AuthCog(commands.Cog, name="Auth"):
                 return e
 
         query = insert(Cookie).values(
-            discord_id=id, cookie=client.authentication, kamaitachi_token=None
+            discord_id=id, cookie=client.lwp_cookie_jar, kamaitachi_token=None
         )
         query = query.on_conflict_do_update(
             index_elements=[Cookie.discord_id], set_={"cookie": query.excluded.cookie}

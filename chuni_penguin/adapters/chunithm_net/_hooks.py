@@ -6,13 +6,13 @@ import aiolimiter
 import httpx
 from selectolax.lexbor import LexborHTMLParser
 
-from chuni_penguin.networks.errors import (
+from chuni_penguin.adapters.errors import (
     AuthenticationError,
     MaintenanceError,
     NoCardsRegistered,
 )
 
-from .exceptions import ChuniNetError
+from .errors import ChuniNetError
 
 _AUTHENTICATION_URL = httpx.URL(
     "https://lng-tgk-aime-gw.am-all.net/common_auth/login"

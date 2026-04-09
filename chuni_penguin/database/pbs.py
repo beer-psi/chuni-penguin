@@ -12,7 +12,7 @@ from sqlalchemy.orm import (
     mapped_column,
 )
 
-from chuni_penguin.networks.types import ClearLamp, ComboLamp
+from chuni_penguin.types import ClearLamp, ComboLamp
 
 from .base import Base, UInt64Integer
 

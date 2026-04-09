@@ -23,7 +23,7 @@ from chuni_penguin.database import (
     Song,
     course_track_charts,
 )
-from chuni_penguin.networks.types import CourseClass, Difficulty
+from chuni_penguin.types import CourseClass, Difficulty
 
 VERSIONS = [
     "CHUNITHM",

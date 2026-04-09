@@ -1,16 +1,4 @@
-from .collections import PlayerCollections, Title, UserAvatar
-from .course import CourseRecord
-from .enums import (
-    ChainLamp,
-    ClearLamp,
-    ComboLamp,
-    CourseClass,
-    Difficulty,
-    Genre,
-    Rank,
-    Rarity,
-    SkillClass,
-)
+from .collections import PlayerCollections, Title, TitleRarity, UserAvatar
 from .leaderboard import Leaderboard, LeaderboardEntry
 from .linked_verse import (
     LinkedGate,
@@ -20,20 +8,41 @@ from .linked_verse import (
     LinkLevel,
 )
 from .login_bonus import DailyBonus, LoginBonus, LoginBonusItem, MonthlyLoginBonus
-from .profile import Currency, Friend, OverPower, Possession, Profile, RatingSystem
+from .profile import (
+    Currency,
+    Friend,
+    OverPower,
+    Possession,
+    Profile,
+    SkillClass,
+)
+from .rating import (
+    RatingBreakdown,
+    RatingFrame,
+    RatingFrameType,
+    RatingSystem,
+    RatingType,
+)
 from .score import (
+    ChainLamp,
+    ClearLamp,
+    ComboLamp,
+    CourseClass,
+    CourseRecord,
     Judgements,
     NotePercentage,
     PersonalBest,
+    Rank,
     RecentScore,
     Score,
     Skill,
 )
+from .song import Chart, Difficulty, Genre, Song
 from .team import Team, TeamEmblem
-from .typeddict import TypePairedDict, TypePairedDictKey
 
 __all__ = (
     "ChainLamp",
+    "Chart",
     "ClearLamp",
     "ComboLamp",
     "CourseClass",
@@ -61,16 +70,19 @@ __all__ = (
     "Possession",
     "Profile",
     "Rank",
-    "Rarity",
+    "RatingBreakdown",
+    "RatingFrame",
+    "RatingFrameType",
     "RatingSystem",
+    "RatingType",
     "RecentScore",
     "Score",
     "Skill",
     "SkillClass",
+    "Song",
     "Team",
     "TeamEmblem",
     "Title",
-    "TypePairedDict",
-    "TypePairedDictKey",
+    "TitleRarity",
     "UserAvatar",
 )

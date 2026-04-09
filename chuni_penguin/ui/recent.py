@@ -9,9 +9,9 @@ from chuni_penguin.ui import ScoreCardEmbed
 from ._pagination import ListPageSource, PaginationView
 
 if TYPE_CHECKING:
+    from chuni_penguin.adapters.base import NetworkAdapter
     from chuni_penguin.cogs.botutils import UtilsCog
-    from chuni_penguin.networks.base import Network
-    from chuni_penguin.networks.types import Profile, RecentScore
+    from chuni_penguin.types import Profile, RecentScore
 
 
 def split_scores_into_credits(
@@ -72,8 +72,8 @@ class RecentRecordsView(PaginationView):
         ctx: Context,
         target_id: int,
         scores: list["RecentScore"],
-        network_client: "Network",
-        network_client_manager: AsyncContextManager["Network"],
+        network_client: "NetworkAdapter",
+        network_client_manager: AsyncContextManager["NetworkAdapter"],
         userinfo: "Profile",
         synthesis_alt_jacket: str | None = None,
     ):
@@ -90,7 +90,7 @@ class RecentRecordsView(PaginationView):
         self.add_item(self.dropdown)
 
         self.network_client = network_client
-        self.network_client_manager: AsyncContextManager["Network"] | None = (
+        self.network_client_manager: AsyncContextManager["NetworkAdapter"] | None = (
             network_client_manager
         )
         self.userinfo = userinfo
@@ -108,7 +108,7 @@ class RecentRecordsView(PaginationView):
             for idx, score in enumerate(scores):
                 options.append(
                     discord.SelectOption(
-                        label=f"{score.track_no or idx + 1}. {score.title} - {score.difficulty}",
+                        label=f"{score.track_no or idx + 1}. {score.song.title} - {score.chart.difficulty}",
                         value=f"{score_idx}",
                     )
                 )
@@ -153,9 +153,6 @@ class RecentRecordsView(PaginationView):
         if self.network_client.SUPPORTS_DETAILED_RECENT_SCORE:
             score = await self.network_client.get_detailed_recent_score(
                 self.scores[idx]
-            )
-            score = await self.utils.process_record(
-                self.target_id, self.network_client.NAME, score
             )
         else:
             score = self.scores[idx]

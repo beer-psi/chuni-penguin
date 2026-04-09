@@ -1,6 +1,9 @@
+from typing import TYPE_CHECKING
+
 import discord
 
-from chuni_penguin.database import Denylist
+if TYPE_CHECKING:
+    from chuni_penguin.database import Denylist
 
 
 class BannedEmbed(discord.Embed):
@@ -8,7 +11,7 @@ class BannedEmbed(discord.Embed):
         self,
         *,
         client: discord.Client,
-        entry: Denylist,
+        entry: "Denylist",
         server_name: str | None,
         support_server_invite: str | None,
     ):

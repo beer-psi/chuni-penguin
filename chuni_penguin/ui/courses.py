@@ -10,7 +10,7 @@ from sqlalchemy.sql import select
 from chuni_penguin.config import config
 from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION
 from chuni_penguin.database import Chart, Course, CourseTrack
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     ClearLamp,
     ComboLamp,
     CourseClass,

@@ -1,6 +1,32 @@
 from dataclasses import dataclass
 
-from .enums import Rarity
+try:
+    from discord.enums import Enum
+except ImportError:
+    from enum import Enum
+
+
+class TitleRarity(Enum):
+    normal = "normal"
+    copper = "copper"
+    silver = "silver"
+    gold = "gold"
+    platinum = "platina"
+    rainbow = "rainbow"
+
+    ongeki = "ongeki"
+    staff = "staff"
+    maimai = "maimai"
+
+    phoenix_gold = "phoenix_g"
+    phoenix_platinum = "phoenix_p"
+    phoenix_rainbow = "phoenix_r"
+
+    version1 = "version1"
+    version2 = "version2"
+    version3 = "version3"
+
+    kop = "kop"
 
 
 @dataclass(slots=True, kw_only=True)
@@ -26,7 +52,7 @@ class UserAvatar:
 @dataclass(slots=True, kw_only=True)
 class Title:
     content: str
-    rarity: Rarity
+    rarity: TitleRarity
 
 
 @dataclass(slots=True, kw_only=True)

@@ -7,7 +7,7 @@ from discord.utils import escape_markdown, format_dt
 
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     Difficulty,
     Leaderboard,
     LeaderboardEntry,

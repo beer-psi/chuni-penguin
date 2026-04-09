@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
 import msgspec
 
 if TYPE_CHECKING:
-    from chuni_penguin.networks.types import Rank
+    from chuni_penguin.types import Rank
 
 T = TypeVar("T")
 

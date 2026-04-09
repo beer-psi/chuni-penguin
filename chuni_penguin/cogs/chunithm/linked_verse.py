@@ -12,7 +12,7 @@ from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import LinkedGateConverter
 from chuni_penguin.database import Alias, Chart, LinkedGateCondition, Song
 from chuni_penguin.database import LinkedGate as DBLinkedGate
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     Difficulty,
     LinkedGate,
     LinkedGateStatus,
@@ -200,12 +200,13 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
 
         async with ctx.typing():
             async with self.bot.chunithm_networks.network(ctx, target_id) as client:
-                if not client.SUPPORTS_LINKED_VERSE_PROGRESS:
+                try:
+                    progress = await client.get_linked_verse_progress()
+                except NotImplementedError:
                     msg = f"Network {client.NAME} does not support retrieving Linked VERSE progress."
-                    raise commands.CommandError(msg)
+                    raise commands.CommandError(msg) from None
 
                 profile = await client.get_minimal_profile()
-                progress = await client.get_linked_verse_progress()
 
             icons: list[str | None] = [
                 config.icons.icon(f"linked_gate_{gate.name}_{status.name}")
@@ -272,11 +273,11 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
 
         async with ctx.typing():
             async with self.bot.chunithm_networks.bot_network() as client:
-                if not client.SUPPORTS_LINKED_GATE_LEADERBOARD:
+                try:
+                    leaderboard = await client.get_linked_gate_leaderboard(gate)
+                except NotImplementedError:
                     msg = f"Network {client.NAME} does not support retrieving Linked GATE leaderboards."
-                    raise commands.CommandError(msg)
-
-                leaderboard = await client.get_linked_gate_leaderboard(gate)
+                    raise commands.CommandError(msg) from None
 
             view = LinkedGateLeaderboardView(
                 ctx,

@@ -13,21 +13,20 @@ from discord.ext.commands import Context
 from sqlalchemy import select
 from sqlalchemy.dialects.sqlite import insert
 
-from chuni_penguin.config import config
-from chuni_penguin.context import PenguinContext
-from chuni_penguin.database import Cookie
-from chuni_penguin.logging import logged_prefix_command, logger
-from chuni_penguin.networks.consts import KEY_SONG_ID
-from chuni_penguin.networks.kamaitachi import (
+from chuni_penguin.adapters.kamaitachi.parser import convert_to_kt_batch_manual
+from chuni_penguin.adapters.kamaitachi.types import (
     KTBatchManualResponse,
     KTImportPollStatusCompleted,
     KTImportPollStatusOngoing,
     KTImportPollStatusResponse,
     KTResponse,
     KTStatusResponse,
-    convert_to_kt_batch_manual,
 )
-from chuni_penguin.networks.types import Difficulty, PersonalBest, RecentScore
+from chuni_penguin.config import config
+from chuni_penguin.context import PenguinContext
+from chuni_penguin.database import Cookie
+from chuni_penguin.logging import logged_prefix_command, logger
+from chuni_penguin.types import Difficulty, PersonalBest, RecentScore
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -261,7 +260,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                 ctx.author.id, cookie.cookie
             ) as chuni_client,
             ctx.bot.chunithm_networks.kamaitachi(
-                cookie.kamaitachi_token
+                ctx.author.id, cookie.kamaitachi_token
             ) as tachi_client,
         ):
             profile = await chuni_client.get_profile()
@@ -271,7 +270,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                 recents = await chuni_client.get_recent_scores()
 
                 for recent in recents:
-                    if recent.difficulty == Difficulty.worlds_end:
+                    if recent.chart.difficulty == Difficulty.worlds_end:
                         continue
 
                     detailed_recent = await chuni_client.get_detailed_recent_score(
@@ -284,39 +283,12 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                             f"Fetching recent scores from CHUNITHM-NET... {len(scores)}/{len(recents)}"
                         )
             elif sync == "pb":
-                charts: set[tuple[int, Difficulty]] = set()
-
-                for difficulty in Difficulty:
-                    if difficulty == Difficulty.worlds_end:
+                for pb in await chuni_client.get_all_personal_bests():
+                    if pb.chart.difficulty == Difficulty.worlds_end:
                         # Kamaitachi does not accept WORLD'S END scores
                         continue
 
-                    await ctx.respond_or_edit(f"Fetching {difficulty} scores...")
-
-                    records = await chuni_client.get_personal_bests_by_difficulty(
-                        difficulty
-                    )
-
-                    for record in records:
-                        scores.append(record)
-                        charts.add((record.extras[KEY_SONG_ID], difficulty))
-
-                hidden_songs = await ctx.bot.database.songs.get_hidden_on_chuninet()
-
-                if len(hidden_songs) > 0:
-                    await ctx.respond_or_edit("Fetching hidden songs...")
-
-                for hidden_song in hidden_songs:
-                    records = await chuni_client.get_personal_bests_on_song(
-                        hidden_song.id
-                    )
-
-                    for record in records:
-                        if (record.extras[KEY_SONG_ID], record.difficulty) in charts:
-                            continue
-
-                        scores.append(record)
-                        charts.add((record.extras[KEY_SONG_ID], record.difficulty))
+                    scores.append(pb)
 
             # all of these should have song IDs... i think
             await self.bot.database.personal_bests.upsert_personal_bests(
@@ -496,7 +468,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
         async with (
             ctx.typing(),
             ctx.bot.chunithm_networks.kamaitachi(
-                cookie.kamaitachi_token
+                ctx.author.id, cookie.kamaitachi_token
             ) as tachi_client,
         ):
             profile = await tachi_client.get_minimal_profile()

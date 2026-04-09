@@ -12,11 +12,11 @@ from PIL import Image
 from sqlalchemy import select
 
 from chuni_penguin import flags
+from chuni_penguin.adapters.chunithm_net import ChuniNetError
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import MemberOrUserConverter
 from chuni_penguin.database import Cookie, UserConfig
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
-from chuni_penguin.networks.chunithm_net import ChuniNetError
 from chuni_penguin.ui import (
     LoginBonusView,
     PersistentHideFriendCodeButton,
@@ -172,12 +172,12 @@ class ProfileCog(commands.Cog, name="Profile"):
                 ctx, user.id, chunithm_net=True
             ) as client,
         ):
-            if not client.SUPPORTS_USER_AVATAR_IN_PROFILE:
-                msg = f"Network {client.NAME} does not support penguin avatars."
-                raise commands.CommandError(msg)
-
             basic_data = await client.get_minimal_profile()
             avatar_urls = basic_data.user_avatar
+
+            if avatar_urls is None:
+                msg = f"Network {client.NAME} does not support penguin avatars."
+                raise commands.CommandError(msg)
 
             assert avatar_urls is not None
 
@@ -222,10 +222,6 @@ class ProfileCog(commands.Cog, name="Profile"):
                 ctx, target.id, kamaitachi=kamaitachi
             ) as client,
         ):
-            if not client.SUPPORTS_PROFILE:
-                msg = f"The network {client.NAME} does not support player profiles."
-                raise commands.CommandError(msg)
-
             profile = await client.get_profile()
 
         async with self.bot.begin_db_read() as session:

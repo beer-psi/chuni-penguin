@@ -11,20 +11,21 @@ import msgspec
 from discord.ext import commands, tasks
 from sqlalchemy import select, update
 
-from chuni_penguin.config import config
-from chuni_penguin.context import PenguinContext
-from chuni_penguin.database import Chart, Cookie
-from chuni_penguin.logging import logger
-from chuni_penguin.networks.base import Network
-from chuni_penguin.networks.chunithm_net import ChuniNetError, ChunithmNet
-from chuni_penguin.networks.errors import (
+import chuni_penguin.adapters.utils
+from chuni_penguin.adapters.base import NetworkAdapter
+from chuni_penguin.adapters.chunithm_net import ChuniNetError, ChunithmNetAdapter
+from chuni_penguin.adapters.errors import (
     AlreadyFriends,
     AuthenticationError,
     InvalidFriendCode,
     NetworkError,
 )
-from chuni_penguin.networks.kamaitachi import Kamaitachi
-from chuni_penguin.networks.types import Difficulty, PersonalBest
+from chuni_penguin.adapters.kamaitachi import KamaitachiAdapter
+from chuni_penguin.config import config
+from chuni_penguin.context import PenguinContext
+from chuni_penguin.database import Chart, Cookie
+from chuni_penguin.logging import logger
+from chuni_penguin.types import Difficulty, PersonalBest
 from chuni_penguin.ui import FriendRequestWaitView
 from chuni_penguin.utils import AsyncRcContextManager, AsyncRWLockMapping
 
@@ -45,7 +46,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         self.chunithm_net_limiter = aiolimiter.AsyncLimiter(10, 1)  # 10 reqs/sec
 
         self._chuni_net_sessions: AsyncRWLockMapping[
-            int, AsyncRcContextManager[ChunithmNet]
+            int, AsyncRcContextManager[ChunithmNetAdapter]
         ] = AsyncRWLockMapping()
 
     async def cog_load(self) -> None:
@@ -119,11 +120,8 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         ]
 
     @contextlib.asynccontextmanager
-    async def kamaitachi(self, token: str):
-        async with Kamaitachi(token) as client:
-            client.get_kt_chart_id = self._get_kt_chart_id
-            client.get_kt_chart_ids = self._get_kt_chart_ids
-
+    async def kamaitachi(self, discord_id: int, token: str):
+        async with KamaitachiAdapter(self.bot.database, discord_id, token) as client:
             yield client
 
     @contextlib.asynccontextmanager
@@ -155,19 +153,21 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
             return
 
-        session = ChunithmNet(
+        session = ChunithmNetAdapter(
+            self.bot.database,
+            user_id,
             lwp_cookies,
             username=username,
             password=password,
             limiter=self.chunithm_net_limiter,
         )
 
-        if session.RANDOMIZE_USER_AGENT and self.user_agents is not None:
+        if self.user_agents is not None:
             session.user_agent = self.user_agents.desktop[
                 (user_id >> 22) % len(self.user_agents.desktop)
             ]
 
-        async def on_exit(session: ChunithmNet):
+        async def on_exit(session: ChunithmNetAdapter):
             async with self._chuni_net_sessions.write() as sessions:
                 with contextlib.suppress(KeyError):
                     del sessions[user_id]
@@ -175,7 +175,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             await self.bot.database.writer.execute(
                 update(Cookie)
                 .where(Cookie.discord_id == user_id)
-                .values(cookie=session.authentication)
+                .values(cookie=session.lwp_cookie_jar)
             )
 
         rc = AsyncRcContextManager(session, on_exit=[on_exit])
@@ -188,7 +188,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
     def _get_not_logged_in_message(
         self,
-        network: type[Network] | None,
+        network: type[NetworkAdapter] | None,
         author_id: int,
         target_id: int,
         *,
@@ -197,7 +197,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         network_name = "" if network is None else f" to {network.NAME}"
         command_name = (
             "kamaitachi link"
-            if network is not None and issubclass(network, Kamaitachi)
+            if network is not None and issubclass(network, KamaitachiAdapter)
             else "login"
         )
         prefix = "/" if is_interaction else config.bot.default_prefix
@@ -216,7 +216,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         *,
         kamaitachi: bool = False,
         chunithm_net: bool = False,
-    ) -> AsyncGenerator[Network, None]:
+    ) -> AsyncGenerator[NetworkAdapter, None]:
         author_id = ctx.author.id if isinstance(ctx, commands.Context) else ctx.user.id
         target_id = id or author_id
         is_interaction = (
@@ -241,11 +241,14 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         if kamaitachi:
             if cookie.kamaitachi_token is None:
                 msg = self._get_not_logged_in_message(
-                    Kamaitachi, author_id, target_id, is_interaction=is_interaction
+                    KamaitachiAdapter,
+                    author_id,
+                    target_id,
+                    is_interaction=is_interaction,
                 )
                 raise commands.CommandError(msg)
 
-            async with self.kamaitachi(cookie.kamaitachi_token) as client:
+            async with self.kamaitachi(target_id, cookie.kamaitachi_token) as client:
                 yield client
 
             return
@@ -253,7 +256,10 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         if chunithm_net:
             if not cookie.cookie:
                 msg = self._get_not_logged_in_message(
-                    ChunithmNet, author_id, target_id, is_interaction=is_interaction
+                    ChunithmNetAdapter,
+                    author_id,
+                    target_id,
+                    is_interaction=is_interaction,
                 )
                 raise commands.CommandError(msg)
 
@@ -269,7 +275,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
             return
 
         if cookie.kamaitachi_token is not None:
-            async with self.kamaitachi(cookie.kamaitachi_token) as client:
+            async with self.kamaitachi(target_id, cookie.kamaitachi_token) as client:
                 yield client
 
             return
@@ -290,7 +296,9 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                 msg = "Bot does not have a Kamaitachi API key configured."
                 raise AuthenticationError(msg)
 
-            async with self.kamaitachi(config.credentials.kamaitachi_api_key) as client:
+            async with self.kamaitachi(
+                self.bot.user.id, config.credentials.kamaitachi_api_key
+            ) as client:
                 yield client
 
             return
@@ -331,7 +339,7 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
         pbs: list[PersonalBest] = []
 
         async with self.bot_network(kamaitachi=False) as client:
-            assert isinstance(client, ChunithmNet)
+            assert isinstance(client, ChunithmNetAdapter)
 
             bot_profile = await client.get_minimal_profile()
             friends = await client.get_friends()
@@ -427,7 +435,9 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
 
             await client.remove_friend(friend_code)
 
-        pbs = await ctx.bot.utils.process_records(ctx.author.id, client.NAME, pbs)
+        pbs = await chuni_penguin.adapters.utils.process_records(
+            self.bot.database, ctx.author.id, client.NAME, pbs
+        )
 
         return friend.profile, pbs
 

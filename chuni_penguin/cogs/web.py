@@ -23,11 +23,11 @@ from sqlalchemy import select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import joinedload
 
+from chuni_penguin.adapters.chunithm_net.utils import is_valid_clal
 from chuni_penguin.config import config
 from chuni_penguin.constants import ASSETS_DIR
 from chuni_penguin.database import Chart, Cookie, Song
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.chunithm_net import is_valid_clal
 from chuni_penguin.utils import (
     get_jacket_url,
     json_dumps,

@@ -7,7 +7,7 @@ from discord.ext import commands
 from discord.utils import escape_markdown
 
 from chuni_penguin.constants import MAX_DIFFICULTY, ChunithmVersion
-from chuni_penguin.networks.types import Difficulty, Genre, LinkedGate, Rank
+from chuni_penguin.types import Difficulty, Genre, LinkedGate, Rank
 
 
 class DifficultyConverter(commands.Converter[Difficulty]):

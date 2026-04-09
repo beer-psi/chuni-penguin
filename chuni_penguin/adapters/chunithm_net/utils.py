@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from selectolax.lexbor import LexborNode
 
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     ChainLamp,
     ClearLamp,
     ComboLamp,

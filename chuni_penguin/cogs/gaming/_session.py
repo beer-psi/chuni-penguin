@@ -27,8 +27,8 @@ from chuni_penguin.constants import ASSETS_DIR
 from chuni_penguin.converters import Level, LevelRange
 from chuni_penguin.database import Alias, Character, Chart, GuessScore, Song
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.types import Difficulty, Genre
 from chuni_penguin.oggopus import crop_audio, get_audio_duration
+from chuni_penguin.types import Difficulty, Genre
 
 from .states.base import GuessingGameSkippableState, GuessingGameState
 from .states.character_age import AskCharacterAgeQuestionState

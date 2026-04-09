@@ -8,14 +8,11 @@ from sqlalchemy import (
     Index,
     text,
 )
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
     relationship,
 )
-
-from chuni_penguin.utils import sdvxin_link
 
 from .base import Base, UInt64Integer
 
@@ -196,7 +193,3 @@ class SdvxinChartView(Base):
         back_populates="sdvxin_chart_view",
         primaryjoin="and_(Chart.song_id == SdvxinChartView.song_id, Chart.difficulty == SdvxinChartView.difficulty)",
     )
-
-    @hybrid_property
-    def url(self) -> str:
-        return sdvxin_link(self)

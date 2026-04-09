@@ -1,4 +1,4 @@
-from chuni_penguin.networks.errors import NetworkError
+from chuni_penguin.adapters.errors import NetworkError
 
 
 class ChuniNetError(NetworkError):
