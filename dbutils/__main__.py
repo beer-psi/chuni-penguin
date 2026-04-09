@@ -6,15 +6,21 @@ from pathlib import Path
 
 import alembic.command
 from alembic.config import Config
+from sqlalchemy import select
+from sqlalchemy import update as sql_update
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     async_sessionmaker,
     create_async_engine,
 )
 
+from chuni_penguin.calculation import calculate_overpower_base, calculate_play_overpower
+from chuni_penguin.calculation.rating import calculate_whole_rating
 from chuni_penguin.config import GitSeedsConfig, LocalSeedsConfig, config
+from chuni_penguin.database import Chart, PersonalBest
 from chuni_penguin.database.base import Base
 from chuni_penguin.logging import logger
+from chuni_penguin.types import ComboLamp
 from chuni_penguin.utils import get_loop_factory
 
 from .aliases import update_aliases
@@ -109,6 +115,8 @@ async def main():
     seeds_backsync_parser.add_argument("--git-auth-username", default=None)
     seeds_backsync_parser.add_argument("--git-auth-password", default=None)
 
+    subparsers.add_parser("recalc", help="Performs a recalc of all personal bests")
+
     args = parser.parse_args()
 
     engine: AsyncEngine = create_async_engine(
@@ -198,6 +206,51 @@ async def main():
                     seeds_repo,
                     git_auth_username=args.git_auth_username,
                     git_auth_password=args.git_auth_password,
+                )
+
+    if args.command == "recalc":
+        sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+
+        async with sessionmaker() as session, session.begin():
+            query = select(
+                PersonalBest.discord_id,
+                PersonalBest.network,
+                PersonalBest.song_id,
+                PersonalBest.difficulty,
+                PersonalBest.score,
+                PersonalBest.combo_lamp,
+                Chart.const,
+            ).join(
+                Chart,
+                (Chart.song_id == PersonalBest.song_id)
+                & (Chart.difficulty == PersonalBest.difficulty),
+            )
+
+            for row in await session.execute(query):
+                discord_id, network, song_id, difficulty, score, combo_lamp, const = row
+
+                if const is None:
+                    rating = None
+                    overpower = None
+                else:
+                    rating = calculate_whole_rating(score, const) // 100
+                    overpower = int(
+                        calculate_play_overpower(
+                            calculate_overpower_base(score, const),
+                            ComboLamp(combo_lamp),
+                        )
+                        * 1000
+                    )
+
+                await session.execute(
+                    sql_update(PersonalBest)
+                    .where(
+                        (PersonalBest.discord_id == discord_id)
+                        & (PersonalBest.network == network)
+                        & (PersonalBest.song_id == song_id)
+                        & (PersonalBest.difficulty == difficulty)
+                    )
+                    .values(rating=rating, overpower=overpower)
                 )
 
     await engine.dispose()
