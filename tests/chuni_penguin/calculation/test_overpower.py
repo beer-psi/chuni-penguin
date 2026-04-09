@@ -7,7 +7,7 @@ from chuni_penguin.calculation import (
     calculate_overpower_max,
     calculate_play_overpower,
 )
-from chuni_penguin.networks.types import ComboLamp
+from chuni_penguin.types import ComboLamp
 
 
 @pytest.mark.parametrize(

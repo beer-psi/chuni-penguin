@@ -9,10 +9,6 @@ from types import SimpleNamespace
 import httpx
 import httpx_aiohttp
 import pytest
-from pytest import MonkeyPatch
-from pytest_httpx import HTTPXMock
-
-from chuni_penguin.networks.chunithm_net import ChuniNetError, ChunithmNet
 from chuni_penguin.networks.chunithm_net.consts import _KEY_DETAILED_PARAMS_IDX
 from chuni_penguin.networks.consts import KEY_SONG_ID
 from chuni_penguin.networks.errors import (
@@ -21,7 +17,12 @@ from chuni_penguin.networks.errors import (
     InvalidFriendCode,
     MaintenanceError,
 )
-from chuni_penguin.networks.types import (
+from chuni_penguin.networks.types.typeddict import TypePairedDict
+from pytest import MonkeyPatch
+from pytest_httpx import HTTPXMock
+
+from chuni_penguin.networks.chunithm_net import ChuniNetError, ChunithmNet
+from chuni_penguin.types import (
     ClearLamp,
     ComboLamp,
     CourseClass,
@@ -31,9 +32,8 @@ from chuni_penguin.networks.types import (
     LinkLevel,
     Possession,
     Rank,
-    Rarity,
+    TitleRarity,
 )
-from chuni_penguin.networks.types.typeddict import TypePairedDict
 
 BASE_DIR = Path(__file__).parent
 
@@ -530,9 +530,9 @@ async def test_client_parses_playerdata(
 
     assert len(user_data.titles) == 2
     assert user_data.titles[0].content == "ネコぱら"
-    assert user_data.titles[0].rarity == Rarity.silver
+    assert user_data.titles[0].rarity == TitleRarity.silver
     assert user_data.titles[1].content == "SPIRIT of PARADISE LOST"
-    assert user_data.titles[1].rarity == Rarity.version1
+    assert user_data.titles[1].rarity == TitleRarity.version1
 
     assert user_data.user_avatar is not None
     assert (

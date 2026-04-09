@@ -4,9 +4,6 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
-from pytest_benchmark.fixture import BenchmarkFixture
-from selectolax.lexbor import LexborHTMLParser, LexborNode
-
 from chuni_penguin.networks.chunithm_net.parser import (
     parse_collection_customize,
     parse_course_list,
@@ -22,7 +19,10 @@ from chuni_penguin.networks.chunithm_net.parser import (
     parse_player_data,
 )
 from chuni_penguin.networks.consts import KEY_SONG_ID
-from chuni_penguin.networks.types import (
+from pytest_benchmark.fixture import BenchmarkFixture
+from selectolax.lexbor import LexborHTMLParser, LexborNode
+
+from chuni_penguin.types import (
     ClearLamp,
     ComboLamp,
     CourseClass,

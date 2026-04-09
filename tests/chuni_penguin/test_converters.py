@@ -10,7 +10,7 @@ from chuni_penguin.converters import (
     LevelRangeConverter,
     RankConverter,
 )
-from chuni_penguin.networks.types import Difficulty, Genre, Rank
+from chuni_penguin.types import Difficulty, Genre, Rank
 
 
 @pytest.mark.asyncio
