@@ -1,6 +1,6 @@
 import pytest
 
-from chuni_penguin.types.profile import Possession
+from chuni_penguin.types import Possession
 
 
 @pytest.mark.parametrize(

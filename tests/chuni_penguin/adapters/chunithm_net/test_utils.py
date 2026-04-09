@@ -2,13 +2,13 @@ import random
 import string
 
 import pytest
-from chuni_penguin.networks.chunithm_net.utils import (
+from selectolax.lexbor import LexborHTMLParser
+
+from chuni_penguin.adapters.chunithm_net.utils import (
     difficulty_from_imgurl,
     get_rank_and_lamps,
     is_valid_clal,
 )
-from selectolax.lexbor import LexborHTMLParser
-
 from chuni_penguin.types import (
     ChainLamp,
     ClearLamp,
