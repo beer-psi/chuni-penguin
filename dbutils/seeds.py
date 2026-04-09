@@ -1,5 +1,6 @@
 import contextlib
 import enum
+import functools
 import json
 import operator
 import os
@@ -40,6 +41,11 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import contains_eager, joinedload
 from structlog.stdlib import BoundLogger
 
+from chuni_penguin.calculation.overpower import (
+    calculate_overpower_base,
+    calculate_play_overpower,
+)
+from chuni_penguin.calculation.rating import calculate_whole_rating
 from chuni_penguin.config import GitSeedsConfig, LocalSeedsConfig, config
 from chuni_penguin.constants import ChunithmVersion
 from chuni_penguin.database import (
@@ -49,12 +55,13 @@ from chuni_penguin.database import (
     CourseTrack,
     LinkedGate,
     LinkedGateCondition,
+    PersonalBest,
     SdvxinChartView,
     Song,
     SongJacket,
     course_track_charts,
 )
-from chuni_penguin.types import CourseClass, Difficulty, Genre, LinkLevel
+from chuni_penguin.types import ComboLamp, CourseClass, Difficulty, Genre, LinkLevel
 
 if TYPE_CHECKING:
     from sqlalchemy.sql._typing import _DMLTableArgument
@@ -582,23 +589,66 @@ async def load_seeds(
                 for c in Chart.__table__.columns
                 if c.name not in ("id", "song_id", "difficulty")
             },
-        )
-        await session.execute(
-            query,
-            [
-                {
-                    "song_id": song.id,
-                    "difficulty": chart.difficulty.short(),
-                    **{
-                        c.name: getattr(chart, c.name)
-                        for c in Chart.__table__.columns
-                        if c.name not in ("id", "song_id", "difficulty")
-                    },
-                }
-                for song in songs
-                for chart in song.charts
-            ],
-        )
+            where=functools.reduce(
+                operator.or_,
+                [
+                    getattr(query.excluded, c.name) != getattr(Chart, c.name)
+                    for c in Chart.__table__.columns
+                    if c.name not in ("id", "song_id", "difficulty")
+                ],
+            ),
+        ).returning(Chart)
+        charts = (
+            await session.execute(
+                query,
+                [
+                    {
+                        "song_id": song.id,
+                        "difficulty": chart.difficulty.short(),
+                        **{
+                            c.name: getattr(chart, c.name)
+                            for c in Chart.__table__.columns
+                            if c.name not in ("id", "song_id", "difficulty")
+                        },
+                    }
+                    for song in songs
+                    for chart in song.charts
+                ],
+            )
+        ).scalars()
+
+        # Run a recalc for charts that changed
+        for chart in charts:
+            logger.info(
+                "chart changed or added, performing recalc for all PBs",
+                song_id=chart.song_id,
+                difficulty=chart.difficulty,
+            )
+
+            query = select(PersonalBest).where(
+                (PersonalBest.song_id == chart.song_id)
+                & (PersonalBest.difficulty == chart.difficulty)
+            )
+            pbs = (await session.execute(query)).scalars()
+
+            if chart.const is None:
+                for pb in pbs:
+                    pb.rating = None
+                    pb.overpower = None
+
+                    session.add(pb)
+            else:
+                for pb in pbs:
+                    pb.rating = calculate_whole_rating(pb.score, chart.const) // 100
+                    pb.overpower = int(
+                        calculate_play_overpower(
+                            calculate_overpower_base(pb.score, chart.const),
+                            ComboLamp(pb.combo_lamp),
+                        )
+                        * 1000
+                    )
+
+                    session.add(pb)
 
         # Remove sdvx.in chart views that are not part of seeds
         await delete_not_in_multiple_columns(
