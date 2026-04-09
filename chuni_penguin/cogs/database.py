@@ -458,6 +458,11 @@ class PersonalBestQueries:
             "score": func.max(PersonalBest.score, query.excluded.score),
             "clear_lamp": func.max(PersonalBest.clear_lamp, query.excluded.clear_lamp),
             "combo_lamp": func.max(PersonalBest.combo_lamp, query.excluded.combo_lamp),
+            # This doesn't hold when charts are nerfed, so chart constant changes have to be
+            # detected and scores need to be recalculated.
+            # Maybe this can be detected more smartly.
+            "rating": func.max(PersonalBest.rating, query.excluded.rating),
+            "overpower": func.max(PersonalBest.overpower, query.excluded.overpower),
             "achieved_at": case(
                 (
                     (
@@ -557,6 +562,10 @@ class PersonalBestQueries:
                 "achieved_at": score.achieved_at,
                 "last_played_at": (
                     score.achieved_at if isinstance(score, RecentScore) else None
+                ),
+                "rating": int(score.rating * 100) if score.rating is not None else None,
+                "overpower": (
+                    int(score.overpower * 1000) if score.overpower is not None else None
                 ),
             }
 

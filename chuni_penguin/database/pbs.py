@@ -5,6 +5,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Index,
     PrimaryKeyConstraint,
+    null,
     text,
 )
 from sqlalchemy.orm import (
@@ -50,6 +51,12 @@ class PersonalBest(Base):
 
     achieved_at: Mapped[datetime | None] = mapped_column()
     last_played_at: Mapped[datetime | None] = mapped_column()
+
+    # Fixed-width floating point represented as an integer: 16.55 -> 1655
+    rating: Mapped[int | None] = mapped_column(default=None, server_default=null())
+
+    # Fixed-width floating point represented as an integer: 76.265 -> 76265
+    overpower: Mapped[int | None] = mapped_column(default=None, server_default=null())
 
     __table_args__ = (
         PrimaryKeyConstraint(discord_id, network, song_id, difficulty),

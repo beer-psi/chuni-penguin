@@ -383,10 +383,11 @@ class ChunithmNetAdapter(NetworkAdapter):
                         "token": self._token,
                     },
                 )
-                difficulty_records = parse_music_for_rating(soup)
-
-                await self.database.personal_bests.upsert_personal_bests(
-                    self.discord_id, self.NAME, difficulty_records
+                difficulty_records = await process_records(
+                    self.database,
+                    self.discord_id,
+                    self.NAME,
+                    parse_music_for_rating(soup),
                 )
 
                 records.extend(
@@ -403,13 +404,6 @@ class ChunithmNetAdapter(NetworkAdapter):
                         if (x.song.id, x.chart.difficulty) in new20_charts
                     ]
                 )
-
-            records = await process_records(
-                self.database, self.discord_id, self.NAME, records
-            )
-            new_records = await process_records(
-                self.database, self.discord_id, self.NAME, new_records
-            )
 
             # sort the fetched best30/new20 by their position in the original b30/n20 list
             records.sort(
