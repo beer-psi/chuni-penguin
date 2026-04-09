@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Optional, TypeVar
 
 import msgspec
@@ -358,6 +359,10 @@ class UtilsCog(commands.Cog, name="Utils"):
                 and db_pb.attack is not None
                 and db_pb.miss is not None
                 else None
+            ),
+            rating=Decimal(db_pb.rating) / 100 if db_pb.rating is not None else None,
+            overpower=(
+                Decimal(db_pb.overpower) / 1000 if db_pb.overpower is not None else None
             ),
         )
         return (await hydrate_records(self.bot.database, [pb]))[0]

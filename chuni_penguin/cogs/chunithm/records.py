@@ -1972,9 +1972,13 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     pb_op_by_song[chart.song_id] = max(
                         pb_op_by_song.get(chart.song_id, Decimal(0)),
-                        calculate_play_overpower(
-                            calculate_overpower_base(pb.score, chart.const),
-                            pb_combo_lamp,
+                        (
+                            Decimal(pb.overpower) / 1000
+                            if pb.overpower is not None
+                            else calculate_play_overpower(
+                                calculate_overpower_base(pb.score, chart.const),
+                                pb_combo_lamp,
+                            )
                         ),
                     )
 
