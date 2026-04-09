@@ -19,19 +19,21 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from chuni_penguin import flags
+from chuni_penguin.adapters.chunithm_net import ChunithmNetAdapter
+from chuni_penguin.adapters.errors import ChartNotFound, NetworkError, SongNotFound
+from chuni_penguin.adapters.kamaitachi import KamaitachiAdapter
+from chuni_penguin.adapters.utils import calculate_ongeki_rating_breakdown
 from chuni_penguin.calculation.overpower import (
     calculate_overpower_base,
     calculate_overpower_max,
     calculate_play_overpower,
 )
-from chuni_penguin.calculation.rating import (
-    calculate_ongeki_platinum_rating,
-    calculate_ongeki_rating,
-)
 from chuni_penguin.config import config
 from chuni_penguin.constants import (
     CACHE_DIR,
     CURRENT_CHUNITHM_VERSION,
+    INTERNATIONAL_JACKET_BASE,
+    JACKET_BASE,
     ChunithmVersion,
 )
 from chuni_penguin.context import PenguinContext
@@ -51,26 +53,9 @@ from chuni_penguin.converters import (
 from chuni_penguin.database import Chart, Song, SongJacket, UserConfig
 from chuni_penguin.database import PersonalBest as DBPersonalBest
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
-from chuni_penguin.networks.base import Network
-from chuni_penguin.networks.chunithm_net import (
-    INTERNATIONAL_JACKET_BASE,
-    JACKET_BASE,
-    ChunithmNet,
-)
-from chuni_penguin.networks.consts import (
-    KEY_INTERNAL_LEVEL,
-    KEY_LEVEL,
-    KEY_OVERPOWER,
-    KEY_OVERPOWER_MAX,
-    KEY_PLATINUM_RATING,
-    KEY_PLAY_RATING,
-    KEY_SONG_GENRE,
-    KEY_SONG_ID,
-    KEY_SONG_VERSION,
-)
-from chuni_penguin.networks.errors import ChartNotFound, NetworkError, SongNotFound
-from chuni_penguin.networks.kamaitachi import Kamaitachi
-from chuni_penguin.networks.types import (
+from chuni_penguin.renderers.b50 import render_b30
+from chuni_penguin.renderers.b50_ongeki import render_b30 as render_b30_ongeki
+from chuni_penguin.types import (
     ClearLamp,
     ComboLamp,
     Difficulty,
@@ -79,11 +64,11 @@ from chuni_penguin.networks.types import (
     Possession,
     Profile,
     Rank,
-    RecentScore,
+    RatingBreakdown,
+    RatingFrameType,
+    RatingType,
     Score,
 )
-from chuni_penguin.renderers.b50 import render_b30
-from chuni_penguin.renderers.b50_ongeki import render_b30 as render_b30_ongeki
 from chuni_penguin.ui import (
     B30N20View,
     B30View,
@@ -196,39 +181,6 @@ class RecordsCog(commands.Cog, name="Records"):
             self.compare_context_menu.name, type=self.compare_context_menu.type
         )
 
-    async def _get_all_personal_bests(self, client: Network):
-        pbs: list[PersonalBest] = []
-
-        if client.SUPPORTS_PERSONAL_BESTS:
-            pbs = await client.get_personal_bests()
-        elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
-            for difficulty in Difficulty:
-                pbs.extend(await client.get_personal_bests_by_difficulty(difficulty))
-        else:
-            msg = f"Network {client.NAME} does not support personal bests (all or by difficulty)"
-            raise ValueError(msg)
-
-        if isinstance(client, ChunithmNet):
-            hidden_songs = await self.bot.database.songs.get_hidden_on_chuninet()
-            retrieved = {(pb.extras[KEY_SONG_ID], pb.difficulty) for pb in pbs}
-
-            for hidden_song in hidden_songs:
-                hidden_song_pbs = await client.get_personal_bests_on_song(
-                    hidden_song.id
-                )
-                pbs.extend(
-                    [
-                        pb
-                        for pb in hidden_song_pbs
-                        if (pb.extras[KEY_SONG_ID], pb.difficulty) not in retrieved
-                    ]
-                )
-                retrieved |= {
-                    (pb.extras[KEY_SONG_ID], pb.difficulty) for pb in hidden_song_pbs
-                }
-
-        return pbs
-
     async def _recent_inner(
         self,
         ctx: PenguinContext,
@@ -243,14 +195,9 @@ class RecordsCog(commands.Cog, name="Records"):
         client = await client_manager.__aenter__()
 
         async with ctx.typing():
-            if not client.SUPPORTS_RECENT_SCORES:
-                msg = f"Network {client.NAME} does not support getting recent scores."
-                raise commands.CommandError(msg)
-
             profile = await client.get_minimal_profile()
 
             recents = await client.get_recent_scores()
-            recents = await self.utils.process_records(target_id, client.NAME, recents)
 
         view = RecentRecordsView(
             ctx,
@@ -385,10 +332,10 @@ class RecordsCog(commands.Cog, name="Records"):
                 jacket = jackets[0]
                 song = jacket.song
 
-            if isinstance(client, ChunithmNet):
+            if isinstance(client, ChunithmNetAdapter):
                 song.raise_if_not_available()
 
-            if isinstance(client, Kamaitachi) and song.genre == "WORLD'S END":
+            if isinstance(client, KamaitachiAdapter) and song.genre == "WORLD'S END":
                 msg = "Kamaitachi does not support WORLD'S END charts."
                 raise commands.CommandError(msg)
 
@@ -397,12 +344,6 @@ class RecordsCog(commands.Cog, name="Records"):
             if song.id >= 8000 and len(song.charts) > 0:
                 displayed_song += f" [{escape_markdown(song.charts[0].level)}]"
 
-            if not client.SUPPORTS_PERSONAL_BESTS_ON_SONG:
-                msg = f"Network {client.NAME} does not support fetching scores for a specific song."
-                raise commands.CommandError(msg)
-
-            profile = await client.get_minimal_profile()
-
             try:
                 records = await client.get_personal_bests_on_song(song.id)
             except (SongNotFound, ChartNotFound):
@@ -410,6 +351,11 @@ class RecordsCog(commands.Cog, name="Records"):
                     f"The song **{displayed_song}** is not available on {client.NAME}."
                 )
                 raise commands.CommandError(msg) from None
+            except NotImplementedError:
+                msg = f"Network {client.NAME} does not support fetching scores for a specific song."
+                raise commands.CommandError(msg) from None
+
+            profile = await client.get_minimal_profile()
 
             if len(records) == 0:
                 await ctx.respond_or_edit(
@@ -417,8 +363,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 )
                 return
 
-            records = await self.utils.process_records(target_id, client.NAME, records)
-            records.sort(key=lambda r: r.difficulty.value)
+            records.sort(key=lambda r: r.chart.difficulty.value)
 
             page = 0
             embed_color = 0
@@ -449,7 +394,7 @@ class RecordsCog(commands.Cog, name="Records"):
                     (
                         i
                         for i, record in enumerate(records)
-                        if record.difficulty == difficulty
+                        if record.chart.difficulty == difficulty
                     ),
                     0,
                 )
@@ -609,8 +554,8 @@ class RecordsCog(commands.Cog, name="Records"):
             songs = [
                 x
                 for x in result.songs
-                if (isinstance(client, Kamaitachi) and x.genre != "WORLD'S END")
-                or (isinstance(client, ChunithmNet) and x.available)
+                if (isinstance(client, KamaitachiAdapter) and x.genre != "WORLD'S END")
+                or (isinstance(client, ChunithmNetAdapter) and x.available)
             ]
 
             if len(songs) > 1:
@@ -664,8 +609,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 await ctx.respond_or_edit(msg)
                 return
 
-            records = await self.utils.process_records(target_id, client.NAME, records)
-            records.sort(key=lambda r: r.difficulty.value)
+            records.sort(key=lambda r: r.chart.difficulty.value)
 
             view = EmbedPaginationView(
                 ctx,
@@ -747,113 +691,23 @@ class RecordsCog(commands.Cog, name="Records"):
         self,
         ctx: PenguinContext,
         profile: Profile,
-        pbs: list[PersonalBest],
-        rating_system: Literal["ongeki", "ongeki-naive"],
+        rating_breakdown: RatingBreakdown,
         user_config: UserConfig | None = None,
     ):
-        pbs = [pb for pb in pbs if pb.difficulty != Difficulty.worlds_end]
+        current_rating = float(rating_breakdown.rating)
+        records = rating_breakdown.frames[RatingFrameType.best].scores
+        record_slots = rating_breakdown.frames[RatingFrameType.best].num_scores
+        platinum_records = rating_breakdown.frames[RatingFrameType.platinum].scores
+        platinum_record_slots = rating_breakdown.frames[
+            RatingFrameType.platinum
+        ].num_scores
 
-        for pb in pbs:
-            pb.extras[KEY_PLAY_RATING] = calculate_ongeki_rating(
-                pb.score, pb.extras[KEY_INTERNAL_LEVEL], pb.combo_lamp
-            )
-            pb.extras[KEY_PLATINUM_RATING] = calculate_ongeki_platinum_rating(
-                pb.score, pb.extras[KEY_INTERNAL_LEVEL]
-            )
-
-        pbs.sort(
-            key=lambda pb: (
-                pb.extras[KEY_PLAY_RATING],
-                pb.score,
-                pb.combo_lamp,
-                pb.extras[KEY_INTERNAL_LEVEL],
-            ),
-            reverse=True,
-        )
-
-        if rating_system == "ongeki":
-            records = [
-                pb
-                for pb in pbs
-                if pb.extras[KEY_SONG_VERSION] != CURRENT_CHUNITHM_VERSION
-            ][:50]
-            record_slots = 50
-
-            new_records = [
-                pb
-                for pb in pbs
-                if pb.extras[KEY_SONG_VERSION] == CURRENT_CHUNITHM_VERSION
-            ][:10]
-            new_record_slots = 10
+        if (new_frame := rating_breakdown.frames.get(RatingFrameType.new)) is not None:
+            new_records = new_frame.scores
+            new_record_slots = new_frame.num_scores
         else:
-            records = pbs[:60]
-            record_slots = 60
-
             new_records = None
             new_record_slots = 0
-
-        platinum_pbs = [pb for pb in pbs if pb.extras[KEY_PLATINUM_RATING] > 0]
-        platinum_pbs.sort(
-            key=lambda pb: (
-                pb.extras[KEY_PLATINUM_RATING],
-                pb.score,
-                pb.combo_lamp,
-                pb.extras[KEY_INTERNAL_LEVEL],
-            ),
-            reverse=True,
-        )
-        platinum_pbs = platinum_pbs[:50]
-
-        if new_records is not None:
-            current_rating = float(
-                floor_to_ndp(
-                    (
-                        sum(
-                            [r.extras[KEY_PLAY_RATING] for r in records],
-                            start=Decimal(0),
-                        )
-                        / record_slots
-                    )
-                    + (
-                        sum(
-                            [r.extras[KEY_PLAY_RATING] for r in new_records],
-                            start=Decimal(0),
-                        )
-                        / new_record_slots
-                        / 5
-                    )
-                    + (
-                        sum(
-                            [r.extras[KEY_PLATINUM_RATING] for r in platinum_pbs],
-                            start=Decimal(0),
-                        )
-                        / 50
-                    ),
-                    3,
-                )
-            )
-        else:
-            current_rating = float(
-                floor_to_ndp(
-                    floor_to_ndp(
-                        sum(
-                            [r.extras[KEY_PLAY_RATING] for r in records],
-                            start=Decimal(0),
-                        )
-                        / record_slots
-                        * Decimal("1.2"),
-                        3,
-                    )
-                    + (
-                        sum(
-                            [r.extras[KEY_PLATINUM_RATING] for r in platinum_pbs],
-                            start=Decimal(0),
-                        )
-                        / 50
-                    ),
-                    3,
-                )
-            )
 
         async with AsyncTemporaryFile() as f:
             await asyncio.to_thread(
@@ -864,8 +718,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 record_slots=record_slots,
                 new_records=new_records,
                 new_record_slots=new_record_slots,
-                platinum_records=platinum_pbs,
-                platinum_record_slots=50,
+                platinum_records=platinum_records,
+                platinum_record_slots=platinum_record_slots,
                 current_rating=current_rating,
                 user_config=user_config or ctx.user_config,
             )
@@ -906,10 +760,10 @@ class RecordsCog(commands.Cog, name="Records"):
 
         pbs.sort(
             key=lambda pb: (
-                pb.extras[KEY_PLAY_RATING],
+                pb.rating,
                 pb.score,
                 pb.combo_lamp,
-                pb.extras[KEY_INTERNAL_LEVEL],
+                pb.chart.internal_level,
             ),
             reverse=True,
         )
@@ -921,7 +775,13 @@ class RecordsCog(commands.Cog, name="Records"):
             new_record_slots = 0
             current_rating = None
         elif rating_system in ("ongeki", "ongeki-naive"):
-            await self._best50_ongeki(ctx, profile, pbs, rating_system, ctx.user_config)
+            breakdown = calculate_ongeki_rating_breakdown(
+                RatingType.ongeki
+                if rating_system == "ongeki"
+                else RatingType.ongeki_naive,
+                pbs,
+            )
+            await self._best50_ongeki(ctx, profile, breakdown, ctx.user_config)
             return
         else:
             new_records = []
@@ -929,13 +789,13 @@ class RecordsCog(commands.Cog, name="Records"):
 
             for pb in pbs:
                 if (
-                    pb.extras[KEY_SONG_VERSION] == CURRENT_CHUNITHM_VERSION
+                    pb.song.version == CURRENT_CHUNITHM_VERSION
                     and len(new_records) < new_record_slots
                 ):
                     new_records.append(pb)
 
                 if (
-                    pb.extras[KEY_SONG_VERSION] != CURRENT_CHUNITHM_VERSION
+                    pb.song.version != CURRENT_CHUNITHM_VERSION
                     and len(records) < record_slots
                 ):
                     records.append(pb)
@@ -987,11 +847,19 @@ class RecordsCog(commands.Cog, name="Records"):
             await view.start()
             return
 
-        records: list[PersonalBest] = []
-        record_slots: int = 30
-        new_records: list[PersonalBest] | None = []
-        new_record_slots: int = 20
-        current_rating: float | None = None
+        rating_type = None
+
+        if rating_system == "ingame":
+            rating_type = RatingType.in_game
+        elif rating_system == "naive":
+            rating_type = RatingType.naive
+        elif rating_system == "ongeki":
+            rating_type = RatingType.ongeki
+        elif rating_system == "ongeki-naive":
+            rating_type = RatingType.ongeki_naive
+        elif rating_system is not None:
+            msg = f"Unknown rating system {rating_system}"
+            raise commands.BadArgument(msg)
 
         async with (
             ctx.typing(),
@@ -1002,264 +870,29 @@ class RecordsCog(commands.Cog, name="Records"):
             user_config = await self.utils.fetch_user_config(target_id)
             profile = await client.get_profile()
 
-            if rating_system is None:
-                if new_rating or (client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20):
-                    rating_system = "ingame"
-                else:
-                    rating_system = "naive"
-
-            # Having client-specific behavior sorta goes against the spirit of having a unified
-            # network API, but there's too many stupid quirks with this thing.
-            if isinstance(client, ChunithmNet) and rating_system == "ingame":
-                current_rating = profile.rating_systems[0].value
-
-                # in order to get extra lamp information, we get the charts that are in a player's
-                # best30/new20 from the music for rating list, but we fetch the player's PBs.
-                best30_charts = [
-                    (x.extras[KEY_SONG_ID], x.difficulty)
-                    for x in await client.get_best30()
-                ]
-                new20_charts = [
-                    (x.extras[KEY_SONG_ID], x.difficulty)
-                    for x in await client.get_new20()
-                ]
-
-                difficulties = sorted(
-                    {x[1] for x in itertools.chain(best30_charts, new20_charts)},
-                    key=lambda x: x.value,
+            if rating_type is None:
+                rating_type = (
+                    client.DEFAULT_RATING_SYSTEM
+                    if not new_rating
+                    else RatingType.in_game
                 )
 
-                for difficulty in difficulties:
-                    difficulty_records = await client.get_personal_bests_by_difficulty(
-                        difficulty
-                    )
-                    await self.bot.database.personal_bests.upsert_personal_bests(
-                        target_id, client.NAME, difficulty_records
-                    )
-                    records.extend(
-                        [
-                            x
-                            for x in difficulty_records
-                            if (x.extras[KEY_SONG_ID], x.difficulty) in best30_charts
-                        ]
-                    )
-                    new_records.extend(
-                        [
-                            x
-                            for x in difficulty_records
-                            if (x.extras[KEY_SONG_ID], x.difficulty) in new20_charts
-                        ]
-                    )
+            breakdown = await client.get_rating_breakdown(rating_type)
 
-                records = await self.utils.process_records(
-                    target_id, client.NAME, records
-                )
-                new_records = await self.utils.process_records(
-                    target_id, client.NAME, new_records
-                )
+            if rating_type in (RatingType.ongeki, RatingType.ongeki_naive):
+                await self._best50_ongeki(ctx, profile, breakdown, user_config)
+                return
 
-                # sort the fetched best30/new20 by their position in the original b30/n20 list
-                records.sort(
-                    key=lambda x: best30_charts.index(
-                        (x.extras[KEY_SONG_ID], x.difficulty)
-                    )
-                )
-                new_records.sort(
-                    key=lambda x: new20_charts.index(
-                        (x.extras[KEY_SONG_ID], x.difficulty)
-                    )
-                )
+            current_rating = float(breakdown.rating)
+            records = breakdown.frames[RatingFrameType.best].scores
+            record_slots = breakdown.frames[RatingFrameType.best].num_scores
 
-                hidden_songs = await ctx.bot.database.songs.get_hidden_on_chuninet()
-
-                # Sometimes, SEGA likes to hide some scores from appearing in
-                # CHUNITHM-NET. This is a workaround. Basically:
-                # - Fetch music records of all hidden songs
-                # - For each record, check if there are already enough slots in the
-                # respective new/old rating list:
-                #   - If there are already enough rating slots, and if the hidden score's
-                # rating is higher than the last item in the rating list, replace the last item
-                # with the hidden record.
-                #   - If there are not enough rating slots, just add the song as is.
-                #   - Sort the list again.
-                for hidden_song in hidden_songs:
-                    if hidden_song.version == CURRENT_CHUNITHM_VERSION:
-                        chart_list = new20_charts
-                        record_list = new_records
-                        record_list_slots = new_record_slots
-                    else:
-                        chart_list = best30_charts
-                        record_list = records
-                        record_list_slots = record_slots
-
-                    hidden_song_records = await self.utils.process_records(
-                        target_id,
-                        client.NAME,
-                        await client.get_personal_bests_on_song(hidden_song.id),
-                    )
-
-                    for hidden_song_record in hidden_song_records:
-                        if (
-                            hidden_song.id,
-                            hidden_song_record.difficulty,
-                        ) in chart_list:
-                            # chart is actually not hidden
-                            continue
-
-                        if len(record_list) >= record_list_slots:
-                            # record list is definitely sorted by rating
-                            min_rating_record = record_list[-1]
-
-                            if (
-                                hidden_song_record.extras[KEY_PLAY_RATING]
-                                > min_rating_record.extras[KEY_PLAY_RATING]
-                            ):
-                                del record_list[-1]
-                                chart_list.remove(
-                                    (
-                                        min_rating_record.extras[KEY_SONG_ID],
-                                        min_rating_record.difficulty,
-                                    )
-                                )
-
-                                chart_list.append(
-                                    (hidden_song.id, hidden_song_record.difficulty)
-                                )
-                                record_list.append(hidden_song_record)
-                        else:
-                            chart_list.append(
-                                (hidden_song.id, hidden_song_record.difficulty)
-                            )
-                            record_list.append(hidden_song_record)
-
-                        record_list.sort(
-                            key=lambda r: r.extras[KEY_PLAY_RATING],
-                            reverse=True,
-                        )
-            elif rating_system == "ingame":
-                if client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20:
-                    try:
-                        profile_rating_system = next(
-                            s for s in profile.rating_systems if s.name == "Rating"
-                        )
-                        current_rating = profile_rating_system.value
-                    except StopIteration:
-                        current_rating = None
-
-                    records = await self.utils.process_records(
-                        target_id, client.NAME, await client.get_best30()
-                    )
-                    new_records = await self.utils.process_records(
-                        target_id, client.NAME, await client.get_new20()
-                    )
-                elif (
-                    client.SUPPORTS_PERSONAL_BESTS
-                    or client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-                ):
-                    pbs = [
-                        pb
-                        for pb in await self._get_all_personal_bests(client)
-                        if pb.difficulty != Difficulty.worlds_end
-                    ]
-                    pbs = await self.utils.process_records(target_id, client.NAME, pbs)
-                    records = [
-                        pb
-                        for pb in pbs
-                        if pb.extras[KEY_SONG_VERSION] != CURRENT_CHUNITHM_VERSION
-                    ]
-                    new_records = [
-                        pb
-                        for pb in pbs
-                        if pb.extras[KEY_SONG_VERSION] == CURRENT_CHUNITHM_VERSION
-                    ]
-
-                    records.sort(
-                        key=lambda pb: (
-                            pb.extras[KEY_PLAY_RATING],
-                            pb.score,
-                            pb.combo_lamp,
-                            pb.extras[KEY_INTERNAL_LEVEL],
-                        ),
-                        reverse=True,
-                    )
-                    new_records.sort(
-                        key=lambda pb: (
-                            pb.extras[KEY_PLAY_RATING],
-                            pb.score,
-                            pb.combo_lamp,
-                            pb.extras[KEY_INTERNAL_LEVEL],
-                        ),
-                        reverse=True,
-                    )
-
-                    records = records[:record_slots]
-                    new_records = new_records[:new_record_slots]
-                    current_rating = float(
-                        floor_to_ndp(
-                            sum(
-                                [
-                                    r.extras[KEY_PLAY_RATING]
-                                    for r in itertools.chain(records, new_records)
-                                ],
-                                start=Decimal(0),
-                            )
-                            / (record_slots + new_record_slots),
-                            2,
-                        )
-                    )
-                else:
-                    msg = f"Network {client.NAME} does not support any features needed for a best50 breakdown."
-                    raise commands.CommandError(msg)
-            elif rating_system == "naive":
+            if (new_frame := breakdown.frames.get(RatingFrameType.new)) is not None:
+                new_records = new_frame.scores
+                new_record_slots = new_frame.num_scores
+            else:
                 new_records = None
                 new_record_slots = 0
-
-                if client.SUPPORTS_BEST_RATINGS:
-                    try:
-                        profile_rating_system = next(
-                            s for s in profile.rating_systems if s.name == "NaiveRating"
-                        )
-                        current_rating = profile_rating_system.value
-                    except StopIteration:
-                        current_rating = None
-
-                    pbs = await client.get_best_ratings()
-                    pbs = await self.utils.process_records(target_id, client.NAME, pbs)
-                elif (
-                    client.SUPPORTS_PERSONAL_BESTS
-                    or client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-                ):
-                    pbs = await self._get_all_personal_bests(client)
-                    pbs = await self.utils.process_records(target_id, client.NAME, pbs)
-
-                    pbs.sort(
-                        key=lambda pb: (
-                            pb.extras[KEY_PLAY_RATING],
-                            pb.score,
-                            pb.combo_lamp,
-                            pb.extras[KEY_INTERNAL_LEVEL],
-                        ),
-                        reverse=True,
-                    )
-                else:
-                    msg = f"Network {client.NAME} does not support any features needed for a best50 breakdown."
-                    raise commands.CommandError(msg)
-
-                records = pbs[:50]
-                record_slots = 50
-            elif rating_system in ("ongeki", "ongeki-naive"):
-                if (
-                    not client.SUPPORTS_PERSONAL_BESTS
-                    and not client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-                ):
-                    msg = "Network does not support fetching personal bests for this rating system."
-                    raise commands.CommandError(msg)
-
-                pbs = await self._get_all_personal_bests(client)
-                pbs = await self.utils.process_records(target_id, client.NAME, pbs)
-
-                await self._best50_ongeki(ctx, profile, pbs, rating_system, user_config)
-                return
 
             await self._best50_respond(
                 ctx,
@@ -1537,80 +1170,30 @@ class RecordsCog(commands.Cog, name="Records"):
         async with ctx.bot.chunithm_networks.network(
             ctx, target_user_id, kamaitachi=kamaitachi
         ) as client:
+            # legacy behavior
             if (
-                not client.SUPPORTS_PERSONAL_BESTS
+                isinstance(client, ChunithmNetAdapter)
                 and level is None
                 and difficulty is None
                 and genre is None
                 and rank is None
+                and version is None
             ):
                 await self._best50_inner(ctx, user)
                 return
 
             await interaction.response.defer()
 
-            if level is not None and client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL:
-                records = await client.get_personal_bests_by_level(level)
-            elif (
-                difficulty is not None and client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-            ):
-                records = await client.get_personal_bests_by_difficulty(difficulty)
-            elif client.SUPPORTS_PERSONAL_BESTS:
-                records = await client.get_personal_bests()
-            else:
-                if (
-                    client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL
-                    and client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-                ):
-                    msg = "At least one of `level` or `difficulty` must be specified."
-                    exc = commands.BadArgument
-                elif client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL:
-                    msg = "Level must be specified."
-                    exc = commands.BadArgument
-                elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
-                    msg = "Difficulty must be specified."
-                    exc = commands.BadArgument
-                else:
-                    msg = f"Network {client.NAME} does not support fetching personal bests."
-                    exc = commands.CommandError
-
-                raise exc(msg)
-
-            if isinstance(client, ChunithmNet):
-                # hidden chart shenanigans
-                hidden_charts = await ctx.bot.database.charts.get_hidden_on_chuninet(
-                    level=level, difficulty=difficulty
+            try:
+                records = await client.get_personal_bests(
+                    level=level,
+                    difficulty=difficulty,
+                    genre=genre,
+                    rank=rank,
+                    version=version,  # pyright: ignore[reportArgumentType]
                 )
-                hidden_song_ids = {c.song_id for c in hidden_charts}
-                record_charts = {(r.extras[KEY_SONG_ID], r.difficulty) for r in records}
-
-                for song_id in hidden_song_ids:
-                    # get the records for the hidden chart's song id
-                    hidden_records = await client.get_personal_bests_on_song(song_id)
-
-                    # and insert it into our records, if a record is not already there
-                    records.extend(
-                        [
-                            r
-                            for r in hidden_records
-                            if (song_id, r.difficulty) not in record_charts
-                        ]
-                    )
-
-            records = await self.utils.process_records(
-                target_user_id, client.NAME, records
-            )
-
-            if difficulty is not None:
-                records = [r for r in records if r.difficulty == difficulty]
-            if rank is not None:
-                records = [r for r in records if r.rank == rank]
-            if level is not None:
-                records = [r for r in records if r.extras[KEY_LEVEL] == level]
-            if genre is not None:
-                records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
-            if version is not None:
-                records = [r for r in records if r.extras[KEY_SONG_VERSION] == version]
+            except ValueError as e:
+                raise commands.BadArgument(str(e)) from None
 
             if len(records) == 0:
                 await interaction.followup.send("No scores found.")
@@ -1620,9 +1203,9 @@ class RecordsCog(commands.Cog, name="Records"):
             records.sort(
                 reverse=sort_order != "ascending",
                 key=lambda x: (
-                    x.extras.get(KEY_PLAY_RATING),
+                    x.rating,
                     x.score,
-                    x.extras.get(KEY_OVERPOWER),
+                    x.overpower,
                     x.combo_lamp.value,
                     x.clear_lamp.value,
                 ),
@@ -1632,8 +1215,8 @@ class RecordsCog(commands.Cog, name="Records"):
                 reverse=sort_order != "ascending",
                 key=lambda x: (
                     x.score,
-                    x.extras.get(KEY_PLAY_RATING),
-                    x.extras.get(KEY_OVERPOWER),
+                    x.rating,
+                    x.overpower,
                     x.combo_lamp.value,
                     x.clear_lamp.value,
                 ),
@@ -1642,8 +1225,8 @@ class RecordsCog(commands.Cog, name="Records"):
             records.sort(
                 reverse=sort_order != "ascending",
                 key=lambda x: (
-                    x.extras.get(KEY_OVERPOWER),
-                    x.extras.get(KEY_PLAY_RATING),
+                    x.overpower,
+                    x.rating,
                     x.score,
                     x.combo_lamp.value,
                     x.clear_lamp.value,
@@ -1653,9 +1236,13 @@ class RecordsCog(commands.Cog, name="Records"):
             records.sort(
                 reverse=sort_order != "ascending",
                 key=lambda x: (
-                    x.extras[KEY_OVERPOWER] / x.extras[KEY_OVERPOWER_MAX],
-                    x.extras.get(KEY_OVERPOWER),
-                    x.extras.get(KEY_PLAY_RATING),
+                    (
+                        Decimal(0)
+                        if x.chart.max_overpower is None
+                        else ((x.overpower or Decimal(0)) / x.chart.max_overpower)
+                    ),
+                    x.overpower,
+                    x.rating,
                     x.score,
                     x.combo_lamp.value,
                     x.clear_lamp.value,
@@ -1666,9 +1253,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 reverse=sort_order != "ascending",
                 key=lambda x: (
                     x.combo_lamp.value,
-                    x.extras.get(KEY_PLAY_RATING),
+                    x.rating,
                     x.score,
-                    x.extras.get(KEY_OVERPOWER),
+                    x.overpower,
                     x.clear_lamp.value,
                 ),
             )
@@ -1677,9 +1264,9 @@ class RecordsCog(commands.Cog, name="Records"):
                 reverse=sort_order != "ascending",
                 key=lambda x: (
                     x.clear_lamp.value,
-                    x.extras.get(KEY_PLAY_RATING),
+                    x.rating,
                     x.score,
-                    x.extras.get(KEY_OVERPOWER),
+                    x.overpower,
                     x.combo_lamp.value,
                 ),
             )
@@ -1692,9 +1279,9 @@ class RecordsCog(commands.Cog, name="Records"):
                         if x.judgements is not None and x.clear_lamp != ClearLamp.failed
                         else math.inf
                     ),
-                    x.extras.get(KEY_PLAY_RATING),
+                    x.rating,
                     x.score,
-                    x.extras.get(KEY_OVERPOWER),
+                    x.overpower,
                     x.combo_lamp.value,
                     x.clear_lamp.value,
                 ),
@@ -1799,11 +1386,12 @@ class RecordsCog(commands.Cog, name="Records"):
             ) as client,
         ):
             if (
-                not client.SUPPORTS_PERSONAL_BESTS
+                isinstance(client, ChunithmNetAdapter)
                 and level is None
                 and difficulty is None
                 and genre is None
                 and rank is None
+                and version is None
             ):
                 if not ctx.bot_permissions.attach_files:
                     raise commands.BotMissingPermissions(["attach_files"])
@@ -1822,74 +1410,21 @@ class RecordsCog(commands.Cog, name="Records"):
                 level_folder = level_data.level
                 internal_level = level_data.const
 
-            if level_folder is not None and client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL:
-                records = await client.get_personal_bests_by_level(level_folder)
-            elif (
-                difficulty is not None and client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-            ):
-                records = await client.get_personal_bests_by_difficulty(difficulty)
-            elif client.SUPPORTS_PERSONAL_BESTS:
-                records = await client.get_personal_bests()
-            else:
-                if (
-                    client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL
-                    and client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY
-                ):
-                    msg = "At least one of `level` or `difficulty` must be specified."
-                    exc = commands.BadArgument
-                elif client.SUPPORTS_PERSONAL_BESTS_BY_LEVEL:
-                    msg = "Level must be specified."
-                    exc = commands.BadArgument
-                elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
-                    msg = "Difficulty must be specified."
-                    exc = commands.BadArgument
-                else:
-                    msg = f"Network {client.NAME} does not support fetching personal bests."
-                    exc = commands.CommandError
-
-                raise exc(msg)
-
-            if isinstance(client, ChunithmNet):
-                # hidden chart shenanigans
-                hidden_charts = await ctx.bot.database.charts.get_hidden_on_chuninet(
-                    level=level, difficulty=difficulty
+            try:
+                records = await client.get_personal_bests(
+                    level=level_folder,
+                    difficulty=difficulty,
+                    genre=genre,
+                    rank=rank,
+                    version=version,
                 )
-                hidden_song_ids = {c.song_id for c in hidden_charts}
-                record_charts = {(r.extras[KEY_SONG_ID], r.difficulty) for r in records}
+            except ValueError as e:
+                raise commands.BadArgument(str(e)) from None
 
-                for song_id in hidden_song_ids:
-                    # get the records for the hidden chart's song id
-                    hidden_records = await client.get_personal_bests_on_song(song_id)
-
-                    # and insert it into our records, if a record is not already there
-                    records.extend(
-                        [
-                            r
-                            for r in hidden_records
-                            if (song_id, r.difficulty) not in record_charts
-                        ]
-                    )
-
-            records = await self.utils.process_records(
-                target_user_id, client.NAME, records
-            )
-
-            if difficulty is not None:
-                records = [r for r in records if r.difficulty == difficulty]
-            if rank is not None:
-                records = [r for r in records if r.rank == rank]
-            if level_folder is not None:
-                records = [r for r in records if r.extras[KEY_LEVEL] == level_folder]
             if internal_level is not None:
                 records = [
-                    r
-                    for r in records
-                    if r.extras.get(KEY_INTERNAL_LEVEL) == internal_level
+                    r for r in records if r.chart.internal_level == internal_level
                 ]
-            if genre is not None:
-                records = [r for r in records if r.extras[KEY_SONG_GENRE] == genre]
-            if version is not None:
-                records = [r for r in records if r.extras[KEY_SONG_VERSION] == version]
 
             if len(records) == 0:
                 await ctx.reply("No scores found.", mention_author=False)
@@ -1904,22 +1439,16 @@ class RecordsCog(commands.Cog, name="Records"):
                     if item.startswith("score"):
                         sort_fn = lambda score: score.score
                     elif item.startswith("rating"):
-                        sort_fn = lambda score: score.extras.get(
-                            KEY_PLAY_RATING, Decimal(0)
-                        )
+                        sort_fn = lambda score: score.rating or Decimal(0)
                     elif item.startswith(("op_percent", "overpower_percent")):
                         sort_fn = lambda score: (
-                            score.extras[KEY_OVERPOWER]
-                            / score.extras[KEY_OVERPOWER_MAX]
-                            * 100
-                            if KEY_OVERPOWER in score.extras
-                            and KEY_OVERPOWER_MAX in score.extras
+                            score.overpower / score.chart.max_overpower * 100
+                            if score.overpower is not None
+                            and score.chart.max_overpower is not None
                             else Decimal(0)
                         )
                     elif item.startswith(("op", "overpower")):
-                        sort_fn = lambda score: score.extras.get(
-                            KEY_OVERPOWER, Decimal(0)
-                        )
+                        sort_fn = lambda score: score.overpower or Decimal(0)
                     elif item.startswith(("note_lamp", "notelamp")):
                         sort_fn = lambda score: score.combo_lamp.value
                     elif item.startswith(("clear_lamp", "clearlamp")):
@@ -1957,7 +1486,7 @@ class RecordsCog(commands.Cog, name="Records"):
             # fallback metrics
             sort_fns.extend(
                 [
-                    lambda score: Reversor(score.extras.get(KEY_PLAY_RATING)),
+                    lambda score: Reversor(score.rating),
                     lambda score: Reversor(score.score),
                     lambda score: (
                         score.judgements.justice
@@ -1969,7 +1498,7 @@ class RecordsCog(commands.Cog, name="Records"):
                         and score.clear_lamp != ClearLamp.failed
                     )
                     else math.inf,
-                    lambda score: Reversor(score.extras.get(KEY_OVERPOWER)),
+                    lambda score: Reversor(score.overpower),
                     lambda score: Reversor(score.combo_lamp.value),
                     lambda score: Reversor(score.clear_lamp.value),
                 ]
@@ -2025,7 +1554,7 @@ class RecordsCog(commands.Cog, name="Records"):
         ):  # determine the network based on the user
             try:
                 async with ctx.bot.chunithm_networks.network(ctx) as client:
-                    kamaitachi = isinstance(client, Kamaitachi)
+                    kamaitachi = isinstance(client, KamaitachiAdapter)
             except commands.CommandError:
                 kamaitachi = False
 
@@ -2033,10 +1562,6 @@ class RecordsCog(commands.Cog, name="Records"):
             ctx.typing(),
             ctx.bot.chunithm_networks.bot_network(kamaitachi=kamaitachi) as client,
         ):
-            if not client.SUPPORTS_CHART_LEADERBOARD:
-                msg = f"Network {client.NAME} does not support viewing chart leaderboards."
-                raise commands.CommandError(msg)
-
             chart = await ctx.find_chart(
                 difficulty, query_str, "Select a chart to see leaderboard for:"
             )
@@ -2044,7 +1569,7 @@ class RecordsCog(commands.Cog, name="Records"):
             if chart is None:
                 return
 
-            if isinstance(client, ChunithmNet):
+            if isinstance(client, ChunithmNetAdapter):
                 chart.song.raise_if_not_available()
 
             try:
@@ -2253,7 +1778,9 @@ class RecordsCog(commands.Cog, name="Records"):
                     client_name = client.NAME
             except (NetworkError, commands.CommandError):
                 username = ctx.author.display_name
-                client_name = Kamaitachi.NAME if kamaitachi else ChunithmNet.NAME
+                client_name = (
+                    KamaitachiAdapter.NAME if kamaitachi else ChunithmNetAdapter.NAME
+                )
 
             async with self.bot.begin_db_read() as session:
                 pb_query = (
@@ -2278,11 +1805,11 @@ class RecordsCog(commands.Cog, name="Records"):
                     .where(Chart.song_id.not_in([50, 81]))  # basic and master tutorials
                 )
 
-                if client_name == ChunithmNet.NAME:
+                if client_name == ChunithmNetAdapter.NAME:
                     cond = (Song.available == True) & (Chart.available == True)  # noqa: E712
                     pb_query = pb_query.where(cond)
                     chart_query = chart_query.where(cond)
-                elif client_name == Kamaitachi.NAME:
+                elif client_name == KamaitachiAdapter.NAME:
                     if not omnimix:
                         cond = Song.removed == False  # noqa: E712
                         pb_query = pb_query.where(cond)
@@ -2445,9 +1972,13 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     pb_op_by_song[chart.song_id] = max(
                         pb_op_by_song.get(chart.song_id, Decimal(0)),
-                        calculate_play_overpower(
-                            calculate_overpower_base(pb.score, chart.const),
-                            pb_combo_lamp,
+                        (
+                            Decimal(pb.overpower) / 1000
+                            if pb.overpower is not None
+                            else calculate_play_overpower(
+                                calculate_overpower_base(pb.score, chart.const),
+                                pb_combo_lamp,
+                            )
                         ),
                     )
 
@@ -2715,54 +2246,24 @@ class RecordsCog(commands.Cog, name="Records"):
         ):
             profile = await client.get_minimal_profile()
 
-            if client.SUPPORTS_RECENT_SCORES:
-                await ctx.respond_or_edit(
-                    f"Fetching recent scores from {client.NAME}..."
-                )
+            await ctx.respond_or_edit(f"Fetching recent scores from {client.NAME}...")
 
-                recents = await client.get_recent_scores()
+            recents = await client.get_recent_scores()
 
-                if client.SUPPORTS_DETAILED_RECENT_SCORE:
-                    detailed_recents: list[RecentScore] = []
-
-                    for recent in recents:
-                        detailed_recents.append(
-                            await client.get_detailed_recent_score(recent)
+            if client.SUPPORTS_DETAILED_RECENT_SCORE:
+                for i, recent in enumerate(recents):
+                    if (i + 1) % 10 == 0 or (i + 1) == len(recents):
+                        await ctx.respond_or_edit(
+                            f"Fetching recent scores from {client.NAME}... {i + 1}/{len(recents)}"
                         )
 
-                        if len(detailed_recents) % 10 == 0 or len(
-                            detailed_recents
-                        ) == len(recents):
-                            await ctx.respond_or_edit(
-                                f"Fetching recent scores from {client.NAME}... {len(detailed_recents)}/{len(recents)}"
-                            )
+                    # Side effect: also processes scores
+                    _ = await client.get_detailed_recent_score(recent)
 
-                    await self.utils.process_records(
-                        target_id, client.NAME, detailed_recents
-                    )
-                else:
-                    await self.utils.process_records(target_id, client.NAME, recents)
+            await ctx.respond_or_edit(f"Fetching personal bests from {client.NAME}...")
 
-            if client.SUPPORTS_PERSONAL_BESTS:
-                await ctx.respond_or_edit(
-                    f"Fetching personal bests from {client.NAME}..."
-                )
-                await self.utils.process_records(
-                    target_id, client.NAME, await client.get_personal_bests()
-                )
-            elif client.SUPPORTS_PERSONAL_BESTS_BY_DIFFICULTY:
-                for d in Difficulty:
-                    await ctx.respond_or_edit(
-                        f"Fetching {d} personal bests from {client.NAME}..."
-                    )
-                    await self.utils.process_records(
-                        target_id,
-                        client.NAME,
-                        await client.get_personal_bests_by_difficulty(d),
-                    )
-            else:
-                msg = f"Network {client.NAME} does not support retrieving personal bests quickly."
-                raise commands.CommandError(msg)
+            # Side effect: fetches PBs and puts them into the database
+            _ = await client.get_all_personal_bests()
 
         await ctx.respond_or_edit(
             f"Successfully synced {client.NAME} scores for {escape_markdown(profile.username)}."

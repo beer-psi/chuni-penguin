@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from .collections import Title, UserAvatar
-from .enums import SkillClass
+from .rating import RatingSystem
 from .team import Team
 
 try:
@@ -33,35 +33,25 @@ class Possession(Enum):
                 return 0x0B6FF3
 
 
+class SkillClass(Enum):
+    i = 1
+    ii = 2
+    iii = 3
+    iv = 4
+    v = 5
+    infinite = 6
+
+    def __str__(self):
+        if self == SkillClass.infinite:
+            return "∞"
+
+        return self.name.upper()
+
+
 @dataclass(slots=True)
 class Currency:
     owned: int
     total: int
-
-
-@dataclass(slots=True, kw_only=True)
-class RatingSystem:
-    """
-    A rating system.
-    """
-
-    name: str
-    """
-    The rating system's name. Networks should return a recognizable value when possible:
-    - "Rating" for the current CHUNITHM version's rating system (currently best30 + new20)
-    - "NaiveRating" for a simple best50 average
-    - "ClassicRating" for old rating system (best30 + recent10)
-    """
-
-    value: float
-    """
-    The user's rating in the specified rating system.
-    """
-
-    max_value: float | None = None
-    """
-    The user's peak rating in the specified rating system.
-    """
 
 
 @dataclass(slots=True, kw_only=True)

@@ -10,8 +10,8 @@ from sqlalchemy.orm import joinedload
 
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
-from chuni_penguin.networks.types import Difficulty
-from chuni_penguin.utils import get_jacket_url, yt_search_link
+from chuni_penguin.types import Difficulty
+from chuni_penguin.utils import get_jacket_url, sdvxin_link, yt_search_link
 
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
@@ -101,7 +101,7 @@ class SongInfoEmbed(discord.Embed):
 
         for chart in charts:
             url = (
-                chart.sdvxin_chart_view.url
+                sdvxin_link(chart.sdvxin_chart_view)
                 if chart.sdvxin_chart_view is not None
                 else yt_search_link(song.title, chart.difficulty)
             )

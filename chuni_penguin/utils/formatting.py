@@ -6,8 +6,7 @@ from zoneinfo import ZoneInfo
 import httpx
 from discord.utils import escape_markdown
 
-from chuni_penguin.networks.chunithm_net import INTERNATIONAL_JACKET_BASE, JACKET_BASE
-from chuni_penguin.networks.types import Difficulty
+from chuni_penguin.constants import INTERNATIONAL_JACKET_BASE, JACKET_BASE
 
 if TYPE_CHECKING:
     from chuni_penguin.database import Alias, SdvxinChartView, Song
@@ -34,6 +33,8 @@ def did_you_mean_text(
 
 
 def yt_search_link(title: str, difficulty: str) -> str:
+    from chuni_penguin.types import Difficulty
+
     try:
         diff = Difficulty(difficulty)
         difficulty = str(diff)

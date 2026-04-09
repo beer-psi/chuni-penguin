@@ -1,13 +1,15 @@
 from math import floor
+from typing import TYPE_CHECKING
 
-from chuni_penguin.networks.types import Judgements, Rank
+if TYPE_CHECKING:
+    from chuni_penguin.types import Judgements, Rank
 
 ONE_ATTACK_IN_JUSTICE = 51
 ONE_MISS_IN_JUSTICE = 101
 ONE_MISS_IN_ATTACK = 2
 
 
-def calculate_border(notecount: int) -> dict[str | Rank, Judgements]:
+def calculate_border(notecount: int) -> "dict[str | Rank, Judgements]":
     # "tolerance" is the number of justices you can have without falling
     # below this score, assuming it's an AJ.
     #
@@ -89,6 +91,8 @@ def calculate_border(notecount: int) -> dict[str | Rank, Judgements]:
     border_jcrit_ss = notecount - border_jus_ss - border_atk_ss - border_miss_ss
     border_jcrit_sp = notecount - border_jus_sp - border_atk_sp - border_miss_sp
     border_jcrit_s = notecount - border_jus_s - border_atk_s - border_miss_s
+
+    from chuni_penguin.types import Judgements, Rank
 
     return {
         "99AJ": Judgements(

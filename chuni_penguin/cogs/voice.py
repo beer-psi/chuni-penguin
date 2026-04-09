@@ -24,7 +24,7 @@ from chuni_penguin.converters import (
 )
 from chuni_penguin.database import Chart, Song
 from chuni_penguin.logging import logged_prefix_command
-from chuni_penguin.networks.types import Genre
+from chuni_penguin.types import Genre
 from chuni_penguin.utils import AsyncRWLockMapping, get_jacket_url
 
 if TYPE_CHECKING:

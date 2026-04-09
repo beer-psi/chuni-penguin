@@ -5,14 +5,13 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord.ext.commands import Context
 
-from chuni_penguin.networks.consts import KEY_PLAY_RATING
 from chuni_penguin.utils import floor_to_ndp
 
 from ._pagination import PaginationView
 from .b30 import B30PageSource
 
 if TYPE_CHECKING:
-    from chuni_penguin.networks.types import Score
+    from chuni_penguin.types import Score
 
 
 class B30N20View(PaginationView):
@@ -44,10 +43,10 @@ class B30N20View(PaginationView):
         self.add_item(self.show_new20)
 
         self.best30_total: Decimal = sum(
-            (item.extras[KEY_PLAY_RATING] for item in b30), Decimal(0)
+            (item.rating or Decimal(0) for item in b30), Decimal(0)
         )
         self.new20_total: Decimal = sum(
-            (item.extras[KEY_PLAY_RATING] for item in n20), Decimal(0)
+            (item.rating or Decimal(0) for item in n20), Decimal(0)
         )
 
         if len(b30) > 0:

@@ -21,7 +21,7 @@ from chuni_penguin.converters import (
 from chuni_penguin.database import GuessScore
 from chuni_penguin.flags import DiscordArguments
 from chuni_penguin.logging import logged_prefix_command
-from chuni_penguin.networks.types import Difficulty, Genre
+from chuni_penguin.types import Difficulty, Genre
 from chuni_penguin.utils import AsyncRWLockMapping, shlex_split
 
 from ._session import GuessingGameSession, GuessingGameType

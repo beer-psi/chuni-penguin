@@ -11,16 +11,16 @@ from discord.ext import commands
 from discord.utils import MISSING, escape_markdown, format_dt
 from PIL import Image
 
+from chuni_penguin.adapters.chunithm_net.errors import ChuniNetError
+from chuni_penguin.adapters.errors import AlreadyFriends, InvalidFriendCode
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.networks.chunithm_net.exceptions import ChuniNetError
-from chuni_penguin.networks.errors import AlreadyFriends, InvalidFriendCode
-from chuni_penguin.networks.types import TeamEmblem
+from chuni_penguin.types import TeamEmblem
 
 from ._base import MessageKwargs, PenguinView
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
-    from chuni_penguin.networks.types import Profile
+    from chuni_penguin.types import Profile
 
 
 async def handle_add_friend_interaction(
@@ -240,7 +240,7 @@ class ProfileView(PenguinView):
             description_lines.append(f"▸ **Level**: {level}")
 
         for rating_system in self.profile.rating_systems:
-            content = f"▸ **{escape_markdown(rating_system.name)}**: {round(rating_system.value, 2):.2f}"
+            content = f"▸ **{escape_markdown(str(rating_system.type))}**: {round(rating_system.value, 2):.2f}"
 
             if rating_system.max_value is not None:
                 content += f" (MAX {rating_system.max_value})"

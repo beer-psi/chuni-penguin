@@ -16,7 +16,7 @@ from sqlalchemy.orm import joinedload
 
 from chuni_penguin.constants import SIMILARITY_THRESHOLD
 from chuni_penguin.database import Alias, Chart, Song, UserConfig
-from chuni_penguin.networks.types import Difficulty
+from chuni_penguin.types import Difficulty
 from chuni_penguin.utils import did_you_mean_text
 
 if TYPE_CHECKING:

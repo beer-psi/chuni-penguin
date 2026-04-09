@@ -27,7 +27,7 @@ from chuni_penguin.calculation import (
     calculate_score_for_rating,
 )
 from chuni_penguin.config import config
-from chuni_penguin.constants import MAX_DIFFICULTY
+from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION, MAX_DIFFICULTY
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
@@ -38,8 +38,7 @@ from chuni_penguin.converters import (
 )
 from chuni_penguin.database import Chart, PersonalBest, Song
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
-from chuni_penguin.networks.consts import KEY_PLAY_RATING
-from chuni_penguin.networks.types import ComboLamp, Difficulty, Rank
+from chuni_penguin.types import ComboLamp, Difficulty, Rank
 from chuni_penguin.ui import ChartCardEmbed
 from chuni_penguin.utils import (
     floor_to_ndp,
@@ -616,32 +615,32 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         async with ctx.typing():
             if target_rating is None:
-                async with ctx.bot.chunithm_networks.network(ctx) as client:
-                    if client.SUPPORTS_BEST30:
-                        # TODO: should ideally have separate recommendations for b30 and n20?
-                        records = await self.utils.process_records(
-                            ctx.author.id, client.NAME, await client.get_best30()
+                async with (
+                    self.bot.begin_db_read() as session,
+                    ctx.bot.chunithm_networks.network(ctx) as client,
+                ):
+                    naive_best50 = (
+                        select(PersonalBest.rating)
+                        .where(
+                            (PersonalBest.discord_id == ctx.author.id)
+                            & (PersonalBest.network == client.NAME)
+                            & (PersonalBest.rating.is_not(None))
                         )
+                        .order_by(PersonalBest.rating.desc())
+                        .limit(50)
+                    ).subquery()
 
-                        # get the song with the lowest rating in b30
-                        min_rating = min(
-                            (item.extras[KEY_PLAY_RATING] for item in records),
-                            default=Decimal(0),
-                        )
-                        # set target rating to be 0.05 above the song with lowest rating in b30
-                        target_rating = float(min_rating) + 0.05
-                    else:
-                        profile = await client.get_profile()
+                    target_rating = (
+                        await session.execute(func.avg(naive_best50.c.rating))
+                    ).scalar_one_or_none()
 
-                        try:
-                            target_rating = next(
-                                s.value
-                                for s in profile.rating_systems
-                                if s.name == client.DEFAULT_RATING_SYSTEM
-                            )
-                        except StopIteration:
-                            msg = "Cannot make recommendations without rating data. Try specifying target rating manually."
-                            raise commands.CommandError(msg) from None
+                    target_rating = (
+                        int(target_rating) / 100 if target_rating is not None else None
+                    )
+
+            if target_rating is None:
+                msg = "There isn't enough data to give you recommendations. Please try using other score features, or specify a target rating."
+                raise commands.CommandError(msg)
 
             # set minimum target rating to 1 to prevent funny things from happening
             if target_rating is None or target_rating < 1:
@@ -760,122 +759,143 @@ class ToolsCog(commands.Cog, name="Tools"):
                     )
                     return
 
-            async with ctx.bot.chunithm_networks.network(ctx) as client:
-                if client.SUPPORTS_BEST30 and client.SUPPORTS_NEW20:
-                    records = await self.utils.process_records(
-                        ctx.author.id, client.NAME, await client.get_best30()
-                    )
-                    new_records = await self.utils.process_records(
-                        ctx.author.id, client.NAME, await client.get_new20()
-                    )
-
-                    # check the number of songs in b30
-                    record_count = len(records)
-                    # check the number of songs in n20
-                    new_record_count = len(new_records)
-
-                    # get the song with lowest rating in b30
-                    min_rating = min(
-                        (item.extras[KEY_PLAY_RATING] for item in records),
-                        default=Decimal(0),
-                    )
-                    # get the song with lowest rating in n20
-                    new_min_rating = min(
-                        (item.extras[KEY_PLAY_RATING] for item in new_records),
-                        default=Decimal(0),
-                    )
-
-                    # calculate raw rating
-                    total_rating = sum(
-                        (item.extras[KEY_PLAY_RATING] for item in records),
-                        start=Decimal(0),
-                    )
-                    new_total_rating = sum(
-                        (item.extras[KEY_PLAY_RATING] for item in new_records),
-                        start=Decimal(0),
-                    )
-                    overall_average = floor_to_ndp(
-                        (total_rating + new_total_rating) / 50, 4
-                    )
-
-                    if current_play_rating is not None:
-                        rating_increase = Decimal(
-                            (play_rating - current_play_rating) / 50
+            async with (
+                self.bot.begin_db_read() as session,
+                ctx.bot.chunithm_networks.network(ctx) as client,
+            ):
+                naive_best50 = list(
+                    (
+                        await session.execute(
+                            select(PersonalBest)
+                            .where(
+                                (PersonalBest.discord_id == ctx.author.id)
+                                & (PersonalBest.network == client.NAME)
+                            )
+                            .where(PersonalBest.rating.is_not(None))
+                            .order_by(PersonalBest.rating.desc())
+                            .limit(50)
                         )
-                        updated_rating = overall_average + rating_increase
-                        res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
-                        res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
-                    else:
-                        res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
-
-                        # calculation in case of old chart
-                        rating_increase = max(
-                            (Decimal(play_rating) - min_rating) / 50, 0
-                        )
-                        if record_count < 30:
-                            rating_increase = Decimal(play_rating) / 50
-                        updated_rating = overall_average + rating_increase
-                        res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is an old chart"
-                        if record_count == 30 and rating_increase > 0:
-                            res += f", replacing a {min_rating:.2f} rating play"
-
-                        # calculation in case of new chart
-                        rating_increase = max(
-                            (Decimal(play_rating) - new_min_rating) / 50, 0
-                        )
-                        if new_record_count < 20:
-                            rating_increase = Decimal(play_rating) / 50
-                        updated_rating = overall_average + rating_increase
-                        res += f"\n- Rating: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f}) if this is a new chart"
-                        if new_record_count == 20 and rating_increase > 0:
-                            res += f", replacing a {new_min_rating:.2f} rating play"
-
-                    await ctx.reply(res, mention_author=False)
-                elif client.SUPPORTS_BEST_RATINGS:
-                    records = await client.get_best_ratings()
-                    records = await self.utils.process_records(
-                        ctx.author.id, client.NAME, records
                     )
-                    records = records[:50]
-                    record_count = len(records)
-
-                    # get the song with lowest rating in b50
-                    min_rating = min(
-                        (item.extras[KEY_PLAY_RATING] for item in records),
-                        default=Decimal(0),
-                    )
-
-                    # calculate raw NaiveRating
-                    total_rating = sum(
-                        (item.extras[KEY_PLAY_RATING] for item in records),
-                        start=Decimal(0),
-                    )
-                    overall_average = floor_to_ndp(total_rating / 50, 4)
-
-                    if current_play_rating is not None:
-                        rating_increase = Decimal(
-                            (play_rating - current_play_rating) / 50
+                    .scalars()
+                    .all()
+                )
+                best30 = list(
+                    (
+                        await session.execute(
+                            select(PersonalBest)
+                            .join(Song, PersonalBest.song_id == Song.id)
+                            .where(
+                                (PersonalBest.discord_id == ctx.author.id)
+                                & (PersonalBest.network == client.NAME)
+                                & (Song.version != CURRENT_CHUNITHM_VERSION)
+                            )
+                            .where(PersonalBest.rating.is_not(None))
+                            .order_by(PersonalBest.rating.desc())
+                            .limit(30)
                         )
-                        updated_rating = overall_average + rating_increase
-                        res = f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:"
-                        res += f"\n- {client.DEFAULT_RATING_SYSTEM}: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
-                    else:
-                        res = f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:"
-
-                        rating_increase = max(
-                            (Decimal(play_rating) - min_rating) / 50, 0
+                    )
+                    .scalars()
+                    .unique()
+                )
+                new20 = list(
+                    (
+                        await session.execute(
+                            select(PersonalBest)
+                            .join(Song, PersonalBest.song_id == Song.id)
+                            .where(
+                                (PersonalBest.discord_id == ctx.author.id)
+                                & (PersonalBest.network == client.NAME)
+                                & (Song.version == CURRENT_CHUNITHM_VERSION)
+                            )
+                            .where(PersonalBest.rating.is_not(None))
+                            .order_by(PersonalBest.rating.desc())
+                            .limit(20)
                         )
-                        if record_count < 50:
-                            rating_increase = Decimal(play_rating) / 50
-                        updated_rating = overall_average + rating_increase
-                        res += f"\n- {client.DEFAULT_RATING_SYSTEM}: **+{rating_increase:.4f}** ({overall_average:.4f} → {updated_rating:.4f})"
-                        if record_count == 50 and rating_increase > 0:
-                            res += f", replacing a {min_rating:.2f} rating play"
+                    )
+                    .scalars()
+                    .unique()
+                )
 
-                    await ctx.reply(res, mention_author=False)
-                else:
-                    msg = f"Network {client.NAME} does not support fetching rating breakdown."
-                    raise commands.CommandError(msg)
+            ingame_rating = floor_to_ndp(
+                Decimal(
+                    sum(pb.rating or 0 for pb in best30)
+                    + sum(pb.rating or 0 for pb in new20)
+                )
+                / 50
+                / 100,  # database rating is x100
+                4,
+            )
+            naive_rating = floor_to_ndp(
+                Decimal(sum(pb.rating or 0 for pb in naive_best50)) / 50 / 100, 4
+            )
+
+            if current_play_rating is not None:
+                rating_increase = (
+                    Decimal(play_rating) - Decimal(current_play_rating)
+                ) / 50
+                await ctx.respond_or_edit(
+                    content=(
+                        f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give **+{rating_increase:.4f}**:\n"
+                        f"- Rating: {ingame_rating:.4f} → {ingame_rating + rating_increase:.4f}\n"
+                        f"- NaiveRating: {naive_rating:.4f} → {naive_rating + rating_increase:.4f}"
+                    )
+                )
+                return
+
+            result: list[str] = [
+                f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:\n"
+            ]
+
+            gain = Decimal(0)
+            replacing = None
+
+            if len(best30) < 30:
+                gain = floor_to_ndp(Decimal(play_rating) / 50, 4)
+            else:
+                replacing = Decimal(best30[-1].rating or 0) / 100
+                gain = max((Decimal(play_rating) - replacing) / 50, Decimal(0))
+
+            result.append(
+                f"- Rating: **+{gain:.4f}** ({ingame_rating:.4f} → {ingame_rating + gain:.4f}) if this is an old chart"
+            )
+
+            if gain > 0 and replacing is not None:
+                result.append(f", replacing a {replacing:.2f} rating play")
+
+            result.append("\n")
+
+            gain = Decimal(0)
+            replacing = None
+
+            if len(new20) < 20:
+                gain = floor_to_ndp(Decimal(play_rating) / 50, 4)
+            else:
+                replacing = Decimal(new20[-1].rating or 0) / 100
+                gain = max((Decimal(play_rating) - replacing) / 50, Decimal(0))
+
+            result.append(
+                f"- Rating: **+{gain:.4f}** ({ingame_rating:.4f} → {ingame_rating + gain:.4f}) if this is a new chart"
+            )
+
+            if gain > 0 and replacing is not None:
+                result.append(f", replacing a {replacing:.2f} rating play")
+
+            result.append("\n")
+
+            gain = Decimal(0)
+            replacing = None
+
+            if len(naive_best50) < 50:
+                gain = floor_to_ndp(Decimal(play_rating) / 50, 4)
+            else:
+                replacing = Decimal(naive_best50[-1].rating or 0) / 100
+                gain = max((Decimal(play_rating) - replacing) / 50, Decimal(0))
+
+            result.append(
+                f"- NaiveRating: **+{gain:.4f}** ({naive_rating:.4f} → {naive_rating + gain:.4f})\n"
+            )
+
+            await ctx.respond_or_edit("".join(result))
 
     async def song_title_autocomplete(
         self, interaction: discord.Interaction, current: str

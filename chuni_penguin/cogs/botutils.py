@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, Optional, Sequence, TypeVar
+from decimal import Decimal
+from typing import TYPE_CHECKING, Literal, Optional, TypeVar
 
 import msgspec
 from discord.ext import commands
@@ -8,28 +9,11 @@ from rapidfuzz import fuzz, process
 from sqlalchemy import select, update
 from sqlalchemy.orm import contains_eager, joinedload
 
-from chuni_penguin.calculation import (
-    calculate_overpower_base,
-    calculate_overpower_max,
-    calculate_play_overpower,
-    calculate_rating,
-)
+from chuni_penguin.adapters.utils import hydrate_records
 from chuni_penguin.config import config
 from chuni_penguin.database import Alias, Chart, Cookie, Song, UserConfig
 from chuni_penguin.database import PersonalBest as DBPersonalBest
-from chuni_penguin.logging import logger
-from chuni_penguin.networks.consts import (
-    KEY_INTERNAL_LEVEL,
-    KEY_LEVEL,
-    KEY_OVERPOWER,
-    KEY_OVERPOWER_MAX,
-    KEY_PLAY_RATING,
-    KEY_SONG_GENRE,
-    KEY_SONG_ID,
-    KEY_SONG_VERSION,
-    KEY_TOTAL_COMBO,
-)
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     ChainLamp,
     ClearLamp,
     ComboLamp,
@@ -39,7 +23,9 @@ from chuni_penguin.networks.types import (
     Rank,
     Score,
 )
-from chuni_penguin.networks.types import PersonalBest as NetworkPersonalBest
+from chuni_penguin.types import Chart as NetworkChart
+from chuni_penguin.types import PersonalBest as NetworkPersonalBest
+from chuni_penguin.types import Song as NetworkSong
 from chuni_penguin.utils import get_jacket_url
 
 if TYPE_CHECKING:
@@ -201,220 +187,6 @@ class UtilsCog(commands.Cog, name="Utils"):
 
         return cookie.cookie
 
-    async def hydrate_records(self, records: Sequence[T]) -> list[T]:
-        song_ids = set()
-        jackets = set()
-        titles = set()
-
-        for record in records:
-            song_id = record.extras.get(KEY_SONG_ID)
-
-            if song_id is not None:
-                if song_id == 723:
-                    # sega revived an old song under a different ID for whatever reason, and people have scores on both of them.
-                    # we only have scores on ID 808 though. this is quite a bodge.
-                    song_id = 808
-                    record.extras[KEY_SONG_ID] = 808
-
-                song_ids.add(song_id)
-            elif record.jacket_url is not None:
-                jackets.add(record.jacket_url.split("/")[-1])
-            else:
-                titles.add(record.title)
-
-        async with self.bot.begin_db_read() as session:
-            stmt = (
-                select(Song)
-                .where(
-                    Song.id.in_(song_ids)
-                    | Song.jacket.in_(jackets)
-                    # Not resolving WE charts on title since there can be multiple
-                    # of them and I'm not dealing with that shit
-                    | ((Song.id < 8000) & Song.title.in_(titles))
-                )
-                .options(joinedload(Song.charts))
-            )
-            songs = (await session.execute(stmt)).scalars().unique()
-
-        song_lookup: dict[int | str, Song] = {}
-
-        for song in songs:
-            song_lookup[song.id] = song
-            song_lookup[song.title] = song
-
-            if song.jacket is not None:
-                song_lookup[song.jacket] = song
-
-        hydrated_records = []
-
-        for record in records[:]:
-            song_id = record.extras.get(KEY_SONG_ID)
-
-            if song_id is not None:
-                song = song_lookup.get(song_id)
-            elif record.jacket_url is not None:
-                song = song_lookup.get(record.jacket_url.split("/")[-1])
-            else:
-                song = song_lookup.get(record.title)
-
-            if song is None:
-                await logger.awarning(
-                    "Missing song data",
-                    tag="missing_song_data",
-                    title=record.title,
-                )
-                hydrated_records.append(record)
-                continue
-
-            if song_id is None:
-                record.extras[KEY_SONG_ID] = song.id
-
-            if KEY_SONG_VERSION not in record.extras:
-                record.extras[KEY_SONG_VERSION] = song.version
-
-            if not record.title:
-                record.title = song.title
-
-            if record.jacket_url is None:
-                record.jacket_url = get_jacket_url(song)
-
-            chart = next(
-                (c for c in song.charts if c.difficulty == record.difficulty.short()),
-                None,
-            )
-
-            if chart is None:
-                await logger.awarning(
-                    "Missing chart data",
-                    tag="missing_chart_data",
-                    song_id=song.id,
-                    difficulty=record.difficulty,
-                )
-                hydrated_records.append(record)
-                continue
-
-            if KEY_LEVEL not in record.extras:
-                record.extras[KEY_LEVEL] = chart.level
-
-            if (internal_level := record.extras.get(KEY_INTERNAL_LEVEL)) is None:
-                if chart.const is None:
-                    try:
-                        internal_level = record.extras[KEY_INTERNAL_LEVEL] = float(
-                            chart.level.replace("+", ".5")
-                        )
-                    except ValueError:
-                        internal_level = record.extras[KEY_INTERNAL_LEVEL] = 0
-                else:
-                    internal_level = record.extras[KEY_INTERNAL_LEVEL] = chart.const
-
-            if KEY_PLAY_RATING not in record.extras:
-                record.extras[KEY_PLAY_RATING] = calculate_rating(
-                    record.score, internal_level
-                )
-
-            if KEY_OVERPOWER not in record.extras:
-                record.extras[KEY_OVERPOWER] = calculate_play_overpower(
-                    calculate_overpower_base(record.score, internal_level),
-                    record.combo_lamp,
-                )
-
-            if KEY_OVERPOWER_MAX not in record.extras:
-                record.extras[KEY_OVERPOWER_MAX] = calculate_overpower_max(
-                    internal_level
-                )
-
-            if KEY_SONG_GENRE not in record.extras:
-                record.extras[KEY_SONG_GENRE] = Genre(song.chunithm_catcode)
-
-            # Hydrate maxcombo and judgement data when possible.
-            if chart.maxcombo is not None:
-                if KEY_TOTAL_COMBO not in record.extras:
-                    record.extras[KEY_TOTAL_COMBO] = chart.maxcombo
-
-                if record.max_combo is None and record.combo_lamp in (
-                    ComboLamp.full_combo,
-                    ComboLamp.all_justice,
-                    ComboLamp.all_justice_critical,
-                ):
-                    record.max_combo = chart.maxcombo
-
-                if record.judgements is None:
-                    if record.combo_lamp == ComboLamp.all_justice_critical:
-                        record.judgements = Judgements(
-                            justice_critical=chart.maxcombo, justice=0, attack=0, miss=0
-                        )
-                    elif record.combo_lamp == ComboLamp.all_justice:
-                        # (notecount * 101) - ((notecount * 101) * score / 1010000)
-                        justice = int(chart.maxcombo * (1010000 - record.score) / 10000)
-                        record.judgements = Judgements(
-                            justice_critical=chart.maxcombo - justice,
-                            justice=justice,
-                            attack=0,
-                            miss=0,
-                        )
-
-            hydrated_records.append(record)
-
-        return hydrated_records
-
-    async def process_record(self, discord_id: int, network: str, record: T) -> T:
-        return (await self.process_records(discord_id, network, [record]))[0]
-
-    async def process_records(
-        self, discord_id: int, network: str, records: Sequence[T]
-    ) -> list[T]:
-        hydrated_records = await self.hydrate_records(records)
-        db_records = await self.bot.database.personal_bests.upsert_personal_bests(
-            discord_id, network, hydrated_records
-        )
-        db_records_by_chart = {(r.song_id, r.difficulty): r for r in db_records}
-
-        # Annotate hydrated records with PB stored in database when applicable.
-        # The returned DB records are better than or equal to the records we're trying
-        # to hydrate, since they're personal bests.
-        for record in hydrated_records:
-            try:
-                db_record = db_records_by_chart[
-                    (record.extras[KEY_SONG_ID], record.difficulty.short())
-                ]
-            except KeyError:
-                continue
-
-            # Only annotate data if the record has the same score as the stored PB.
-            if record.score != db_record.score:
-                continue
-
-            if (
-                record.judgements is None
-                and db_record.justice_critical is not None
-                and db_record.justice is not None
-                and db_record.attack is not None
-                and db_record.miss is not None
-            ):
-                record.judgements = Judgements(
-                    justice_critical=db_record.justice_critical,
-                    justice=db_record.justice,
-                    attack=db_record.attack,
-                    miss=db_record.miss,
-                )
-
-            if record.achieved_at is None and db_record.achieved_at is not None:
-                record.achieved_at = db_record.achieved_at
-
-            if record.clear_lamp is None:
-                record.clear_lamp = ClearLamp(db_record.clear_lamp)
-
-            if record.combo_lamp is None:
-                record.combo_lamp = ComboLamp(db_record.combo_lamp)
-
-            if record.chain_lamp is None and db_record.chain_lamp is not None:
-                record.chain_lamp = ChainLamp(db_record.chain_lamp)
-
-            if record.max_combo is None and db_record.max_combo is not None:
-                record.max_combo = db_record.max_combo
-
-        return hydrated_records
-
     async def find_song(
         self,
         query: str,
@@ -548,16 +320,30 @@ class UtilsCog(commands.Cog, name="Utils"):
             )
             chart = (await session.execute(query)).scalar_one()
 
-        pb = NetworkPersonalBest(
+        network_song = NetworkSong(
+            id=chart.song.id,
             title=chart.song.title,
-            difficulty=Difficulty(chart.difficulty),
-            score=db_pb.score,
+            version=chart.song.version,
+            genre=Genre(chart.song.chunithm_catcode),
             jacket_url=get_jacket_url(chart.song),
+        )
+        network_chart = NetworkChart(
+            difficulty=Difficulty(chart.difficulty),
+            level=chart.level,
+            internal_level=chart.const,
+            max_combo=chart.maxcombo,
+        )
+        pb = NetworkPersonalBest(
+            song=network_song,
+            chart=network_chart,
+            score=db_pb.score,
             rank=Rank.from_score(db_pb.score),
             clear_lamp=ClearLamp(db_pb.clear_lamp),
             combo_lamp=ComboLamp(db_pb.combo_lamp),
             chain_lamp=(
-                ChainLamp(db_pb.chain_lamp) if db_pb.chain_lamp is not None else None
+                ChainLamp(db_pb.chain_lamp)
+                if db_pb.chain_lamp is not None
+                else ChainLamp.none
             ),
             achieved_at=db_pb.achieved_at,
             max_combo=db_pb.max_combo,
@@ -574,10 +360,12 @@ class UtilsCog(commands.Cog, name="Utils"):
                 and db_pb.miss is not None
                 else None
             ),
+            rating=Decimal(db_pb.rating) / 100 if db_pb.rating is not None else None,
+            overpower=(
+                Decimal(db_pb.overpower) / 1000 if db_pb.overpower is not None else None
+            ),
         )
-        pb.extras[KEY_SONG_ID] = db_pb.song_id
-
-        return (await self.hydrate_records([pb]))[0]
+        return (await hydrate_records(self.bot.database, [pb]))[0]
 
 
 async def setup(bot: "ChuniBot"):

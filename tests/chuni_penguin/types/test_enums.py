@@ -1,6 +1,6 @@
 import pytest
 
-from chuni_penguin.networks.types.enums import (
+from chuni_penguin.types import (
     ClearLamp,
     Difficulty,
     Rank,

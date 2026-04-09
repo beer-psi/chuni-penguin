@@ -12,7 +12,7 @@ from chuni_penguin.config import config
 from chuni_penguin.context import PenguinGuildContext
 from chuni_penguin.converters import Level, LevelRange, LevelRangeConverter
 from chuni_penguin.database import GuessScore
-from chuni_penguin.networks.types import Difficulty, Genre
+from chuni_penguin.types import Difficulty, Genre
 
 from ._pagination import ListPageSource, PaginationView
 

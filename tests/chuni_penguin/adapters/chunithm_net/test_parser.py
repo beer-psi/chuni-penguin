@@ -7,7 +7,7 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 from selectolax.lexbor import LexborHTMLParser, LexborNode
 
-from chuni_penguin.networks.chunithm_net.parser import (
+from chuni_penguin.adapters.chunithm_net.parser import (
     parse_collection_customize,
     parse_course_list,
     parse_detailed_recent_record,
@@ -21,8 +21,7 @@ from chuni_penguin.networks.chunithm_net.parser import (
     parse_player_card_and_avatar,
     parse_player_data,
 )
-from chuni_penguin.networks.consts import KEY_SONG_ID
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     ClearLamp,
     ComboLamp,
     CourseClass,
@@ -32,7 +31,8 @@ from chuni_penguin.networks.types import (
     LinkLevel,
     Possession,
     Rank,
-    Rarity,
+    RatingType,
+    TitleRarity,
 )
 
 BASE_DIR = Path(__file__).parent
@@ -137,7 +137,7 @@ def test_parse_player_card_and_avatar(benchmark: BenchmarkFixture):
     assert user_data.over_power.value == pytest.approx(4878.18)
     assert user_data.over_power.percentage == pytest.approx(5.68)
 
-    assert user_data.rating_systems[0].name == "Rating"
+    assert user_data.rating_systems[0].type == RatingType.in_game
     assert user_data.rating_systems[0].value == pytest.approx(15.10)
 
     assert user_data.emblem is None
@@ -163,9 +163,9 @@ def test_parse_player_data(benchmark: BenchmarkFixture):
 
     assert len(user_data.titles) == 2
     assert user_data.titles[0].content == "ネコぱら"
-    assert user_data.titles[0].rarity == Rarity.silver
+    assert user_data.titles[0].rarity == TitleRarity.silver
     assert user_data.titles[1].content == "SPIRIT of PARADISE LOST"
-    assert user_data.titles[1].rarity == Rarity.version1
+    assert user_data.titles[1].rarity == TitleRarity.version1
 
     assert user_data.user_avatar is not None
     assert (
@@ -241,7 +241,7 @@ def test_parse_player_data(benchmark: BenchmarkFixture):
     assert user_data.over_power.value == pytest.approx(4878.18)
     assert user_data.over_power.percentage == pytest.approx(5.68)
 
-    assert user_data.rating_systems[0].name == "Rating"
+    assert user_data.rating_systems[0].type == RatingType.in_game
     assert user_data.rating_systems[0].value == pytest.approx(15.10)
 
     assert user_data.currency is not None
@@ -261,10 +261,10 @@ def test_parse_detailed_recent_record(benchmark: BenchmarkFixture):
         parse_detailed_recent_record,
     )
 
-    assert record.extras.get(KEY_SONG_ID) == 317
+    assert record.song.id == 317
 
-    assert record.title == "Air"
-    assert record.difficulty == Difficulty.master
+    assert record.song.title == "Air"
+    assert record.chart.difficulty == Difficulty.master
     assert record.score == 950592
 
     assert record.rank == Rank.aaa
@@ -272,7 +272,7 @@ def test_parse_detailed_recent_record(benchmark: BenchmarkFixture):
     assert record.combo_lamp == ComboLamp.none
 
     assert (
-        record.jacket_url
+        record.song.jacket_url
         == "https://chunithm-net-eng.com/mobile/img/db15d5b7aefaa672.jpg"
     )
 
@@ -324,14 +324,12 @@ def test_parse_music_record(benchmark: BenchmarkFixture):
 
     assert len(records) == 2
 
-    assert (
-        records[0].extras.get(KEY_SONG_ID) == records[1].extras.get(KEY_SONG_ID) == 428
-    )
+    assert records[0].song.id == records[1].song.id == 428
 
-    assert records[0].title == records[1].title == "Aleph-0"
+    assert records[0].song.title == records[1].song.title == "Aleph-0"
 
-    assert records[0].difficulty == Difficulty.expert
-    assert records[1].difficulty == Difficulty.master
+    assert records[0].chart.difficulty == Difficulty.expert
+    assert records[1].chart.difficulty == Difficulty.master
 
     assert records[0].score == 1005037
     assert records[1].score == 988818
@@ -345,8 +343,8 @@ def test_parse_music_record(benchmark: BenchmarkFixture):
     assert records[1].combo_lamp == ComboLamp.none
 
     assert (
-        records[0].jacket_url
-        == records[1].jacket_url
+        records[0].song.jacket_url
+        == records[1].song.jacket_url
         == "https://chunithm-net-eng.com/mobile/img/986a1c6047f3033e.jpg"
     )
 
@@ -363,10 +361,10 @@ def test_parse_music_for_rating(benchmark: BenchmarkFixture):
     assert records is not None
     assert len(records) == 34
 
-    assert records[0].extras.get(KEY_SONG_ID) == 2184
-    assert records[0].title == "ENDYMION"
+    assert records[0].song.id == 2184
+    assert records[0].song.title == "ENDYMION"
     assert records[0].score == 992633
-    assert records[0].difficulty == Difficulty.expert
+    assert records[0].chart.difficulty == Difficulty.expert
 
     assert records[0].rank == Rank.sp
     assert records[0].clear_lamp == ClearLamp.clear
@@ -438,10 +436,10 @@ def test_parse_collections_customise(benchmark: BenchmarkFixture):
         collections.titles[0].content
         == "Phosphoribosylaminoimidazolesuccinocarboxamide"
     )
-    assert collections.titles[0].rarity == Rarity.platinum
+    assert collections.titles[0].rarity == TitleRarity.platinum
 
     assert collections.titles[1].content == "Should be burning in hell."
-    assert collections.titles[1].rarity == Rarity.silver
+    assert collections.titles[1].rarity == TitleRarity.silver
 
     assert (
         collections.nameplate
@@ -565,6 +563,6 @@ def test_parse_friend_vs(benchmark: BenchmarkFixture):
         parse_friend_vs,
     )
 
-    assert pbs[0].title == "きゅびずむ"
+    assert pbs[0].song.title == "きゅびずむ"
     assert pbs[0].score == 1_009_943
     assert pbs[0].combo_lamp == ComboLamp.all_justice

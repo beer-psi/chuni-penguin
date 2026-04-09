@@ -9,12 +9,7 @@ from typing import IO, TYPE_CHECKING, Any
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from chuni_penguin.constants import ASSETS_DIR, CACHE_DIR
-from chuni_penguin.networks.consts import (
-    KEY_INTERNAL_LEVEL,
-    KEY_PLAY_RATING,
-    KEY_SONG_ID,
-)
-from chuni_penguin.networks.types import ComboLamp, Score
+from chuni_penguin.types import ComboLamp, Score
 from chuni_penguin.utils import floor_to_ndp
 
 if TYPE_CHECKING:
@@ -309,7 +304,7 @@ def _render_b30_entry(
     user_config: "UserConfig | None" = None,
 ):
     # get the jacket
-    song_id = record.extras[KEY_SONG_ID]
+    song_id = record.song.id
     jacket_basename = f"{song_id}"
 
     if song_id == 2698 and user_config is not None:
@@ -320,7 +315,9 @@ def _render_b30_entry(
 
     jacket_path = ASSETS_DIR / "jackets" / f"{jacket_basename}.webp"
     prerendered_path = (
-        ASSETS_DIR / "jackets" / f"{jacket_basename}_{record.difficulty.value}.webp"
+        ASSETS_DIR
+        / "jackets"
+        / f"{jacket_basename}_{record.chart.difficulty.value}.webp"
     )
 
     if prerendered_path.exists():
@@ -329,7 +326,7 @@ def _render_b30_entry(
     else:
         # draw the base image based on the difficulty
         b30_base_image_path = (
-            ASSETS_DIR / "b50" / f"b50_base_{record.difficulty.value}.webp"
+            ASSETS_DIR / "b50" / f"b50_base_{record.chart.difficulty.value}.webp"
         )
 
         with Image.open(b30_base_image_path) as b30_base_image, closing(b30_base_image):
@@ -354,7 +351,7 @@ def _render_b30_entry(
     b30_draw = ImageDraw.Draw(b30_image)
 
     # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
-    title = record.title
+    title = record.song.title
     title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
 
     while title_length > B30_ENTRY_WIDTH - 25:
@@ -364,11 +361,11 @@ def _render_b30_entry(
     # draw the title
     b30_draw.text(
         (x + 10, y),
-        title + ("..." if title != record.title else ""),
+        title + ("..." if title != record.song.title else ""),
         fill="#FFFFFF",
         font=(
             NOTO_SANS_JP_32_BOLD
-            if record.extras[KEY_SONG_ID] != 2831  # Street - χρόνος
+            if record.song.id != 2831  # Street - χρόνος
             else NOTO_SANS_32_BOLD
         ),
     )
@@ -461,14 +458,14 @@ def _render_b30_entry(
     # draw the internal level
     b30_draw.text(
         (x + 132, y + 128),
-        f"{record.extras.get(KEY_INTERNAL_LEVEL):.1f}",
+        f"{record.chart.internal_level:.1f}",
         fill="#FFFFFF",
         font=NOTO_SANS_JP_28_MEDIUM,
     )
 
     # draw the rating value
     rating_text_length = b30_draw.textlength(
-        f"{record.extras.get(KEY_PLAY_RATING):.2f}", NOTO_SANS_JP_40_BOLD
+        f"{record.rating:.2f}", NOTO_SANS_JP_40_BOLD
     )
     rating_value_color = "#FFFFFF"
 
@@ -477,7 +474,7 @@ def _render_b30_entry(
 
     b30_draw.text(
         (x + B30_ENTRY_WIDTH - 10 - rating_text_length, y + 118),
-        f"{record.extras.get(KEY_PLAY_RATING):.2f}",
+        f"{record.rating:.2f}",
         fill=rating_value_color,
         font=NOTO_SANS_JP_40_BOLD,
     )
@@ -524,7 +521,7 @@ def render_b30(
 
     # get rating values
     total_rating = sum(
-        (item.extras[KEY_PLAY_RATING] for item in records), start=Decimal(0)
+        (item.rating or Decimal(0) for item in records), start=Decimal(0)
     )
     average = floor_to_ndp(total_rating / record_slots, 4)
     new_average = 0
@@ -535,7 +532,7 @@ def render_b30(
         final_rating = floor_to_ndp(average, 2)
     else:
         new_total_rating = sum(
-            (item.extras[KEY_PLAY_RATING] for item in new_records), start=Decimal(0)
+            (item.rating or Decimal(0) for item in new_records), start=Decimal(0)
         )
         new_average = floor_to_ndp(
             new_total_rating / new_record_slots,

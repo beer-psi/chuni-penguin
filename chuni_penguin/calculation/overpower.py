@@ -1,10 +1,13 @@
 import decimal
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from chuni_penguin.networks.types import ComboLamp
 from chuni_penguin.utils import floor_to_ndp
 
 from .rating import calculate_whole_rating
+
+if TYPE_CHECKING:
+    from chuni_penguin.types import ComboLamp
 
 FC_OVERPOWER_BONUS = Decimal("0.5")
 AJ_OVERPOWER_BONUS = Decimal("0.5")
@@ -34,7 +37,11 @@ def calculate_overpower_max(internal_level: float) -> Decimal:
     return Decimal(str(internal_level)) * 5 + 15
 
 
-def calculate_play_overpower(overpower_base: Decimal, combo_lamp: ComboLamp) -> Decimal:
+def calculate_play_overpower(
+    overpower_base: Decimal, combo_lamp: "ComboLamp"
+) -> Decimal:
+    from chuni_penguin.types import ComboLamp
+
     play_overpower = overpower_base
 
     if combo_lamp in (

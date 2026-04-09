@@ -10,12 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
 from chuni_penguin.config import config
-from chuni_penguin.constants import ASSETS_DIR
+from chuni_penguin.constants import ASSETS_DIR, INTERNATIONAL_JACKET_BASE, JACKET_BASE
 from chuni_penguin.database import Song, SongJacket
-from chuni_penguin.networks.chunithm_net import (
-    INTERNATIONAL_JACKET_BASE,
-    JACKET_BASE,
-)
 
 from .chunirec import ChunithmOfficialSong, MaimaiOfficialSong
 

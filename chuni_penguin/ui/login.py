@@ -10,8 +10,8 @@ from discord.abc import MISSING
 from discord.ext.commands import Context
 from discord.utils import escape_markdown
 
+from chuni_penguin.adapters.chunithm_net._hooks import _AUTHENTICATION_URL
 from chuni_penguin.logging import logger
-from chuni_penguin.networks.chunithm_net._hooks import _AUTHENTICATION_URL
 
 from ._pagination import FormatPageReturn, PaginationView
 from .embeds import EmbedPageSource

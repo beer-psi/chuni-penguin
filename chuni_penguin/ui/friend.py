@@ -6,7 +6,7 @@ from discord.ext.commands.core import hooked_wrapped_callback
 from discord.utils import MISSING, escape_markdown
 
 from chuni_penguin.context import PenguinContext
-from chuni_penguin.networks.types import Profile
+from chuni_penguin.types import Profile
 
 from ._base import MessageKwargs, PenguinView
 

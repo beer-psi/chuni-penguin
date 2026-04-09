@@ -2,16 +2,7 @@ import discord
 from discord.utils import escape_markdown
 
 from chuni_penguin.config import config
-from chuni_penguin.networks.consts import (
-    KEY_INTERNAL_LEVEL,
-    KEY_LEVEL,
-    KEY_OVERPOWER,
-    KEY_OVERPOWER_MAX,
-    KEY_PLAY_RATING,
-    KEY_SONG_ID,
-    KEY_TOTAL_COMBO,
-)
-from chuni_penguin.networks.types import (
+from chuni_penguin.types import (
     ChainLamp,
     ClearLamp,
     ComboLamp,
@@ -33,11 +24,11 @@ class ScoreCardEmbed(discord.Embed):
         synthesis_alt_jacket: str | None = None,
         detailed: bool = False,
     ):
-        super().__init__(color=record.difficulty.color())
+        super().__init__(color=record.chart.difficulty.color())
 
-        self.set_thumbnail(url=record.jacket_url)
+        self.set_thumbnail(url=record.song.jacket_url)
 
-        if record.extras.get(KEY_SONG_ID) == 2698:
+        if record.song.id == 2698:
             if synthesis_alt_jacket == "none":
                 self.set_thumbnail(url=None)
             elif synthesis_alt_jacket != "default" and config.web.serve_assets:
@@ -72,20 +63,23 @@ class ScoreCardEmbed(discord.Embed):
             score_data = f"▸ {config.icons.rank_icon(record.rank)} ▸ {record.score}"
 
         footer_sections = []
-        if play_rating := record.extras.get(KEY_PLAY_RATING):
-            play_overpower = record.extras[KEY_OVERPOWER]
-            overpower_max = record.extras[KEY_OVERPOWER_MAX]
+        if (
+            record.chart.difficulty != Difficulty.worlds_end
+            and (play_rating := record.rating) is not None
+        ):
+            if show_lamps:
+                footer_sections.append(f"Rating: {floor_to_ndp(play_rating, 2)}")
+            else:
+                score_data += f" ▸ **{floor_to_ndp(play_rating, 2)}**"
+
+        if (
+            record.chart.difficulty != Difficulty.worlds_end
+            and (play_overpower := record.overpower) is not None
+            and (overpower_max := record.chart.max_overpower) is not None
+        ):
             play_op_display = f"{play_overpower} ({floor_to_ndp(play_overpower / overpower_max * 100, 2)}%)"
 
-            footer_sections = []
-            if record.difficulty != Difficulty.worlds_end:
-                if show_lamps:
-                    footer_sections.append(f"Rating: {floor_to_ndp(play_rating, 2)}")
-                else:
-                    score_data += f" ▸ **{floor_to_ndp(play_rating, 2)}**"
-
-            if record.difficulty != Difficulty.worlds_end:
-                footer_sections.append(f"OP: {play_op_display}")
+            footer_sections.append(f"OP: {play_op_display}")
 
         if isinstance(record, PersonalBest) and record.play_count is not None:
             footer_sections.append(
@@ -97,7 +91,7 @@ class ScoreCardEmbed(discord.Embed):
         if isinstance(record, PersonalBest) and record.ajc_count is not None:
             score_data += f"\n▸ AJC count: {record.ajc_count}"
 
-        total_combo = record.extras.get(KEY_TOTAL_COMBO)
+        total_combo = record.chart.max_combo
 
         if record.max_combo is not None and record.max_combo >= 0:
             score_data += (
@@ -178,12 +172,12 @@ class ScoreCardEmbed(discord.Embed):
                 self.set_author(name=f"TRACK {record.track_no}")
 
             self.description = (
-                f"**{escape_markdown(record.title)} [{_displayed_difficulty(record)}]**\n"
+                f"**{escape_markdown(record.song.title)} [{_displayed_difficulty(record)}]**\n"
                 "\n"
                 f"{score_data}"
             )
         else:
-            name = f"{record.title} [{_displayed_difficulty(record)}]"
+            name = f"{record.song.title} [{_displayed_difficulty(record)}]"
             if index is not None:
                 name = f"{index}. {name}"
 
@@ -192,9 +186,9 @@ class ScoreCardEmbed(discord.Embed):
 
 
 def _displayed_difficulty(record: Score) -> str:
-    difficulty = record.difficulty
-    level = record.extras.get(KEY_LEVEL)
-    internal_level = record.extras.get(KEY_INTERNAL_LEVEL)
+    difficulty = record.chart.difficulty
+    level = record.chart.level
+    internal_level = record.chart.internal_level
 
     if internal_level:
         return f"{difficulty} {internal_level}"

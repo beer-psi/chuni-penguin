@@ -6,15 +6,20 @@ from pathlib import Path
 
 import alembic.command
 from alembic.config import Config
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     async_sessionmaker,
     create_async_engine,
 )
 
+from chuni_penguin.calculation import calculate_overpower_base, calculate_play_overpower
+from chuni_penguin.calculation.rating import calculate_whole_rating
 from chuni_penguin.config import GitSeedsConfig, LocalSeedsConfig, config
+from chuni_penguin.database import Chart, PersonalBest
 from chuni_penguin.database.base import Base
 from chuni_penguin.logging import logger
+from chuni_penguin.types import ComboLamp
 from chuni_penguin.utils import get_loop_factory
 
 from .aliases import update_aliases
@@ -109,6 +114,8 @@ async def main():
     seeds_backsync_parser.add_argument("--git-auth-username", default=None)
     seeds_backsync_parser.add_argument("--git-auth-password", default=None)
 
+    subparsers.add_parser("recalc", help="Performs a recalc of all personal bests")
+
     args = parser.parse_args()
 
     engine: AsyncEngine = create_async_engine(
@@ -199,6 +206,42 @@ async def main():
                     git_auth_username=args.git_auth_username,
                     git_auth_password=args.git_auth_password,
                 )
+
+    if args.command == "recalc":
+        sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+
+        async with sessionmaker() as session, session.begin():
+            query = select(func.count()).select_from(PersonalBest)
+            count = (await session.execute(query)).scalar_one()
+
+            logger.info("performing recalc", count=count)
+
+            query = select(PersonalBest, Chart.const).join(
+                Chart,
+                (Chart.song_id == PersonalBest.song_id)
+                & (Chart.difficulty == PersonalBest.difficulty),
+            )
+
+            for i, row in enumerate(await session.execute(query)):
+                pb, const = row
+
+                if const is None:
+                    pb.rating = None
+                    pb.overpower = None
+                else:
+                    pb.rating = calculate_whole_rating(pb.score, const) // 100
+                    pb.overpower = int(
+                        calculate_play_overpower(
+                            calculate_overpower_base(pb.score, const),
+                            ComboLamp(pb.combo_lamp),
+                        )
+                        * 1000
+                    )
+
+                session.add(pb)
+
+                if i % 10000 == 0:
+                    logger.debug("iterating over database", done=i, total=count)
 
     await engine.dispose()
 

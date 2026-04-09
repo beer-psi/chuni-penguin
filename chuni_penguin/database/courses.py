@@ -14,7 +14,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from chuni_penguin.networks.types import CourseClass
+from chuni_penguin.types import CourseClass
 
 from .base import Base
 from .songs import Chart
