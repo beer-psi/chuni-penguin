@@ -592,7 +592,7 @@ async def load_seeds(
             where=functools.reduce(
                 operator.or_,
                 [
-                    getattr(query.excluded, c.name) != getattr(Chart, c.name)
+                    getattr(query.excluded, c.name).is_not(getattr(Chart, c.name))
                     for c in Chart.__table__.columns
                     if c.name not in ("id", "song_id", "difficulty")
                 ],
