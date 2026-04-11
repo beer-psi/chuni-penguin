@@ -10,6 +10,9 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 
+permissions:
+  contents: "write"
+
 jobs:
   test-creating-db:
     runs-on: "ubuntu-latest"
