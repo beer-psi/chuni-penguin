@@ -1728,6 +1728,7 @@ class RecordsCog(commands.Cog, name="Records"):
             app_commands.Choice(name=x, value=x) for x in ChunithmVersion.__args__
         ],
     )
+    @logged_app_command
     async def statistics_slash(
         self,
         interaction: discord.Interaction["ChuniBot"],
@@ -2147,6 +2148,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("user", nargs=flags.OPTIONAL_INVISIBLE, default=None)
     @commands.cooldown(2, 60, commands.BucketType.user)
+    @logged_prefix_command
     async def sync(
         self,
         ctx: PenguinContext,
@@ -2186,6 +2188,7 @@ class RecordsCog(commands.Cog, name="Records"):
     )
     @app_commands.rename(friend_code="friend-code")
     @app_commands.checks.cooldown(2, 60)
+    @logged_app_command
     async def sync_slash(
         self,
         interaction: discord.Interaction["ChuniBot"],
@@ -2278,6 +2281,7 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
     @commands.group("ranking", invoke_without_command=True)
+    @logged_prefix_command
     async def ranking_prefix(self, ctx: PenguinContext):
         """
         View rankings for teams, rating, scores and currency.
@@ -2286,6 +2290,7 @@ class RecordsCog(commands.Cog, name="Records"):
         await ctx.send_help(ctx.command)
 
     @ranking_prefix.command("team")
+    @logged_prefix_command
     async def ranking_team_prefix(self, ctx: PenguinContext, month: str | None = None):
         """
         View team rankings.
@@ -2302,6 +2307,7 @@ class RecordsCog(commands.Cog, name="Records"):
     @flags.argument("-c", "--chunithm-net", action="store_true")
     @flags.argument("-k", "--kamaitachi", action="store_true")
     @flags.argument("type", nargs="?", default="global", choices=["friend", "global"])
+    @logged_prefix_command
     async def ranking_rating_prefix(
         self,
         ctx: PenguinContext,
@@ -2324,6 +2330,7 @@ class RecordsCog(commands.Cog, name="Records"):
         )
 
     @ranking_prefix.command("score")
+    @logged_prefix_command
     async def ranking_score_prefix(
         self,
         ctx: PenguinContext,
@@ -2343,6 +2350,7 @@ class RecordsCog(commands.Cog, name="Records"):
         await self._ranking_score_impl(ctx, type, difficulty)
 
     @ranking_prefix.command("currency", aliases=["memory", "point"])
+    @logged_prefix_command
     async def ranking_currency_prefix(
         self, ctx: PenguinContext, type: Literal["friend", "global"] = "global"
     ):
@@ -2364,6 +2372,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
     @ranking_slash.command(name="team", description="View team rankings.")
     @app_commands.describe(month="The month to view team rankings for (e.g. 2026/04).")
+    @logged_app_command
     async def ranking_team_slash(
         self, interaction: discord.Interaction["ChuniBot"], month: str | None = None
     ):
@@ -2384,6 +2393,7 @@ class RecordsCog(commands.Cog, name="Records"):
             app_commands.Choice(name="Friend", value="friend"),
         ]
     )
+    @logged_app_command
     async def ranking_rating_slash(
         self,
         interaction: discord.Interaction["ChuniBot"],
@@ -2416,6 +2426,7 @@ class RecordsCog(commands.Cog, name="Records"):
             app_commands.Choice(name="Friend", value="friend"),
         ],
     )
+    @logged_app_command
     async def ranking_score_slash(
         self,
         interaction: discord.Interaction["ChuniBot"],
@@ -2438,6 +2449,7 @@ class RecordsCog(commands.Cog, name="Records"):
             app_commands.Choice(name="Friend", value="friend"),
         ]
     )
+    @logged_app_command
     async def ranking_currency_slash(
         self,
         interaction: discord.Interaction["ChuniBot"],

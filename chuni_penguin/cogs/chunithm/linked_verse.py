@@ -12,6 +12,7 @@ from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import LinkedGateConverter
 from chuni_penguin.database import Alias, Chart, LinkedGateCondition, Song
 from chuni_penguin.database import LinkedGate as DBLinkedGate
+from chuni_penguin.logging import logged_prefix_command
 from chuni_penguin.types import (
     Difficulty,
     LinkedGate,
@@ -102,11 +103,13 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
         return db_gates[0]
 
     @commands.hybrid_group("linked-verse", aliases=["linkedverse", "lv"])
+    @logged_prefix_command
     async def linked_verse(self, ctx: PenguinContext):
         await ctx.send_help(ctx.command)
 
     @linked_verse.command("gate", aliases=["info"])
     @app_commands.describe(gate="The Linked GATE to view information for.")
+    @logged_prefix_command
     async def linked_verse_gate(
         self, ctx: PenguinContext, gate: Annotated[LinkedGate, LinkedGateConverter]
     ):
@@ -188,6 +191,7 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
     @app_commands.describe(
         user="The user to view the Linked GATE progress for. Yourself, if not specified."
     )
+    @logged_prefix_command
     async def linked_verse_progress(
         self, ctx: PenguinContext, user: discord.User | discord.Member | None = None
     ):
@@ -259,6 +263,7 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
 
     @linked_verse.command("leaderboard", aliases=["lb"])
     @app_commands.describe(gate="The Linked GATE to view the leaderboard for.")
+    @logged_prefix_command
     async def linked_verse_leaderboard(
         self, ctx: PenguinContext, gate: Annotated[LinkedGate, LinkedGateConverter]
     ):

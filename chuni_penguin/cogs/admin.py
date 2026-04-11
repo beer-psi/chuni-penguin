@@ -56,7 +56,7 @@ class AdminCog(commands.Cog, name="Admin", command_attrs={"hidden": True}):
 
         await ctx.respond_or_edit(f"Synced the tree to {ret}/{len(guilds)}.")
 
-    @commands.command("say")
+    @commands.command("say", extras={"invoke_on_edit": False})
     @commands.is_owner()
     async def say(
         self,
