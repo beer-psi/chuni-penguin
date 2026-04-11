@@ -1,16 +1,15 @@
 # ruff: noqa: RUF001
 
+import json
 import re
 from html import unescape
 
 import aiohttp
+import msgspec
 from selectolax.lexbor import LexborHTMLParser
-from sqlalchemy import select
-from sqlalchemy.dialects.sqlite import insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
-from chuni_penguin.database import Chart, SdvxinChartView, Song
+from .seeds import SEEDS_DIR, SeedsJSONEncoder
 
 WORLD_END_SDVXIN_REGEX = re.compile(
     r"document\.title\s*=\s*['\"](?P<title>.+?) \[WORLD'S END(?:\])?\s*(?P<difficulty>.+?)(?:\]\s*)?['\"]"
@@ -139,16 +138,16 @@ TITLE_MAPPING = {
 }
 
 
-async def update_sdvxin(
-    logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
-):
+async def update_sdvxin(logger: BoundLogger):
     # sdvx.in ID, song_id, difficulty
-    inserted_data: list[dict] = []
-    async with (
-        aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=600)) as client,
-        async_session() as session,
-        session.begin(),
-    ):
+    with (SEEDS_DIR / "songs.json").open("rb") as f:
+        songs = msgspec.json.decode(f.read())
+
+    songs_by_id = {s["id"]: s for s in songs}
+
+    async with aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(total=600)
+    ) as client:
         # standard categories
         for category in SDVXIN_CATEGORIES:
             logger.info(f"Processing category {category}")
@@ -186,18 +185,20 @@ async def update_sdvxin(
                         :5
                     ]  # TODO: dont assume the ID is always 5 digits
 
-                    stmt = select(Song)
-                    condition = Song.title == title
                     script_data = None
                     level = None
+
+                    logger.debug(
+                        "Finding chart", title=title, level=level, category=category
+                    )
 
                     if category == "end":
                         if sdvx_in_id == "01052":
                             # Invitation WE got revived under a different ID.
-                            condition = Song.id == 8306
+                            song = songs_by_id.get(8306)
                         elif sdvx_in_id == "01032":
                             # ナイト・オブ・ナイツ WE got revived under a different ID.
-                            condition = Song.id == 8309
+                            song = songs_by_id.get(8309)
                         else:
                             script_resp = await client.get(
                                 f"https://sdvx.in{script.attrs['src']}"
@@ -220,17 +221,28 @@ async def update_sdvxin(
                                 )
                                 continue
 
-                            stmt = stmt.join(Chart)
-                            condition &= (Song.id >= 8000) & (Chart.level == level)
+                            song = next(
+                                (
+                                    song
+                                    for song in songs
+                                    if song["title"] == title
+                                    and song["id"] >= 8000
+                                    and any(
+                                        c["difficulty"] == "WE" and c["level"] == level
+                                        for c in song["charts"]
+                                    )
+                                ),
+                                None,
+                            )
                     else:
-                        condition &= Song.id < 8000
-
-                    logger.debug(
-                        "Finding chart", title=title, level=level, category=category
-                    )
-
-                    stmt = stmt.where(condition)
-                    song = (await session.execute(stmt)).scalar_one_or_none()
+                        song = next(
+                            (
+                                song
+                                for song in songs
+                                if song["title"] == title and song["id"] < 8000
+                            ),
+                            None,
+                        )
 
                     if song is None:
                         if category == "end":
@@ -263,14 +275,25 @@ async def update_sdvxin(
                         if value_soup.css_first("a") is None:
                             continue
 
-                        inserted_data.append(
-                            {
-                                "id": sdvx_in_id,
-                                "song_id": song.id,
-                                "difficulty": level,
-                                "end_index": end_index,
-                            }
+                        chart = next(
+                            (c for c in song["charts"] if c["difficulty"] == level),
+                            None,
                         )
 
-        stmt = insert(SdvxinChartView).on_conflict_do_nothing()
-        await session.execute(stmt, inserted_data)
+                        if chart is not None:
+                            chart["sdvxin"] = {"id": sdvx_in_id, "end_index": end_index}
+                        else:
+                            logger.warning(
+                                "Could not find chart",
+                                song_id=song["id"],
+                                difficulty=level,
+                            )
+
+    with (SEEDS_DIR / "songs.json").open("w") as f:
+        json.dump(
+            songs,
+            f,
+            cls=SeedsJSONEncoder,
+            indent=4,
+            ensure_ascii=False,
+        )

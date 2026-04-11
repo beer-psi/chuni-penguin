@@ -1,6 +1,7 @@
 import concurrent.futures
 import csv
 import itertools
+import json
 import subprocess
 import traceback
 from pathlib import Path
@@ -9,21 +10,14 @@ from xml.etree import ElementTree
 
 import httpx
 import httpx_aiohttp
+import msgspec
 from PIL import Image
-from sqlalchemy import delete, func
-from sqlalchemy.dialects.sqlite import insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
 from chuni_penguin.constants import ASSETS_DIR
-from chuni_penguin.database import (
-    Chart,
-    Course,
-    CourseTrack,
-    Song,
-    course_track_charts,
-)
 from chuni_penguin.types import CourseClass, Difficulty
+
+from .seeds import SEEDS_DIR, SeedsJSONEncoder
 
 VERSIONS = [
     "CHUNITHM",
@@ -170,7 +164,6 @@ def extract_audio(song_id: int, cue_file: Path):
 
 async def merge_options(
     logger: BoundLogger,
-    async_session: async_sessionmaker[AsyncSession],
     data_dir: Path,
     option_dir: Optional[Path],
     *,
@@ -211,8 +204,15 @@ async def merge_options(
             course_paths, option_dir.glob("**/course/**/Course.xml")
         )
 
-    inserted_songs = []
-    inserted_charts = []
+    with (SEEDS_DIR / "songs.json").open("rb") as f:
+        existing_songs = msgspec.json.decode(f.read())
+
+    songs_by_id = {s["id"]: s for s in existing_songs}
+
+    with (SEEDS_DIR / "courses.json").open("rb") as f:
+        existing_courses = msgspec.json.decode(f.read())
+
+    courses_by_id = {c["id"]: c for c in existing_courses}
 
     with concurrent.futures.ProcessPoolExecutor() as pool:
         for xml_path in music_xml_paths:
@@ -300,23 +300,36 @@ async def merge_options(
 
             release_date = gettext(root, "./releaseDate")
 
-            inserted_song = {
-                "id": song_id_int,
-                "title": gettext(root, "./name/str"),
-                "chunithm_catcode": int(catcode),
-                "genre": genre,
-                "artist": gettext(root, "./artistName/str"),
-                "release": f"{release_date[:4]}-{release_date[4:6]}-{release_date[6:]}"
+            try:
+                song = songs_by_id[song_id_int]
+            except KeyError:
+                songs_by_id[song_id_int] = song = {}
+
+            song["id"] = song_id_int
+            song["chunirec_id"] = song.get("chunirec_id")
+            song["title"] = gettext(root, "./name/str")
+            song["wikiwiki_title"] = song.get("wikiwiki_title")
+            song["chunithm_catcode"] = int(catcode)
+            song["genre"] = genre
+            song["artist"] = gettext(root, "./artistName/str")
+            song["version"] = VERSIONS[int(release_tag_id)]
+            song["release"] = (
+                f"{release_date[:4]}-{release_date[4:6]}-{release_date[6:]}"
                 if release_date
-                else None,
-                "version": VERSIONS[int(release_tag_id)],
-                "bpm": None,
-                "min_bpm": None,
-                "max_bpm": None,
-                "jacket": jacket_by_id.get(song_id_int),
-                "available": gettext(root, "./disableFlag") != "true",
-                "removed": False,
-            }
+                else None
+            )
+            song["bpm"] = None
+            song["min_bpm"] = None
+            song["max_bpm"] = None
+            song["jacket"] = jacket_by_id.get(song_id_int)
+            song["available"] = gettext(root, "./disableFlag") != "true"
+            song["removed"] = False
+            song["is_hidden_on_chuninet"] = song.get("is_hidden_on_chuninet", False)
+            song["aliases"] = song.get("aliases", [])
+            song["charts"] = song.get("charts", [])
+            song["jackets"] = song.get("jackets", [])
+
+            charts_by_difficulty = {c["difficulty"]: c for c in song["charts"]}
 
             for idx, chart in enumerate(
                 root.findall("./fumens/MusicFumenData[enable='true']")
@@ -358,15 +371,29 @@ async def merge_options(
                     displayed_level = level_str + ("+" if level_decimal >= 50 else "")
                     const = float(f"{level_str}.{level_decimal_str}")
 
-                inserted_chart = {
-                    "song_id": song_id_int,
-                    "difficulty": "WE"
-                    if difficulty == "WORLD'S END"
-                    else difficulty[:3],
-                    "level": displayed_level,
-                    "const": const,
-                    "available": inserted_song["available"],
-                }
+                difficulty_short = (
+                    "WE" if difficulty == "WORLD'S END" else difficulty[:3]
+                )
+
+                try:
+                    chart = charts_by_difficulty[difficulty_short]
+                except KeyError:
+                    charts_by_difficulty[difficulty_short] = chart = {}
+
+                chart["difficulty"] = difficulty_short
+                chart["level"] = displayed_level
+                chart["const"] = const
+                chart["maxcombo"] = chart.get("maxcombo", 0)
+                chart["tap"] = chart.get("tap", 0)
+                chart["hold"] = chart.get("hold", 0)
+                chart["slide"] = chart.get("slide", 0)
+                chart["air"] = chart.get("air", 0)
+                chart["flick"] = chart.get("flick", 0)
+                chart["charter"] = chart.get("charter")
+                chart["version"] = chart.get("version")
+                chart["available"] = chart.get("available", song["available"])
+                chart["tachi_chart_id"] = chart.get("tachi_chart_id")
+                chart["sdvxin"] = chart.get("sdvxin")
 
                 with xml_path.with_name(chart_filename).open(encoding="utf-8") as f:
                     rd = csv.reader(f, delimiter="\t")
@@ -377,37 +404,37 @@ async def merge_options(
 
                         command = row[0]
 
-                        if command == "BPM_DEF" and inserted_song.get("bpm") is None:
-                            inserted_song["bpm"] = float(row[2])
+                        if command == "BPM_DEF" and song["bpm"] is None:
+                            bpm = float(row[2])
+
+                            if bpm.is_integer():
+                                bpm = int(bpm)
+
+                            song["bpm"] = bpm
                         if command == "BPM":
                             bpm = float(row[3])
 
-                            if (
-                                min_bpm := inserted_song.get("min_bpm")
-                            ) is None or bpm < min_bpm:
-                                inserted_song["min_bpm"] = bpm
-                            if (
-                                max_bpm := inserted_song.get("max_bpm")
-                            ) is None or bpm > max_bpm:
-                                inserted_song["max_bpm"] = bpm
+                            if bpm.is_integer():
+                                bpm = int(bpm)
+
+                            if song["min_bpm"] is None or bpm < song["min_bpm"]:
+                                song["min_bpm"] = bpm
+                            if song["max_bpm"] is None or bpm > song["max_bpm"]:
+                                song["max_bpm"] = bpm
                         elif command == "T_JUDGE_ALL":
-                            inserted_chart["maxcombo"] = int(row[1])
+                            chart["maxcombo"] = int(row[1])
                         elif command == "T_JUDGE_TAP":
-                            inserted_chart["tap"] = int(row[1])
+                            chart["tap"] = int(row[1])
                         elif command == "T_JUDGE_HLD":
-                            inserted_chart["hold"] = int(row[1])
+                            chart["hold"] = int(row[1])
                         elif command == "T_JUDGE_SLD":
-                            inserted_chart["slide"] = int(row[1])
+                            chart["slide"] = int(row[1])
                         elif command == "T_JUDGE_AIR":
-                            inserted_chart["air"] = int(row[1])
+                            chart["air"] = int(row[1])
                         elif command == "T_JUDGE_FLK":
-                            inserted_chart["flick"] = int(row[1])
+                            chart["flick"] = int(row[1])
                         elif command == "CREATOR":
-                            inserted_chart["charter"] = row[1]
-
-                inserted_charts.append(inserted_chart)
-
-            inserted_songs.append(inserted_song)
+                            chart["charter"] = row[1]
 
         if extract_audios:
             for cue_file_path in cue_file_paths:
@@ -440,9 +467,6 @@ async def merge_options(
 
         pool.shutdown(wait=True)
 
-    inserted_courses = []
-    inserted_course_tracks = []
-    inserted_course_track_charts = []
     course_rules = {}
 
     for course_rule_path in course_rule_paths:
@@ -551,16 +575,21 @@ async def merge_options(
 
         logger.debug("Reading course %s", course_id)
 
-        inserted_courses.append(
-            {
-                "id": course_id,
-                "cls": cls,
-                "name": name,
-                "version": version,
-                "is_duplicate_track_allowed": is_music_duplicate_allowed == "true",
-                **rule,
-            }
-        )
+        try:
+            course = courses_by_id[course_id]
+        except KeyError:
+            course = courses_by_id[course_id] = {}
+
+        course["id"] = course_id
+        course["cls"] = cls
+        course["name"] = name
+        course["version"] = version
+        course["is_duplicate_track_allowed"] = is_music_duplicate_allowed == "true"
+
+        for k, v in rule.items():
+            course[k] = v
+
+        course["tracks"] = []
 
         for i, info in enumerate(root.findall("./infos/CourseMusicDataInfo")):
             ty = gettext(info, "./type")
@@ -583,18 +612,19 @@ async def merge_options(
                     msg = f"CourseMusicDataInfo of type {ty} (from {course_path}) does not have a selectMusic set"
                     raise ValueError(msg)
 
-                inserted_course_tracks.append(
-                    {"course_id": course_id, "track": i + 1, "level": None}
-                )
-                inserted_course_track_charts.append(
+                course["tracks"].append(
                     {
-                        "course_id": course_id,
-                        "track": i + 1,
-                        "song_id": int(song_id),
-                        "difficulty": "WE"
-                        if difficulty == "WORLD'S END"
-                        else difficulty[:3],
-                    }
+                        "charts": [
+                            {
+                                "song_id": int(song_id),
+                                "difficulty": (
+                                    "WE"
+                                    if difficulty == "WORLD'S END"
+                                    else difficulty[:3]
+                                ),
+                            },
+                        ],
+                    },
                 )
             elif ty == 1:
                 level = gettext(info, "./selectLevel/fromLevel/data")
@@ -603,17 +633,9 @@ async def merge_options(
                     msg = f"CourseMusicDataInfo of type {ty} (from {course_path}) does not have a level set"
                     raise ValueError(msg)
 
-                inserted_course_tracks.append(
-                    {
-                        "course_id": course_id,
-                        "track": i + 1,
-                        "level": level[2:],  # Chop off the "Lv" prefix
-                    }
-                )
+                course["tracks"].append({"level": level[2:]})
             elif ty == 2:
-                inserted_course_tracks.append(
-                    {"course_id": course_id, "track": i + 1, "level": None}
-                )
+                track_charts = []
 
                 for music in info.findall(
                     "./selectMusicList/musicList/list/CourseMusicListSubData"
@@ -631,109 +653,34 @@ async def merge_options(
                         msg = f"CourseMusicListSubData of type {sub_ty} (from {course_path}) does not have a courseMusicData set"
                         raise ValueError(msg)
 
-                    inserted_course_track_charts.append(
+                    track_charts.append(
                         {
-                            "course_id": course_id,
-                            "track": i + 1,
                             "song_id": int(song_id),
-                            "difficulty": "WE"
-                            if difficulty == "WORLD'S END"
-                            else difficulty[:3],
+                            "difficulty": (
+                                "WE" if difficulty == "WORLD'S END" else difficulty[:3]
+                            ),
                         }
                     )
+
+                course["tracks"].append({"charts": track_charts})
             else:
                 msg = f"Invalid type {ty} for CourseMusicDataInfo"
                 raise ValueError(msg)
 
-    async with async_session() as session, session.begin():
-        logger.info(
-            "Upserting %d songs, %d charts, %d courses",
-            len(inserted_songs),
-            len(inserted_charts),
-            len(inserted_courses),
+    with (SEEDS_DIR / "songs.json").open("w") as f:
+        json.dump(
+            list(songs_by_id.values()),
+            f,
+            cls=SeedsJSONEncoder,
+            indent=4,
+            ensure_ascii=False,
         )
 
-        insert_stmt = insert(Song)
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=[Song.id],
-            set_={
-                "title": insert_stmt.excluded.title,
-                "chunithm_catcode": insert_stmt.excluded.chunithm_catcode,
-                "genre": insert_stmt.excluded.genre,
-                "artist": insert_stmt.excluded.artist,
-                "release": func.coalesce(insert_stmt.excluded.release, Song.release),
-                "version": insert_stmt.excluded.version,
-                "bpm": func.coalesce(insert_stmt.excluded.bpm, Song.bpm),
-                "min_bpm": func.coalesce(insert_stmt.excluded.min_bpm, Song.min_bpm),
-                "max_bpm": func.coalesce(insert_stmt.excluded.max_bpm, Song.max_bpm),
-                # also ignore jackets
-                "available": Song.available,
-                # also ignore removed state
-            },
+    with (SEEDS_DIR / "courses.json").open("w") as f:
+        json.dump(
+            list(courses_by_id.values()),
+            f,
+            cls=SeedsJSONEncoder,
+            indent=4,
+            ensure_ascii=False,
         )
-
-        await session.execute(upsert_stmt, inserted_songs)
-
-        insert_stmt = insert(Chart)
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=[Chart.song_id, Chart.difficulty],
-            set_={
-                "level": insert_stmt.excluded.level,
-                "const": insert_stmt.excluded.const,
-                "maxcombo": insert_stmt.excluded.maxcombo,
-                "tap": insert_stmt.excluded.tap,
-                "hold": insert_stmt.excluded.hold,
-                "slide": insert_stmt.excluded.slide,
-                "air": insert_stmt.excluded.air,
-                "flick": insert_stmt.excluded.flick,
-                "charter": insert_stmt.excluded.charter,
-            },
-        )
-
-        await session.execute(upsert_stmt, inserted_charts)
-
-        if len(inserted_courses) > 0:
-            insert_stmt = insert(Course)
-            upsert_stmt = insert_stmt.on_conflict_do_update(
-                index_elements=[Course.id],
-                set_={
-                    k: getattr(insert_stmt.excluded, k)
-                    for k in (
-                        "cls",
-                        "name",
-                        "version",
-                        "is_duplicate_track_allowed",
-                        "life",
-                        "recovery_life",
-                        "clear_life",
-                        "damage_miss",
-                        "damage_attack",
-                        "damage_justice",
-                        "damage_jcrit",
-                    )
-                },
-            )
-
-            await session.execute(upsert_stmt, inserted_courses)
-
-        if len(inserted_course_tracks) > 0:
-            insert_stmt = insert(CourseTrack)
-            upsert_stmt = insert_stmt.on_conflict_do_update(
-                index_elements=[CourseTrack.course_id, CourseTrack.track],
-                set_={
-                    "level": insert_stmt.excluded.level,
-                },
-            )
-
-            await session.execute(upsert_stmt, inserted_course_tracks)
-
-            await session.execute(
-                delete(course_track_charts).where(
-                    (course_track_charts.c.course_id + course_track_charts.c.track).in_(
-                        {c["course_id"] + c["track"] for c in inserted_course_tracks}
-                    )
-                )
-            )
-            await session.execute(
-                insert(course_track_charts), inserted_course_track_charts
-            )

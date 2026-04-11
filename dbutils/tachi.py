@@ -1,43 +1,51 @@
+import json
+
 import httpx
 import httpx_aiohttp
-from sqlalchemy import bindparam, update
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+import msgspec
 from structlog.stdlib import BoundLogger
 
-from chuni_penguin.database import Chart
+from .seeds import SEEDS_DIR, SeedsJSONEncoder
 
 
-async def update_tachi(
-    logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
-):
+async def update_tachi(logger: BoundLogger):
+    with (SEEDS_DIR / "songs.json").open("rb") as f:
+        songs = msgspec.json.decode(f.read())
+
+    charts_by_id_difficulty = {}
+
+    for song in songs:
+        mapping = charts_by_id_difficulty[song["id"]] = {}
+
+        for chart in song["charts"]:
+            mapping[chart["difficulty"]] = chart
+
     async with httpx.AsyncClient(
         transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
     ) as client:
         resp = await client.get(
             "https://raw.githubusercontent.com/zkrising/Tachi/main/seeds/collections/charts-chunithm.json"
         )
-        charts = resp.json()
+        tachi_charts = resp.json()
 
-    async with async_session() as session:
-        stmt = (
-            update(Chart)
-            .where(
-                (Chart.song_id == bindparam("b_song_id"))
-                & (Chart.difficulty == bindparam("b_difficulty"))
-            )
-            .values(tachi_chart_id=bindparam("b_tachi_chart_id"))
+    for tachi_chart in tachi_charts:
+        mapping = charts_by_id_difficulty.get(tachi_chart["data"]["inGameID"])
+
+        if mapping is None:
+            continue
+
+        chart = mapping.get(tachi_chart["difficulty"][:3])
+
+        if chart is None:
+            continue
+
+        chart["tachi_chart_id"] = tachi_chart["chartID"]
+
+    with (SEEDS_DIR / "songs.json").open("w") as f:
+        json.dump(
+            songs,
+            f,
+            cls=SeedsJSONEncoder,
+            indent=4,
+            ensure_ascii=False,
         )
-        connection = await session.connection()
-        await connection.execute(
-            stmt,
-            [
-                {
-                    "b_song_id": c["data"]["inGameID"],
-                    "b_difficulty": c["difficulty"][:3],
-                    "b_tachi_chart_id": c["chartID"],
-                }
-                for c in charts
-            ],
-            execution_options={"synchronize_session": False},
-        )
-        await connection.commit()

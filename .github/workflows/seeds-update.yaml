@@ -1,0 +1,67 @@
+name: "Update seeds"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 5AM JST, allow for database to backsync changes at 4AM JST first
+    - cron: "7 20 * * *"
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  test-creating-db:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Check out repository"
+        uses: "actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd" # v6
+        with:
+          ref: "trunk"
+          persist-credentials: true
+
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78" # v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: "Install dependencies"
+        run: "uv sync --frozen"
+
+      - name: "Configuration"
+        run: |
+          mkdir -p data/
+          cp bot.example.ini bot.ini
+          sed -i 's/# chunirec_token = <token>/chunirec_token = ${{ secrets.CHUNIREC_TOKEN }}/' bot.ini
+
+      - name: "Update chunirec IDs"
+        run: |
+          uv run python -m dbutils update chunirec
+
+      - name: "Update song jacket lookup"
+        run: |
+          uv run python -m dbutils update jackets
+
+      - name: "Update sdvx.in chart views"
+        run: |
+          uv run python -m dbutils update sdvxin
+
+      - name: "Update Kamaitachi chart IDs"
+        run: |
+          uv run python -m dbutils update tachi
+
+      - name: "Push back to trunk if there were any changes"
+        run: |
+          git config --global user.name chuni-penguin-seeds
+          git config --global user.email "268542682+chuni-penguin-seeds@users.noreply.github.com"
+
+          git status
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add chuni_penguin/database/seeds
+            git commit -m "automated: seeds update $(date --utc +%Y-%m-%dT%H:%M:%S.%6N%:z)"
+            git push
+          else
+            echo "No changes to commit"
+          fi

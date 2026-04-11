@@ -22,7 +22,6 @@ from chuni_penguin.logging import logger
 from chuni_penguin.types import ComboLamp
 from chuni_penguin.utils import get_loop_factory
 
-from .aliases import update_aliases
 from .chunirec import update_db
 from .jackets import update_jackets
 from .merge_options import merge_options
@@ -132,18 +131,14 @@ async def main():
         alembic.command.stamp(alembic_config, "head")
 
     if args.command == "update":
-        async_session = async_sessionmaker(engine, expire_on_commit=False)
-
         if args.source == "chunirec":
-            await update_db(logger, async_session)
+            await update_db(logger)
         if args.source == "jackets":
-            await update_jackets(logger, async_session)
+            await update_jackets(logger)
         if args.source == "sdvxin":
-            await update_sdvxin(logger, async_session)
-        if args.source == "alias":
-            await update_aliases(logger, async_session)
+            await update_sdvxin(logger)
         if args.source == "tachi":
-            await update_tachi(logger, async_session)
+            await update_tachi(logger)
         if args.source == "dump":
             if args.data_dir is None:
                 update.print_help()
@@ -151,7 +146,6 @@ async def main():
 
             await merge_options(
                 logger,
-                async_session,
                 args.data_dir,
                 args.option_dir,
                 extract_jackets=args.extract_jackets,

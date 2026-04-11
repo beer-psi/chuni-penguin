@@ -1,19 +1,17 @@
+import json
 import re
-from typing import TypedDict
+from typing import Any
 
 import httpx
 import httpx_aiohttp
 import msgspec
-from sqlalchemy import select, update
-from sqlalchemy.dialects.sqlite import insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from structlog.stdlib import BoundLogger
 
 from chuni_penguin.config import config
 from chuni_penguin.constants import ASSETS_DIR, INTERNATIONAL_JACKET_BASE, JACKET_BASE
-from chuni_penguin.database import Song, SongJacket
 
 from .chunirec import ChunithmOfficialSong, MaimaiOfficialSong
+from .seeds import SEEDS_DIR, SeedsJSONEncoder
 
 # There's this really stupid thing where CHUNITHM/ONGEKI has the original game name
 # in the artist for songs from other IPs, but maimai doesn't. For song title/artist lookup
@@ -32,11 +30,6 @@ class ZetarakuData(msgspec.Struct):
     songs: list[ZetarakuSong]
 
 
-class SongJacketInsertCols(TypedDict):
-    song_id: int
-    jacket_url: str
-
-
 def is_url(value: str):
     return value.startswith(("http://", "https://"))
 
@@ -53,21 +46,19 @@ def normalize_artist(artist: str):
     )
 
 
-async def update_jackets(
-    logger: BoundLogger, async_session: async_sessionmaker[AsyncSession]
-):
+async def update_jackets(logger: BoundLogger):
     client = httpx.AsyncClient(transport=httpx_aiohttp.AIOHTTPTransport(retries=5))
+    song_title_artist_lookup: dict[str, dict[str, Any]] = {}
 
-    jackets: list[SongJacketInsertCols] = []
-    song_title_artist_lookup: dict[str, Song] = {}
+    with (SEEDS_DIR / "songs.json").open("rb") as f:
+        songs = msgspec.json.decode(f.read())
 
-    async with async_session() as session:
-        songs = (await session.scalars(select(Song))).all()
+    songs_by_id = {s["id"]: s for s in songs}
 
-    official_jacket_updates = []
     official_chunithm_resp = await client.get(
         "https://chunithm.sega.jp/storage/json/music.json"
     )
+
     official_chunithm = msgspec.json.decode(
         official_chunithm_resp.content,
         type=list[ChunithmOfficialSong],
@@ -76,37 +67,27 @@ async def update_jackets(
     official_chunithm_by_id = {x.id: x for x in official_chunithm}
 
     for song in songs:
-        if song.id < 8000:
+        if song["id"] < 8000:
             song_title_artist_lookup[
-                f"{song.title}:{normalize_artist(song.artist)}"
+                f"{song['title']}:{normalize_artist(song['artist'])}"
             ] = song
 
-        if song.jacket is None:
-            if song.id not in official_chunithm_by_id:
+        existing_jackets = set(song["jackets"])
+
+        if song["jacket"] is None:
+            if song["id"] not in official_chunithm_by_id:
                 continue
-            song.jacket = official_chunithm_by_id[song.id].image
-            official_jacket_updates.append({"id": song.id, "jacket": song.jacket})
+            song["jacket"] = official_chunithm_by_id[song.id].image
 
-        if is_url(song.jacket):
-            jackets.append({"song_id": song.id, "jacket_url": song.jacket})
+        if is_url(song["jacket"]) and song["jacket"] not in existing_jackets:
+            song["jackets"].append(song["jacket"])
         else:
-            jackets.append(
-                {
-                    "song_id": song.id,
-                    "jacket_url": f"{JACKET_BASE}/{song.jacket}",
-                }
-            )
-            jackets.append(
-                {
-                    "song_id": song.id,
-                    "jacket_url": f"{INTERNATIONAL_JACKET_BASE}/{song.jacket}",
-                }
-            )
-
-    if len(official_jacket_updates) > 0:
-        async with async_session() as session:
-            await session.execute(update(Song), official_jacket_updates)
-            await session.commit()
+            for url in (
+                f"{JACKET_BASE}/{song['jacket']}",
+                f"{INTERNATIONAL_JACKET_BASE}/{song['jacket']}",
+            ):
+                if url not in existing_jackets:
+                    song["jackets"].append(url)
 
     for game in ("maimai", "chunithm", "ongeki"):
         zetaraku_songs_resp = await client.get(
@@ -128,15 +109,13 @@ async def update_jackets(
                 continue
 
             logger.info(
-                f"Mapped {db_song.artist} - {db_song.title} to Zetaraku {game} entry {song.artist} - {song.title}."
+                f"Mapped {db_song['artist']} - {db_song['title']} to Zetaraku {game} entry {song.artist} - {song.title}."
             )
 
-            jackets.append(
-                {
-                    "song_id": db_song.id,
-                    "jacket_url": f"https://dp4p6x0xfi5o9.cloudfront.net/{game}/img/cover/{song.image_name}",
-                }
-            )
+            url = f"https://dp4p6x0xfi5o9.cloudfront.net/{game}/img/cover/{song.image_name}"
+
+            if url not in db_song["jackets"]:
+                db_song["jackets"].append(url)
 
     official_maimai_resp = await client.get(
         "https://maimai.sega.jp/data/maimai_songs.json"
@@ -153,53 +132,40 @@ async def update_jackets(
             continue
 
         logger.info(
-            f"Mapped {db_song.artist} - {db_song.title} to official maimai entry {song.artist} - {song.title}."
+            f"Mapped {db_song['artist']} - {db_song['title']} to official maimai entry {song.artist} - {song.title}."
         )
 
-        jackets.append(
-            {
-                "song_id": db_song.id,
-                "jacket_url": f"https://maimaidx.jp/maimai-mobile/img/Music/{song.image_url}",
-            }
-        )
-        jackets.append(
-            {
-                "song_id": db_song.id,
-                "jacket_url": f"https://maimaidx-eng.com/maimai-mobile/img/Music/{song.image_url}",
-            }
-        )
-        jackets.append(
-            {
-                "song_id": db_song.id,
-                "jacket_url": f"https://mimixd.app/images/render/cover/{song.image_url}",
-            }
-        )
+        existing_jackets = set(db_song["jackets"])
+
+        for url in (
+            f"https://maimaidx.jp/maimai-mobile/img/Music/{song.image_url}",
+            f"https://maimaidx-eng.com/maimai-mobile/img/Music/{song.image_url}",
+            f"https://mimixd.app/images/render/cover/{song.image_url}",
+        ):
+            if url not in existing_jackets:
+                db_song["jackets"].append(url)
 
     if config.web.serve_assets and config.web.base_url:
         for jacket in (ASSETS_DIR / "jackets").iterdir():
-            try:
-                song_id = int(jacket.stem)
-            except ValueError:
+            if not jacket.stem.isdigit():
                 continue
-            else:
-                jackets.append(
-                    {
-                        "song_id": song_id,
-                        "jacket_url": f"{config.web.base_url}/assets/jackets/{jacket.name}",
-                    }
-                )
 
-    async with async_session() as session:
-        logger.info("Upserting %d jacket URLs.", len(jackets))
+            song_id = int(jacket.stem)
+            url = f"{config.web.base_url}/assets/jackets/{jacket.name}"
 
-        insert_stmt = insert(SongJacket)
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=[SongJacket.jacket_url],
-            set_={
-                "song_id": insert_stmt.excluded.song_id,
-            },
+            if (
+                song_id in songs_by_id
+                and url not in songs_by_id[song_id]["jackets"]
+            ):
+                songs_by_id[song_id]["jackets"].append(url)
+
+    with (SEEDS_DIR / "songs.json").open("w") as f:
+        json.dump(
+            songs,
+            f,
+            cls=SeedsJSONEncoder,
+            indent=4,
+            ensure_ascii=False,
         )
-        await session.execute(upsert_stmt, jackets)
-        await session.commit()
 
     await client.aclose()

@@ -20,4 +20,5 @@ COG_LIST: list[str] = [
     "chuni_penguin.cogs.chunithm.search",
     "chuni_penguin.cogs.chunithm.tools",
     "chuni_penguin.cogs.chunithm.linked_verse",
+    "chuni_penguin.cogs.chunithm.chunirec",
 ]
