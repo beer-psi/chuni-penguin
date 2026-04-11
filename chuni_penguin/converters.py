@@ -42,6 +42,15 @@ class DifficultyConverter(commands.Converter[Difficulty]):
         raise commands.BadArgument(msg)
 
 
+class RankingDifficultyConverter(commands.Converter[Difficulty | None]):
+    @override
+    async def convert(self, ctx: commands.Context, argument: str) -> Difficulty | None:
+        if argument.lower() == "all":
+            return None
+
+        return await DifficultyConverter().convert(ctx, argument)
+
+
 class GenreConverter(commands.Converter[Genre]):
     @override
     async def convert(self, ctx: commands.Context, argument: str) -> Genre:

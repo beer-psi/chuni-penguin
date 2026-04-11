@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from datetime import datetime
 from types import TracebackType
 from typing import TYPE_CHECKING, ClassVar
 
@@ -19,6 +20,13 @@ from chuni_penguin.types import (
     RatingBreakdown,
     RatingType,
     RecentScore,
+)
+from chuni_penguin.types.ranking import (
+    CurrencyRanking,
+    RankingType,
+    RatingRanking,
+    ScoreRanking,
+    TeamRanking,
 )
 
 if TYPE_CHECKING:
@@ -154,6 +162,33 @@ class NetworkAdapter(ABC):
         Set the player's favorite music. Any songs that were previously in the list
         but not included in :param:`ids` must be removed.
         """
+
+    @abstractmethod
+    async def get_team_ranking(self, month: datetime | None = None) -> TeamRanking:
+        """
+        Get monthly team rankings for the specified month, or the latest month
+        if it is `None`.
+        """
+
+    @abstractmethod
+    async def get_rating_ranking(
+        self, type: RankingType = RankingType.global_
+    ) -> RatingRanking:
+        """Get rating rankings."""
+
+    @abstractmethod
+    async def get_score_ranking(
+        self,
+        type: RankingType = RankingType.global_,
+        difficulty: Difficulty | None = None,
+    ) -> ScoreRanking:
+        """Get total highscore rankings."""
+
+    @abstractmethod
+    async def get_currency_ranking(
+        self, type: RankingType = RankingType.global_
+    ) -> CurrencyRanking:
+        """Get total currency rankings."""
 
     @abstractmethod
     async def logout(self) -> None:

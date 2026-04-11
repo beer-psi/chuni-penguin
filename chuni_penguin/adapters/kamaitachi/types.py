@@ -328,6 +328,11 @@ class KTChunithmLeaderboard(msgspec.Struct, rename="camel"):
     users: list[KTUserProfile]
 
 
+class KTChunithmRanking(msgspec.Struct, rename="camel"):
+    game_stats: list[KTChunithmGameStats]
+    users: list[KTUserProfile]
+
+
 KTChunithmPersonalBestResponse = KTResponse[KTChunithmPersonalBestResponseBody]
 KTChunithmPersonalBestsResponse = KTResponse[KTChunithmPersonalBestsResponseBody]
 KTChunithmScoreResponse = KTResponse[KTChunithmScoreResponseBody]

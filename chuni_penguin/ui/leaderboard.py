@@ -1,3 +1,4 @@
+import unicodedata
 from collections.abc import Sequence
 from typing import override
 
@@ -75,22 +76,35 @@ class LeaderboardPageSource(ListPageSource):
 
         description = ""
 
-        for record in page:
-            description += f"`{record.position: >3}` {record.player_name} ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
-
-            if record.judgements is not None:
-                description += f" ({record.judgements.justice_critical} / {record.judgements.justice} / {record.judgements.attack} / {record.judgements.miss})"
-
-            if record.ajc_count is not None:
-                description += f" (AJC: {record.ajc_count})"
-
-            if record.achieved_at is not None:
-                description += f" ▸ {format_dt(record.achieved_at, 'f')}\n"
-            else:
-                description += "\n"
-
-        if description == "":
+        try:
+            max_player_name_length = max(len(record.player_name) for record in page)
+            max_position_length = max(len(str(record.position)) for record in page)
+            has_widechar = any(
+                any(
+                    unicodedata.east_asian_width(c) in ("W", "F", "A")
+                    for c in record.player_name
+                )
+                for record in page
+            )
+        except ValueError:  # empty iterable
             description = "No scores."
+        else:
+            for record in page:
+                if has_widechar:
+                    description += f"`{record.position: >{max_position_length}}` {record.player_name:\u3000<{max_player_name_length}} ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+                else:
+                    description += f"`{record.position: >{max_position_length}}` `{record.player_name: <{max_player_name_length}}` ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+
+                if record.judgements is not None:
+                    description += f" ({record.judgements.justice_critical} / {record.judgements.justice} / {record.judgements.attack} / {record.judgements.miss})"
+
+                if record.ajc_count is not None:
+                    description += f" (AJC: {record.ajc_count})"
+
+                if record.achieved_at is not None:
+                    description += f" ▸ {format_dt(record.achieved_at, 'f')}\n"
+                else:
+                    description += "\n"
 
         leaderboard_embed = discord.Embed(
             color=self.difficulty.color(),

@@ -48,6 +48,17 @@ from chuni_penguin.types import (
     TitleRarity,
     UserAvatar,
 )
+from chuni_penguin.types.ranking import (
+    CurrencyRanking,
+    CurrencyRankingEntry,
+    RankingDelta,
+    RatingRanking,
+    RatingRankingEntry,
+    ScoreRanking,
+    ScoreRankingEntry,
+    TeamRanking,
+    TeamRankingEntry,
+)
 
 from .consts import LINKED_VERSE_PROGRESS_BADGES
 from .utils import (
@@ -814,3 +825,156 @@ def parse_friend_vs(
         )
 
     return (your_pbs, their_pbs)
+
+
+def parse_team_ranking(soup: LexborHTMLParser) -> TeamRanking:
+    ranking_update_elem = soup.css_first(".ranking_update")
+
+    if ranking_update_elem is None:
+        msg = "Missing ranking update date"
+        raise ValueError(msg)
+
+    updated_at = parse_time(
+        ranking_update_elem.text().removeprefix("Update on：")  # noqa: RUF001
+    )
+    ranking: list[TeamRankingEntry] = []
+
+    for e in soup.css(".rank_block"):
+        position_elem = e.css_first(".rank_block_rank")
+        name_elem = e.css_first(".rank_teamname")
+        points_elem = e.css_first(".rank_block_team_num")
+        delta_elem = e.css_first(".rank_block_team_diff")
+        rank_state_elem = e.css_first("img.rank_state_img")
+
+        if (
+            position_elem is None
+            or name_elem is None
+            or points_elem is None
+            or delta_elem is None
+            or rank_state_elem is None
+        ):
+            continue
+
+        position = int(position_elem.text())
+        team_name = name_elem.text()
+        points = chuni_int(points_elem.text())
+        delta = chuni_int(
+            delta_elem.text()
+            .removeprefix("(")
+            .removesuffix(")")
+            .replace("＋", "")  # noqa: RUF001
+            .replace("±", "")
+            .replace("－", "-")  # noqa: RUF001
+        )
+        ranking_delta = getattr(
+            RankingDelta, extract_last_part(rank_state_elem.attrs["src"])
+        )
+
+        ranking.append(
+            TeamRankingEntry(
+                position=position,
+                team_name=team_name,
+                points=points,
+                delta=delta,
+                ranking_delta=ranking_delta,
+            )
+        )
+
+    return TeamRanking(updated_at=updated_at, ranking=ranking)
+
+
+def parse_rating_ranking(soup: LexborHTMLParser) -> RatingRanking:
+    ranking_update_elem = soup.css_first(".ranking_update")
+
+    if ranking_update_elem is None:
+        msg = "Missing ranking update date"
+        raise ValueError(msg)
+
+    updated_at = parse_time(
+        ranking_update_elem.text().removeprefix("Update on：")  # noqa: RUF001
+    )
+    ranking: list[RatingRankingEntry] = []
+
+    for e in soup.css(".rank_block_s"):
+        position_elem = e.css_first(".rank_block_rank_s")
+        name_elem = e.css_first(".rank_block_name_s")
+        rating_elem = e.css_first(".rank_block_rating_num")
+
+        if position_elem is None or name_elem is None or rating_elem is None:
+            continue
+
+        position = int(position_elem.text())
+        player_name = name_elem.text()
+        rating = parse_player_rating(rating_elem.css("img"))
+
+        ranking.append(
+            RatingRankingEntry(
+                position=position, player_name=player_name, rating=rating
+            )
+        )
+
+    return RatingRanking(updated_at=updated_at, ranking=ranking)
+
+
+def parse_score_ranking(soup: LexborHTMLParser) -> ScoreRanking:
+    ranking_update_elem = soup.css_first(".ranking_update")
+
+    if ranking_update_elem is None:
+        msg = "Missing ranking update date"
+        raise ValueError(msg)
+
+    updated_at = parse_time(
+        ranking_update_elem.text().removeprefix("Update on：")  # noqa: RUF001
+    )
+    ranking: list[ScoreRankingEntry] = []
+
+    for e in soup.css(".rank_block_s"):
+        position_elem = e.css_first(".rank_block_rank_s")
+        name_elem = e.css_first(".rank_block_name_s")
+        score_elem = e.css_first(".rank_block_num_s")
+
+        if position_elem is None or name_elem is None or score_elem is None:
+            continue
+
+        position = int(position_elem.text())
+        player_name = name_elem.text()
+        score = chuni_int(score_elem.text())
+
+        ranking.append(
+            ScoreRankingEntry(position=position, player_name=player_name, score=score)
+        )
+
+    return ScoreRanking(updated_at=updated_at, ranking=ranking)
+
+
+def parse_currency_ranking(soup: LexborHTMLParser) -> CurrencyRanking:
+    ranking_update_elem = soup.css_first(".ranking_update")
+
+    if ranking_update_elem is None:
+        msg = "Missing ranking update date"
+        raise ValueError(msg)
+
+    updated_at = parse_time(
+        ranking_update_elem.text().removeprefix("Update on：")  # noqa: RUF001
+    )
+    ranking: list[CurrencyRankingEntry] = []
+
+    for e in soup.css(".rank_block_s"):
+        position_elem = e.css_first(".rank_block_rank_s")
+        name_elem = e.css_first(".rank_block_name_s")
+        currency_elem = e.css_first(".rank_block_num_s")
+
+        if position_elem is None or name_elem is None or currency_elem is None:
+            continue
+
+        position = int(position_elem.text())
+        player_name = name_elem.text()
+        currency = chuni_int(currency_elem.text())
+
+        ranking.append(
+            CurrencyRankingEntry(
+                position=position, player_name=player_name, currency=currency
+            )
+        )
+
+    return CurrencyRanking(updated_at=updated_at, ranking=ranking)

@@ -42,6 +42,14 @@ from chuni_penguin.types import (
     RatingType,
     RecentScore,
 )
+from chuni_penguin.types.ranking import (
+    CurrencyRanking,
+    RankingType,
+    RatingRanking,
+    RatingRankingEntry,
+    ScoreRanking,
+    TeamRanking,
+)
 from chuni_penguin.utils import floor_to_ndp
 
 from .errors import KamaitachiError
@@ -57,6 +65,7 @@ from .types import (
     KTChunithmLeaderboard,
     KTChunithmPersonalBestResponse,
     KTChunithmPersonalBestsResponse,
+    KTChunithmRanking,
     KTChunithmScoreResponse,
     KTChunithmUserProfile,
     KTResponse,
@@ -464,6 +473,65 @@ class KamaitachiAdapter(NetworkAdapter):
         raise NotImplementedError
 
     async def set_favorite_music(self, ids: Sequence[int]) -> None:
+        raise NotImplementedError
+
+    async def get_team_ranking(self, month: datetime | None = None) -> TeamRanking:
+        raise NotImplementedError
+
+    async def get_rating_ranking(
+        self, type: RankingType = RankingType.global_
+    ) -> RatingRanking:
+        if type == RankingType.friend:
+            raise NotImplementedError
+
+        resp = await self._client.get(
+            "/api/v1/games/chunithm/Single/leaderboard",
+            params={"alg": "naiveRating", "limit": "500"},
+        )
+        data = msgspec.json.decode(resp.content, type=KTResponse[KTChunithmRanking])
+
+        if not data.success or data.body is None:
+            raise KamaitachiError(data.description)
+
+        users_by_id = {u.id: u for u in data.body.users}
+        ranking: list[RatingRankingEntry] = []
+        position = 0
+        num_people_same_rating = 1
+        last_rating = None
+
+        for game_stat in data.body.game_stats:
+            user = users_by_id.get(game_stat.userID)
+
+            if user is None:
+                continue
+
+            if game_stat.ratings.naive_rating == last_rating:
+                num_people_same_rating += 1
+            else:
+                last_rating = game_stat.ratings.naive_rating
+                position += num_people_same_rating
+                num_people_same_rating = 1
+
+            ranking.append(
+                RatingRankingEntry(
+                    position=position,
+                    player_name=user.username,
+                    rating=game_stat.ratings.naive_rating,
+                )
+            )
+
+        return RatingRanking(updated_at=datetime.now(UTC), ranking=ranking)
+
+    async def get_score_ranking(
+        self,
+        type: RankingType = RankingType.global_,
+        difficulty: Difficulty | None = None,
+    ) -> ScoreRanking:
+        raise NotImplementedError
+
+    async def get_currency_ranking(
+        self, type: RankingType = RankingType.global_
+    ) -> CurrencyRanking:
         raise NotImplementedError
 
     async def logout(self) -> None:

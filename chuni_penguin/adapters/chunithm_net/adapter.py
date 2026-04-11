@@ -1,6 +1,7 @@
 import io
 import itertools
 from collections.abc import Callable, Sequence
+from datetime import datetime
 from decimal import Decimal
 from http.cookiejar import DefaultCookiePolicy, LWPCookieJar
 from typing import TYPE_CHECKING, Any, override
@@ -38,6 +39,13 @@ from chuni_penguin.types import (
     RatingType,
     RecentScore,
 )
+from chuni_penguin.types.ranking import (
+    CurrencyRanking,
+    RankingType,
+    RatingRanking,
+    ScoreRanking,
+    TeamRanking,
+)
 from chuni_penguin.utils import floor_to_ndp
 
 from ._hooks import ChunithmNetAuth, acquire_ratelimit, raise_on_chunithm_net_error
@@ -45,6 +53,7 @@ from .parser import (
     parse_basic_recent_record,
     parse_collection_customize,
     parse_course_list,
+    parse_currency_ranking,
     parse_detailed_recent_record,
     parse_friend_vs,
     parse_leaderboard,
@@ -55,6 +64,9 @@ from .parser import (
     parse_music_record,
     parse_player_card_and_avatar,
     parse_player_data,
+    parse_rating_ranking,
+    parse_score_ranking,
+    parse_team_ranking,
 )
 
 if TYPE_CHECKING:
@@ -651,6 +663,74 @@ class ChunithmNetAdapter(NetworkAdapter):
                 "referer": str(_BASE_URL.join("/mobile/home/favorite/updateMusic"))
             },
         )
+
+    async def get_team_ranking(self, month: datetime | None = None) -> TeamRanking:
+        if month is None:
+            soup = await self._request_as_soup("GET", "mobile/ranking/teamPoint/")
+        else:
+            soup = await self._request_as_soup(
+                "POST",
+                "mobile/ranking/teamPoint/sendSearch/",
+                data={
+                    "aggrDate": f"{month.year:04}-{month.month:02}-01 00:00:00",
+                    "token": self._token,
+                },
+                headers={"referer": str(_BASE_URL.join("/mobile/ranking/teamPoint/"))},
+            )
+
+        return parse_team_ranking(soup)
+
+    async def get_rating_ranking(
+        self, type: RankingType = RankingType.global_
+    ) -> RatingRanking:
+        if type == RankingType.global_:
+            soup = await self._request_as_soup("GET", "mobile/ranking/rating/")
+        else:
+            soup = await self._request_as_soup(
+                "POST",
+                "mobile/ranking/rating/sendSearch/",
+                data={"category": "3", "token": self._token},
+                headers={"referer": str(_BASE_URL.join("/mobile/ranking/rating/"))},
+            )
+
+        return parse_rating_ranking(soup)
+
+    async def get_score_ranking(
+        self,
+        type: RankingType = RankingType.global_,
+        difficulty: Difficulty | None = None,
+    ) -> ScoreRanking:
+        if difficulty == Difficulty.worlds_end:
+            raise NotImplementedError
+
+        if type == RankingType.global_ and difficulty is None:
+            soup = await self._request_as_soup("GET", "mobile/ranking/totalHighScore/")
+        else:
+            soup = await self._request_as_soup(
+                "POST",
+                f"mobile/ranking/totalHighScore/{'all' if difficulty is None else difficulty.name}",
+                data={
+                    "category": "3" if type == RankingType.friend else "1",
+                    "token": self._token,
+                },
+            )
+
+        return parse_score_ranking(soup)
+
+    async def get_currency_ranking(
+        self, type: RankingType = RankingType.global_
+    ) -> CurrencyRanking:
+        if type == RankingType.global_:
+            soup = await self._request_as_soup("GET", "mobile/ranking/totalPoint/")
+        else:
+            soup = await self._request_as_soup(
+                "POST",
+                "mobile/ranking/totalPoint/sendSearch/",
+                data={"category": "3", "token": self._token},
+                headers={"referer": str(_BASE_URL.join("/mobile/ranking/totalPoint/"))},
+            )
+
+        return parse_currency_ranking(soup)
 
     async def remove_friend_request(self, identifier: str) -> None:
         await self._client.post(

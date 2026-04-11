@@ -9,7 +9,7 @@ from collections import Counter
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional
 
 import discord
 from discord import Interaction, app_commands
@@ -48,6 +48,7 @@ from chuni_penguin.converters import (
     LevelRangeConverter,
     MemberOrUserConverter,
     RankConverter,
+    RankingDifficultyConverter,
     VersionConverter,
 )
 from chuni_penguin.database import Chart, Song, SongJacket, UserConfig
@@ -69,6 +70,7 @@ from chuni_penguin.types import (
     RatingType,
     Score,
 )
+from chuni_penguin.types.ranking import RankingType
 from chuni_penguin.ui import (
     B30N20View,
     B30View,
@@ -79,7 +81,13 @@ from chuni_penguin.ui import (
     ScoreCardEmbed,
     SelectToCompareView,
 )
-from chuni_penguin.utils import AsyncTemporaryFile, floor_to_ndp
+from chuni_penguin.ui.ranking import (
+    CurrencyRankingView,
+    RatingRankingView,
+    ScoreRankingView,
+    TeamRankingView,
+)
+from chuni_penguin.utils import TOKYO_TZ, AsyncTemporaryFile, floor_to_ndp
 from chuni_penguin.utils.formatting import bold, bold_if
 from chuni_penguin.utils.misc import Reversor
 
@@ -2268,6 +2276,326 @@ class RecordsCog(commands.Cog, name="Records"):
         await ctx.respond_or_edit(
             f"Successfully synced {client.NAME} scores for {escape_markdown(profile.username)}."
         )
+
+    @commands.group("ranking", invoke_without_command=True)
+    async def ranking_prefix(self, ctx: PenguinContext):
+        """
+        View rankings for teams, rating, scores and currency.
+        """
+
+        await ctx.send_help(ctx.command)
+
+    @ranking_prefix.command("team")
+    async def ranking_team_prefix(self, ctx: PenguinContext, month: str | None = None):
+        """
+        View team rankings.
+
+        Only available for CHUNITHM International.
+
+        **Parameters**
+        `month`: The month to view team rankings for (e.g. 2026/04). If omitted, default to most recent team ranking.
+        """
+
+        await self._ranking_team_impl(ctx, month)
+
+    @ranking_prefix.command("rating", cls=flags.FlagCommand)
+    @flags.argument("-c", "--chunithm-net", action="store_true")
+    @flags.argument("-k", "--kamaitachi", action="store_true")
+    @flags.argument("type", nargs="?", default="global", choices=["friend", "global"])
+    async def ranking_rating_prefix(
+        self,
+        ctx: PenguinContext,
+        *,
+        chunithm_net: bool = False,
+        kamaitachi: bool = False,
+        type: Literal["friend", "global"] = "global",
+    ):
+        """
+        View player rankings on rating.
+
+        **Paramters**
+        `-c`: View CHUNITHM International rankings.
+        `-k`: View Kamaitachi rankings.
+        `type`: The ranking type to view. If not specified, show global rankings. Friend rankings are only supported for CHUNITHM International.
+        """
+
+        await self._ranking_rating_impl(
+            ctx, type, chunithm_net=chunithm_net, kamaitachi=kamaitachi
+        )
+
+    @ranking_prefix.command("score")
+    async def ranking_score_prefix(
+        self,
+        ctx: PenguinContext,
+        difficulty: Annotated[Difficulty | None, RankingDifficultyConverter] = None,
+        type: Literal["friend", "global"] = "global",
+    ):
+        """
+        View player rankings on total highscore.
+
+        Only available for CHUNITHM International.
+
+        **Paramters**:
+        `difficulty`: The difficulty to view. If not specified or `all`, show total highscore across all difficulties.
+        `type`: The ranking type to view. If not specified, show global rankings. Friend rankings are only supported for CHUNITHM International.
+        """
+
+        await self._ranking_score_impl(ctx, type, difficulty)
+
+    @ranking_prefix.command("currency", aliases=["memory", "point"])
+    async def ranking_currency_prefix(
+        self, ctx: PenguinContext, type: Literal["friend", "global"] = "global"
+    ):
+        """
+        View player rankings on total currency obtained.
+
+        Only available for CHUNITHM International.
+
+        **Paramters**:
+        `type`: The ranking type to view. If not specified, show global rankings. Friend rankings are only supported for CHUNITHM International.
+        """
+
+        await self._ranking_currency_impl(ctx, type)
+
+    ranking_slash = app_commands.Group(
+        name="ranking",
+        description="View rankings for teams, rating, scores and currency.",
+    )
+
+    @ranking_slash.command(name="team", description="View team rankings.")
+    @app_commands.describe(month="The month to view team rankings for (e.g. 2026/04).")
+    async def ranking_team_slash(
+        self, interaction: discord.Interaction["ChuniBot"], month: str | None = None
+    ):
+        await self._ranking_team_impl(
+            await PenguinContext.from_interaction(interaction), month
+        )
+
+    @ranking_slash.command(name="rating", description="View player rankings on rating.")
+    @app_commands.rename(chunithm_net="chunithm-net")
+    @app_commands.describe(
+        type="The ranking type to view. If not specified, show global rankings.",
+        chunithm_net="View CHUNITHM International rankings.",
+        kamaitachi="View Kamaitachi rankings.",
+    )
+    @app_commands.choices(
+        type=[
+            app_commands.Choice(name="Global", value="global"),
+            app_commands.Choice(name="Friend", value="friend"),
+        ]
+    )
+    async def ranking_rating_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        type: Literal["friend", "global"] = "global",
+        *,
+        chunithm_net: bool = False,
+        kamaitachi: bool = False,
+    ):
+        await self._ranking_rating_impl(
+            await PenguinContext.from_interaction(interaction),
+            type,
+            chunithm_net=chunithm_net,
+            kamaitachi=kamaitachi,
+        )
+
+    @ranking_slash.command(
+        name="score", description="View player rankings on total highscore."
+    )
+    @app_commands.describe(
+        difficulty="The difficulty to view. If not specified, show total highscore across all difficulties.",
+        type="The ranking type to view. If not specified, show global rankings.",
+    )
+    @app_commands.choices(
+        difficulty=[
+            app_commands.Choice(name=str(x), value=x.value)
+            for x in Difficulty.__members__.values()
+        ],  # type: ignore[reportGeneralTypeIssues]
+        type=[
+            app_commands.Choice(name="Global", value="global"),
+            app_commands.Choice(name="Friend", value="friend"),
+        ],
+    )
+    async def ranking_score_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        difficulty: Difficulty | None = None,
+        type: Literal["friend", "global"] = "global",
+    ):
+        await self._ranking_score_impl(
+            await PenguinContext.from_interaction(interaction), type, difficulty
+        )
+
+    @ranking_slash.command(
+        name="currency", description="View player rankings on total currency obtained."
+    )
+    @app_commands.describe(
+        type="The ranking type to view. If not specified, show global rankings.",
+    )
+    @app_commands.choices(
+        type=[
+            app_commands.Choice(name="Global", value="global"),
+            app_commands.Choice(name="Friend", value="friend"),
+        ]
+    )
+    async def ranking_currency_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        type: Literal["friend", "global"] = "global",
+    ):
+        await self._ranking_currency_impl(
+            await PenguinContext.from_interaction(interaction), type
+        )
+
+    async def _ranking_team_impl(self, ctx: PenguinContext, month: str | None = None):
+        if month is not None:
+            try:
+                # Deliberately naive datetime since year/months are usually
+                # not subject to timezone nonsense, and networks will have different
+                # timezones
+                dt = datetime.strptime(  # noqa: DTZ007
+                    month.replace("/", "-").replace(".", "-"), "%Y-%m"
+                )
+            except ValueError:
+                msg = f'Invalid month "{escape_markdown(month)}."'
+                raise commands.BadArgument(msg) from None
+
+            if dt.month > datetime.now(TOKYO_TZ).month:
+                msg = "Cannot specify a month in the future."
+                raise commands.BadArgument(msg)
+        else:
+            dt = None
+
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.bot_network(kamaitachi=False) as client,
+        ):
+            try:
+                ranking = await client.get_team_ranking(dt)
+            except NotImplementedError:
+                msg = f"{client.NAME} does not support team rankings."
+                raise commands.CommandError(msg) from None
+
+        view = TeamRankingView(
+            ctx, client.NAME, discord.Color(client.ACCENT_COLOR), ranking
+        )
+        await view.start()
+
+    async def _ranking_rating_impl(
+        self,
+        ctx: PenguinContext,
+        type: Literal["friend", "global"],
+        *,
+        chunithm_net: bool,
+        kamaitachi: bool,
+    ):
+        if chunithm_net and kamaitachi:
+            msg = "You can only select either CHUNITHM-NET International or Kamaitachi."
+            raise commands.BadArgument(msg)
+
+        ranking_type = RankingType(type)
+
+        # if asking for friend ranking, directly grab user's network
+        if ranking_type == RankingType.friend:
+            async with (
+                ctx.typing(),
+                ctx.bot.chunithm_networks.network(
+                    ctx, kamaitachi=kamaitachi, chunithm_net=chunithm_net
+                ) as client,
+            ):
+                try:
+                    ranking = await client.get_rating_ranking(RankingType(type))
+                except NotImplementedError:
+                    msg = f"{client.NAME} does not support {type} rankings."
+                    raise commands.CommandError(msg) from None
+        else:
+            if (
+                not chunithm_net and not kamaitachi
+            ):  # determine the network based on the user
+                try:
+                    async with ctx.bot.chunithm_networks.network(ctx) as client:
+                        kamaitachi = isinstance(client, KamaitachiAdapter)
+                except commands.CommandError:
+                    kamaitachi = False
+
+            async with (
+                ctx.typing(),
+                ctx.bot.chunithm_networks.bot_network(kamaitachi=kamaitachi) as client,
+            ):
+                try:
+                    ranking = await client.get_rating_ranking(RankingType(type))
+                except NotImplementedError:
+                    msg = f"{client.NAME} does not support {type} rankings."
+                    raise commands.CommandError(msg) from None
+
+        view = RatingRankingView(
+            ctx,
+            client.NAME,
+            discord.Color(client.ACCENT_COLOR),
+            RankingType(type),
+            ranking,
+        )
+        await view.start()
+
+    async def _ranking_score_impl(
+        self,
+        ctx: PenguinContext,
+        type: Literal["friend", "global"],
+        difficulty: Difficulty | None,
+    ):
+        ranking_type = RankingType(type)
+
+        async with (
+            ctx.typing(),
+            (
+                ctx.bot.chunithm_networks.network(ctx, ctx.author.id, chunithm_net=True)
+                if ranking_type == RankingType.friend
+                else ctx.bot.chunithm_networks.bot_network(kamaitachi=False)
+            ) as client,
+        ):
+            try:
+                ranking = await client.get_score_ranking(RankingType(type), difficulty)
+            except NotImplementedError:
+                msg = f"{client.NAME} does not support {type} score rankings on {difficulty}."
+                raise commands.CommandError(msg) from None
+
+        view = ScoreRankingView(
+            ctx,
+            client.NAME,
+            discord.Color(client.ACCENT_COLOR),
+            RankingType(type),
+            difficulty,
+            ranking,
+        )
+        await view.start()
+
+    async def _ranking_currency_impl(
+        self, ctx: PenguinContext, type: Literal["friend", "global"]
+    ):
+        ranking_type = RankingType(type)
+
+        async with (
+            ctx.typing(),
+            (
+                ctx.bot.chunithm_networks.network(ctx, ctx.author.id, chunithm_net=True)
+                if ranking_type == RankingType.friend
+                else ctx.bot.chunithm_networks.bot_network(kamaitachi=False)
+            ) as client,
+        ):
+            try:
+                ranking = await client.get_currency_ranking(RankingType(type))
+            except NotImplementedError:
+                msg = f"{client.NAME} does not support {type} currency rankings."
+                raise commands.CommandError(msg) from None
+
+        view = CurrencyRankingView(
+            ctx,
+            client.NAME,
+            discord.Color(client.ACCENT_COLOR),
+            RankingType(type),
+            ranking,
+        )
+        await view.start()
 
 
 async def setup(bot: "ChuniBot"):
