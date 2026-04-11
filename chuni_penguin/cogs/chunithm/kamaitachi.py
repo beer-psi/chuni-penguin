@@ -26,7 +26,7 @@ from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_prefix_command, logger
-from chuni_penguin.types import Difficulty, PersonalBest, RecentScore
+from chuni_penguin.types import ComboLamp, Difficulty, PersonalBest, RecentScore
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -287,6 +287,20 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                     if pb.chart.difficulty == Difficulty.worlds_end:
                         # Kamaitachi does not accept WORLD'S END scores
                         continue
+
+                    # If there's judgement data (annotated from the database), but
+                    # those don't line up with the lamp, then remove the judgements
+                    if pb.judgements is not None and (
+                        (
+                            pb.combo_lamp == ComboLamp.all_justice
+                            and (pb.judgements.miss > 0 or pb.judgements.attack > 0)
+                        )
+                        or (
+                            pb.combo_lamp == ComboLamp.full_combo
+                            and pb.judgements.miss > 0
+                        )
+                    ):
+                        pb.judgements = None
 
                     scores.append(pb)
 
