@@ -107,6 +107,9 @@ class IconsConfig(msgspec.Struct):
     link_level_iii: str | None = None
     link_level_ii: str | None = None
     link_level_i: str | None = None
+    ranking_delta_down: str | None = None
+    ranking_delta_keep: str | None = None
+    ranking_delta_up: str | None = None
 
     @overload
     def icon(self, named: str) -> str | None: ...

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Protocol
 import discord
 from discord.ext.commands import Context
 
+from chuni_penguin.config import config
 from chuni_penguin.types import Difficulty
 from chuni_penguin.types.ranking import (
     CurrencyRanking,
@@ -58,7 +59,7 @@ class TeamRankingPaginationSource(ListPageSource[TeamRankingEntry]):
             return embed
 
         description_rows: list[str] = [
-            f"`{entry.position: >{max_position_length}}` {entry.team_name:\u3000<{max_team_name_length}} ▸ {entry.points:,} ({'+' if entry.delta >= 0 else '-'}{entry.delta:,}) {entry.ranking_delta.emoji}"
+            f"`{entry.position: >{max_position_length}}` {entry.team_name:\u3000<{max_team_name_length}} ▸ {entry.points:,} ({'+' if entry.delta >= 0 else '-'}{entry.delta:,}) {config.icons.icon(f'ranking_delta_{entry.ranking_delta.name}', entry.ranking_delta.emoji)}"
             for entry in page
         ]
         embed.description = "\n".join(description_rows)
