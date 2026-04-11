@@ -2460,7 +2460,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 msg = f'Invalid month "{escape_markdown(month)}."'
                 raise commands.BadArgument(msg) from None
 
-            if dt.month > datetime.now(TOKYO_TZ).month:
+            if dt.replace(tzinfo=TOKYO_TZ) > datetime.now(TOKYO_TZ):
                 msg = "Cannot specify a month in the future."
                 raise commands.BadArgument(msg)
         else:
