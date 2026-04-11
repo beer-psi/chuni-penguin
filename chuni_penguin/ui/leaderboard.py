@@ -79,6 +79,10 @@ class LeaderboardPageSource(ListPageSource):
         try:
             max_player_name_length = max(len(record.player_name) for record in page)
             max_position_length = max(len(str(record.position)) for record in page)
+
+        except ValueError:  # empty iterable
+            description = "No scores."
+        else:
             has_widechar = any(
                 any(
                     unicodedata.east_asian_width(c) in ("W", "F", "A")
@@ -86,9 +90,7 @@ class LeaderboardPageSource(ListPageSource):
                 )
                 for record in page
             )
-        except ValueError:  # empty iterable
-            description = "No scores."
-        else:
+
             for record in page:
                 if has_widechar:
                     description += f"`{record.position: >{max_position_length}}` {record.player_name:\u3000<{max_player_name_length}} ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
@@ -148,12 +150,26 @@ class LinkedGateLeaderboardPageSource(ListPageSource):
     async def format_page(
         self, menu: "PaginationView", page: Sequence[LinkedGateLeaderboardEntry]
     ) -> FormatPageReturn:
-        description = "\n".join(
-            [
-                f"`{record.position: >3}` {record.player_name} ▸ {config.icons.icon(f'link_level_{record.link_level.name}', str(record.link_level))} ▸ {format_dt(record.achieved_at, 'f')}"
+        try:
+            max_player_name_length = max(len(record.player_name) for record in page)
+            max_position_length = max(len(str(record.position)) for record in page)
+        except ValueError:  # empty iterable
+            description = "No scores."
+        else:
+            has_widechar = any(
+                any(
+                    unicodedata.east_asian_width(c) in ("W", "F", "A")
+                    for c in record.player_name
+                )
                 for record in page
-            ]
-        )
+            )
+            padding_char = "\u3000" if has_widechar else " "
+            description = "\n".join(
+                [
+                    f"`{record.position: >{max_position_length}}` {record.player_name:{padding_char}<{max_player_name_length}} ▸ {config.icons.icon(f'link_level_{record.link_level.name}', str(record.link_level))} ▸ {format_dt(record.achieved_at, 'f')}"
+                    for record in page
+                ]
+            )
 
         if description == "":
             description = "No scores."
