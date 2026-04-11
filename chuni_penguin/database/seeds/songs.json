@@ -13921,8 +13921,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "13+",
-                "const": 13.8,
+                "level": "14",
+                "const": 14.0,
                 "maxcombo": 1423,
                 "tap": 675,
                 "hold": 322,
@@ -57835,7 +57835,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.4,
+                "const": 14.3,
                 "maxcombo": 1760,
                 "tap": 859,
                 "hold": 437,
@@ -74610,7 +74610,7 @@
         "min_bpm": 211,
         "max_bpm": 211,
         "jacket": "6526fdf31b83f552.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -74633,7 +74633,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -74649,7 +74649,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -74665,7 +74665,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10189",
@@ -74684,7 +74684,7 @@
                 "flick": 72,
                 "charter": "ミストルティン／すっぴんMASTER！",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10189",
@@ -120897,7 +120897,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.3,
+                "const": 15.4,
                 "maxcombo": 2512,
                 "tap": 1435,
                 "hold": 293,
@@ -142901,8 +142901,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "12+",
-                "const": 12.8,
+                "level": "13",
+                "const": 13.0,
                 "maxcombo": 1550,
                 "tap": 661,
                 "hold": 96,
@@ -155358,7 +155358,7 @@
         "wikiwiki_title": null,
         "chunithm_catcode": 7,
         "genre": "イロドリミドリ",
-        "artist": "箱部なる (CV: M・A・O)",
+        "artist": "箱部 なる(CV:M・A・O)",
         "version": "LUMINOUS",
         "release": "2023-12-14",
         "bpm": 146,
@@ -156234,8 +156234,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "13",
-                "const": 13.4,
+                "level": "13+",
+                "const": 13.5,
                 "maxcombo": 1673,
                 "tap": 742,
                 "hold": 106,
@@ -161157,7 +161157,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.5,
+                "const": 14.6,
                 "maxcombo": 2121,
                 "tap": 958,
                 "hold": 64,
@@ -164182,7 +164182,7 @@
             {
                 "difficulty": "EXP",
                 "level": "14",
-                "const": 14.3,
+                "const": 14.0,
                 "maxcombo": 2243,
                 "tap": 961,
                 "hold": 314,
@@ -164378,8 +164378,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "14",
-                "const": 14.0,
+                "level": "13+",
+                "const": 13.9,
                 "maxcombo": 1428,
                 "tap": 819,
                 "hold": 116,
@@ -164479,8 +164479,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "14+",
-                "const": 14.5,
+                "level": "14",
+                "const": 14.4,
                 "maxcombo": 2300,
                 "tap": 973,
                 "hold": 117,
@@ -167907,8 +167907,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "15",
-                "const": 15.0,
+                "level": "14+",
+                "const": 14.9,
                 "maxcombo": 2540,
                 "tap": 1238,
                 "hold": 374,
@@ -170046,8 +170046,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "13+",
-                "const": 13.9,
+                "level": "14",
+                "const": 14.0,
                 "maxcombo": 1790,
                 "tap": 1050,
                 "hold": 232,
@@ -170066,7 +170066,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.3,
+                "const": 15.2,
                 "maxcombo": 2726,
                 "tap": 1568,
                 "hold": 187,
@@ -170268,8 +170268,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14",
-                "const": 14.0,
+                "level": "13+",
+                "const": 13.9,
                 "maxcombo": 1437,
                 "tap": 566,
                 "hold": 215,
@@ -171600,7 +171600,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.2,
+                "const": 14.1,
                 "maxcombo": 2204,
                 "tap": 1112,
                 "hold": 276,
@@ -171802,7 +171802,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.0,
+                "const": 15.1,
                 "maxcombo": 2006,
                 "tap": 1366,
                 "hold": 188,
@@ -173462,8 +173462,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "13",
-                "const": 13.1,
+                "level": "12+",
+                "const": 12.9,
                 "maxcombo": 1801,
                 "tap": 727,
                 "hold": 80,
@@ -173571,7 +173571,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.0,
+                "const": 15.1,
                 "maxcombo": 2188,
                 "tap": 1157,
                 "hold": 172,
@@ -174078,7 +174078,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15+",
-                "const": 15.6,
+                "const": 15.5,
                 "maxcombo": 3300,
                 "tap": 1708,
                 "hold": 163,
@@ -174178,8 +174178,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14",
-                "const": 14.0,
+                "level": "13+",
+                "const": 13.9,
                 "maxcombo": 1982,
                 "tap": 855,
                 "hold": 235,
@@ -174280,8 +174280,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14+",
-                "const": 14.9,
+                "level": "15",
+                "const": 15.0,
                 "maxcombo": 2511,
                 "tap": 1231,
                 "hold": 227,
@@ -174478,8 +174478,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "12+",
-                "const": 12.5,
+                "level": "13",
+                "const": 13.0,
                 "maxcombo": 1983,
                 "tap": 514,
                 "hold": 832,
@@ -174577,7 +174577,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.7,
+                "const": 14.9,
                 "maxcombo": 2028,
                 "tap": 1295,
                 "hold": 113,
@@ -174782,7 +174782,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.7,
+                "const": 14.9,
                 "maxcombo": 1777,
                 "tap": 840,
                 "hold": 201,
@@ -175708,7 +175708,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.2,
+                "const": 15.3,
                 "maxcombo": 3000,
                 "tap": 1511,
                 "hold": 686,
@@ -175910,8 +175910,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.5,
                 "maxcombo": 1956,
                 "tap": 1250,
                 "hold": 192,
@@ -176215,7 +176215,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.0,
+                "const": 15.1,
                 "maxcombo": 2135,
                 "tap": 1507,
                 "hold": 193,
@@ -176313,7 +176313,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.6,
+                "const": 14.7,
                 "maxcombo": 2599,
                 "tap": 986,
                 "hold": 281,
@@ -177316,7 +177316,7 @@
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
         "genre": "VARIETY",
-        "artist": "Mitsukiyo「ブルーアーカイブ -Blue Archive-」",
+        "artist": "SUGAR RUSH「ブルーアーカイブ -Blue Archive-」",
         "version": "X-VERSE",
         "release": "2025-07-16",
         "bpm": 180,
@@ -177562,8 +177562,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "9+",
-                "const": 9.5,
+                "level": "10",
+                "const": 10.0,
                 "maxcombo": 1202,
                 "tap": 678,
                 "hold": 88,
@@ -177600,8 +177600,8 @@
             },
             {
                 "difficulty": "ULT",
-                "level": "14+",
-                "const": 14.5,
+                "level": "14",
+                "const": 14.3,
                 "maxcombo": 1937,
                 "tap": 1010,
                 "hold": 64,
@@ -177827,8 +177827,8 @@
             },
             {
                 "difficulty": "ULT",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.5,
                 "maxcombo": 2004,
                 "tap": 973,
                 "hold": 228,
@@ -178143,8 +178143,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14+",
-                "const": 14.9,
+                "level": "15",
+                "const": 15.0,
                 "maxcombo": 3025,
                 "tap": 1329,
                 "hold": 327,
@@ -178446,8 +178446,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14+",
-                "const": 14.5,
+                "level": "14",
+                "const": 14.4,
                 "maxcombo": 2293,
                 "tap": 1071,
                 "hold": 231,
@@ -178549,8 +178549,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.6,
                 "maxcombo": 1805,
                 "tap": 945,
                 "hold": 156,
@@ -178854,7 +178854,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.2,
+                "const": 15.1,
                 "maxcombo": 2500,
                 "tap": 1359,
                 "hold": 114,
@@ -179149,8 +179149,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "12+",
-                "const": 12.9,
+                "level": "13",
+                "const": 13.0,
                 "maxcombo": 2176,
                 "tap": 752,
                 "hold": 175,
@@ -179331,8 +179331,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.5,
                 "maxcombo": 2719,
                 "tap": 1196,
                 "hold": 510,
@@ -179656,7 +179656,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.2,
+                "const": 14.3,
                 "maxcombo": 1667,
                 "tap": 813,
                 "hold": 76,
@@ -179742,8 +179742,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "9+",
-                "const": 9.5,
+                "level": "10",
+                "const": 10.2,
                 "maxcombo": 1121,
                 "tap": 662,
                 "hold": 197,
@@ -179863,7 +179863,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.7,
+                "const": 14.5,
                 "maxcombo": 2875,
                 "tap": 1303,
                 "hold": 195,
@@ -179965,7 +179965,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.1,
+                "const": 15.0,
                 "maxcombo": 2180,
                 "tap": 1406,
                 "hold": 226,
@@ -180063,7 +180063,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.3,
+                "const": 14.4,
                 "maxcombo": 2137,
                 "tap": 858,
                 "hold": 211,
@@ -180366,7 +180366,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.4,
+                "const": 14.2,
                 "maxcombo": 1771,
                 "tap": 722,
                 "hold": 82,
@@ -184992,7 +184992,7 @@
         "min_bpm": 33.17,
         "max_bpm": 230,
         "jacket": "a093f933858fe77b.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -185009,7 +185009,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185025,7 +185025,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185041,7 +185041,7 @@
                 "flick": 0,
                 "charter": "ミストルティン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10180",
@@ -185060,7 +185060,7 @@
                 "flick": 98,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10180",
@@ -185737,7 +185737,7 @@
         "min_bpm": 80,
         "max_bpm": 200,
         "jacket": "bb542d4615c79046.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -185754,7 +185754,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185770,7 +185770,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185786,7 +185786,7 @@
                 "flick": 0,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10187",
@@ -185805,7 +185805,7 @@
                 "flick": 147,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10187",
@@ -185839,7 +185839,7 @@
         "min_bpm": 204,
         "max_bpm": 204,
         "jacket": "de74f5f3ea113c7b.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -185856,7 +185856,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185872,7 +185872,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185888,7 +185888,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10190",
@@ -185907,7 +185907,7 @@
                 "flick": 85,
                 "charter": "obj:mnnn",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10190",
@@ -185941,7 +185941,7 @@
         "min_bpm": 146,
         "max_bpm": 146,
         "jacket": "0d333c9eab239e8b.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -185958,7 +185958,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185974,7 +185974,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -185990,7 +185990,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10191",
@@ -186009,7 +186009,7 @@
                 "flick": 96,
                 "charter": "Junk Blade",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10191",
@@ -186039,7 +186039,7 @@
         "min_bpm": 180,
         "max_bpm": 180,
         "jacket": "75ac394edc1b6294.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -186056,7 +186056,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186072,7 +186072,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186088,7 +186088,7 @@
                 "flick": 0,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10188",
@@ -186107,7 +186107,7 @@
                 "flick": 49,
                 "charter": "Aloe Arborescens",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10188",
@@ -186141,7 +186141,7 @@
         "min_bpm": 126,
         "max_bpm": 126,
         "jacket": "f7a3d3df8b3c65e0.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -186158,7 +186158,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186174,7 +186174,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186190,7 +186190,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10194",
@@ -186209,7 +186209,7 @@
                 "flick": 78,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10194",
@@ -186244,7 +186244,7 @@
         "min_bpm": 92,
         "max_bpm": 116,
         "jacket": "b1e943c7a72617fb.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -186263,7 +186263,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186279,7 +186279,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186295,7 +186295,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10195",
@@ -186314,7 +186314,7 @@
                 "flick": 27,
                 "charter": "ミニミライト",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10195",
@@ -186345,7 +186345,7 @@
         "min_bpm": 176,
         "max_bpm": 176,
         "jacket": "504297fb1be61191.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -186362,7 +186362,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186378,7 +186378,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186394,7 +186394,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10193",
@@ -186413,7 +186413,7 @@
                 "flick": 112,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10193",
@@ -186447,7 +186447,7 @@
         "min_bpm": 168,
         "max_bpm": 168,
         "jacket": "9e77859d6fd5efa3.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -186467,7 +186467,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186483,7 +186483,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186499,7 +186499,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10192",
@@ -186518,7 +186518,7 @@
                 "flick": 96,
                 "charter": "みぞれとレモン 当たり前！",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10192",
@@ -186548,7 +186548,7 @@
         "min_bpm": 120,
         "max_bpm": 120,
         "jacket": "0435eee3e95b03a0.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -186567,7 +186567,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186583,7 +186583,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186599,7 +186599,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10196",
@@ -186618,7 +186618,7 @@
                 "flick": 54,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10196",
@@ -186648,7 +186648,7 @@
         "min_bpm": 182,
         "max_bpm": 182,
         "jacket": "4f87f9a2b0c6678c.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -186667,7 +186667,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186683,7 +186683,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186699,7 +186699,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10197",
@@ -186718,7 +186718,7 @@
                 "flick": 111,
                 "charter": "Δ.LIZ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10197",
@@ -186748,7 +186748,7 @@
         "min_bpm": 155,
         "max_bpm": 155,
         "jacket": "c396f54a2b4909c1.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -186765,7 +186765,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186781,7 +186781,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186797,7 +186797,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10198",
@@ -186816,7 +186816,7 @@
                 "flick": 248,
                 "charter": "Clematis vs Mistilteinn",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10198",
@@ -186846,7 +186846,7 @@
         "min_bpm": 224,
         "max_bpm": 224,
         "jacket": "847a10e09b44fbc9.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -186866,7 +186866,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186882,7 +186882,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186898,7 +186898,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10199",
@@ -186917,7 +186917,7 @@
                 "flick": 115,
                 "charter": "アミノハバキリ + そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10199",
@@ -186947,7 +186947,7 @@
         "min_bpm": 180,
         "max_bpm": 180,
         "jacket": "93df75f4bb6daa87.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -186967,7 +186967,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186983,7 +186983,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -186999,7 +186999,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10200",
@@ -187018,7 +187018,7 @@
                 "flick": 221,
                 "charter": "透明絵具",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10200",
@@ -187048,7 +187048,7 @@
         "min_bpm": 80,
         "max_bpm": 152,
         "jacket": "141156011c312445.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -187069,7 +187069,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187085,7 +187085,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187101,7 +187101,7 @@
                 "flick": 0,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10201",
@@ -187120,7 +187120,7 @@
                 "flick": 46,
                 "charter": "neige-fondue",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10201",
@@ -187150,7 +187150,7 @@
         "min_bpm": 54,
         "max_bpm": 259,
         "jacket": "72cd2fb54e03d738.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -187167,7 +187167,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187183,7 +187183,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187199,7 +187199,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10202",
@@ -187218,7 +187218,7 @@
                 "flick": 347,
                 "charter": "OVERLOAD LEMON",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10202",
@@ -187248,7 +187248,7 @@
         "min_bpm": 218,
         "max_bpm": 218,
         "jacket": "2b6966ef8a837f60.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -187267,7 +187267,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187283,7 +187283,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187299,7 +187299,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10203",
@@ -187318,7 +187318,7 @@
                 "flick": 143,
                 "charter": "TraNsforM \"NEW\"",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10203",
