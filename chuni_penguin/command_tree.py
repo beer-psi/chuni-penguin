@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 
 import discord
 import msgspec
-from discord.app_commands import CommandTree
+from discord.app_commands import AppCommandContext, AppInstallationType, CommandTree
 
 from chuni_penguin.config import config
 from chuni_penguin.logging import logger
@@ -17,6 +17,16 @@ if TYPE_CHECKING:
 
 
 class PenguinCommandTree(CommandTree["ChuniBot"]):
+    def __init__(self, client: "ChuniBot"):
+        super().__init__(
+            client,
+            fallback_to_global=True,
+            allowed_contexts=AppCommandContext(
+                guild=True, dm_channel=True, private_channel=True
+            ),
+            allowed_installs=AppInstallationType(guild=True, user=True),
+        )
+
     async def get_hash(self) -> int:
         commands = sorted(
             self._get_all_commands(guild=None), key=lambda c: c.qualified_name
