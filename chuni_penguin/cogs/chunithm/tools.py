@@ -227,13 +227,21 @@ def rating_reach_content(
         )
 
         return (
-            f"To reach {target_rating:.2f} {rating_type} with {count} score{'s' if count > 1 else ''} "
-            f"of the same rating in {frame.type.name}{frame.num_scores}, each of them "
-            f"would need to be **{required:.2f}** rating"
-        ) + (
-            f", but you only have {count_less_than_required} scores less than {required:.2f} rating."
-            if count_less_than_required < count
-            else "."
+            (
+                f"To reach {target_rating:.2f} {rating_type} with {count} score{'s' if count > 1 else ''} "
+                f"of the same rating in {frame.type.name}{frame.num_scores}, each of them "
+                f"would need to be **{required:.2f}** rating"
+            )
+            + (
+                f", but you only have {count_less_than_required} scores less than {required:.2f} rating."
+                if count_less_than_required < count
+                else "."
+            )
+            + (
+                " Good luck, I guess."
+                if required >= calculate_rating(1010000, MAX_DIFFICULTY)
+                else ""
+            )
         )
 
     return "Uh oh, you hit a bug! Please annoy beerpsi."
