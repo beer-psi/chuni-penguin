@@ -211,7 +211,13 @@ def rating_reach_content(
         # it reaches the new target rating.
         raw_rating_required = (target_rating - current_rating) * total_scores
         required = (
-            ceil((sum(ratings, Decimal(0)) + raw_rating_required) / len(ratings) * 100)
+            Decimal(
+                ceil(
+                    (sum(ratings, Decimal(0)) + raw_rating_required)
+                    / len(ratings)
+                    * 100
+                )
+            )
             / 100
         )
         count_less_than_required = sum(
