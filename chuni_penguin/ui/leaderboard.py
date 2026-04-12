@@ -9,6 +9,8 @@ from discord.utils import escape_markdown, format_dt
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
 from chuni_penguin.types import (
+    ClearLamp,
+    ComboLamp,
     Difficulty,
     Leaderboard,
     LeaderboardEntry,
@@ -93,9 +95,28 @@ class LeaderboardPageSource(ListPageSource):
 
             for record in page:
                 if has_widechar:
-                    description += f"`{record.position: >{max_position_length}}` {record.player_name:\u3000<{max_player_name_length}} ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+                    description += f"`{record.position: >{max_position_length}}` {record.player_name:\u3000<{max_player_name_length}} ▸ {config.icons.rank_icon(Rank.from_score(record.score))}"
                 else:
-                    description += f"`{record.position: >{max_position_length}}` `{record.player_name: <{max_player_name_length}}` ▸ {config.icons.rank_icon(Rank.from_score(record.score))} ▸ {record.score}"
+                    description += f"`{record.position: >{max_position_length}}` `{record.player_name: <{max_player_name_length}}` ▸ {config.icons.rank_icon(Rank.from_score(record.score))}"
+
+                if record.combo_lamp is not None or record.clear_lamp is not None:
+                    lamp_parts: list[str] = []
+
+                    if (
+                        record.combo_lamp is not None
+                        and record.combo_lamp != ComboLamp.none
+                    ):
+                        lamp_parts.append(record.combo_lamp.short())
+
+                    if (
+                        record.clear_lamp is not None
+                        and record.clear_lamp != ClearLamp.clear
+                    ):
+                        lamp_parts.append(record.clear_lamp.short())
+
+                    description += f" ▸ {' / '.join(lamp_parts)}"
+
+                description += f" ▸ {record.score}"
 
                 if record.judgements is not None:
                     description += f" ({record.judgements.justice_critical} / {record.judgements.justice} / {record.judgements.attack} / {record.judgements.miss})"

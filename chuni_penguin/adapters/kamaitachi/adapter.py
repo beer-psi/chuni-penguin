@@ -54,6 +54,8 @@ from chuni_penguin.utils import floor_to_ndp
 
 from .errors import KamaitachiError
 from .parser import (
+    KT_CLEAR_LAMP_MAP,
+    KT_NOTE_LAMP_MAP,
     convert_kt_pbs_to_records,
     convert_kt_scores_to_records,
     convert_kt_to_score,
@@ -438,6 +440,8 @@ class KamaitachiAdapter(NetworkAdapter):
                         )
                         else None
                     ),
+                    clear_lamp=KT_CLEAR_LAMP_MAP.get(pb.score_data.clear_lamp),
+                    combo_lamp=KT_NOTE_LAMP_MAP.get(pb.score_data.note_lamp),
                     ajc_count=None,
                     achieved_at=(
                         datetime.fromtimestamp(pb.time_achieved / 1000, tz=UTC)

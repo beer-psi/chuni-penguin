@@ -680,6 +680,8 @@ def parse_leaderboard(soup: LexborHTMLParser) -> Leaderboard:
             player_name=player_name_elem.text(),
             score=chuni_int(score_elem.text()),
             judgements=None,
+            clear_lamp=None,
+            combo_lamp=None,
             ajc_count=chuni_int(ajc_count_elem.text())
             if ajc_count_elem is not None
             else None,
