@@ -443,18 +443,29 @@ class RecordsCog(commands.Cog, name="Records"):
             try:
 
                 def check(m: discord.Message):
-                    nonlocal url_whitelist
-                    nonlocal image_urls_by_message
-
                     if m.author != self.bot.user:
                         return False
 
+                    # Secondary check needed when searching from message cache
+                    if m.channel.id != ctx.channel.id:
+                        return False
+
                     image_urls = _extract_images_from_message(m, url_whitelist)
+
+                    if len(image_urls) <= 0:
+                        return False
+
                     image_urls_by_message[m.id] = image_urls
+                    return True
 
-                    return len(image_urls) > 0
+                # Perform lookup in message cache first, which is faster and also
+                # avoids a potential Read Message History permission error
+                message = discord.utils.find(check, ctx.bot.cached_messages)
 
-                message = await discord.utils.find(check, ctx.channel.history(limit=50))
+                if message is None:
+                    message = await discord.utils.find(
+                        check, ctx.channel.history(limit=50)
+                    )
             except discord.errors.Forbidden as e:
                 msg = "Bot requires the Read Message History permission to fetch recent scores."
 

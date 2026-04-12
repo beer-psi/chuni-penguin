@@ -85,6 +85,7 @@ class ChuniBot(commands.AutoShardedBot):
         # - Messages/message content: Prefix command handling
         # - Typing: c>guess activity detection
         super().__init__(
+            max_messages=20000,
             command_prefix=guild_specific_prefix(config.bot.default_prefix),
             tree_cls=PenguinCommandTree,
             intents=discord.Intents(
