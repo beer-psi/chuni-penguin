@@ -121,6 +121,7 @@ def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
 
 
 def rating_reach_content(
+    rating_type: RatingType,
     target_rating: Decimal,
     current_rating: Decimal,  # should be 4dp for best results
     total_scores: int,
@@ -139,7 +140,7 @@ def rating_reach_content(
         play_rating_required = ceil((frame_floor + raw_rating_required) * 100) / 100
 
         return (
-            f"To acheive {target_rating:.2f} with one score in your "
+            f"To reach {target_rating:.2f} {rating_type} with one score in your "
             f"{frame.type.name}{frame.num_scores}, you need to set a **{play_rating_required:.2f}** "
             f"rating play."
         ) + (
@@ -156,7 +157,7 @@ def rating_reach_content(
         # Given rating is below best50 floor
         return (
             f"New {frame.type.name}{frame.num_scores} scores require "
-            f"at least **{frame.scores[-1].rating:.2f}** rating, so {target_rating:.2f} "
+            f"at least **{frame.scores[-1].rating:.2f}** rating, so {target_rating:.2f} {rating_type} "
             f"can't be reached with {each:.2f} rating scores."
         )
     if each is not None:
@@ -180,15 +181,15 @@ def rating_reach_content(
 
         if current_rating >= target_rating:
             return (
-                f"To reach {target_rating:.2f} rating, you need to set **{num_scores}** "
+                f"To reach {target_rating:.2f} {rating_type}, you need to set **{num_scores}** "
                 f"score{'s' if num_scores > 1 else ''} of **{each:.2f}** rating in your "
                 f"{frame.type.name}{frame.num_scores}."
             )
 
         return (
             f"Filling up your {frame.type.name}{frame.num_scores} with {each:.2f} rating "
-            f"plays would only lead to {current_rating:.4f} rating, which is still less "
-            f"than {target_rating:.2f} rating."
+            f"plays would only lead to {current_rating:.4f} {rating_type}, which is still less "
+            f"than {target_rating:.2f} {rating_type}."
         )
 
     if count is not None:
@@ -220,7 +221,7 @@ def rating_reach_content(
         )
 
         return (
-            f"To reach {target_rating:.2f} rating with {count} score{'s' if count > 1 else ''} "
+            f"To reach {target_rating:.2f} {rating_type} with {count} score{'s' if count > 1 else ''} "
             f"of the same rating in {frame.type.name}{frame.num_scores}, each of them "
             f"would need to be **{required:.2f}** rating"
         ) + (
@@ -1197,8 +1198,8 @@ class ToolsCog(commands.Cog, name="Tools"):
             )
             await ctx.respond_or_edit(
                 (
-                    f"- Best 30: {rating_reach_content(target_rating, raw_rating, total_scores, best30, each, count)}\n"
-                    f"- New 20: {rating_reach_content(target_rating, raw_rating, total_scores, new20, each, count)}\n"
+                    f"- Best 30: {rating_reach_content(rating_type, target_rating, raw_rating, total_scores, best30, each, count)}\n"
+                    f"- New 20: {rating_reach_content(rating_type, target_rating, raw_rating, total_scores, new20, each, count)}\n"
                 )
             )
         elif rating_type == RatingType.naive:
@@ -1211,7 +1212,13 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             await ctx.respond_or_edit(
                 rating_reach_content(
-                    target_rating, raw_rating, best50.num_scores, best50, each, count
+                    rating_type,
+                    target_rating,
+                    raw_rating,
+                    best50.num_scores,
+                    best50,
+                    each,
+                    count,
                 )
             )
         else:
