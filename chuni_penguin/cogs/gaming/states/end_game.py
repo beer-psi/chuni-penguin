@@ -45,6 +45,11 @@ STATIC_TIPS = tips = [
     "L9 upside down is six seven",
     "ok daddy sega please feed me more slop",
     "go ahead, look up the source for these tips, ruin the fun for yourself",
+    "increasing my read speed (flooring the gas pedal)",
+    "14+ this 15+ that why don't you go find yourself an 18+",
+    "no verse x until after marriage",
+    "『KING of Performai The 7th』全国決勝大でのキャラクター『Shoni Penguin』の告知映像内にて、『5 years old』との表現がありましたが、正しくは『3 years old』の誤りでした。",
+    "Japan is using piezoelectric tiles to convert footsteps into electricity. These tiles capture the kinetic energy from your steps. As you walk, your weight and movement put pressure on the tiles. The tiles bend slightly, creating mechanical stress. The piezoelectric material inside the tiles converts this stress into electrical energy. Each step generates a small amount of charge, and millions of steps combined produce enough electricity to power LED lights, digital displays, and sensors. In busy areas like Shibuya Station, approximately 2.4 million footsteps contribute to this system every day. This electricity can be stored or used immediately, reducing reliance on traditional power sources and supporting sustainable urban infrastructure. This method transforms everyday movement into practical renewable energy.",
 ]
 
 
