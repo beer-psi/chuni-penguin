@@ -460,7 +460,9 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 # Perform lookup in message cache first, which is faster and also
                 # avoids a potential Read Message History permission error
-                message = discord.utils.find(check, ctx.bot.cached_messages)
+                # cached_messages is internally is a deque, newer messages are at the end,
+                # so a reverse is needed
+                message = discord.utils.find(check, reversed(ctx.bot.cached_messages))
 
                 if message is None:
                     message = await discord.utils.find(
