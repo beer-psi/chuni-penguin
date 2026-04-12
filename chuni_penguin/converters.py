@@ -1,8 +1,9 @@
 import contextlib
 from dataclasses import dataclass
-from typing import NamedTuple, override
+from decimal import Decimal
+from typing import Any, NamedTuple, override
 
-from discord import Interaction, Member, User, app_commands
+from discord import AppCommandOptionType, Interaction, Member, User, app_commands
 from discord.ext import commands
 from discord.utils import escape_markdown
 
@@ -319,3 +320,24 @@ class VersionConverter(commands.Converter[ChunithmVersion]):
 
         msg = f'Unknown version "{escape_markdown(argument)}"'
         raise commands.CommandError(msg) from None
+
+
+class DecimalConverter(commands.Converter[Decimal]):
+    async def convert(self, ctx: commands.Context, argument: str) -> Decimal:
+        try:
+            return Decimal(argument)
+        except ValueError:
+            msg = f"{escape_markdown(argument)} is not a valid decimal number."
+            raise commands.BadArgument(msg) from None
+
+
+class DecimalTransformer(app_commands.Transformer):
+    @property
+    def type(self) -> AppCommandOptionType:
+        return AppCommandOptionType.number
+
+    async def transform(self, interaction: Interaction, value: Any, /) -> Decimal:
+        try:
+            return Decimal(value)
+        except ValueError:
+            raise app_commands.TransformerError(value, self.type, self) from None

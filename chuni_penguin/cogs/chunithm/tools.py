@@ -5,6 +5,7 @@ import random
 from contextlib import closing
 from decimal import Decimal
 from io import BytesIO
+from math import ceil
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Sequence
 
 import discord
@@ -27,18 +28,26 @@ from chuni_penguin.calculation import (
     calculate_score_for_rating,
 )
 from chuni_penguin.config import config
-from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION, MAX_DIFFICULTY
+from chuni_penguin.constants import MAX_DIFFICULTY
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
     AliasNameTransformer,
+    DecimalTransformer,
     DifficultyConverter,
     LevelRange,
     LevelRangeConverter,
 )
 from chuni_penguin.database import Chart, PersonalBest, Song
 from chuni_penguin.logging import logged_app_command, logged_prefix_command
-from chuni_penguin.types import ComboLamp, Difficulty, Rank
+from chuni_penguin.types import (
+    ComboLamp,
+    Difficulty,
+    Rank,
+    RatingFrame,
+    RatingFrameType,
+    RatingType,
+)
 from chuni_penguin.ui import ChartCardEmbed
 from chuni_penguin.utils import (
     floor_to_ndp,
@@ -109,6 +118,142 @@ def compose_chart_view(bg: bytes, data: bytes, bar: bytes):
     output.seek(0)
 
     return output
+
+
+def rating_reach_content(
+    target_rating: Decimal,
+    current_rating: Decimal,  # should be 4dp for best results
+    total_scores: int,
+    frame: RatingFrame,
+    each: Decimal | None,
+    count: int | None,
+):
+    if each is None and (count is None or count == 1):
+        # Reach goal with only one score
+        raw_rating_required = (target_rating - current_rating) * total_scores
+        frame_floor = (
+            (frame.scores[-1].rating or Decimal(0))
+            if len(frame.scores) == frame.num_scores
+            else Decimal(0)
+        )
+        play_rating_required = ceil((frame_floor + raw_rating_required) * 100) / 100
+
+        return (
+            f"To acheive {target_rating:.2f} with one score in your "
+            f"{frame.type.name}{frame.num_scores}, you need to set a **{play_rating_required:.2f}** "
+            f"rating play."
+        ) + (
+            " Good luck, I guess."
+            if play_rating_required >= calculate_rating(1010000, MAX_DIFFICULTY)
+            else ""
+        )
+    if (
+        each is not None
+        and len(frame.scores) == frame.num_scores
+        and frame.scores[-1].rating is not None
+        and each < frame.scores[-1].rating
+    ):
+        # Given rating is below best50 floor
+        return (
+            f"New {frame.type.name}{frame.num_scores} scores require "
+            f"at least **{frame.scores[-1].rating:.2f}** rating, so {target_rating:.2f} "
+            f"can't be reached with {each:.2f} rating scores."
+        )
+    if each is not None:
+        # Given rating would be in best50
+        num_scores = 0
+        # Rating list from bottom to top, fill in unfilled slots with 0 rating
+        ratings = [Decimal(0)] * (frame.num_scores - len(frame.scores)) + [
+            frame.scores[-(i + 1)].rating or Decimal(0)
+            for i in range(len(frame.scores))
+        ]
+
+        for rating in ratings:
+            if rating >= each:
+                break
+
+            current_rating += (each - rating) / 50
+            num_scores += 1
+
+            if current_rating >= target_rating:
+                break
+
+        if current_rating >= target_rating:
+            return (
+                f"To reach {target_rating:.2f} rating, you need to set **{num_scores}** "
+                f"score{'s' if num_scores > 1 else ''} of **{each:.2f}** rating in your "
+                f"{frame.type.name}{frame.num_scores}."
+            )
+
+        return (
+            f"Filling up your {frame.type.name}{frame.num_scores} with {each:.2f} rating "
+            f"plays would only lead to {current_rating:.4f} rating, which is still less "
+            f"than {target_rating:.2f} rating."
+        )
+
+    if count is not None:
+        if count > frame.num_scores:
+            return f"{count} scores is more than the number of scores in {frame.type.name}{frame.num_scores}."
+
+        # count is not None and count > 1 (because first condition checks count == 1)
+        # calculate play rating needed for each play to achieve the given rating
+        # Ratings of bottom n plays.
+        # - If there are more than `count` unfilled slots, take a list of `count` 0s.
+        # - If there are less than `count` unfilled slots, take a list of 0s of unfilled
+        # slots, and then take the rest from the given data.
+        ratings = [Decimal(0)] * min(count, frame.num_scores - len(frame.scores)) + [
+            frame.scores[-(i + 1)].rating or Decimal(0)
+            for i in range(max(0, count - (frame.num_scores - len(frame.scores))))
+        ]
+
+        # Find the minimum rating to replace each entry in `ratings` with so that
+        # it reaches the new target rating.
+        raw_rating_required = (target_rating - current_rating) * total_scores
+        required = (
+            ceil((sum(ratings, Decimal(0)) + raw_rating_required) / len(ratings) * 100)
+            / 100
+        )
+        count_less_than_required = sum(
+            1
+            for entry in frame.scores
+            if entry.rating is None or entry.rating < required
+        )
+
+        return (
+            f"To reach {target_rating:.2f} rating with {count} score{'s' if count > 1 else ''} "
+            f"of the same rating in {frame.type.name}{frame.num_scores}, each of them "
+            f"would need to be **{required:.2f}** rating"
+        ) + (
+            f", but you only have {count_less_than_required} scores less than {required:.2f} rating."
+            if count_less_than_required < count
+            else "."
+        )
+
+    return "Uh oh, you hit a bug! Please annoy beerpsi."
+
+
+def whatif_content(
+    frame: RatingFrame,
+    current_rating: Decimal,
+    play_rating: Decimal,
+    text_before_replacing: str = "",
+):
+    replacing: Decimal | None = None
+
+    if len(frame.scores) < frame.num_scores:
+        rating_increase = floor_to_ndp(play_rating / 50, 4)
+    else:
+        replacing = frame.scores[-1].rating or Decimal(0)
+        rating_increase = max((Decimal(play_rating) - replacing) / 50, Decimal(0))
+
+    return (
+        f"**+{rating_increase:.4f}** ({current_rating:.4f} → {current_rating + rating_increase:.4f}){text_before_replacing}"
+        + (
+            f", replacing a {replacing:.2f} rating play"
+            if replacing is not None and rating_increase > 0
+            else ""
+        )
+    )
 
 
 class ToolsCog(commands.Cog, name="Tools"):
@@ -723,179 +868,355 @@ class ToolsCog(commands.Cog, name="Tools"):
 
             await ctx.reply(embeds=embeds, mention_author=False)
 
-    @commands.hybrid_command("whatif")
+    @flags.command("whatif")
+    @flags.argument("play_rating", type=Decimal)
+    @flags.argument("current_play_rating", nargs="?", default=None, type=Decimal)
+    @flags.argument(
+        "-r",
+        "--rating-system",
+        choices=["naive", "ingame"],
+        default=None,
+        required=False,
+    )
+    @flags.argument("-k", "--kamaitachi", dest="kamaitachi", action="store_true")
     @logged_prefix_command
     async def whatif(
         self,
         ctx: PenguinContext,
-        play_rating: Range[float, 0.0, round(MAX_DIFFICULTY + 2.15, 2)],
-        current_play_rating: Optional[
-            Range[float, 0.0, round(MAX_DIFFICULTY + 2.15, 2)]
-        ] = None,
+        *,
+        play_rating: Decimal,
+        current_play_rating: Decimal | None = None,
+        rating_system: Literal["naive", "ingame"] | None = None,
+        kamaitachi: bool = False,
     ):
         """What if you get a new play with a certain play rating?
 
-        Parameters
-        ----------
-        play_rating: float
-            The play rating you would achieve.
-        current_play_rating: Optional[float]
-            The current play rating of the chart if it is already in your best 50 scores.
-            Leave blank if the chart is currently not included in your best 50 scores.
+        *Parameters*
+        `play_rating`: The play rating you would achieve.
+        `current_play_rating`: The current play rating of the chart if it is already in your best 50 scores. Leave blank if the chart is currently not included in your best 50 scores.
+        `-r`, `--rating-system`: Choose between `ingame` (best30 + new20) or `naive` (best50) (default: depends on network).
+        `-k`, `--kamaitachi`: Use your Kamaitachi account instead of your CHUNITHM International account, if both are linked.
         """
 
-        async with ctx.typing():
-            play_rating = round(play_rating, 2)
+        if rating_system == "naive":
+            rating_type = RatingType.naive
+        elif rating_system == "ingame":
+            rating_type = RatingType.in_game
+        else:
+            rating_type = None
 
-            if current_play_rating is not None:
-                current_play_rating = round(current_play_rating, 2)
-                if play_rating < current_play_rating:
-                    # swap the input parameters because we're nice
-                    play_rating, current_play_rating = current_play_rating, play_rating
-                elif play_rating == current_play_rating:
-                    await ctx.reply(
-                        "That wouldn't give you any rating increase! What are you expecting?",
-                        mention_author=False,
-                    )
-                    return
+        await self._whatif_impl(
+            ctx, play_rating, current_play_rating, rating_type, kamaitachi=kamaitachi
+        )
 
-            async with (
-                self.bot.begin_db_read() as session,
-                ctx.bot.chunithm_networks.network(ctx) as client,
-            ):
-                naive_best50 = list(
-                    (
-                        await session.execute(
-                            select(PersonalBest)
-                            .where(
-                                (PersonalBest.discord_id == ctx.author.id)
-                                & (PersonalBest.network == client.NAME)
-                            )
-                            .where(PersonalBest.rating.is_not(None))
-                            .order_by(PersonalBest.rating.desc())
-                            .limit(50)
-                        )
-                    )
-                    .scalars()
-                    .all()
-                )
-                best30 = list(
-                    (
-                        await session.execute(
-                            select(PersonalBest)
-                            .join(Song, PersonalBest.song_id == Song.id)
-                            .where(
-                                (PersonalBest.discord_id == ctx.author.id)
-                                & (PersonalBest.network == client.NAME)
-                                & (Song.version != CURRENT_CHUNITHM_VERSION)
-                            )
-                            .where(PersonalBest.rating.is_not(None))
-                            .order_by(PersonalBest.rating.desc())
-                            .limit(30)
-                        )
-                    )
-                    .scalars()
-                    .unique()
-                )
-                new20 = list(
-                    (
-                        await session.execute(
-                            select(PersonalBest)
-                            .join(Song, PersonalBest.song_id == Song.id)
-                            .where(
-                                (PersonalBest.discord_id == ctx.author.id)
-                                & (PersonalBest.network == client.NAME)
-                                & (Song.version == CURRENT_CHUNITHM_VERSION)
-                            )
-                            .where(PersonalBest.rating.is_not(None))
-                            .order_by(PersonalBest.rating.desc())
-                            .limit(20)
-                        )
-                    )
-                    .scalars()
-                    .unique()
-                )
+    @app_commands.command(
+        name="whatif",
+        description="What if you get a new play with a certain play rating?",
+    )
+    @app_commands.rename(
+        play_rating="play-rating", current_play_rating="current-play-rating"
+    )
+    @app_commands.describe(
+        play_rating="The play rating you would achieve.",
+        current_play_rating="The current play rating of the chart if it is already in your best 50 scores.",
+        rating_system="The rating system to calculate the rating gain for.",
+        kamaitachi="Use your Kamaitachi account.",
+    )
+    @app_commands.choices(
+        rating_system=[
+            app_commands.Choice(
+                name="In-game (Best 30 + New 20)", value=RatingType.in_game.value
+            ),
+            app_commands.Choice(name="Naive (Best 50)", value=RatingType.naive.value),
+        ]
+    )
+    @logged_app_command
+    async def whatif_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        play_rating: app_commands.Transform[Decimal, DecimalTransformer],
+        current_play_rating: app_commands.Transform[Decimal | None, DecimalTransformer],
+        rating_system: RatingType | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        await self._whatif_impl(
+            await PenguinContext.from_interaction(interaction),
+            play_rating,
+            current_play_rating,
+            rating_system,
+            kamaitachi=kamaitachi,
+        )
 
-            ingame_rating = floor_to_ndp(
-                Decimal(
-                    sum(pb.rating or 0 for pb in best30)
-                    + sum(pb.rating or 0 for pb in new20)
-                )
-                / 50
-                / 100,  # database rating is x100
-                4,
-            )
-            naive_rating = floor_to_ndp(
-                Decimal(sum(pb.rating or 0 for pb in naive_best50)) / 50 / 100, 4
-            )
+    async def _whatif_impl(
+        self,
+        ctx: PenguinContext,
+        play_rating: Decimal,
+        current_play_rating: Decimal | None,
+        rating_type: RatingType | None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        play_rating = floor_to_ndp(play_rating, 2)
 
-            if current_play_rating is not None:
-                rating_increase = (
-                    Decimal(play_rating) - Decimal(current_play_rating)
-                ) / 50
-                await ctx.respond_or_edit(
-                    content=(
-                        f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give **+{rating_increase:.4f}**:\n"
-                        f"- Rating: {ingame_rating:.4f} → {ingame_rating + rating_increase:.4f}\n"
-                        f"- NaiveRating: {naive_rating:.4f} → {naive_rating + rating_increase:.4f}"
-                    )
+        if current_play_rating is not None:
+            current_play_rating = floor_to_ndp(current_play_rating, 2)
+
+            if play_rating < current_play_rating:
+                # swap the input parameters because we're nice
+                play_rating, current_play_rating = current_play_rating, play_rating
+            elif play_rating == current_play_rating:
+                await ctx.reply(
+                    "That wouldn't give you any rating increase! What are you expecting?",
+                    mention_author=False,
                 )
                 return
 
-            result: list[str] = [
-                f"Getting a **{play_rating:.2f}** rating play for a chart currently not in your best 50 would give:\n"
-            ]
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.network(ctx, kamaitachi=kamaitachi) as client,
+        ):
+            if rating_type is None:
+                rating_type = client.DEFAULT_RATING_SYSTEM
 
-            gain = Decimal(0)
-            replacing = None
+            breakdown = await client.get_rating_breakdown(rating_type)
 
-            if len(best30) < 30:
-                gain = floor_to_ndp(Decimal(play_rating) / 50, 4)
-            else:
-                replacing = Decimal(best30[-1].rating or 0) / 100
-                gain = max((Decimal(play_rating) - replacing) / 50, Decimal(0))
+        if rating_type == RatingType.in_game:
+            best30 = breakdown.frames[RatingFrameType.best]
+            new20 = breakdown.frames[RatingFrameType.new]
+            total_scores = best30.num_scores + new20.num_scores
+            raw_rating = floor_to_ndp(
+                sum(
+                    (
+                        entry.rating or Decimal(0)
+                        for entry in itertools.chain(best30.scores, new20.scores)
+                    ),
+                    Decimal(0),
+                )
+                / total_scores,
+                4,
+            )
+        elif rating_type == RatingType.naive:
+            best50 = breakdown.frames[RatingFrameType.best]
+            raw_rating = floor_to_ndp(
+                sum(
+                    (entry.rating or Decimal(0) for entry in best50.scores),
+                    Decimal(0),
+                )
+                / best50.num_scores,
+                4,
+            )
+        else:
+            msg = f"Unsupported rating system {client.DEFAULT_RATING_SYSTEM}."
+            raise commands.CommandError(msg)
 
-            result.append(
-                f"- Rating: **+{gain:.4f}** ({ingame_rating:.4f} → {ingame_rating + gain:.4f}) if this is an old chart"
+        if current_play_rating is not None:
+            rating_increase = (Decimal(play_rating) - Decimal(current_play_rating)) / 50
+            await ctx.respond_or_edit(
+                content=(
+                    f"Replacing a **{current_play_rating:.2f}** rating play with a **{play_rating:.2f}** rating play in your best 50 would give:\n"
+                    f"- {rating_type}: **+{rating_increase:.4f}** ({raw_rating:.4f} → {raw_rating + rating_increase:.4f})"
+                )
+            )
+            return
+
+        if rating_type == RatingType.in_game:
+            best30 = breakdown.frames[RatingFrameType.best]
+            new20 = breakdown.frames[RatingFrameType.new]
+
+            await ctx.respond_or_edit(
+                content=(
+                    f"Getting a **{play_rating:.2f}** play for a chart currently not in your best50 would give:\n"
+                    f"- {rating_type}: {whatif_content(best30, raw_rating, play_rating, ' if this is an old chart')}\n"
+                    f"- {rating_type}: {whatif_content(new20, raw_rating, play_rating, ' if this is a new chart')}"
+                )
             )
 
-            if gain > 0 and replacing is not None:
-                result.append(f", replacing a {replacing:.2f} rating play")
+        elif rating_type == RatingType.naive:
+            best50 = breakdown.frames[RatingFrameType.best]
 
-            result.append("\n")
+            await ctx.respond_or_edit(
+                content=(
+                    f"Getting a **{play_rating:.2f}** play for a chart currently not in your best50 would give:\n"
+                    f"- {rating_type}: {whatif_content(best50, raw_rating, play_rating)}"
+                )
+            )
+        else:
+            msg = f"Unreachable branch {current_play_rating=!r} {rating_type=!r}"
+            raise commands.CommandError(msg)
 
-            gain = Decimal(0)
-            replacing = None
+    @flags.command("reach")
+    @flags.argument("target")
+    @flags.argument(
+        "-e", "--each", dest="each", type=Decimal, default=None, required=False
+    )
+    @flags.argument(
+        "-c", "--count", dest="count", type=int, default=None, required=False
+    )
+    @flags.argument(
+        "-r",
+        "--rating-system",
+        choices=["naive", "ingame"],
+        default=None,
+        required=False,
+    )
+    @flags.argument("-k", "--kamaitachi", dest="kamaitachi", action="store_true")
+    @logged_prefix_command
+    async def reach_prefix(
+        self,
+        ctx: PenguinContext,
+        *,
+        target: str,
+        each: Decimal | None = None,
+        count: int | None = None,
+        rating_system: Literal["naive", "ingame"] | None = None,
+        kamaitachi: bool = False,
+    ):
+        """Calculate how many scores of what rating is needed to reach the given rating.
 
-            if len(new20) < 20:
-                gain = floor_to_ndp(Decimal(play_rating) / 50, 4)
-            else:
-                replacing = Decimal(new20[-1].rating or 0) / 100
-                gain = max((Decimal(play_rating) - replacing) / 50, Decimal(0))
+        **Parameters**
+        `target`: The target rating to achieve, will be floored to 2 decimal points. Alternatively, prefix the value with a `+` to interpret as a delta relative to your current rating.
+        `-e`, `--each`: Fill your best30/new20/best50 with scores of this much rating (floored to 2 decimal points) until the target rating is acheived. (default: None)
+        `-c`, `--count`: Specify a number of scores to set to reach the target rating (default: 1).
+        `-r`, `--rating-system`: Choose between `ingame` (best30 + new20) or `naive` (best50) (default: depends on network).
+        `-k`, `--kamaitachi`: Use your Kamaitachi account instead of your CHUNITHM International account, if both are linked.
+        """
 
-            result.append(
-                f"- Rating: **+{gain:.4f}** ({ingame_rating:.4f} → {ingame_rating + gain:.4f}) if this is a new chart"
+        if rating_system == "naive":
+            rating_type = RatingType.naive
+        elif rating_system == "ingame":
+            rating_type = RatingType.in_game
+        else:
+            rating_type = None
+
+        await self._reach_impl(
+            ctx, target, each, count, rating_type, kamaitachi=kamaitachi
+        )
+
+    @app_commands.command(
+        name="reach",
+        description="Calculate how many scores of what rating is needed to reach the given rating.",
+    )
+    @app_commands.rename(rating_system="rating-system")
+    @app_commands.describe(
+        target="Target rating to achieve, or a delta from your current rating (e.g. +0.01).",
+        each="Fill your best30/new20/best50 with scores of this much rating until the target rating is acheived.",
+        count="Specify a number of scores to set to reach the target rating.",
+        rating_system="The rating system to calculate for.",
+        kamaitachi="Use your Kamaitachi account.",
+    )
+    @app_commands.choices(
+        rating_system=[
+            app_commands.Choice(
+                name="In-game (Best 30 + New 20)", value=RatingType.in_game.value
+            ),
+            app_commands.Choice(name="Naive (Best 50)", value=RatingType.naive.value),
+        ]
+    )
+    @logged_app_command
+    async def reach_slash(
+        self,
+        interaction: discord.Interaction["ChuniBot"],
+        target: str,
+        each: app_commands.Transform[Decimal | None, DecimalTransformer] = None,
+        count: int | None = None,
+        rating_system: RatingType | None = None,
+        *,
+        kamaitachi: bool = False,
+    ):
+        await self._reach_impl(
+            await PenguinContext.from_interaction(interaction),
+            target,
+            each,
+            count,
+            rating_system,
+            kamaitachi=kamaitachi,
+        )
+
+    async def _reach_impl(
+        self,
+        ctx: PenguinContext,
+        target: str,
+        each: Decimal | None,
+        count: int | None,
+        rating_type: RatingType | None,
+        *,
+        kamaitachi: bool,
+    ):
+        if target.startswith("-"):
+            msg = "We don't have recent rating anymore, you can't lose rating until the version changes!"
+            raise commands.BadArgument(msg)
+
+        if each is not None and count is not None:
+            msg = 'You can only specify one of "each" or "count".'
+            raise commands.BadArgument(msg)
+
+        try:
+            target_value = floor_to_ndp(Decimal(target), 2)
+        except ValueError:
+            msg = 'Expected a number for parameter "target".'
+            raise commands.BadArgument(msg) from None
+
+        if each is not None:
+            each = floor_to_ndp(each, 2)
+
+        async with (
+            ctx.typing(),
+            ctx.bot.chunithm_networks.network(ctx, kamaitachi=kamaitachi) as client,
+        ):
+            if rating_type is None:
+                rating_type = client.DEFAULT_RATING_SYSTEM
+
+            rating_breakdown = await client.get_rating_breakdown(rating_type)
+
+        if target.startswith("+"):
+            target_rating = rating_breakdown.rating + target_value
+        else:
+            target_rating = target_value
+
+        if rating_breakdown.rating >= target_rating:
+            await ctx.respond_or_edit(
+                f"You have {rating_breakdown.rating:.2f} {rating_type} which is already more than {target_rating}."
+            )
+            return
+
+        if rating_type == RatingType.in_game:
+            best30 = rating_breakdown.frames[RatingFrameType.best]
+            new20 = rating_breakdown.frames[RatingFrameType.new]
+            total_scores = best30.num_scores + new20.num_scores
+            raw_rating = floor_to_ndp(
+                sum(
+                    (
+                        entry.rating or Decimal(0)
+                        for entry in itertools.chain(best30.scores, new20.scores)
+                    ),
+                    Decimal(0),
+                )
+                / total_scores,
+                4,
+            )
+            await ctx.respond_or_edit(
+                (
+                    f"- Best 30: {rating_reach_content(target_rating, raw_rating, total_scores, best30, each, count)}\n"
+                    f"- New 20: {rating_reach_content(target_rating, raw_rating, total_scores, new20, each, count)}\n"
+                )
+            )
+        elif rating_type == RatingType.naive:
+            best50 = rating_breakdown.frames[RatingFrameType.best]
+            raw_rating = floor_to_ndp(
+                sum((entry.rating or Decimal(0) for entry in best50.scores), Decimal(0))
+                / best50.num_scores,
+                4,
             )
 
-            if gain > 0 and replacing is not None:
-                result.append(f", replacing a {replacing:.2f} rating play")
-
-            result.append("\n")
-
-            gain = Decimal(0)
-            replacing = None
-
-            if len(naive_best50) < 50:
-                gain = floor_to_ndp(Decimal(play_rating) / 50, 4)
-            else:
-                replacing = Decimal(naive_best50[-1].rating or 0) / 100
-                gain = max((Decimal(play_rating) - replacing) / 50, Decimal(0))
-
-            result.append(
-                f"- NaiveRating: **+{gain:.4f}** ({naive_rating:.4f} → {naive_rating + gain:.4f})\n"
+            await ctx.respond_or_edit(
+                rating_reach_content(
+                    target_rating, raw_rating, best50.num_scores, best50, each, count
+                )
             )
-
-            await ctx.respond_or_edit("".join(result))
+        else:
+            msg = f"Unsupported rating system {client.DEFAULT_RATING_SYSTEM}."
+            raise commands.CommandError(msg)
 
     async def song_title_autocomplete(
         self, interaction: discord.Interaction, current: str
