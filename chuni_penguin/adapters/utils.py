@@ -293,6 +293,8 @@ def calculate_ongeki_rating_breakdown(
         reverse=True,
     )
 
+    platinum_pbs = platinum_pbs[:50]
+
     if rating_type == RatingType.ongeki:
         best = []
         new = []
@@ -349,14 +351,13 @@ def calculate_ongeki_rating_breakdown(
                 RatingFrameType.platinum: RatingFrame(
                     type=RatingFrameType.platinum,
                     num_scores=50,
-                    scores=platinum_pbs[:50],
+                    scores=platinum_pbs,
                 ),
             },
         )
 
     if rating_type == RatingType.ongeki_naive:
         pbs = pbs[:60]
-        platinum_pbs = platinum_pbs[:50]
         rating = floor_to_ndp(
             floor_to_ndp(
                 sum(
