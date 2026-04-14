@@ -365,7 +365,11 @@ class ChunithmNetAdapter(NetworkAdapter):
         if rating_type == RatingType.in_game:
             profile = await self.get_profile()
             rating = Decimal(
-                next(s.value for s in profile.rating_systems if s.type == rating_type)
+                next(
+                    str(s.value)
+                    for s in profile.rating_systems
+                    if s.type == rating_type
+                )
             )
             records: list[PersonalBest] = []
             record_slots = 30
