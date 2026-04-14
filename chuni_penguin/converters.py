@@ -1,4 +1,5 @@
 import contextlib
+import decimal
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, NamedTuple, override
@@ -326,8 +327,8 @@ class DecimalConverter(commands.Converter[Decimal]):
     async def convert(self, ctx: commands.Context, argument: str) -> Decimal:
         try:
             return Decimal(argument)
-        except ValueError:
-            msg = f"{escape_markdown(argument)} is not a valid decimal number."
+        except decimal.InvalidOperation:
+            msg = f'"{escape_markdown(argument)}" is not a valid number.'
             raise commands.BadArgument(msg) from None
 
 
@@ -339,5 +340,5 @@ class DecimalTransformer(app_commands.Transformer):
     async def transform(self, interaction: Interaction, value: Any, /) -> Decimal:
         try:
             return Decimal(value)
-        except ValueError:
+        except decimal.InvalidOperation:
             raise app_commands.TransformerError(value, self.type, self) from None

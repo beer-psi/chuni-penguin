@@ -1,5 +1,6 @@
 # ruff: noqa: RUF003
 import asyncio
+import decimal
 import itertools
 import random
 from contextlib import closing
@@ -33,6 +34,7 @@ from chuni_penguin.context import PenguinContext
 from chuni_penguin.converters import (
     AliasNameConverter,
     AliasNameTransformer,
+    DecimalConverter,
     DecimalTransformer,
     DifficultyConverter,
     LevelRange,
@@ -1063,7 +1065,7 @@ class ToolsCog(commands.Cog, name="Tools"):
     @flags.command("reach")
     @flags.argument("target")
     @flags.argument(
-        "-e", "--each", dest="each", type=Decimal, default=None, required=False
+        "-e", "--each", dest="each", type=DecimalConverter, default=None, required=False
     )
     @flags.argument(
         "-c", "--count", dest="count", type=int, default=None, required=False
@@ -1168,8 +1170,8 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         try:
             target_value = floor_to_ndp(Decimal(target), 2)
-        except ValueError:
-            msg = 'Expected a number for parameter "target".'
+        except decimal.InvalidOperation:
+            msg = f'"{escape_markdown(target)}" is not a valid number.'
             raise commands.BadArgument(msg) from None
 
         if each is not None:

@@ -315,7 +315,11 @@ class KamaitachiAdapter(NetworkAdapter):
             pbs = pbs[:50]
             profile = await self.get_profile()
             rating = Decimal(
-                next(s.value for s in profile.rating_systems if s.type == rating_type)
+                next(
+                    str(s.value)
+                    for s in profile.rating_systems
+                    if s.type == rating_type
+                )
             )
 
             return RatingBreakdown(
