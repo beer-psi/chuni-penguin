@@ -187547,7 +187547,7 @@
         "min_bpm": 135,
         "max_bpm": 135,
         "jacket": "ca8e87e6896d99b1.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -187568,7 +187568,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187584,7 +187584,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187600,7 +187600,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10206",
@@ -187619,7 +187619,7 @@
                 "flick": 65,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10206",
@@ -187653,7 +187653,7 @@
         "min_bpm": 240,
         "max_bpm": 240,
         "jacket": "1c0cd842e31d1ff2.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -187673,7 +187673,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187689,7 +187689,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187705,7 +187705,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10207",
@@ -187724,7 +187724,7 @@
                 "flick": 177,
                 "charter": "バカペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10207",
@@ -187758,7 +187758,7 @@
         "min_bpm": 140,
         "max_bpm": 200,
         "jacket": "2a1db642d331bc94.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -187777,7 +187777,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187793,7 +187793,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": null
             },
@@ -187809,7 +187809,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10208",
@@ -187828,7 +187828,7 @@
                 "flick": 137,
                 "charter": "じゃこレモン(_ _).｡o○",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
                     "id": "10208",
