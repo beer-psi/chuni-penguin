@@ -22,6 +22,10 @@ class TitleRarity(Enum):
     phoenix_platinum = "phoenix_p"
     phoenix_rainbow = "phoenix_r"
 
+    expert = "expert"
+    master = "master"
+    ultima = "ultima"
+
     version1 = "version1"
     version2 = "version2"
     version3 = "version3"
