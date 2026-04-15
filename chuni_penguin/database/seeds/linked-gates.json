@@ -853,6 +853,66 @@
                 "damage_justice": 50,
                 "start_date": "2026-01-07T21:00:00+00:00",
                 "end_date": null
+            },
+            {
+                "level": 5,
+                "region": "intl",
+                "difficulty": "MAS",
+                "life": 300,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-15T21:00:00+00:00",
+                "end_date": "2026-04-19T21:00:00+00:00"
+            },
+            {
+                "level": 4,
+                "region": "intl",
+                "difficulty": "MAS",
+                "life": 1000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-19T21:00:00+00:00",
+                "end_date": "2026-04-22T21:00:00+00:00"
+            },
+            {
+                "level": 3,
+                "region": "intl",
+                "difficulty": "MAS",
+                "life": 2000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-22T21:00:00+00:00",
+                "end_date": "2026-04-26T21:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "intl",
+                "difficulty": "EXP",
+                "life": 3000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-26T21:00:00+00:00",
+                "end_date": "2026-04-29T21:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "intl",
+                "difficulty": "BAS",
+                "life": 3000,
+                "recovery_life": 0,
+                "damage_miss": 20,
+                "damage_attack": 10,
+                "damage_justice": 5,
+                "start_date": "2026-04-29T21:00:00+00:00",
+                "end_date": null
             }
         ]
     },

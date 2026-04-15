@@ -318,12 +318,12 @@ async def merge_options(
                 if release_date
                 else None
             )
-            song["bpm"] = None
-            song["min_bpm"] = None
-            song["max_bpm"] = None
-            song["jacket"] = jacket_by_id.get(song_id_int)
+            song["bpm"] = song.get("bpm")
+            song["min_bpm"] = song.get("min_bpm")
+            song["max_bpm"] = song.get("max_bpm")
+            song["jacket"] = song.get("jacket", jacket_by_id.get(song_id_int))
             song["available"] = gettext(root, "./disableFlag") != "true"
-            song["removed"] = False
+            song["removed"] = song.get("removed", False)
             song["is_hidden_on_chuninet"] = song.get("is_hidden_on_chuninet", False)
             song["aliases"] = song.get("aliases", [])
             song["charts"] = song.get("charts", [])
