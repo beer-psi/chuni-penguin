@@ -1106,6 +1106,10 @@ class ToolsCog(commands.Cog, name="Tools"):
         else:
             rating_type = None
 
+        if count is not None and count <= 0:
+            msg = "number of charts must be at least 1"
+            raise commands.BadArgument(msg)
+
         await self._reach_impl(
             ctx, target, each, count, rating_type, kamaitachi=kamaitachi
         )
@@ -1136,7 +1140,7 @@ class ToolsCog(commands.Cog, name="Tools"):
         interaction: discord.Interaction["ChuniBot"],
         target: str,
         each: app_commands.Transform[Decimal | None, DecimalTransformer] = None,
-        count: int | None = None,
+        count: app_commands.Range[int, 1] | None = None,
         rating_system: RatingType | None = None,
         *,
         kamaitachi: bool = False,
