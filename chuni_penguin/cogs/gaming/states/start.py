@@ -86,10 +86,5 @@ class StartState(GuessingGameState):
         if self.session.seeded:
             embed.add_field(name="Seed", value=self.session.seed)
 
-        if self.session.game_type != GuessingGameType.CHARACTER_AGE:
-            content = f"try the limited time gamemode `{self.session.ctx.clean_prefix}guess character-age`"
-        else:
-            content = None
-
-        await self.session.ctx.send(content=content, embed=embed)
+        await self.session.ctx.send(embed=embed)
         return WaitState(self.session, 5, self.session.question_state_cls(self.session))
