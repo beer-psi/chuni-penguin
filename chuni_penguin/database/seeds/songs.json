@@ -177406,7 +177406,12 @@
             "https://chunithm.beerpsi.cc/assets/jackets/2818.png",
             "https://chunithm.beerpsi.cc/assets/jackets/2818.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/c85e8c746444772d726cc308115bc4979c9cac71bbc2e5bfcc7694aca08bca5d.png",
-            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/2052bb12a465f286.jpg"
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/2052bb12a465f286.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/0f4c6d4515f0c1cb06334701d18aad30451d6e5cede2066461eaad1b5febc044.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/41a8b5a54f76f83a23a80815b8e74b8bcdfaa8f34ce76a0801c0cfbd7a05259c.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/b13a68ee8c85a999.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/b13a68ee8c85a999.png",
+            "https://mimixd.app/images/render/cover/b13a68ee8c85a999.png"
         ]
     },
     {
@@ -191075,7 +191080,7 @@
     },
     {
         "id": 2959,
-        "chunirec_id": null,
+        "chunirec_id": "e750a42252bf9d0b",
         "title": "無双の咆哮 Warcry Overload",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -191086,7 +191091,7 @@
         "bpm": 185,
         "min_bpm": 185,
         "max_bpm": 185,
-        "jacket": null,
+        "jacket": "5e9b5e75bf05b27c.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -191159,11 +191164,16 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/5e9b5e75bf05b27c.jpg",
+            "https://chunithm-net-eng.com/mobile/img/5e9b5e75bf05b27c.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2959.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2959.webp"
+        ]
     },
     {
         "id": 2960,
-        "chunirec_id": null,
+        "chunirec_id": "5a186c3c75de4197",
         "title": "God only knows",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -191174,7 +191184,7 @@
         "bpm": 170,
         "min_bpm": 170,
         "max_bpm": 170,
-        "jacket": null,
+        "jacket": "0cb3382441cd8284.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -191245,11 +191255,16 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/0cb3382441cd8284.jpg",
+            "https://chunithm-net-eng.com/mobile/img/0cb3382441cd8284.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2960.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2960.webp"
+        ]
     },
     {
         "id": 2961,
-        "chunirec_id": null,
+        "chunirec_id": "01aaeb334b7e1af7",
         "title": "New Starlight",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -191260,7 +191275,7 @@
         "bpm": 155,
         "min_bpm": 155,
         "max_bpm": 155,
-        "jacket": null,
+        "jacket": "c8a1df3e97ad768f.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -191331,11 +191346,16 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/c8a1df3e97ad768f.jpg",
+            "https://chunithm-net-eng.com/mobile/img/c8a1df3e97ad768f.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2961.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2961.webp"
+        ]
     },
     {
         "id": 2962,
-        "chunirec_id": null,
+        "chunirec_id": "903aa88c9e4212f7",
         "title": "バンバード ～Piano Version～",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -191346,7 +191366,7 @@
         "bpm": 144,
         "min_bpm": 144,
         "max_bpm": 144,
-        "jacket": null,
+        "jacket": "436affe2be8db137.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -191420,7 +191440,12 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/436affe2be8db137.jpg",
+            "https://chunithm-net-eng.com/mobile/img/436affe2be8db137.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2962.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2962.webp"
+        ]
     },
     {
         "id": 3003,

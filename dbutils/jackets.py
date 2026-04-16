@@ -77,7 +77,7 @@ async def update_jackets(logger: BoundLogger):
         if song["jacket"] is None:
             if song["id"] not in official_chunithm_by_id:
                 continue
-            song["jacket"] = official_chunithm_by_id[song.id].image
+            song["jacket"] = official_chunithm_by_id[song["id"]].image
 
         if is_url(song["jacket"]) and song["jacket"] not in existing_jackets:
             song["jackets"].append(song["jacket"])
@@ -153,10 +153,7 @@ async def update_jackets(logger: BoundLogger):
             song_id = int(jacket.stem)
             url = f"{config.web.base_url}/assets/jackets/{jacket.name}"
 
-            if (
-                song_id in songs_by_id
-                and url not in songs_by_id[song_id]["jackets"]
-            ):
+            if song_id in songs_by_id and url not in songs_by_id[song_id]["jackets"]:
                 songs_by_id[song_id]["jackets"].append(url)
 
     with (SEEDS_DIR / "songs.json").open("w") as f:
