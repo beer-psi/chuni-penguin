@@ -790,7 +790,7 @@
         "name": "Linked GATE NEW",
         "color": "#FEE75C",
         "song_id": 2919,
-        "available": false,
+        "available": true,
         "open_condition": "Finish VERSE ep. NEW.",
         "unlock_condition": "Equip the **head, body and back** avatar parts for the character [淀川 沙音瑠](https://chunithm.sega.jp/character/#/chunithm-new/%E6%B7%80%E5%B7%9D%E6%B2%99%E9%9F%B3%E7%91%A0), obtainable from her mission released at X-VERSE-X launch. If you missed the mission, these avatar parts can be obtained in the P-Point shop for 75pt each. **The item avatar part is not required**.",
         "conditions": [
