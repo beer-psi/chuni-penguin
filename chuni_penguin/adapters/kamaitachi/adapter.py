@@ -20,7 +20,7 @@ from chuni_penguin.adapters.utils import (
     process_records,
 )
 from chuni_penguin.config import config
-from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION, ChunithmVersion
+from chuni_penguin.constants import ChunithmVersion
 from chuni_penguin.database import Chart as DBChart
 from chuni_penguin.types import (
     CourseRecord,
@@ -354,7 +354,7 @@ class KamaitachiAdapter(NetworkAdapter):
             new: list[PersonalBest] = []
 
             for pb in pbs:
-                if pb.song.version == CURRENT_CHUNITHM_VERSION:
+                if pb.song.version == "X-VERSE":
                     if len(new) < 20:
                         new.append(pb)
                 elif len(best) < 30:
