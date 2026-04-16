@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from math import ceil
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any
+from typing import IO, TYPE_CHECKING, Any, Literal
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
@@ -106,7 +106,38 @@ def _render_b30_template(
     invite_link: str = INVITE_LINK,
     *,
     uncross_verse: bool = False,
+    bg_path: Path | None = None,
+    overlay_path: Path | None = None,
+    logo_path: Path | None = None,
+    part_header_path: Path | None = None,
+    part_date_path: Path | None = None,
+    part_old_path: Path | None = None,
+    part_new_path: Path | None = None,
 ):
+    if bg_path is None:
+        bg_path = ASSETS_DIR / "b50" / "default" / "bg.webp"
+
+    if overlay_path is None:
+        overlay_path = ASSETS_DIR / "b50" / "b50_overlay.webp"
+
+    if logo_path is None:
+        if uncross_verse:
+            logo_path = ASSETS_DIR / "b50" / "default" / "logo_uncrossverse.webp"
+        else:
+            logo_path = ASSETS_DIR / "b50" / "default" / "logo.webp"
+
+    if part_header_path is None:
+        part_header_path = ASSETS_DIR / "b50" / "b50_part_header.webp"
+
+    if part_date_path is None:
+        part_date_path = ASSETS_DIR / "b50" / "b50_part_date.webp"
+
+    if part_old_path is None:
+        part_old_path = ASSETS_DIR / "b50" / "b50_part_old.webp"
+
+    if part_new_path is None:
+        part_new_path = ASSETS_DIR / "b50" / "b50_part_new.webp"
+
     cache_parts = [
         1,  # version number for when constants like fonts, etc. need to be updated
         record_slots,
@@ -115,20 +146,16 @@ def _render_b30_template(
         footer_text,
         invite_link,
         uncross_verse,
-        (ASSETS_DIR / "b50" / "b50_bg.webp").stat().st_mtime,
-        (ASSETS_DIR / "b50" / "b50_overlay.webp").stat().st_mtime,
-        (ASSETS_DIR / "b50" / "b50_part_header.webp").stat().st_mtime,
-        (
-            (ASSETS_DIR / "b50" / "b50_logo_uncrossverse.webp").stat().st_mtime
-            if uncross_verse
-            else (ASSETS_DIR / "b50" / "b50_logo.webp").stat().st_mtime
-        ),
-        (ASSETS_DIR / "b50" / "b50_part_date.webp").stat().st_mtime,
+        bg_path.stat().st_mtime,
+        overlay_path.stat().st_mtime,
+        part_header_path.stat().st_mtime,
+        logo_path.stat().st_mtime,
+        part_date_path.stat().st_mtime,
     ]
 
     if new_record_slots is not None:
-        cache_parts.append((ASSETS_DIR / "b50" / "b50_part_old.webp").stat().st_mtime)
-        cache_parts.append((ASSETS_DIR / "b50" / "b50_part_new.webp").stat().st_mtime)
+        cache_parts.append(part_old_path.stat().st_mtime)
+        cache_parts.append(part_new_path.stat().st_mtime)
 
     cache_key = binascii.crc32(":".join([str(p) for p in cache_parts]).encode("utf-8"))
     cached_file = CACHE_DIR / "b50" / f"template_{cache_key}.webp"
@@ -158,9 +185,7 @@ def _render_b30_template(
 
     # draw background, copy so we can paste things on top of it
     with closing(
-        _make_background_image(
-            ASSETS_DIR / "b50" / "b50_bg.webp", B30_IMAGE_WIDTH, b30_image_height
-        )
+        _make_background_image(bg_path, B30_IMAGE_WIDTH, b30_image_height)
     ) as im:
         b30_image = im.copy()
 
@@ -168,28 +193,14 @@ def _render_b30_template(
     with (
         closing(b30_image),
         closing(
-            _make_background_image(
-                ASSETS_DIR / "b50" / "b50_overlay.webp",
-                b30_image.width,
-                b30_image.height,
-            )
+            _make_background_image(overlay_path, b30_image.width, b30_image.height)
         ) as b30_overlay,
     ):
         b30_image = Image.alpha_composite(b30_image, b30_overlay)
 
     # draw header overlay
-    with (
-        Image.open(ASSETS_DIR / "b50" / "b50_part_header.webp") as im,
-        closing(im),
-        closing(b30_image),
-    ):
+    with Image.open(part_header_path) as im, closing(im), closing(b30_image):
         b30_image = _paste_alpha_composite(b30_image, im, (0, 0))
-
-    # draw logo
-    if uncross_verse:
-        logo_path = ASSETS_DIR / "b50" / "b50_logo_uncrossverse.webp"
-    else:
-        logo_path = ASSETS_DIR / "b50" / "b50_logo.webp"
 
     with Image.open(logo_path) as im, closing(im), closing(b30_image):
         b30_image = _paste_alpha_composite(
@@ -197,11 +208,7 @@ def _render_b30_template(
         )
 
     # draw generated date overlay
-    with (
-        Image.open(ASSETS_DIR / "b50" / "b50_part_date.webp") as im,
-        closing(im),
-        closing(b30_image),
-    ):
+    with Image.open(part_date_path) as im, closing(im), closing(b30_image):
         b30_image = _paste_alpha_composite(b30_image, im, (1492, 310))
 
     # draw semitransparent rectangles to darken footer
@@ -236,18 +243,10 @@ def _render_b30_template(
 
     if new_record_slots is not None:
         # draw the "OLD CHARTS" and "NEW CHARTS" separators
-        with (
-            Image.open(ASSETS_DIR / "b50" / "b50_part_old.webp") as im,
-            closing(im),
-            closing(b30_image),
-        ):
+        with Image.open(part_old_path) as im, closing(im), closing(b30_image):
             b30_image = _paste_alpha_composite(b30_image, im, (0, 300))
 
-        with (
-            Image.open(ASSETS_DIR / "b50" / "b50_part_new.webp") as im,
-            closing(im),
-            closing(b30_image),
-        ):
+        with Image.open(part_new_path) as im, closing(im), closing(b30_image):
             b30_image = _paste_alpha_composite(b30_image, im, (0, 1870))
 
     b30_draw = ImageDraw.Draw(b30_image)
@@ -491,6 +490,7 @@ def render_b30(
     current_rating: float | None = None,
     user_config: "UserConfig | None" = None,
     uncross_verse: bool = False,
+    theme: Literal["xverse", "default"] = "default",
     output_format: str = "PNG",
     output_params: dict[str, Any] | None = None,
 ):
@@ -502,11 +502,24 @@ def render_b30(
         msg = "More new records provided than number of new record slots"
         raise ValueError(msg)
 
+    if theme != "default":
+        bg_path = ASSETS_DIR / "b50" / theme / "bg.webp"
+        logo_path = (
+            ASSETS_DIR / "b50" / theme / "logo_uncrossverse.webp"
+            if uncross_verse
+            else ASSETS_DIR / "b50" / theme / "logo.webp"
+        )
+    else:
+        bg_path = None
+        logo_path = None
+
     b30_image = _render_b30_template(
         record_slots,
         new_record_slots if new_records is not None else None,
         rating_title="RATING" if new_records is not None else "NAIVE RATING",
         uncross_verse=uncross_verse,
+        bg_path=bg_path,
+        logo_path=logo_path,
     )
     b30_draw = ImageDraw.Draw(b30_image)
 

@@ -379,6 +379,7 @@ async def merge_options(
                     chart = charts_by_difficulty[difficulty_short]
                 except KeyError:
                     charts_by_difficulty[difficulty_short] = chart = {}
+                    song["charts"].append(chart)
 
                 chart["difficulty"] = difficulty_short
                 chart["level"] = displayed_level
