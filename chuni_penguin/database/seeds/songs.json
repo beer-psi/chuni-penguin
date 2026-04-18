@@ -69139,7 +69139,7 @@
         "min_bpm": 110,
         "max_bpm": 110,
         "jacket": "683e1c1fc9a82ce1.jpg",
-        "available": true,
+        "available": false,
         "removed": true,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -69161,7 +69161,7 @@
                 "flick": 0,
                 "charter": "ミストルティン",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "40bbff9c9185338510d707e651ef2ffb5ceb0725",
                 "sdvxin": null
             },
@@ -69177,7 +69177,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "e74461c86af37fefdb47e5f733bebad98c6d003e",
                 "sdvxin": null
             },
@@ -69193,7 +69193,7 @@
                 "flick": 0,
                 "charter": "ぴちネコ",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "8b6a716ec7a41d93bffcb613f90a48bc3b3221cf",
                 "sdvxin": {
                     "id": "04124",
@@ -69212,7 +69212,7 @@
                 "flick": 50,
                 "charter": "ミストルティン",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "84f192b0771735140c0cb77683f688c45336d10b",
                 "sdvxin": {
                     "id": "04124",
@@ -84518,7 +84518,7 @@
         "min_bpm": 140,
         "max_bpm": 140,
         "jacket": "45fbe07154bf8806.jpg",
-        "available": true,
+        "available": false,
         "removed": true,
         "is_hidden_on_chuninet": false,
         "aliases": [
@@ -84537,7 +84537,7 @@
                 "flick": 0,
                 "charter": "écologie",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "adbb2d237cf9bfc476649acf20a951644016ead5",
                 "sdvxin": null
             },
@@ -84553,7 +84553,7 @@
                 "flick": 0,
                 "charter": "ロシアンブラック",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "d7bc0c65df3bdd23ee68973689d22dd12fd0423f",
                 "sdvxin": null
             },
@@ -84569,7 +84569,7 @@
                 "flick": 0,
                 "charter": "すきやき奉行",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "ca078a7728b57b280f027b9588a79aec0f89ff1d",
                 "sdvxin": null
             },
@@ -84585,7 +84585,7 @@
                 "flick": 40,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "5d99074100bba2af00cdf4f630e1ca3dd8a21a06",
                 "sdvxin": {
                     "id": "05102",
@@ -149679,7 +149679,7 @@
         "min_bpm": 174,
         "max_bpm": 180,
         "jacket": "b7ec25d973052f3c.jpg",
-        "available": true,
+        "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "aliases": [],
@@ -149696,7 +149696,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "017441dfe8889c7567fc0c3142c95382b0cfd8d0",
                 "sdvxin": null
             },
@@ -149712,7 +149712,7 @@
                 "flick": 0,
                 "charter": "ミニミライト",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "4e36786832d0e3492d82303482fe6582fdfa1b91",
                 "sdvxin": null
             },
@@ -149728,7 +149728,7 @@
                 "flick": 0,
                 "charter": "ミストルティン",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "7778552b569bea9559108b34d1140e43f55e8924",
                 "sdvxin": {
                     "id": "09001",
@@ -149747,7 +149747,7 @@
                 "flick": 89,
                 "charter": "ヤナギ・リコイル",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "8aae032ef40c59787e29f983e10804fbfe4a8f98",
                 "sdvxin": {
                     "id": "09001",
