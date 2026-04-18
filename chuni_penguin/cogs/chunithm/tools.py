@@ -883,6 +883,10 @@ class ToolsCog(commands.Cog, name="Tools"):
                 if len(embeds) >= count:
                     break
 
+            if len(embeds) <= 0:
+                await ctx.reply("No charts found.", mention_author=False)
+                return
+
             await ctx.reply(embeds=embeds, mention_author=False)
 
     @flags.command("whatif")
