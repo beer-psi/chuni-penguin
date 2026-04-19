@@ -109,7 +109,9 @@ class JumpToPageModal(discord.ui.Modal, title="Jump to page"):
             return
 
         await interaction.response.defer()
-        await self.view.show_page(interaction, page_number - 1)
+
+        if self.view.current_page != page_number - 1:
+            await self.view.show_page(interaction, page_number - 1)
 
 
 class PaginationView(PenguinView, Generic[PageT]):
