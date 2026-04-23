@@ -191930,7 +191930,8 @@
         "is_hidden_on_chuninet": false,
         "aliases": [
             "pandora",
-            "panpara"
+            "panpara",
+            "pp"
         ],
         "charts": [
             {
@@ -192195,7 +192196,10 @@
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
-        "aliases": [],
+        "aliases": [
+            "Seisha no Ibuki",
+            "Breath of the Saint"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -192283,7 +192287,8 @@
         "is_hidden_on_chuninet": false,
         "aliases": [
             "Super MANJI Rush",
-            "manji"
+            "manji",
+            "Chou MANJI Rush"
         ],
         "charts": [
             {
@@ -192370,7 +192375,12 @@
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
-        "aliases": [],
+        "aliases": [
+            "Lips XTC",
+            "lips",
+            "Lips XTC remix",
+            "lips remix"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -192542,7 +192552,9 @@
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
-        "aliases": [],
+        "aliases": [
+            "glory MAX"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
