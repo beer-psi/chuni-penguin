@@ -192456,7 +192456,9 @@
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
-        "aliases": [],
+        "aliases": [
+            "d321"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -192542,7 +192544,9 @@
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
-        "aliases": [],
+        "aliases": [
+            "Re:Re"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
