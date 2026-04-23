@@ -52,4 +52,12 @@ LINKED_VERSE_PROGRESS_BADGES: dict[str, tuple[LinkedGate | None, LinkedGateStatu
         LinkedGateStatus.linkable,
     ),
     "GBJ90ERPKKNSJXO7O5P6IRP9QAP8BYLO": (LinkedGate.paradise, LinkedGateStatus.clear),
+    "DM77M8PZI6QBYYPZTGZRN3KVS7RUG6EI": (LinkedGate.new, LinkedGateStatus.not_found),
+    "PFIGRBPAP4RH0HW6PHV6TLNBB5W6ESZ3": (
+        LinkedGate.new,
+        LinkedGateStatus.under_analysis,
+    ),
+    "ZTCCYKHBRB0DOO9IZRDIQO6CKY7R7HSY": (LinkedGate.new, LinkedGateStatus.linkable),
+    "MVYAA3OTYDT5369W0KH86KG28XX07K70": (LinkedGate.new, LinkedGateStatus.clear),
+    "5SG4USIH41QX722D5G11CBMS292Z13PN": (None, LinkedGateStatus.not_found),
 }
