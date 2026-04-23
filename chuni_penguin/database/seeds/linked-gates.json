@@ -1207,7 +1207,7 @@
         "song_id": 2967,
         "available": false,
         "open_condition": "",
-        "unlock_condition": "After clearing Linked GATE X-VERSE, you will receive a song based on the game you picked in Uni's survey, done when you re-enter Linked VERSE after clearing for the first time. This song can be shared through National Matching or Cab-to-Cab Matching. Collect all [11 songs](https://x.com/chunithm/status/2047156634414399733) to unlock this gate.",
+        "unlock_condition": "Play all 11 songs in any order, on any difficulty:\n- PANDORA PARADOXXX\n- μ3\n- †渚の小悪魔ラヴリィ～レイディオ†\n- 聖者の息吹\n- 超MANJIラッシュ\n- Lips XTC -Sorist Remix-\n- Marigold\n- glory MAX -to the MAXimum-\n- DESTRUCTION 3,2,1\n- Ré：Ré\n- ALTER EGO",
         "conditions": [
             {
                 "level": 6,
