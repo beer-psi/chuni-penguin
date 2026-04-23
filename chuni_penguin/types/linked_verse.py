@@ -18,9 +18,10 @@ class LinkedGate(Enum):
     sun = 10008
     luminous = 10009
     verse = 10010
+    x_verse = 10011
 
     def __str__(self) -> str:
-        return f"Linked GATE {self.name.upper()}"
+        return f"Linked GATE {self.name.upper().replace('_', '-')}"
 
 
 class LinkedGateStatus(Enum):

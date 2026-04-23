@@ -149,12 +149,15 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
                 "**This gate is not available in CHUNITHM International.**"
             )
 
-        info_embed.add_field(
-            name="How to discover", value=db_gate.open_condition, inline=False
-        )
-        info_embed.add_field(
-            name="How to unlock", value=db_gate.unlock_condition, inline=False
-        )
+        if db_gate.open_condition:
+            info_embed.add_field(
+                name="How to discover", value=db_gate.open_condition, inline=False
+            )
+
+        if db_gate.unlock_condition:
+            info_embed.add_field(
+                name="How to unlock", value=db_gate.unlock_condition, inline=False
+            )
 
         view = discord.ui.View()
 
@@ -171,7 +174,7 @@ class LinkedVerse(commands.Cog, name="Linked VERSE"):
             discord.ui.Button(
                 style=discord.ButtonStyle.link,
                 label="Story",
-                url=f"https://www.chunithmstory.com/linked-verse/gate-{gate.name}",
+                url=f"https://www.chunithmstory.com/linked-verse/gate-{gate.name.replace('_', '-')}",
             )
         )
 

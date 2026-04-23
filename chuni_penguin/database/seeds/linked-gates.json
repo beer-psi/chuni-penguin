@@ -1057,5 +1057,147 @@
                 "end_date": null
             }
         ]
+    },
+    {
+        "id": 10010,
+        "name": "Linked GATE VERSE",
+        "color": "#40F4A8",
+        "song_id": 2966,
+        "available": false,
+        "open_condition": "Finish VERSE ep. VERSE.",
+        "unlock_condition": "Play songs from **within the recommended music folder**:\n- Crossmythos Rhapsodia\n- Theatore Creatore\n- メッちゅう殴打",
+        "conditions": [
+            {
+                "level": 5,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 1000,
+                "recovery_life": 30,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-04-22T21:00:00+00:00",
+                "end_date": "2026-04-29T21:00:00+00:00"
+            },
+            {
+                "level": 4,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 3000,
+                "recovery_life": 90,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-04-29T21:00:00+00:00",
+                "end_date": "2026-05-06T21:00:00+00:00"
+            },
+            {
+                "level": 3,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 5000,
+                "recovery_life": 180,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-05-06T21:00:00+00:00",
+                "end_date": "2026-05-13T21:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "jp",
+                "difficulty": "EXP",
+                "life": 5000,
+                "recovery_life": 200,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-05-13T21:00:00+00:00",
+                "end_date": "2026-05-20T21:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "jp",
+                "difficulty": "BAS",
+                "life": 5000,
+                "recovery_life": 200,
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "start_date": "2026-05-20T21:00:00+00:00",
+                "end_date": null
+            }
+        ]
+    },
+    {
+        "id": 10011,
+        "name": "Linked GATE X-VERSE",
+        "color": "#40F4A8",
+        "song_id": 2967,
+        "available": false,
+        "open_condition": "",
+        "unlock_condition": "Automatically unlocked when all previous Linked GATEs (ORIGIN ~ VERSE) have been cleared.",
+        "conditions": [
+            {
+                "level": 5,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 1000,
+                "recovery_life": 30,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-04-22T21:00:00+00:00",
+                "end_date": "2026-04-29T21:00:00+00:00"
+            },
+            {
+                "level": 4,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 3000,
+                "recovery_life": 90,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-04-29T21:00:00+00:00",
+                "end_date": "2026-05-06T21:00:00+00:00"
+            },
+            {
+                "level": 3,
+                "region": "jp",
+                "difficulty": "MAS",
+                "life": 5000,
+                "recovery_life": 180,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-05-06T21:00:00+00:00",
+                "end_date": "2026-05-13T21:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "jp",
+                "difficulty": "EXP",
+                "life": 5000,
+                "recovery_life": 200,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-05-13T21:00:00+00:00",
+                "end_date": "2026-05-20T21:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "jp",
+                "difficulty": "BAS",
+                "life": 5000,
+                "recovery_life": 200,
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "start_date": "2026-05-20T21:00:00+00:00",
+                "end_date": null
+            }
+        ]
     }
 ]

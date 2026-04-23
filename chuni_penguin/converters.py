@@ -280,6 +280,9 @@ class LinkedGateConverter(commands.Converter[LinkedGate]):
         if argument_lower == "vrs":
             return LinkedGate.verse
 
+        if argument_lower in ("xv", "xverse", "x-verse"):
+            return LinkedGate.x_verse
+
         try:
             return getattr(LinkedGate, argument_lower)
         except AttributeError:
