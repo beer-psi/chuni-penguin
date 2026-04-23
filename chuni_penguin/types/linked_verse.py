@@ -19,8 +19,12 @@ class LinkedGate(Enum):
     luminous = 10009
     verse = 10010
     x_verse = 10011
+    re_verse = 10012
 
     def __str__(self) -> str:
+        if self == LinkedGate.re_verse:
+            return "Linked GATE RE:VERSE"
+
         return f"Linked GATE {self.name.upper().replace('_', '-')}"
 
 
@@ -37,8 +41,12 @@ class LinkLevel(Enum):
     iii = 3
     iv = 4
     v = 5
+    infinity = 6
 
     def __str__(self):
+        if self == LinkLevel.infinity:
+            return "∞"
+
         return self.name.upper()
 
 

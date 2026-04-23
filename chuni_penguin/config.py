@@ -102,6 +102,7 @@ class IconsConfig(msgspec.Struct):
     linked_gate_sun_clear: str | None = None
     linked_gate_luminous_clear: str | None = None
     linked_gate_verse_clear: str | None = None
+    link_level_infinity: str | None = None
     link_level_v: str | None = None
     link_level_iv: str | None = None
     link_level_iii: str | None = None

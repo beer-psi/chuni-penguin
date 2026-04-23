@@ -1199,5 +1199,28 @@
                 "end_date": null
             }
         ]
+    },
+    {
+        "id": 10012,
+        "name": "Linked GATE RE:VERSE",
+        "color": "#40F4A8",
+        "song_id": 2967,
+        "available": false,
+        "open_condition": "",
+        "unlock_condition": "After clearing Linked GATE X-VERSE, you will receive a song based on the game you picked in Uni's survey, done when you re-enter Linked VERSE after clearing for the first time. This song can be shared through National Matching or Cab-to-Cab Matching. Collect all [11 songs](https://x.com/chunithm/status/2047156634414399733) to unlock this gate.",
+        "conditions": [
+            {
+                "level": 6,
+                "region": "jp",
+                "difficulty": "ULT",
+                "life": 2000,
+                "recovery_life": 30,
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "start_date": "2026-04-22T21:00:00+00:00",
+                "end_date": null
+            }
+        ]
     }
 ]

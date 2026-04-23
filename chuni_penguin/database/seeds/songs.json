@@ -191907,6 +191907,22 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": null
+            },
+            {
+                "difficulty": "ULT",
+                "level": "X",
+                "const": null,
+                "maxcombo": 4321,
+                "tap": 0,
+                "hold": 0,
+                "slide": 0,
+                "air": 0,
+                "flick": 0,
+                "charter": "Reminiscence of \"UHUNITHM\"",
+                "version": null,
+                "available": false,
+                "tachi_chart_id": null,
+                "sdvxin": null
             }
         ],
         "jackets": []
