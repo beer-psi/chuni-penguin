@@ -1,4 +1,3 @@
-import math
 from collections.abc import Sequence
 from typing import override
 from urllib.parse import quote
@@ -82,7 +81,7 @@ class SongInfoEmbed(discord.Embed):
 
         if song.duration is not None:
             song_description_parts.append(
-                f"**Duration**: {song.duration // 60000}:{math.ceil(song.duration % 60000 / 1000)}\n"
+                f"**Duration**: {song.duration // 60000}:{song.duration % 60000 // 1000}\n"
             )
 
         super().__init__(title=song.title, color=discord.Color.yellow())
