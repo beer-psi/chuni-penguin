@@ -218,10 +218,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         ):
             aliases.extend(guild_aliases)
 
-        # Since we don't define a score_cutoff here, there's no possible way for
-        # process.extractOne to return None. This is true as of RapidFuzz 3.14.3,
-        # and in earlier versions this did not raise a type error.
-        (_, similarity, index) = process.extractOne(  # pyright: ignore[reportGeneralTypeIssues]
+        (_, similarity, index) = process.extractOne(
             query.lower(), [x.alias for x in aliases], scorer=fuzz.QRatio
         )
         matching_alias = aliases[index]
@@ -267,10 +264,7 @@ class UtilsCog(commands.Cog, name="Utils"):
         ):
             aliases.extend(guild_aliases)
 
-        # Since we don't define a score_cutoff here, there's no possible way for
-        # process.extractOne to return None. This is true as of RapidFuzz 3.14.3,
-        # and in earlier versions this did not raise a type error.
-        (_, similarity, index) = process.extractOne(  # pyright: ignore[reportGeneralTypeIssues]
+        (_, similarity, index) = process.extractOne(
             query.lower(), [x.alias for x in aliases], scorer=fuzz.QRatio
         )
         matching_alias = aliases[index]
