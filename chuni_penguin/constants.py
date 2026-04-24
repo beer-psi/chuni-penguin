@@ -8,7 +8,7 @@ SIMILARITY_THRESHOLD = 65
 
 # Chart constant of the hardest song in the game.
 # Probably not the best way to implement this but whatever.
-MAX_DIFFICULTY = 15.7
+MAX_DIFFICULTY = 15.8
 
 ChunithmVersion = Literal[
     "CHUNITHM",
