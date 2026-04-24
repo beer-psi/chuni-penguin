@@ -156,11 +156,11 @@ class SeedsSong(msgspec.Struct):
     bpm: PositiveFloat | None
     min_bpm: PositiveFloat | None
     max_bpm: PositiveFloat | None
-    duration: PositiveInt | None
     jacket: str | None
     available: bool
     removed: bool
     is_hidden_on_chuninet: bool
+    duration: PositiveInt | None
     aliases: list[str]
     charts: list[SeedsChart]
     jackets: list[str]

@@ -349,7 +349,6 @@ async def merge_options(
             new_song["bpm"] = song.get("bpm")
             new_song["min_bpm"] = song.get("min_bpm")
             new_song["max_bpm"] = song.get("max_bpm")
-            new_song["duration"] = song.get("duration")
             new_song["jacket"] = song.get("jacket", jacket_by_id.get(song_id_int))
 
             if is_international:
@@ -360,6 +359,7 @@ async def merge_options(
                 new_song["removed"] = gettext(root, "./disableFlag") == "true"
 
             new_song["is_hidden_on_chuninet"] = song.get("is_hidden_on_chuninet", False)
+            new_song["duration"] = song.get("duration")
             new_song["aliases"] = song.get("aliases", [])
             new_song["charts"] = song.get("charts", [])
             new_song["jackets"] = song.get("jackets", [])
