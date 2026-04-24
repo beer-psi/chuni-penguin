@@ -1,3 +1,4 @@
+import math
 from collections.abc import Sequence
 from typing import override
 from urllib.parse import quote
@@ -26,24 +27,26 @@ class SongInfoEmbed(discord.Embed):
         synthesis_alt_jacket: str | None = None,
         brainrot: bool = False,
     ):
-        song_description = ""
+        song_description_parts = []
 
         if len(song.aliases) > 0:
-            song_description = "-# "
-            song_description += " / ".join(
-                [escape_markdown(x.alias) for x in song.aliases if x.guild_id == 0]
+            song_description_parts.append("-# ")
+            song_description_parts.append(
+                " / ".join(
+                    [escape_markdown(x.alias) for x in song.aliases if x.guild_id == 0]
+                )
             )
-            song_description += "\n"
+            song_description_parts.append("\n")
 
         if not song.available:
             if song.removed:
-                song_description += "\n**This song is removed.**\n\n"
+                song_description_parts.append("\n**This song is removed.**\n\n")
             else:
-                song_description += (
+                song_description_parts.append(
                     "\n**This song is not available in CHUNITHM International.**\n\n"
                 )
         else:
-            song_description += "\n"
+            song_description_parts.append("\n")
 
         displayed_version = song.version
         displayed_bpm = "Unknown"
@@ -61,7 +64,7 @@ class SongInfoEmbed(discord.Embed):
             ):
                 displayed_bpm = f"{displayed_bpm} ({song.min_bpm}~{song.max_bpm})"
 
-        song_description += (
+        song_description_parts.append(
             f"**Artist**: {escape_markdown(song.artist)}\n"
             f"**Category**: {song.genre}\n"
             f"**Version**: {displayed_version}\n"
@@ -71,9 +74,16 @@ class SongInfoEmbed(discord.Embed):
             if chart.version is not None:
                 difficulty = Difficulty(chart.difficulty)
 
-                song_description += f"**Version ({difficulty})**: {chart.version}\n"
+                song_description_parts.append(
+                    f"**Version ({difficulty})**: {chart.version}\n"
+                )
 
-        song_description += f"**BPM**: {displayed_bpm}\n"
+        song_description_parts.append(f"**BPM**: {displayed_bpm}\n")
+
+        if song.duration is not None:
+            song_description_parts.append(
+                f"**Duration**: {song.duration // 60000}:{math.ceil(song.duration % 60000 / 1000)}\n"
+            )
 
         super().__init__(title=song.title, color=discord.Color.yellow())
         self.set_thumbnail(url=get_jacket_url(song))
@@ -139,14 +149,17 @@ class SongInfoEmbed(discord.Embed):
             chart_level_desc.append(desc)
 
         if len(chart_level_desc) > 0:
-            song_description += "\n**Level**:\n"
-            if detailed:
-                song_description += "**CHAIN** / TAP / HOLD / SLIDE / AIR / FLICK\n\n"
-                song_description += "\n".join(chart_level_desc)
-            else:
-                song_description += " / ".join(chart_level_desc)
+            song_description_parts.append("\n**Level**:\n")
 
-        self.description = song_description
+            if detailed:
+                song_description_parts.append(
+                    "**CHAIN** / TAP / HOLD / SLIDE / AIR / FLICK\n\n"
+                )
+                song_description_parts.append("\n".join(chart_level_desc))
+            else:
+                song_description_parts.append(" / ".join(chart_level_desc))
+
+        self.description = "".join(song_description_parts)
 
 
 class SongInfoPageSource(ListPageSource[Song]):

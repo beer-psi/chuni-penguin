@@ -1,3 +1,4 @@
+import asyncio
 import concurrent.futures
 import csv
 import itertools
@@ -169,6 +170,7 @@ async def merge_options(
     *,
     extract_jackets: bool,
     extract_audios: bool,
+    is_international: bool,
 ):
     async with httpx.AsyncClient(
         transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
@@ -207,7 +209,15 @@ async def merge_options(
     with (SEEDS_DIR / "songs.json").open("rb") as f:
         existing_songs = msgspec.json.decode(f.read())
 
+        if is_international:
+            for song in existing_songs:
+                song["available"] = False
+        else:
+            for song in existing_songs:
+                song["removed"] = True
+
     songs_by_id = {s["id"]: s for s in existing_songs}
+    song_id_by_cue_file_id: dict[int, list[int]] = {}
 
     with (SEEDS_DIR / "courses.json").open("rb") as f:
         existing_courses = msgspec.json.decode(f.read())
@@ -216,6 +226,13 @@ async def merge_options(
 
     with concurrent.futures.ProcessPoolExecutor() as pool:
         for xml_path in music_xml_paths:
+            # Axxx/music/musicXXXX/Music.xml
+            option_name = xml_path.parent.parent.parent.name
+            is_omnimix = option_name in ("AOLD", "AOMN", "A300")
+
+            if is_omnimix:
+                continue
+
             tree = ElementTree.parse(xml_path)
             root = tree.getroot()
 
@@ -228,6 +245,7 @@ async def merge_options(
             genre = gettext(root, "./genreNames/list/StringID/str")
             we_tag_name = gettext(root, "./worldsEndTagName/str")
             release_tag_id = gettext(root, path="./releaseTagName/id")
+            cue_file_id = gettext(root, "./cueFileName/id")
 
             if (
                 song_id is None
@@ -241,6 +259,14 @@ async def merge_options(
 
             logger.debug("Reading music ID %s", song_id)
             song_id_int = int(song_id)
+
+            if cue_file_id is not None:
+                cue_file_id_int = int(cue_file_id)
+
+                try:
+                    song_id_by_cue_file_id[cue_file_id_int].append(song_id_int)
+                except KeyError:
+                    song_id_by_cue_file_id[cue_file_id_int] = [song_id_int]
 
             if extract_jackets:
                 jacket_file = gettext(root, "./jaketFile/path")
@@ -302,34 +328,43 @@ async def merge_options(
 
             try:
                 song = songs_by_id[song_id_int]
+                songs_by_id[song_id_int] = new_song = {}
             except KeyError:
-                songs_by_id[song_id_int] = song = {}
+                song = {}
+                songs_by_id[song_id_int] = new_song = {}
 
-            song["id"] = song_id_int
-            song["chunirec_id"] = song.get("chunirec_id")
-            song["title"] = gettext(root, "./name/str")
-            song["wikiwiki_title"] = song.get("wikiwiki_title")
-            song["chunithm_catcode"] = int(catcode)
-            song["genre"] = genre
-            song["artist"] = gettext(root, "./artistName/str")
-            song["version"] = VERSIONS[int(release_tag_id)]
-            song["release"] = (
+            new_song["id"] = song_id_int
+            new_song["chunirec_id"] = song.get("chunirec_id")
+            new_song["title"] = gettext(root, "./name/str")
+            new_song["wikiwiki_title"] = song.get("wikiwiki_title")
+            new_song["chunithm_catcode"] = int(catcode)
+            new_song["genre"] = genre
+            new_song["artist"] = gettext(root, "./artistName/str")
+            new_song["version"] = VERSIONS[int(release_tag_id)]
+            new_song["release"] = (
                 f"{release_date[:4]}-{release_date[4:6]}-{release_date[6:]}"
                 if release_date
-                else None
+                else song.get("release")
             )
-            song["bpm"] = song.get("bpm")
-            song["min_bpm"] = song.get("min_bpm")
-            song["max_bpm"] = song.get("max_bpm")
-            song["jacket"] = song.get("jacket", jacket_by_id.get(song_id_int))
-            song["available"] = gettext(root, "./disableFlag") != "true"
-            song["removed"] = song.get("removed", False)
-            song["is_hidden_on_chuninet"] = song.get("is_hidden_on_chuninet", False)
-            song["aliases"] = song.get("aliases", [])
-            song["charts"] = song.get("charts", [])
-            song["jackets"] = song.get("jackets", [])
+            new_song["bpm"] = song.get("bpm")
+            new_song["min_bpm"] = song.get("min_bpm")
+            new_song["max_bpm"] = song.get("max_bpm")
+            new_song["duration"] = song.get("duration")
+            new_song["jacket"] = song.get("jacket", jacket_by_id.get(song_id_int))
 
-            charts_by_difficulty = {c["difficulty"]: c for c in song["charts"]}
+            if is_international:
+                new_song["available"] = gettext(root, "./disableFlag") != "true"
+                new_song["removed"] = song.get("removed", False)
+            else:
+                new_song["available"] = song.get("available", False)
+                new_song["removed"] = gettext(root, "./disableFlag") == "true"
+
+            new_song["is_hidden_on_chuninet"] = song.get("is_hidden_on_chuninet", False)
+            new_song["aliases"] = song.get("aliases", [])
+            new_song["charts"] = song.get("charts", [])
+            new_song["jackets"] = song.get("jackets", [])
+
+            charts_by_difficulty = {c["difficulty"]: c for c in new_song["charts"]}
 
             for idx, chart in enumerate(
                 root.findall("./fumens/MusicFumenData[enable='true']")
@@ -379,7 +414,7 @@ async def merge_options(
                     chart = charts_by_difficulty[difficulty_short]
                 except KeyError:
                     charts_by_difficulty[difficulty_short] = chart = {}
-                    song["charts"].append(chart)
+                    new_song["charts"].append(chart)
 
                 chart["difficulty"] = difficulty_short
                 chart["level"] = displayed_level
@@ -392,7 +427,7 @@ async def merge_options(
                 chart["flick"] = chart.get("flick", 0)
                 chart["charter"] = chart.get("charter")
                 chart["version"] = chart.get("version")
-                chart["available"] = chart.get("available", song["available"])
+                chart["available"] = chart.get("available", new_song["available"])
                 chart["tachi_chart_id"] = chart.get("tachi_chart_id")
                 chart["sdvxin"] = chart.get("sdvxin")
 
@@ -405,23 +440,23 @@ async def merge_options(
 
                         command = row[0]
 
-                        if command == "BPM_DEF" and song["bpm"] is None:
+                        if command == "BPM_DEF" and new_song["bpm"] is None:
                             bpm = float(row[2])
 
                             if bpm.is_integer():
                                 bpm = int(bpm)
 
-                            song["bpm"] = bpm
+                            new_song["bpm"] = bpm
                         if command == "BPM":
                             bpm = float(row[3])
 
                             if bpm.is_integer():
                                 bpm = int(bpm)
 
-                            if song["min_bpm"] is None or bpm < song["min_bpm"]:
-                                song["min_bpm"] = bpm
-                            if song["max_bpm"] is None or bpm > song["max_bpm"]:
-                                song["max_bpm"] = bpm
+                            if new_song["min_bpm"] is None or bpm < new_song["min_bpm"]:
+                                new_song["min_bpm"] = bpm
+                            if new_song["max_bpm"] is None or bpm > new_song["max_bpm"]:
+                                new_song["max_bpm"] = bpm
                         elif command == "T_JUDGE_ALL":
                             chart["maxcombo"] = int(row[1])
                         elif command == "T_JUDGE_TAP":
@@ -437,34 +472,65 @@ async def merge_options(
                         elif command == "CREATOR":
                             chart["charter"] = row[1]
 
-        if extract_audios:
-            for cue_file_path in cue_file_paths:
-                tree = ElementTree.parse(cue_file_path)
-                root = tree.getroot()
+        for cue_file_path in cue_file_paths:
+            tree = ElementTree.parse(cue_file_path)
+            root = tree.getroot()
 
-                if root.tag != "CueFileData":
-                    logger.warning(
-                        "%s: Invalid XML (missing CueFileData root)", cue_file_path
-                    )
-                    continue
-
-                cue_file_id = gettext(root, "./name/id")
-                awb_file = gettext(root, "./awbFile/path")
-
-                if cue_file_id is None or awb_file is None:
-                    logger.warning(
-                        "%s: Invalid XML (missing ID or awbFile path)", cue_file_path
-                    )
-                    continue
-
-                if (
-                    int(cue_file_id) >= 10000
-                ):  # those are actually "FULL COMBO" sounds of different system voices
-                    continue
-
-                pool.submit(
-                    extract_audio, int(cue_file_id), cue_file_path.parent / awb_file
+            if root.tag != "CueFileData":
+                logger.warning(
+                    "%s: Invalid XML (missing CueFileData root)", cue_file_path
                 )
+                continue
+
+            cue_file_id = gettext(root, "./name/id")
+            awb_file = gettext(root, "./awbFile/path")
+
+            if cue_file_id is None or awb_file is None:
+                logger.warning(
+                    "%s: Invalid XML (missing ID or awbFile path)", cue_file_path
+                )
+                continue
+
+            cue_file_id_int = int(cue_file_id)
+
+            if cue_file_id_int >= 10000:
+                # those are actually "FULL COMBO" sounds of different system voices
+                continue
+
+            song_ids = song_id_by_cue_file_id.get(cue_file_id_int)
+            awb_file_path = cue_file_path.parent / awb_file
+
+            if song_ids is not None:
+                proc = await asyncio.create_subprocess_exec(
+                    "vgmstream-cli",
+                    "-mI",
+                    awb_file_path,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, stderr = await proc.communicate()
+
+                if proc.returncode == 0:
+                    awb_metadata = json.loads(stdout)
+                    duration_ms = (
+                        awb_metadata["numberOfSamples"]
+                        * 1000
+                        // awb_metadata["sampleRate"]
+                    )
+
+                    for song_id in song_ids:
+                        songs_by_id[song_id]["duration"] = duration_ms
+                else:
+                    logger.error(
+                        "Failed to obtain metadata for cue file",
+                        awb_file=awb_file_path,
+                        returncode=proc.returncode,
+                        stdout=stdout,
+                        stderr=stderr,
+                    )
+
+            if extract_audios:
+                pool.submit(extract_audio, cue_file_id_int, awb_file_path)
 
         pool.shutdown(wait=True)
 

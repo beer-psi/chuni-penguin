@@ -96,6 +96,7 @@ def msgspec_dec_hook(t: type, obj: Any) -> Any:
 
 NonNegativeInt = Annotated[int, msgspec.Meta(ge=0)]
 NonNegativeFloat = Annotated[float, msgspec.Meta(ge=0)]
+PositiveInt = Annotated[int, msgspec.Meta(gt=0)]
 PositiveFloat = Annotated[float, msgspec.Meta(gt=0)]
 
 
@@ -155,6 +156,7 @@ class SeedsSong(msgspec.Struct):
     bpm: PositiveFloat | None
     min_bpm: PositiveFloat | None
     max_bpm: PositiveFloat | None
+    duration: PositiveInt | None
     jacket: str | None
     available: bool
     removed: bool

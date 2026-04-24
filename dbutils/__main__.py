@@ -85,6 +85,9 @@ async def main():
         action="store_true",
         help="If updating from data, extract song jackets to assets/audio/",
     )
+    update.add_argument(
+        "--international", action="store_true", help="Treat as international data"
+    )
 
     seeds = subparsers.add_parser("seeds", help="Seeds management commands")
 
@@ -150,6 +153,7 @@ async def main():
                 args.option_dir,
                 extract_jackets=args.extract_jackets,
                 extract_audios=args.extract_audio,
+                is_international=args.international,
             )
 
     if args.command == "seeds":

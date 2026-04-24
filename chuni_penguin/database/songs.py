@@ -57,6 +57,9 @@ class Song(Base):
     is_hidden_on_chuninet: Mapped[bool] = mapped_column(
         nullable=False, default=False, server_default=text("FALSE")
     )
+    duration: Mapped[int | None] = mapped_column(
+        nullable=True, default=None, server_default=text("NULL")
+    )
 
     charts: Mapped[list["Chart"]] = relationship(
         back_populates="song", cascade="all, delete-orphan"

@@ -3,10 +3,9 @@ data/
 database/*.sqlite3
 database/*.sqlite3-*
 discord.log
-assets/jackets
-assets/audio
-assets/characters
-assets/ranks
+assets/
+!assets/b50
+!assets/fonts
 chuni_penguin/locales
 options
 

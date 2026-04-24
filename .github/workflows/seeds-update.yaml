@@ -55,6 +55,10 @@ jobs:
         run: |
           uv run python -m dbutils update tachi
 
+      - name: "Sort updated data"
+        run: |
+          uv run python -m dbutils seeds sort
+
       - name: "Push back to trunk if there were any changes"
         run: |
           git config --global user.name chuni-penguin-seeds
