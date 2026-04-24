@@ -193350,7 +193350,7 @@
     },
     {
         "id": 2963,
-        "chunirec_id": null,
+        "chunirec_id": "f3b8dab29887a06a",
         "title": "Beenden",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -193435,12 +193435,13 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/e90fc35b817a7a27.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/ac2c29eee660fa479d1c085a92dd6d4e673c440246817d15e18643bc1db3d49a.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/e90fc35b817a7a27.jpg"
         ]
     },
     {
         "id": 2964,
-        "chunirec_id": null,
+        "chunirec_id": "8875c5607d14c087",
         "title": "EFX",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -193525,12 +193526,13 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/66b1fadb306c805e.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/0e53822b8dfd42fb4450ff75a189a19ac580b7cd9abc7c34d9cdb24f57e695bf.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/66b1fadb306c805e.jpg"
         ]
     },
     {
         "id": 2965,
-        "chunirec_id": null,
+        "chunirec_id": "1265ee0392312257",
         "title": "薄明のクオリア",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -193619,6 +193621,7 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/4c7fc5467cfc5e86.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/db651b6004af5cf5a73c00d2b1f901c4c59b8e88ffab76115e306c9c469d85df.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/4c7fc5467cfc5e86.jpg"
         ]
     },
@@ -193713,7 +193716,7 @@
     },
     {
         "id": 2967,
-        "chunirec_id": null,
+        "chunirec_id": "1ce8d72fe93fc6c2",
         "title": "YOUNITHM",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -193761,7 +193764,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10251",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "EXP",
@@ -193777,7 +193783,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10251",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -193793,7 +193802,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10251",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "ULT",
