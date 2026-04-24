@@ -17,8 +17,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-07-15T21:00:00+00:00",
-                "end_date": "2025-07-23T21:00:00+00:00"
+                "start_date": "2025-07-15T22:00:00+00:00",
+                "end_date": "2025-07-23T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -29,8 +29,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-07-23T21:00:00+00:00",
-                "end_date": "2025-07-30T21:00:00+00:00"
+                "start_date": "2025-07-23T22:00:00+00:00",
+                "end_date": "2025-07-30T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -41,8 +41,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-07-30T21:00:00+00:00",
-                "end_date": "2025-08-06T21:00:00+00:00"
+                "start_date": "2025-07-30T22:00:00+00:00",
+                "end_date": "2025-08-06T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -53,8 +53,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-08-06T21:00:00+00:00",
-                "end_date": "2025-08-13T21:00:00+00:00"
+                "start_date": "2025-08-06T22:00:00+00:00",
+                "end_date": "2025-08-13T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -65,7 +65,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2025-08-13T21:00:00+00:00",
+                "start_date": "2025-08-13T22:00:00+00:00",
                 "end_date": null
             },
             {
@@ -77,8 +77,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-11-19T21:00:00+00:00",
-                "end_date": "2025-11-23T21:00:00+00:00"
+                "start_date": "2025-11-19T22:00:00+00:00",
+                "end_date": "2025-11-23T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -89,8 +89,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-11-23T21:00:00+00:00",
-                "end_date": "2025-11-26T21:00:00+00:00"
+                "start_date": "2025-11-23T22:00:00+00:00",
+                "end_date": "2025-11-26T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -101,8 +101,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-11-26T21:00:00+00:00",
-                "end_date": "2025-11-30T21:00:00+00:00"
+                "start_date": "2025-11-26T22:00:00+00:00",
+                "end_date": "2025-11-30T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -113,8 +113,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-11-30T21:00:00+00:00",
-                "end_date": "2025-12-03T21:00:00+00:00"
+                "start_date": "2025-11-30T22:00:00+00:00",
+                "end_date": "2025-12-03T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -125,7 +125,7 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-12-03T21:00:00+00:00",
+                "start_date": "2025-12-03T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -148,8 +148,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-11-26T21:00:00+00:00",
-                "end_date": "2025-11-30T21:00:00+00:00"
+                "start_date": "2025-11-26T22:00:00+00:00",
+                "end_date": "2025-11-30T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -160,8 +160,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-11-30T21:00:00+00:00",
-                "end_date": "2025-12-03T21:00:00+00:00"
+                "start_date": "2025-11-30T22:00:00+00:00",
+                "end_date": "2025-12-03T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -172,8 +172,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-03T21:00:00+00:00",
-                "end_date": "2025-12-07T21:00:00+00:00"
+                "start_date": "2025-12-03T22:00:00+00:00",
+                "end_date": "2025-12-07T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -184,8 +184,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-07T21:00:00+00:00",
-                "end_date": "2025-12-10T21:00:00+00:00"
+                "start_date": "2025-12-07T22:00:00+00:00",
+                "end_date": "2025-12-10T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -196,7 +196,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2025-12-10T21:00:00+00:00",
+                "start_date": "2025-12-10T22:00:00+00:00",
                 "end_date": null
             },
             {
@@ -208,8 +208,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-08-06T21:00:00+00:00",
-                "end_date": "2025-08-13T21:00:00+00:00"
+                "start_date": "2025-08-06T22:00:00+00:00",
+                "end_date": "2025-08-13T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -220,8 +220,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-08-13T21:00:00+00:00",
-                "end_date": "2025-08-20T21:00:00+00:00"
+                "start_date": "2025-08-13T22:00:00+00:00",
+                "end_date": "2025-08-20T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -232,8 +232,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-08-20T21:00:00+00:00",
-                "end_date": "2025-08-27T21:00:00+00:00"
+                "start_date": "2025-08-20T22:00:00+00:00",
+                "end_date": "2025-08-27T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -244,8 +244,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-08-27T21:00:00+00:00",
-                "end_date": "2025-09-03T21:00:00+00:00"
+                "start_date": "2025-08-27T22:00:00+00:00",
+                "end_date": "2025-09-03T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -256,7 +256,7 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-09-03T21:00:00+00:00",
+                "start_date": "2025-09-03T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -279,8 +279,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-09-03T21:00:00+00:00",
-                "end_date": "2025-09-10T21:00:00+00:00"
+                "start_date": "2025-09-03T22:00:00+00:00",
+                "end_date": "2025-09-10T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -291,8 +291,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-09-10T21:00:00+00:00",
-                "end_date": "2025-09-17T21:00:00+00:00"
+                "start_date": "2025-09-10T22:00:00+00:00",
+                "end_date": "2025-09-17T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -303,8 +303,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-09-17T21:00:00+00:00",
-                "end_date": "2025-09-24T21:00:00+00:00"
+                "start_date": "2025-09-17T22:00:00+00:00",
+                "end_date": "2025-09-24T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -315,8 +315,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-09-24T21:00:00+00:00",
-                "end_date": "2025-10-01T21:00:00+00:00"
+                "start_date": "2025-09-24T22:00:00+00:00",
+                "end_date": "2025-10-01T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -327,7 +327,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2025-10-01T21:00:00+00:00",
+                "start_date": "2025-10-01T22:00:00+00:00",
                 "end_date": null
             },
             {
@@ -339,8 +339,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-12-17T21:00:00+00:00",
-                "end_date": "2025-12-21T21:00:00+00:00"
+                "start_date": "2025-12-17T22:00:00+00:00",
+                "end_date": "2025-12-21T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -351,8 +351,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-12-21T21:00:00+00:00",
-                "end_date": "2025-12-24T21:00:00+00:00"
+                "start_date": "2025-12-21T22:00:00+00:00",
+                "end_date": "2025-12-24T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -363,8 +363,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-12-24T21:00:00+00:00",
-                "end_date": "2025-12-28T21:00:00+00:00"
+                "start_date": "2025-12-24T22:00:00+00:00",
+                "end_date": "2025-12-28T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -375,8 +375,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-12-28T21:00:00+00:00",
-                "end_date": "2025-12-31T21:00:00+00:00"
+                "start_date": "2025-12-28T22:00:00+00:00",
+                "end_date": "2025-12-31T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -387,7 +387,7 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-12-31T21:00:00+00:00",
+                "start_date": "2025-12-31T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -410,8 +410,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-10-01T21:00:00+00:00",
-                "end_date": "2025-10-08T21:00:00+00:00"
+                "start_date": "2025-10-01T22:00:00+00:00",
+                "end_date": "2025-10-08T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -422,8 +422,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-10-08T21:00:00+00:00",
-                "end_date": "2025-10-15T21:00:00+00:00"
+                "start_date": "2025-10-08T22:00:00+00:00",
+                "end_date": "2025-10-15T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -434,8 +434,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-10-15T21:00:00+00:00",
-                "end_date": "2025-10-22T21:00:00+00:00"
+                "start_date": "2025-10-15T22:00:00+00:00",
+                "end_date": "2025-10-22T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -446,8 +446,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-10-22T21:00:00+00:00",
-                "end_date": "2025-10-29T21:00:00+00:00"
+                "start_date": "2025-10-22T22:00:00+00:00",
+                "end_date": "2025-10-29T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -458,7 +458,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2025-10-29T21:00:00+00:00",
+                "start_date": "2025-10-29T22:00:00+00:00",
                 "end_date": null
             },
             {
@@ -470,8 +470,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2025-01-21T21:00:00+00:00",
-                "end_date": "2025-01-25T21:00:00+00:00"
+                "start_date": "2025-01-21T22:00:00+00:00",
+                "end_date": "2025-01-25T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -482,8 +482,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-01-25T21:00:00+00:00",
-                "end_date": "2025-01-28T21:00:00+00:00"
+                "start_date": "2026-01-25T22:00:00+00:00",
+                "end_date": "2025-01-28T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -494,8 +494,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-01-28T21:00:00+00:00",
-                "end_date": "2025-02-01T21:00:00+00:00"
+                "start_date": "2026-01-28T22:00:00+00:00",
+                "end_date": "2025-02-01T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -506,8 +506,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-02-01T21:00:00+00:00",
-                "end_date": "2026-02-04T21:00:00+00:00"
+                "start_date": "2026-02-01T22:00:00+00:00",
+                "end_date": "2026-02-04T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -518,7 +518,7 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-02-04T21:00:00+00:00",
+                "start_date": "2026-02-04T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -541,8 +541,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-11-05T21:00:00+00:00",
-                "end_date": "2025-11-12T21:00:00+00:00"
+                "start_date": "2025-11-05T22:00:00+00:00",
+                "end_date": "2025-11-12T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -553,8 +553,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-11-12T21:00:00+00:00",
-                "end_date": "2025-11-19T21:00:00+00:00"
+                "start_date": "2025-11-12T22:00:00+00:00",
+                "end_date": "2025-11-19T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -565,8 +565,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-11-19T21:00:00+00:00",
-                "end_date": "2025-11-26T21:00:00+00:00"
+                "start_date": "2025-11-19T22:00:00+00:00",
+                "end_date": "2025-11-26T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -577,8 +577,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-11-26T21:00:00+00:00",
-                "end_date": "2025-12-03T21:00:00+00:00"
+                "start_date": "2025-11-26T22:00:00+00:00",
+                "end_date": "2025-12-03T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -589,7 +589,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2025-12-03T21:00:00+00:00",
+                "start_date": "2025-12-03T22:00:00+00:00",
                 "end_date": null
             },
             {
@@ -601,8 +601,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-03-04T21:00:00+00:00",
-                "end_date": "2026-03-08T21:00:00+00:00"
+                "start_date": "2026-03-04T22:00:00+00:00",
+                "end_date": "2026-03-08T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -613,8 +613,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-03-08T21:00:00+00:00",
-                "end_date": "2026-03-11T21:00:00+00:00"
+                "start_date": "2026-03-08T22:00:00+00:00",
+                "end_date": "2026-03-11T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -625,8 +625,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-03-11T21:00:00+00:00",
-                "end_date": "2026-03-15T21:00:00+00:00"
+                "start_date": "2026-03-11T22:00:00+00:00",
+                "end_date": "2026-03-15T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -637,8 +637,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-03-15T21:00:00+00:00",
-                "end_date": "2026-03-18T21:00:00+00:00"
+                "start_date": "2026-03-15T22:00:00+00:00",
+                "end_date": "2026-03-18T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -649,7 +649,7 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-03-18T21:00:00+00:00",
+                "start_date": "2026-03-18T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -672,8 +672,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-11-26T21:00:00+00:00",
-                "end_date": "2025-12-03T21:00:00+00:00"
+                "start_date": "2025-11-26T22:00:00+00:00",
+                "end_date": "2025-12-03T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -684,8 +684,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-03T21:00:00+00:00",
-                "end_date": "2025-12-10T21:00:00+00:00"
+                "start_date": "2025-12-03T22:00:00+00:00",
+                "end_date": "2025-12-10T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -696,8 +696,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-10T21:00:00+00:00",
-                "end_date": "2025-12-17T21:00:00+00:00"
+                "start_date": "2025-12-10T22:00:00+00:00",
+                "end_date": "2025-12-17T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -708,8 +708,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-17T21:00:00+00:00",
-                "end_date": "2025-12-24T21:00:00+00:00"
+                "start_date": "2025-12-17T22:00:00+00:00",
+                "end_date": "2025-12-24T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -720,7 +720,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2025-12-24T21:00:00+00:00",
+                "start_date": "2025-12-24T22:00:00+00:00",
                 "end_date": null
             },
             {
@@ -732,8 +732,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-03-31T21:00:00+00:00",
-                "end_date": "2026-04-04T21:00:00+00:00"
+                "start_date": "2026-03-31T22:00:00+00:00",
+                "end_date": "2026-04-04T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -744,8 +744,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-04T21:00:00+00:00",
-                "end_date": "2026-04-07T21:00:00+00:00"
+                "start_date": "2026-04-04T22:00:00+00:00",
+                "end_date": "2026-04-07T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -756,8 +756,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-07T21:00:00+00:00",
-                "end_date": "2026-04-11T21:00:00+00:00"
+                "start_date": "2026-04-07T22:00:00+00:00",
+                "end_date": "2026-04-11T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -768,8 +768,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-11T21:00:00+00:00",
-                "end_date": "2026-04-14T21:00:00+00:00"
+                "start_date": "2026-04-11T22:00:00+00:00",
+                "end_date": "2026-04-14T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -780,7 +780,7 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-14T21:00:00+00:00",
+                "start_date": "2026-04-14T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -803,8 +803,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-10T21:00:00+00:00",
-                "end_date": "2025-12-17T21:00:00+00:00"
+                "start_date": "2025-12-10T22:00:00+00:00",
+                "end_date": "2025-12-17T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -815,8 +815,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-17T21:00:00+00:00",
-                "end_date": "2025-12-24T21:00:00+00:00"
+                "start_date": "2025-12-17T22:00:00+00:00",
+                "end_date": "2025-12-24T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -827,8 +827,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-24T21:00:00+00:00",
-                "end_date": "2025-12-31T21:00:00+00:00"
+                "start_date": "2025-12-24T22:00:00+00:00",
+                "end_date": "2025-12-31T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -839,8 +839,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2025-12-31T21:00:00+00:00",
-                "end_date": "2026-01-07T21:00:00+00:00"
+                "start_date": "2025-12-31T22:00:00+00:00",
+                "end_date": "2026-01-07T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -851,7 +851,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2026-01-07T21:00:00+00:00",
+                "start_date": "2026-01-07T22:00:00+00:00",
                 "end_date": null
             },
             {
@@ -863,8 +863,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-15T21:00:00+00:00",
-                "end_date": "2026-04-19T21:00:00+00:00"
+                "start_date": "2026-04-15T22:00:00+00:00",
+                "end_date": "2026-04-19T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -875,8 +875,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-19T21:00:00+00:00",
-                "end_date": "2026-04-22T21:00:00+00:00"
+                "start_date": "2026-04-19T22:00:00+00:00",
+                "end_date": "2026-04-22T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -887,8 +887,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-22T21:00:00+00:00",
-                "end_date": "2026-04-26T21:00:00+00:00"
+                "start_date": "2026-04-22T22:00:00+00:00",
+                "end_date": "2026-04-26T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -899,8 +899,8 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-26T21:00:00+00:00",
-                "end_date": "2026-04-29T21:00:00+00:00"
+                "start_date": "2026-04-26T22:00:00+00:00",
+                "end_date": "2026-04-29T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -911,7 +911,7 @@
                 "damage_miss": 20,
                 "damage_attack": 10,
                 "damage_justice": 5,
-                "start_date": "2026-04-29T21:00:00+00:00",
+                "start_date": "2026-04-29T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -934,8 +934,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-02-04T21:00:00+00:00",
-                "end_date": "2026-02-11T21:00:00+00:00"
+                "start_date": "2026-02-04T22:00:00+00:00",
+                "end_date": "2026-02-11T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -946,8 +946,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-02-11T21:00:00+00:00",
-                "end_date": "2026-02-18T21:00:00+00:00"
+                "start_date": "2026-02-11T22:00:00+00:00",
+                "end_date": "2026-02-18T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -958,8 +958,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-02-18T21:00:00+00:00",
-                "end_date": "2026-02-25T21:00:00+00:00"
+                "start_date": "2026-02-18T22:00:00+00:00",
+                "end_date": "2026-02-25T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -970,8 +970,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-02-25T21:00:00+00:00",
-                "end_date": "2026-03-04T21:00:00+00:00"
+                "start_date": "2026-02-25T22:00:00+00:00",
+                "end_date": "2026-03-04T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -982,7 +982,7 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-03-04T21:00:00+00:00",
+                "start_date": "2026-03-04T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1005,8 +1005,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-03-18T21:00:00+00:00",
-                "end_date": "2026-03-25T21:00:00+00:00"
+                "start_date": "2026-03-18T22:00:00+00:00",
+                "end_date": "2026-03-25T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -1017,8 +1017,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-03-25T21:00:00+00:00",
-                "end_date": "2026-04-01T21:00:00+00:00"
+                "start_date": "2026-03-25T22:00:00+00:00",
+                "end_date": "2026-04-01T22:00:00+00:00"
             },
             {
                 "level": 3,
@@ -1029,8 +1029,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-04-01T21:00:00+00:00",
-                "end_date": "2026-04-08T21:00:00+00:00"
+                "start_date": "2026-04-01T22:00:00+00:00",
+                "end_date": "2026-04-08T22:00:00+00:00"
             },
             {
                 "level": 2,
@@ -1041,8 +1041,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-04-08T21:00:00+00:00",
-                "end_date": "2026-04-15T21:00:00+00:00"
+                "start_date": "2026-04-08T22:00:00+00:00",
+                "end_date": "2026-04-15T22:00:00+00:00"
             },
             {
                 "level": 1,
@@ -1053,7 +1053,7 @@
                 "damage_miss": 50,
                 "damage_attack": 50,
                 "damage_justice": 50,
-                "start_date": "2026-04-15T21:00:00+00:00",
+                "start_date": "2026-04-15T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1076,8 +1076,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-04-22T21:00:00+00:00",
-                "end_date": "2026-04-29T21:00:00+00:00"
+                "start_date": "2026-04-22T22:00:00+00:00",
+                "end_date": "2026-04-24T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -1088,43 +1088,7 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-04-29T21:00:00+00:00",
-                "end_date": "2026-05-06T21:00:00+00:00"
-            },
-            {
-                "level": 3,
-                "region": "jp",
-                "difficulty": "MAS",
-                "life": 5000,
-                "recovery_life": 180,
-                "damage_miss": 200,
-                "damage_attack": 100,
-                "damage_justice": 50,
-                "start_date": "2026-05-06T21:00:00+00:00",
-                "end_date": "2026-05-13T21:00:00+00:00"
-            },
-            {
-                "level": 2,
-                "region": "jp",
-                "difficulty": "EXP",
-                "life": 5000,
-                "recovery_life": 200,
-                "damage_miss": 200,
-                "damage_attack": 100,
-                "damage_justice": 50,
-                "start_date": "2026-05-13T21:00:00+00:00",
-                "end_date": "2026-05-20T21:00:00+00:00"
-            },
-            {
-                "level": 1,
-                "region": "jp",
-                "difficulty": "BAS",
-                "life": 5000,
-                "recovery_life": 200,
-                "damage_miss": 50,
-                "damage_attack": 50,
-                "damage_justice": 50,
-                "start_date": "2026-05-20T21:00:00+00:00",
+                "start_date": "2026-04-24T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1147,8 +1111,8 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-04-22T21:00:00+00:00",
-                "end_date": "2026-04-29T21:00:00+00:00"
+                "start_date": "2026-04-22T22:00:00+00:00",
+                "end_date": "2026-04-24T22:00:00+00:00"
             },
             {
                 "level": 4,
@@ -1159,43 +1123,7 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-04-29T21:00:00+00:00",
-                "end_date": "2026-05-06T21:00:00+00:00"
-            },
-            {
-                "level": 3,
-                "region": "jp",
-                "difficulty": "MAS",
-                "life": 5000,
-                "recovery_life": 180,
-                "damage_miss": 200,
-                "damage_attack": 100,
-                "damage_justice": 50,
-                "start_date": "2026-05-06T21:00:00+00:00",
-                "end_date": "2026-05-13T21:00:00+00:00"
-            },
-            {
-                "level": 2,
-                "region": "jp",
-                "difficulty": "EXP",
-                "life": 5000,
-                "recovery_life": 200,
-                "damage_miss": 200,
-                "damage_attack": 100,
-                "damage_justice": 50,
-                "start_date": "2026-05-13T21:00:00+00:00",
-                "end_date": "2026-05-20T21:00:00+00:00"
-            },
-            {
-                "level": 1,
-                "region": "jp",
-                "difficulty": "BAS",
-                "life": 5000,
-                "recovery_life": 200,
-                "damage_miss": 50,
-                "damage_attack": 50,
-                "damage_justice": 50,
-                "start_date": "2026-05-20T21:00:00+00:00",
+                "start_date": "2026-04-24T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1218,7 +1146,7 @@
                 "damage_miss": 200,
                 "damage_attack": 100,
                 "damage_justice": 50,
-                "start_date": "2026-04-22T21:00:00+00:00",
+                "start_date": "2026-04-22T22:00:00+00:00",
                 "end_date": null
             }
         ]
