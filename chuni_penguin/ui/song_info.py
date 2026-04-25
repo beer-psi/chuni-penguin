@@ -81,7 +81,7 @@ class SongInfoEmbed(discord.Embed):
 
         if song.duration is not None:
             song_description_parts.append(
-                f"**Duration**: {song.duration // 60000}:{song.duration % 60000 // 1000}\n"
+                f"**Duration**: {song.duration // 60000}:{song.duration % 60000 // 1000:02}\n"
             )
 
         super().__init__(title=song.title, color=discord.Color.yellow())
