@@ -1,6 +1,7 @@
 import random
 from typing import TYPE_CHECKING, Annotated
 
+import discord
 from discord import (
     DeletedReferencedMessage,
     app_commands,
@@ -157,6 +158,14 @@ class FluffCog(commands.Cog, name="Fluff"):
             "[How to improv: a guide for performers](https://www.bbcmaestro.com/blog/how-to-improv)",
             mention_author=False,
         )
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if "what even happens in chunithm" in message.content.lower():
+            await message.reply(
+                "[how about you find out](https://chunithmstory.com)",
+                mention_author=False,
+            )
 
 
 async def setup(bot: "ChuniBot"):
