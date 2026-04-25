@@ -194819,6 +194819,45 @@
         "jackets": []
     },
     {
+        "id": 2999,
+        "chunirec_id": null,
+        "title": "Melodiniq",
+        "wikiwiki_title": null,
+        "chunithm_catcode": 5,
+        "genre": "ORIGINAL",
+        "artist": "onoken a.k.a. owl＊tree",
+        "version": "X-VERSE-X",
+        "release": "2026-04-23",
+        "bpm": 193,
+        "min_bpm": 193,
+        "max_bpm": 193,
+        "jacket": null,
+        "available": false,
+        "removed": false,
+        "is_hidden_on_chuninet": false,
+        "duration": null,
+        "aliases": [],
+        "charts": [
+            {
+                "difficulty": "ULT",
+                "level": "16",
+                "const": null,
+                "maxcombo": 5716,
+                "tap": 0,
+                "hold": 0,
+                "slide": 0,
+                "air": 0,
+                "flick": 0,
+                "charter": "Memoir of \"AdministratoR\"",
+                "version": null,
+                "available": false,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            }
+        ],
+        "jackets": []
+    },
+    {
         "id": 3003,
         "chunirec_id": "043bbd2fa148d834",
         "title": "Choose!!!",
