@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, PrimaryKeyConstraint, text
+from sqlalchemy import ForeignKey, PrimaryKeyConstraint, false, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, DateTimeUTC
@@ -36,9 +36,19 @@ class LinkedGateCondition(Base):
     difficulty: Mapped[str] = mapped_column()
     life: Mapped[int] = mapped_column()
     recovery_life: Mapped[int] = mapped_column()
+    recovery_life_combo_type: Mapped[str] = mapped_column(
+        default="combo", server_default=text("'combo'")
+    )
     damage_miss: Mapped[int] = mapped_column()
     damage_attack: Mapped[int] = mapped_column()
     damage_justice: Mapped[int] = mapped_column()
+
+    is_local_matching_required: Mapped[bool] = mapped_column(
+        default=False, server_default=false()
+    )
+    survivors_required: Mapped[int | None] = mapped_column(
+        default=None, server_default=text("NULL")
+    )
 
     start_date: Mapped[datetime] = mapped_column(DateTimeUTC())
     end_date: Mapped[datetime | None] = mapped_column(DateTimeUTC())

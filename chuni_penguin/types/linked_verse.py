@@ -20,6 +20,7 @@ class LinkedGate(Enum):
     verse = 10010
     x_verse = 10011
     re_verse = 10012
+    universe = 10013
 
     def __str__(self) -> str:
         if self == LinkedGate.re_verse:

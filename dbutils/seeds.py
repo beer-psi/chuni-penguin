@@ -224,9 +224,12 @@ class SeedsLinkedGateCondition(msgspec.Struct):
     difficulty: Difficulty
     life: int
     recovery_life: int
+    recovery_life_combo_type: str
     damage_miss: int
     damage_attack: int
     damage_justice: int
+    is_local_matching_required: bool
+    survivors_required: int | None
     start_date: datetime
     end_date: datetime | None
 
@@ -938,9 +941,12 @@ async def load_seeds(
                     "difficulty": condition.difficulty.short(),
                     "life": condition.life,
                     "recovery_life": condition.recovery_life,
+                    "recovery_life_combo_type": condition.recovery_life_combo_type,
                     "damage_miss": condition.damage_miss,
                     "damage_attack": condition.damage_attack,
                     "damage_justice": condition.damage_justice,
+                    "is_local_matching_required": condition.is_local_matching_required,
+                    "survivors_required": condition.survivors_required,
                     "start_date": condition.start_date,
                     "end_date": condition.end_date,
                 }
