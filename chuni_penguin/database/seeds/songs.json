@@ -193414,7 +193414,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10247",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -193430,7 +193433,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10247",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -193505,7 +193511,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10248",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -193521,7 +193530,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10248",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -193600,7 +193612,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10249",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -193616,7 +193631,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10249",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -193627,7 +193645,7 @@
     },
     {
         "id": 2966,
-        "chunirec_id": null,
+        "chunirec_id": "47ee8e8878f5fb30",
         "title": "月葬",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -193834,7 +193852,7 @@
     },
     {
         "id": 2968,
-        "chunirec_id": null,
+        "chunirec_id": "a7ab5d7f1afc4c75",
         "title": "PANDORA PARADOXXX",
         "wikiwiki_title": null,
         "chunithm_catcode": 9,
@@ -193939,7 +193957,7 @@
     },
     {
         "id": 2969,
-        "chunirec_id": null,
+        "chunirec_id": "69eb84c20e0f8722",
         "title": "μ3",
         "wikiwiki_title": null,
         "chunithm_catcode": 9,
@@ -194039,7 +194057,7 @@
     },
     {
         "id": 2970,
-        "chunirec_id": null,
+        "chunirec_id": "d33bc90a7060d73f",
         "title": "†渚の小悪魔ラヴリィ～レイディオ†",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194130,7 +194148,7 @@
     },
     {
         "id": 2971,
-        "chunirec_id": null,
+        "chunirec_id": "f6733cd3eaaef394",
         "title": "聖者の息吹",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194220,7 +194238,7 @@
     },
     {
         "id": 2972,
-        "chunirec_id": null,
+        "chunirec_id": "d1925656ca557ce4",
         "title": "超MANJIラッシュ",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194311,7 +194329,7 @@
     },
     {
         "id": 2973,
-        "chunirec_id": null,
+        "chunirec_id": "6feed43fff794af0",
         "title": "Lips XTC -Sorist Remix-",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194403,7 +194421,7 @@
     },
     {
         "id": 2974,
-        "chunirec_id": null,
+        "chunirec_id": "fd994bf422937efb",
         "title": "Marigold",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194490,7 +194508,7 @@
     },
     {
         "id": 2975,
-        "chunirec_id": null,
+        "chunirec_id": "5d076f9f2583bb1e",
         "title": "glory MAX -to the MAXimum-",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194579,7 +194597,7 @@
     },
     {
         "id": 2976,
-        "chunirec_id": null,
+        "chunirec_id": "a75e2fb1fc11fc64",
         "title": "DESTRUCTION 3,2,1",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194629,7 +194647,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10260",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "EXP",
@@ -194645,7 +194666,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10260",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -194661,14 +194685,17 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10260",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": []
     },
     {
         "id": 2977,
-        "chunirec_id": null,
+        "chunirec_id": "882f607f45ca5960",
         "title": "Ré：Ré",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194757,7 +194784,7 @@
     },
     {
         "id": 2978,
-        "chunirec_id": null,
+        "chunirec_id": "183dc4d8954d61ba",
         "title": "ALTER EGO",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -194821,7 +194848,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10262",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -194837,7 +194867,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10262",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": []
