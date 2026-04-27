@@ -1350,6 +1350,21 @@
                 "is_local_matching_required": false,
                 "survivors_required": null,
                 "start_date": "2026-04-25T22:00:00+00:00",
+                "end_date": "2026-04-26T22:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "jp",
+                "difficulty": "EXP",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "combo",
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-04-26T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1406,6 +1421,21 @@
                 "is_local_matching_required": false,
                 "survivors_required": null,
                 "start_date": "2026-04-25T22:00:00+00:00",
+                "end_date": "2026-04-26T22:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "jp",
+                "difficulty": "EXP",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "combo",
+                "damage_miss": 200,
+                "damage_attack": 100,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-04-26T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1506,11 +1536,11 @@
                 "end_date": "2026-04-26T22:00:00+00:00"
             },
             {
-                "level": 4,
+                "level": 3,
                 "region": "jp",
-                "difficulty": "ULT",
+                "difficulty": "MAS",
                 "life": 5000,
-                "recovery_life": 180,
+                "recovery_life": 200,
                 "recovery_life_combo_type": "JUSTICE HEAVEN",
                 "damage_miss": 200,
                 "damage_attack": 100,
