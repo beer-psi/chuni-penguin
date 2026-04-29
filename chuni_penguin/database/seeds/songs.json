@@ -193849,7 +193849,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10251",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": []
@@ -194420,7 +194423,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10257",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -194436,7 +194442,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10257",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": []
@@ -194959,7 +194968,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10263",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "EXP",
@@ -194975,7 +194987,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10263",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -194991,7 +195006,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10263",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "ULT",
@@ -195007,7 +195025,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10263",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": []
@@ -195078,7 +195099,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10264",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -195094,7 +195118,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "10264",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": []
