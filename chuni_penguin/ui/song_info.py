@@ -24,7 +24,7 @@ class SongInfoEmbed(discord.Embed):
         *,
         detailed: bool = False,
         synthesis_alt_jacket: str | None = None,
-        brainrot: bool = False,
+        fun_mode: bool = False,
     ):
         song_description_parts = []
 
@@ -87,24 +87,28 @@ class SongInfoEmbed(discord.Embed):
         super().__init__(title=song.title, color=discord.Color.yellow())
         self.set_thumbnail(url=get_jacket_url(song))
 
-        if song.id == 2698:
-            if synthesis_alt_jacket == "none":
-                self.set_thumbnail(url=None)
-            elif (
-                synthesis_alt_jacket != "default"
-                and config.web.serve_assets
-                and config.web.is_accessible
-            ):
+        if song.id == 2698 and synthesis_alt_jacket == "none":
+            self.set_thumbnail(url=None)
+
+        if config.web.serve_assets and config.web.is_accessible:
+            if song.id == 2698 and synthesis_alt_jacket not in ("none", "default"):
                 self.set_thumbnail(
                     url=f"{config.web.base_url}/assets/jackets/{song.id}_{synthesis_alt_jacket}.webp"
                 )
-        elif (
-            brainrot
-            and song.id in (45, 8100)
-            and config.web.serve_assets
-            and config.web.is_accessible
-        ):
-            self.set_thumbnail(url=f"{config.web.base_url}/assets/jackets/45_67.webp")
+
+            if fun_mode and song.id in (45, 8100):
+                self.set_thumbnail(
+                    url=f"{config.web.base_url}/assets/jackets/45_67.webp"
+                )
+
+        if fun_mode and song.id == 881:
+            self.set_footer(
+                text=(
+                    '"Learning trrricksters is just like learning how to ride a bike: '
+                    "except the bike has no handlebars, no seats and the wheels are on "
+                    'fire. Good luck. (Tap slides are slower than you imagine)" - 8por?'
+                )
+            )
 
         chart_level_desc = []
 
@@ -162,7 +166,7 @@ class SongInfoEmbed(discord.Embed):
 
 
 class SongInfoPageSource(ListPageSource[Song]):
-    __slots__ = ("brainrot", "detailed", "synthesis_alt_jacket")
+    __slots__ = ("detailed", "fun_mode", "synthesis_alt_jacket")
 
     def __init__(
         self,
@@ -170,12 +174,12 @@ class SongInfoPageSource(ListPageSource[Song]):
         *,
         detailed: bool,
         synthesis_alt_jacket: str | None = None,
-        brainrot: bool = False,
+        fun_mode: bool = False,
     ) -> None:
         super().__init__(entries, per_page=1)
         self.detailed: bool = detailed
         self.synthesis_alt_jacket: str | None = synthesis_alt_jacket
-        self.brainrot: bool = brainrot
+        self.fun_mode: bool = fun_mode
 
     @override
     async def format_page(
@@ -199,7 +203,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                         charts,
                         detailed=self.detailed,
                         synthesis_alt_jacket=self.synthesis_alt_jacket,
-                        brainrot=self.brainrot,
+                        fun_mode=self.fun_mode,
                     )
                 )
 
@@ -237,7 +241,7 @@ class SongInfoPaginationView(PaginationView):
         *,
         detailed: bool = False,
         synthesis_alt_jacket: str | None = None,
-        brainrot: bool = False,
+        fun_mode: bool = False,
     ):
         super().__init__(
             ctx,
@@ -245,6 +249,6 @@ class SongInfoPaginationView(PaginationView):
                 items,
                 detailed=detailed,
                 synthesis_alt_jacket=synthesis_alt_jacket,
-                brainrot=brainrot,
+                fun_mode=fun_mode,
             ),
         )

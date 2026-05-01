@@ -488,16 +488,21 @@ class SearchCog(commands.Cog, name="Search"):
                 await ctx.bot.database.user_found_easter_egg(
                     ctx.author.id, "L9-upside-down-is-67"
                 )
-                brainrot = True
+                fun_mode = True
+            elif (query in ("bike", "\N{BICYCLE}") or ":bikebait:" in query) and any(
+                song.id == 881 for song in result.songs
+            ):
+                await ctx.bot.database.user_found_easter_egg(ctx.author.id, "bike")
+                fun_mode = True
             else:
-                brainrot = False
+                fun_mode = False
 
             view = SongInfoPaginationView(
                 ctx,
                 result.songs,
                 detailed=detailed,
                 synthesis_alt_jacket=ctx.user_config.synthesis_alt_jacket,
-                brainrot=brainrot,
+                fun_mode=fun_mode,
             )
             await view.start()
 
