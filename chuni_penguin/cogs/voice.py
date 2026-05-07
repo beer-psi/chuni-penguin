@@ -308,7 +308,13 @@ class VoiceCog(commands.Cog, name="Voice"):
                     msg = "The game has already stopped."
                     raise commands.CommandError(msg)
 
-                await game_sessions[ctx.channel.id].stop(ctx.author)
+                session = game_sessions[ctx.channel.id]
+                await session.stop(ctx.author)
+
+            await self.games._clear_state(ctx.channel.id)
+
+            if (voice_client := session.voice_client) is not None:
+                await self.games._clear_state(voice_client.channel.id)
         elif channel_is_radio:
             async with self.radio_states.write() as radio_states:
                 if ctx.channel.id not in radio_states:

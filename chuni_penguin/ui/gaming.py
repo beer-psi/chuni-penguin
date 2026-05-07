@@ -396,6 +396,9 @@ class RetryGameButton(
                 )
                 return
 
+        voice_client: songbird.SongbirdClient | None = None
+        voice_channel_id: int | None = None
+
         if self.mode == GuessingGameType.VOICE_CHANNEL:
             if interaction.guild is None or not isinstance(
                 interaction.user, discord.Member
@@ -420,9 +423,10 @@ class RetryGameButton(
                 )
                 return
 
-            await interaction.user.voice.channel.connect(
+            voice_client = await interaction.user.voice.channel.connect(
                 cls=songbird.SongbirdClient, self_deaf=True
             )
+            voice_channel_id = voice_client.channel.id
 
         ctx = await interaction.client.get_context(interaction.message)
         # user will have the appropriate type if the message is in a guild context
@@ -450,13 +454,6 @@ class RetryGameButton(
                 levels=self.levels,
                 seed=self.seed,
             )
-
-        voice_channel_id = (
-            interaction.guild.voice_client.channel.id
-            if interaction.guild is not None
-            and isinstance(interaction.guild.voice_client, songbird.SongbirdClient)
-            else None
-        )
 
         async def after(e):
             await gaming._clear_state(interaction.channel_id)  # pyright: ignore[reportArgumentType]
