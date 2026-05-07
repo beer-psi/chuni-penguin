@@ -1365,6 +1365,21 @@
                 "is_local_matching_required": false,
                 "survivors_required": null,
                 "start_date": "2026-04-26T22:00:00+00:00",
+                "end_date": "2026-04-27T22:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "jp",
+                "difficulty": "BAS",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "combo",
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-04-27T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1436,6 +1451,21 @@
                 "is_local_matching_required": false,
                 "survivors_required": null,
                 "start_date": "2026-04-26T22:00:00+00:00",
+                "end_date": "2026-04-27T22:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "jp",
+                "difficulty": "BAS",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "combo",
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-04-27T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1492,6 +1522,36 @@
                 "is_local_matching_required": false,
                 "survivors_required": null,
                 "start_date": "2026-04-26T22:00:00+00:00",
+                "end_date": "2026-04-29T22:00:00+00:00"
+            },
+            {
+                "level": 2,
+                "region": "jp",
+                "difficulty": "EXP",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "combo",
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-04-29T22:00:00+00:00",
+                "end_date": "2026-05-03T22:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "jp",
+                "difficulty": "BAS",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "combo",
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-05-03T22:00:00+00:00",
                 "end_date": null
             }
         ]
@@ -1548,6 +1608,36 @@
                 "is_local_matching_required": false,
                 "survivors_required": null,
                 "start_date": "2026-04-26T22:00:00+00:00",
+                "end_date": null
+            },
+            {
+                "level": 2,
+                "region": "jp",
+                "difficulty": "EXP",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "JUSTICE HEAVEN",
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-04-29T22:00:00+00:00",
+                "end_date": "2026-05-03T22:00:00+00:00"
+            },
+            {
+                "level": 1,
+                "region": "jp",
+                "difficulty": "BAS",
+                "life": 5000,
+                "recovery_life": 200,
+                "recovery_life_combo_type": "JUSTICE HEAVEN",
+                "damage_miss": 50,
+                "damage_attack": 50,
+                "damage_justice": 50,
+                "is_local_matching_required": false,
+                "survivors_required": null,
+                "start_date": "2026-05-03T22:00:00+00:00",
                 "end_date": null
             }
         ]
