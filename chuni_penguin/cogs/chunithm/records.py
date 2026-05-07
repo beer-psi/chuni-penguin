@@ -1911,7 +1911,10 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 # Checking for AJ is probably unnecessary since currently 1009900
                 # guarantees an AJ... until a chart with 5100+ notes is added
-                if pb.score >= 1009900 and pb_combo_lamp == ComboLamp.all_justice:
+                if pb.score >= 1009900 and pb_combo_lamp in (
+                    ComboLamp.all_justice,
+                    ComboLamp.all_justice_critical,
+                ):
                     counts["99AJ"] += 1
 
                 for rank in (Rank.s, Rank.sp, Rank.ss, Rank.ssp, Rank.sss, Rank.sssp):
