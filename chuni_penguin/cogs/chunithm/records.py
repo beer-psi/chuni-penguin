@@ -889,7 +889,6 @@ class RecordsCog(commands.Cog, name="Records"):
                 ctx, target_id, kamaitachi=kamaitachi
             ) as client,
         ):
-            theme = "xverse" if isinstance(client, KamaitachiAdapter) else "default"
             user_config = await self.utils.fetch_user_config(target_id)
             profile = await client.get_profile()
 
@@ -926,7 +925,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 record_slots,
                 new_records,
                 new_record_slots,
-                theme,
+                "default",
                 classic=classic,
             )
 
