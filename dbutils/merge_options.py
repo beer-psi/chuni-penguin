@@ -92,7 +92,14 @@ def extract_jacket(
 ):
     try:
         with Image.open(jacket_file) as im:
-            im = im.convert("RGB")
+            bg = Image.new("RGB", im.size, (0, 0, 0))
+
+            if im.has_transparency_data:
+                bg.paste(im, mask=im.split()[3])
+            else:
+                bg.paste(im)
+
+            im = bg.resize((300, 300), Image.Resampling.LANCZOS)
 
             # Keep the PNG version around to prevent dead links, I'm pretty sure some
             # other tools use these jackets
