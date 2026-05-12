@@ -279,6 +279,7 @@ async def _get_songlist(bot: "ChuniBot"):
             "release_date": song.release,
             "version": song.version,
             "jacket_url": get_jacket_url(song),
+            "duration": song.duration,
             "bpm": {
                 "min": song.min_bpm,
                 "max": song.max_bpm,
@@ -295,9 +296,12 @@ async def _get_songlist(bot: "ChuniBot"):
                     "const": x.const,
                     "charter": x.charter,
                     "version": x.version,
-                    "sdvxin_url": sdvxin_link(x.sdvxin_chart_view)
-                    if x.sdvxin_chart_view is not None
-                    else None,
+                    "sdvxin_url": (
+                        sdvxin_link(x.sdvxin_chart_view)
+                        if x.sdvxin_chart_view is not None
+                        else None
+                    ),
+                    "available": x.available,
                     "notecounts": {
                         "total": x.maxcombo,
                         "tap": x.tap,
