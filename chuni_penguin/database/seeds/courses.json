@@ -4028,6 +4028,46 @@
         ]
     },
     {
+        "id": 45002,
+        "cls": "i",
+        "name": "EXPERT エキスパート Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2545,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2253,
+                        "difficulty": "EXP"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2044,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 45003,
         "cls": "ii",
         "name": "Christmas Set",
@@ -4068,6 +4108,46 @@
         ]
     },
     {
+        "id": 45004,
+        "cls": "ii",
+        "name": "鳩ホルダー Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2504,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2760,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2764,
+                        "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 45005,
         "cls": "iii",
         "name": "名取さな Set",
@@ -4101,6 +4181,46 @@
                 "charts": [
                     {
                         "song_id": 2502,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45006,
+        "cls": "iii",
+        "name": "ハネリズム Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2312,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2512,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2580,
                         "difficulty": "MAS"
                     }
                 ]
@@ -4148,6 +4268,46 @@
         ]
     },
     {
+        "id": 45008,
+        "cls": "iv",
+        "name": "HAND-TRIP Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2720,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2277,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2356,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 45009,
         "cls": "v",
         "name": "豪雪 Set",
@@ -4181,6 +4341,86 @@
                 "charts": [
                     {
                         "song_id": 2053,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45010,
+        "cls": "v",
+        "name": "Twinrook Set",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2614,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2892,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2799,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 45011,
+        "cls": "infinite",
+        "name": "Ultimate Boss Rush",
+        "version": "X-VERSE-X",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 982,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 1086,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2652,
                         "difficulty": "MAS"
                     }
                 ]
