@@ -79,6 +79,7 @@ TITLE_MAPPING = {
     "Pump": "Pump!n",
     "Ray ?はじまりのセカイ?": "Ray ―はじまりのセカイ― (クロニクルアレンジver.)",
     "Reach for the Stars": "Reach For The Stars",
+    "Re：Re": "Ré：Ré",
     "Session High": "Session High⤴",
     "Seyana": "Seyana. ～何でも言うことを聞いてくれるアカネチャン～",
     "Seyana. ~何でも言うことを聞いてくれるアカネチャン~": "Seyana. ～何でも言うことを聞いてくれるアカネチャン～",
