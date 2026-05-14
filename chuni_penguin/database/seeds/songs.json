@@ -193663,7 +193663,7 @@
         "bpm": 190,
         "min_bpm": 190,
         "max_bpm": 190,
-        "jacket": null,
+        "jacket": "526f2c61c37fb231.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -193743,7 +193743,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/526f2c61c37fb231.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/526f2c61c37fb231.jpg"
+        ]
     },
     {
         "id": 2967,
@@ -193875,7 +193878,7 @@
         "bpm": 150,
         "min_bpm": 75,
         "max_bpm": 250,
-        "jacket": null,
+        "jacket": "7c0d2bba8c6432e8.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -193961,10 +193964,12 @@
             }
         ],
         "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/7c0d2bba8c6432e8.jpg",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/658fe4921a6bcfff951cbd362636a6970d5bbb1df0587ac7819dcccb962c9bd6.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/35b2760a42a8eebe.png",
             "https://maimaidx.jp/maimai-mobile/img/Music/35b2760a42a8eebe.png",
-            "https://mimixd.app/images/render/cover/35b2760a42a8eebe.png"
+            "https://mimixd.app/images/render/cover/35b2760a42a8eebe.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/7c0d2bba8c6432e8.jpg"
         ]
     },
     {
@@ -193980,7 +193985,7 @@
         "bpm": 192,
         "min_bpm": 192,
         "max_bpm": 192,
-        "jacket": null,
+        "jacket": "d79a18964b32fadb.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194064,7 +194069,9 @@
             }
         ],
         "jackets": [
-            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/09e46dd4c9bbb993989d15cf4272be986ee76c2a2f5a355249931a57df28a5a0.png"
+            "https://chunithm-net-eng.com/mobile/img/d79a18964b32fadb.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/09e46dd4c9bbb993989d15cf4272be986ee76c2a2f5a355249931a57df28a5a0.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/d79a18964b32fadb.jpg"
         ]
     },
     {
@@ -194080,7 +194087,7 @@
         "bpm": 190,
         "min_bpm": 190,
         "max_bpm": 190,
-        "jacket": null,
+        "jacket": "b227a354f158fec6.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194162,7 +194169,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/b227a354f158fec6.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/b227a354f158fec6.jpg"
+        ]
     },
     {
         "id": 2971,
@@ -194177,7 +194187,7 @@
         "bpm": 180,
         "min_bpm": 180,
         "max_bpm": 180,
-        "jacket": null,
+        "jacket": "fa67a8f24675ec38.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194258,7 +194268,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/fa67a8f24675ec38.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/fa67a8f24675ec38.jpg"
+        ]
     },
     {
         "id": 2972,
@@ -194273,7 +194286,7 @@
         "bpm": 205,
         "min_bpm": 205,
         "max_bpm": 205,
-        "jacket": null,
+        "jacket": "f9a6b164418d922e.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194355,7 +194368,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/f9a6b164418d922e.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/f9a6b164418d922e.jpg"
+        ]
     },
     {
         "id": 2973,
@@ -194370,7 +194386,7 @@
         "bpm": 143.95,
         "min_bpm": 143.95,
         "max_bpm": 1151.6,
-        "jacket": null,
+        "jacket": "873ad3e03caedb0d.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194453,7 +194469,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/873ad3e03caedb0d.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/873ad3e03caedb0d.jpg"
+        ]
     },
     {
         "id": 2974,
@@ -194468,7 +194487,7 @@
         "bpm": 160,
         "min_bpm": 160,
         "max_bpm": 160,
-        "jacket": null,
+        "jacket": "7a19b31e47f91fb5.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194546,7 +194565,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/7a19b31e47f91fb5.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/7a19b31e47f91fb5.jpg"
+        ]
     },
     {
         "id": 2975,
@@ -194561,7 +194583,7 @@
         "bpm": 190,
         "min_bpm": 190,
         "max_bpm": 190,
-        "jacket": null,
+        "jacket": "8bd58bb075d55449.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194641,7 +194663,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/8bd58bb075d55449.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/8bd58bb075d55449.jpg"
+        ]
     },
     {
         "id": 2976,
@@ -194656,7 +194681,7 @@
         "bpm": 321.321,
         "min_bpm": 321.321,
         "max_bpm": 321.321,
-        "jacket": null,
+        "jacket": "ce21ae87308e7599.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194739,7 +194764,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/ce21ae87308e7599.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/ce21ae87308e7599.jpg"
+        ]
     },
     {
         "id": 2977,
@@ -194754,7 +194782,7 @@
         "bpm": 222,
         "min_bpm": 222,
         "max_bpm": 222,
-        "jacket": null,
+        "jacket": "117154b0ebadf063.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194835,7 +194863,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/117154b0ebadf063.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/117154b0ebadf063.jpg"
+        ]
     },
     {
         "id": 2978,
@@ -194850,7 +194881,7 @@
         "bpm": 195,
         "min_bpm": 97.5,
         "max_bpm": 195,
-        "jacket": null,
+        "jacket": "96dca6406e40c201.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -194928,7 +194959,10 @@
                 }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/96dca6406e40c201.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/96dca6406e40c201.jpg"
+        ]
     },
     {
         "id": 2979,
@@ -194943,7 +194977,7 @@
         "bpm": 148,
         "min_bpm": 148,
         "max_bpm": 148,
-        "jacket": null,
+        "jacket": "70736c900114d732.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -195017,7 +195051,15 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/70736c900114d732.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/3411e61509c17e518a0999c90d7e18ce66ebeb18d20b8d19951d8b9d0eded299.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/9d3004d18c02688a550ac619074c8096abd5e89936c0552921b15cc5475da35e.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/a9567047ac19c427.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/a9567047ac19c427.png",
+            "https://mimixd.app/images/render/cover/a9567047ac19c427.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/70736c900114d732.jpg"
+        ]
     },
     {
         "id": 2980,
@@ -195032,7 +195074,7 @@
         "bpm": 146,
         "min_bpm": 146,
         "max_bpm": 146,
-        "jacket": null,
+        "jacket": "5cb62363cba66f4b.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -195120,7 +195162,15 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/5cb62363cba66f4b.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/2d070018eebd26c7078e72411022912dff843315f727310f48769b0f74ca98a2.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/be8ddc1884bc5cca1efc7ff0fd1ab328d27d19bd6a127d6245222ed987a6a21f.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/b873005e6463213c.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/b873005e6463213c.png",
+            "https://mimixd.app/images/render/cover/b873005e6463213c.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/5cb62363cba66f4b.jpg"
+        ]
     },
     {
         "id": 2981,
@@ -195135,7 +195185,7 @@
         "bpm": 108,
         "min_bpm": 108,
         "max_bpm": 108,
-        "jacket": null,
+        "jacket": "f2c93f26b6568653.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -195211,7 +195261,10 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/f2c93f26b6568653.jpg",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/f2c93f26b6568653.jpg"
+        ]
     },
     {
         "id": 2982,
@@ -195226,7 +195279,7 @@
         "bpm": 230,
         "min_bpm": 230,
         "max_bpm": 230,
-        "jacket": null,
+        "jacket": "9085fe54856f6bb7.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -195302,7 +195355,11 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/9085fe54856f6bb7.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/ec9d85e42a74a4cb91537592da3e57016d422db33379da2a4c71f1fb4e7f8a4f.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/9085fe54856f6bb7.jpg"
+        ]
     },
     {
         "id": 2999,
@@ -195525,7 +195582,7 @@
         "bpm": 166,
         "min_bpm": 125,
         "max_bpm": 220,
-        "jacket": null,
+        "jacket": "ef2c22c0f97703cc.jpg",
         "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -195601,7 +195658,15 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/ef2c22c0f97703cc.jpg",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/cf170e57331a7da631134f4ff5248fb36cac2b0685aa685add3ed65bfb21c61c.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/3cd5a218a9d07d8c04344a8aed099db7f8a75c3740928f70a3f58089e533193a.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/17b2fa631b0824d7.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/17b2fa631b0824d7.png",
+            "https://mimixd.app/images/render/cover/17b2fa631b0824d7.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/ef2c22c0f97703cc.jpg"
+        ]
     },
     {
         "id": 3003,
