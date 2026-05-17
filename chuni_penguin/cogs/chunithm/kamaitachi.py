@@ -26,7 +26,7 @@ from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_prefix_command, logger
-from chuni_penguin.types import ComboLamp, Difficulty, PersonalBest, RecentScore
+from chuni_penguin.types import ComboLamp, PersonalBest, RecentScore
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
