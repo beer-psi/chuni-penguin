@@ -343,10 +343,6 @@ class RecordsCog(commands.Cog, name="Records"):
             if isinstance(client, ChunithmNetAdapter):
                 song.raise_if_not_available()
 
-            if isinstance(client, KamaitachiAdapter) and song.genre == "WORLD'S END":
-                msg = "Kamaitachi does not support WORLD'S END charts."
-                raise commands.CommandError(msg)
-
             displayed_song = escape_markdown(song.title)
 
             if song.id >= 8000 and len(song.charts) > 0:
@@ -570,13 +566,10 @@ class RecordsCog(commands.Cog, name="Records"):
 
             # if we're fetching scores from Kamaitachi, we don't need to care about whether
             # the song is available in CHUNITHM International.
-            #
-            # However, we need to keep in mind that Kamaitachi does not support WORLD'S END.
             songs = [
                 x
                 for x in result.songs
-                if (isinstance(client, KamaitachiAdapter) and x.genre != "WORLD'S END")
-                or (isinstance(client, ChunithmNetAdapter) and x.available)
+                if not isinstance(client, ChunithmNetAdapter) or x.available
             ]
 
             if len(songs) > 1:

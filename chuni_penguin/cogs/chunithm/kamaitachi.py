@@ -270,9 +270,6 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                 recents = await chuni_client.get_recent_scores()
 
                 for recent in recents:
-                    if recent.chart.difficulty == Difficulty.worlds_end:
-                        continue
-
                     detailed_recent = await chuni_client.get_detailed_recent_score(
                         recent
                     )
@@ -284,10 +281,6 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                         )
             elif sync == "pb":
                 for pb in await chuni_client.get_all_personal_bests():
-                    if pb.chart.difficulty == Difficulty.worlds_end:
-                        # Kamaitachi does not accept WORLD'S END scores
-                        continue
-
                     # If there's judgement data (annotated from the database), but
                     # those don't line up with the lamp, then remove the judgements
                     if pb.judgements is not None and (
@@ -445,7 +438,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                                 discord.ui.Button(
                                     style=discord.ButtonStyle.link,
                                     label="CHUNITHM Profile",
-                                    url=f"https://kamai.tachi.ac/u/{import_doc.user_id}/games/chunithm/Single",
+                                    url=f"https://kamai.tachi.ac/u/{import_doc.user_id}/games/chunithm",
                                 )
                             )
                             .add_item(
@@ -512,7 +505,7 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                     discord.ui.Button(
                         style=discord.ButtonStyle.link,
                         label="CHUNITHM Profile",
-                        url=f"https://kamai.tachi.ac/u/{profile.username}/games/chunithm/Single",
+                        url=f"https://kamai.tachi.ac/u/{profile.username}/games/chunithm",
                     )
                 )
                 .add_item(

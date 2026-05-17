@@ -24,7 +24,7 @@ async def update_tachi(logger: BoundLogger):
         transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
     ) as client:
         resp = await client.get(
-            "https://raw.githubusercontent.com/zkrising/Tachi/main/seeds/collections/charts-chunithm.json"
+            "https://raw.githubusercontent.com/zkldi/Tachi3/refs/heads/main/db/seeds/charts-chunithm.json"
         )
         tachi_charts = resp.json()
 
@@ -39,7 +39,7 @@ async def update_tachi(logger: BoundLogger):
         if chart is None:
             continue
 
-        chart["tachi_chart_id"] = tachi_chart["chartID"]
+        chart["tachi_chart_id"] = tachi_chart["id"]
 
     with (SEEDS_DIR / "songs.json").open("w") as f:
         json.dump(

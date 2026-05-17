@@ -150,7 +150,7 @@ class KamaitachiAdapter(NetworkAdapter):
 
         return Profile(
             username=username,
-            url=f"https://kamai.tachi.ac/users/{user_id}/games/chunithm/Single",
+            url=f"https://kamai.tachi.ac/users/{user_id}/games/chunithm",
             profile_picture=(
                 f"{config.web.base_url}/kamaitachi/users/{user_id}/pfp/{custom_pfp_location}"
                 if config.web.is_accessible and custom_pfp_location is not None
@@ -176,7 +176,7 @@ class KamaitachiAdapter(NetworkAdapter):
     async def get_profile(self) -> Profile:
         profile = await self.get_minimal_profile()
         resp = await self._client.get(
-            f"/api/v1/users/{profile.username}/games/chunithm/Single"
+            f"/api/v1/users/{profile.username}/games/chunithm"
         )
         ugpt_data = msgspec.json.decode(
             resp.content, type=KTResponse[KTChunithmUserProfile]
@@ -189,9 +189,7 @@ class KamaitachiAdapter(NetworkAdapter):
         return update_profile_from_ugpt_data(profile, ugpt_data.body)
 
     async def get_recent_scores(self) -> list[RecentScore]:
-        resp = await self._client.get(
-            "/api/v1/users/me/games/chunithm/Single/scores/recent"
-        )
+        resp = await self._client.get("/api/v1/users/me/games/chunithm/scores/recent")
         data = msgspec.json.decode(resp.content, type=KTChunithmScoreResponse)
 
         if not data.success:
@@ -229,9 +227,7 @@ class KamaitachiAdapter(NetworkAdapter):
         ]
 
     async def _get_personal_bests(self, user: str | int):
-        resp = await self._client.get(
-            f"/api/v1/users/{user}/games/chunithm/Single/pbs/all"
-        )
+        resp = await self._client.get(f"/api/v1/users/{user}/games/chunithm/pbs/all")
         data = msgspec.json.decode(resp.content, type=KTChunithmPersonalBestsResponse)
 
         if not data.success:
@@ -263,9 +259,7 @@ class KamaitachiAdapter(NetworkAdapter):
 
         fs = [
             asyncio.create_task(
-                self._client.get(
-                    f"/api/v1/users/me/games/chunithm/Single/pbs/{chart_id}"
-                )
+                self._client.get(f"/api/v1/users/me/games/chunithm/pbs/{chart_id}")
             )
             for chart_id in chart_ids
         ]
@@ -294,7 +288,7 @@ class KamaitachiAdapter(NetworkAdapter):
     async def get_rating_breakdown(self, rating_type: RatingType) -> RatingBreakdown:
         if rating_type == RatingType.naive:
             resp = await self._client.get(
-                "/api/v1/users/me/games/chunithm/Single/pbs/best?alg=rating"
+                "/api/v1/users/me/games/chunithm/pbs/best?alg=rating"
             )
             data = msgspec.json.decode(
                 resp.content, type=KTChunithmPersonalBestsResponse
@@ -394,7 +388,7 @@ class KamaitachiAdapter(NetworkAdapter):
         self, song_id: int, difficulty: Difficulty
     ) -> Leaderboard:
         resp = await self._client.post(
-            "/api/v1/games/chunithm/Single/charts/resolve",
+            "/api/v1/games/chunithm/charts/resolve",
             json={
                 "matchType": "inGameID",
                 "identifier": str(song_id),
@@ -409,10 +403,8 @@ class KamaitachiAdapter(NetworkAdapter):
             msg = f"No chart exists in Kamaitachi for song ID {song_id} and difficulty {difficulty}."
             raise ChartNotFound(msg)
 
-        chart_id = resolve_data.body.chart.chart_id
-        resp = await self._client.get(
-            f"/api/v1/games/chunithm/Single/charts/{chart_id}/pbs"
-        )
+        chart_id = resolve_data.body.chart.id
+        resp = await self._client.get(f"/api/v1/games/chunithm/charts/{chart_id}/pbs")
         data = msgspec.json.decode(resp.content, type=KTResponse[KTChunithmLeaderboard])
 
         if not data.success:
@@ -493,7 +485,7 @@ class KamaitachiAdapter(NetworkAdapter):
             raise NotImplementedError
 
         resp = await self._client.get(
-            "/api/v1/games/chunithm/Single/leaderboard",
+            "/api/v1/games/chunithm/leaderboard",
             params={"alg": "naiveRating", "limit": "500"},
         )
         data = msgspec.json.decode(resp.content, type=KTResponse[KTChunithmRanking])

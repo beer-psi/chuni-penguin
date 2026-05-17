@@ -80,13 +80,24 @@ def convert_kt_to_score(
 
         song.version = song_version
 
-    record = Score(
-        song=song,
-        chart=Chart(
+    # WE charts use the difficulty field for storing the level, since difficulty must
+    # be unique across all charts of a Tachi song.
+    if chart.data.in_game_id >= 8000:
+        bot_chart = Chart(
+            difficulty=Difficulty.worlds_end,
+            level=chart.difficulty,
+            internal_level=None,
+        )
+    else:
+        bot_chart = Chart(
             difficulty=getattr(Difficulty, chart.difficulty.lower()),
             level=chart.level,
             internal_level=chart.level_num,
-        ),
+        )
+
+    record = Score(
+        song=song,
+        chart=bot_chart,
         score=score.score_data.score,
         rank=getattr(Rank, score.score_data.grade.lower().replace("+", "p")),
         clear_lamp=KT_CLEAR_LAMP_MAP.get(score.score_data.clear_lamp, ClearLamp.failed),
@@ -122,20 +133,21 @@ def convert_kt_pbs_to_records(
     else:
         body = msgspec.convert(raw_body, KTChunithmPersonalBestsResponseBody)
 
-    songs_by_id = {s.id: s for s in body.songs}
-    charts_by_id = {c.chart_id: c for c in body.charts}
+    charts_by_id = {c.id: c for c in body.charts}
+    records: list[PersonalBest] = []
 
-    return [
-        PersonalBest.from_score(
-            convert_kt_to_score(
-                pb,
-                songs_by_id[pb.song_id].title,
-                charts_by_id[pb.chart_id],
-                songs_by_id[pb.song_id].data.display_version,
+    for pb in body.pbs:
+        chart = charts_by_id[pb.chart_id]
+
+        records.append(
+            PersonalBest.from_score(
+                convert_kt_to_score(
+                    pb, chart.song.title, chart, chart.song.data.display_version
+                )
             )
         )
-        for pb in body.pbs
-    ]
+
+    return records
 
 
 def convert_kt_scores_to_records(
@@ -147,7 +159,7 @@ def convert_kt_scores_to_records(
         body = msgspec.convert(raw_body, KTChunithmScoreResponseBody)
 
     songs_by_id = {s.id: s for s in body.songs}
-    charts_by_id = {c.chart_id: c for c in body.charts}
+    charts_by_id = {c.id: c for c in body.charts}
 
     return [
         RecentScore.from_score(
@@ -171,9 +183,6 @@ def convert_to_kt_batch_manual(profile: Profile, scores: Sequence[Score]):
         batch_manual.classes.emblem = KTChunithmClass.from_skill_class(profile.emblem)
 
     for score in scores:
-        if score.chart.difficulty == Difficulty.worlds_end:
-            continue
-
         tachi_score = KTBatchManualChunithmScore(
             score=score.score,
             note_lamp=KT_REVERSE_NOTE_LAMP_MAP.get(score.combo_lamp, "NONE"),
@@ -182,6 +191,10 @@ def convert_to_kt_batch_manual(profile: Profile, scores: Sequence[Score]):
             identifier=str(score.song.id),
             difficulty=str(score.chart.difficulty),  # pyright: ignore[reportArgumentType]
         )
+
+        if score.chart.difficulty == Difficulty.worlds_end:
+            tachi_score.match_type = "gcmInGameIDSpecialChart"
+            tachi_score.difficulty = msgspec.UNSET
 
         if score.achieved_at is not None:
             tachi_score.time_achieved = int(score.achieved_at.timestamp() * 1000)

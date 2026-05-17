@@ -13,7 +13,6 @@ KTChunithmNoteLamp = Literal[
 KTChunithmClearLamp = Literal[
     "FAILED", "CLEAR", "HARD", "BRAVE", "ABSOLUTE", "CATASTROPHY"
 ]
-KTChunithmDifficulty = Literal["BASIC", "ADVANCED", "EXPERT", "MASTER", "ULTIMA"]
 
 
 @functools.total_ordering
@@ -126,9 +125,8 @@ class KTChunithmPersonalBestComposition(msgspec.Struct, rename="camel"):
 class KTChunithmPersonalBest(msgspec.Struct, rename="camel"):
     user_id: int = msgspec.field(name="userID")
     game: Literal["chunithm"]
-    playtype: Literal["Single"]
 
-    song_id: int = msgspec.field(name="songID")
+    song_id: str = msgspec.field(name="songID")
     chart_id: str = msgspec.field(name="chartID")
 
     score_data: KTChunithmScoreData
@@ -146,9 +144,8 @@ class KTChunithmScore(msgspec.Struct, rename="camel"):
 
     user_id: int = msgspec.field(name="userID")
     game: Literal["chunithm"]
-    playtype: Literal["Single"]
 
-    song_id: int = msgspec.field(name="songID")
+    song_id: str = msgspec.field(name="songID")
     chart_id: str = msgspec.field(name="chartID")
 
     import_type: str
@@ -170,7 +167,7 @@ class KTChunithmSongData(msgspec.Struct, rename="camel"):
 
 
 class KTChunithmSong(msgspec.Struct, rename="camel"):
-    id: int
+    id: str
     title: str
     artist: str
     alt_titles: list[str]
@@ -183,13 +180,12 @@ class KTChunithmChartData(msgspec.Struct, rename="camel"):
 
 
 class KTChunithmChart(msgspec.Struct, rename="camel"):
-    chart_id: str = msgspec.field(name="chartID")
-    song_id: int = msgspec.field(name="songID")
-    difficulty: KTChunithmDifficulty
+    id: str = msgspec.field(name="chartID")
+    song: KTChunithmSong
+    difficulty: str
     is_primary: bool
     level: str
     level_num: float
-    playtype: Literal["Single"]
     versions: list[str]
     data: KTChunithmChartData
 
@@ -227,9 +223,11 @@ class KTBatchManualChunithmScore(msgspec.Struct, rename="camel"):
     score: int
     note_lamp: KTChunithmNoteLamp
     clear_lamp: KTChunithmClearLamp
-    match_type: Literal["inGameID", "songTitle", "tachiSongID"]
+    match_type: Literal[
+        "inGameID", "songTitle", "tachiSongID", "gcmInGameIDSpecialChart"
+    ]
     identifier: str
-    difficulty: KTChunithmDifficulty
+    difficulty: str | msgspec.UnsetType = msgspec.UNSET
     time_achieved: int | msgspec.UnsetType = msgspec.UNSET
     judgements: KTChunithmJudgements | msgspec.UnsetType = msgspec.UNSET
     optional: KTChunithmOptionalData | msgspec.UnsetType = msgspec.UNSET
@@ -310,7 +308,6 @@ class KTChunithmClasses(msgspec.Struct, rename="camel"):
 
 class KTChunithmGameStats(msgspec.Struct, rename="camel"):
     game: str
-    playtype: str
     userID: int
     ratings: KTChunithmRatings
     classes: KTChunithmClasses
