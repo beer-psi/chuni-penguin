@@ -119,7 +119,7 @@ class SeedsChart(msgspec.Struct):
     version: ChunithmVersion | None
     available: bool
     # フリーフォール BASIC chart ID is 39 characters?
-    tachi_chart_id: Annotated[str, msgspec.Meta(pattern=r"^[0-9a-f]{39,40}$")] | None
+    tachi_chart_id: Annotated[str, msgspec.Meta(pattern=r"^C[0-9a-f]+$")] | None
     sdvxin: SeedsSdvxin | None
 
     def __post_init__(self):
