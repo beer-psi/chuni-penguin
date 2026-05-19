@@ -131,11 +131,11 @@ class KTChunithmPersonalBest(msgspec.Struct, rename="camel"):
 
     score_data: KTChunithmScoreData
     calculated_data: KTChunithmCalculatedData
-    composed_from: list[KTChunithmPersonalBestComposition]
+    # composed_from: list[KTChunithmPersonalBestComposition]
 
-    is_primary: bool
-    highlight: bool
-    ranking_data: KTRankingData
+    # is_primary: bool
+    # highlight: bool
+    # ranking_data: KTRankingData
     time_achieved: int | None
 
 
@@ -148,15 +148,15 @@ class KTChunithmScore(msgspec.Struct, rename="camel"):
     song_id: str = msgspec.field(name="songID")
     chart_id: str = msgspec.field(name="chartID")
 
-    import_type: str
-    service: str
+    # import_type: str
+    # service: str
 
     score_data: KTChunithmScoreData
     calculated_data: KTChunithmCalculatedData
 
-    is_primary: bool
-    highlight: bool
-    comment: str | None
+    # is_primary: bool
+    # highlight: bool
+    # comment: str | None
     time_added: int
     time_achieved: int | None
 
