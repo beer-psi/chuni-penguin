@@ -24,7 +24,7 @@ async def update_tachi(logger: BoundLogger):
         transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
     ) as client:
         resp = await client.get(
-            "https://raw.githubusercontent.com/zkldi/Tachi3/refs/heads/main/db/seeds/charts-chunithm.json"
+            "https://raw.githubusercontent.com/zkldi/Tachi/refs/heads/main/db/seeds/charts-chunithm.json"
         )
         tachi_charts = resp.json()
 

@@ -266,7 +266,7 @@ class KTImportDocument(msgspec.Struct, rename="camel"):
     user_id: int = msgspec.field(name="userID")
     time_finished: int
     score_ids: list[str] = msgspec.field(name="scoreIDs")
-    game: str
+    game_group: str
     errors: list[KTImportErrContent]
     created_sessions: list[KTSessionInfoReturn]
 

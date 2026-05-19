@@ -429,6 +429,32 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                             name="Errors", value=error_content, inline=False
                         )
 
+                        error_list: list[str] = []
+                        error_descriptions: list[str] = []
+                        error_codes: set[str] = set()
+
+                        for e in import_doc.errors:
+                            error_list.append(f"- {e.type}: {e.message}")
+
+                            if e.type not in error_codes:
+                                error_codes.add(e.type)
+
+                                if e.type == "SongOrChartNotFound":
+                                    error_descriptions.append(
+                                        "- **SongOrChartNotFound** means the score was "
+                                        "still saved and Kamaitachi will attempt "
+                                        "matching nightly at 1AM UTC. You can also force"
+                                        "a reprocess with "
+                                        f"`{ctx.clean_prefix}kamaitachi deorphan`."
+                                    )
+
+                                if e.type == "OrphanExists":
+                                    error_descriptions.append(
+                                        "- **OrphanExists** means the score already "
+                                        "exists in Kamaitachi, but there is no song or "
+                                        "chart to match it to."
+                                    )
+
                     return await ctx.respond_or_edit(
                         content=content,
                         embed=embed,
@@ -446,6 +472,13 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                                     style=discord.ButtonStyle.link,
                                     label="Imports",
                                     url=f"https://kamai.tachi.ac/u/{import_doc.user_id}/imports",
+                                )
+                            )
+                            .add_item(
+                                discord.ui.Button(
+                                    style=discord.ButtonStyle.link,
+                                    label="Orphan scores",
+                                    url=f"https://kamai.tachi.ac/u/{import_doc.user_id}/orphans",
                                 )
                             )
                         ),
