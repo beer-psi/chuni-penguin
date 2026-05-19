@@ -189918,7 +189918,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 145655,
-        "aliases": [],
+        "aliases": [
+            "tmove"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
