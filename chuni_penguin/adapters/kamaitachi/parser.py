@@ -69,16 +69,15 @@ def convert_kt_to_score(
     score: KTChunithmScore | KTChunithmPersonalBest,
     song_title: str,
     chart: KTChunithmChart,
-    song_version: str | None = None,
 ):
     judgements = score.score_data.judgements
     song = Song(id=chart.data.in_game_id, title=song_title)
+    song_version = chart.data.display_version
 
-    if song_version is not None:
-        if song_version not in ("CHUNITHM", "CHUNITHM PLUS"):
-            song_version = song_version.removeprefix("CHUNITHM ")
+    if song_version not in ("CHUNITHM", "CHUNITHM PLUS"):
+        song_version = song_version.removeprefix("CHUNITHM ")
 
-        song.version = song_version
+    song.version = song_version
 
     # WE charts use the difficulty field for storing the level, since difficulty must
     # be unique across all charts of a Tachi song.
@@ -140,11 +139,7 @@ def convert_kt_pbs_to_records(
         chart = charts_by_id[pb.chart_id]
 
         records.append(
-            PersonalBest.from_score(
-                convert_kt_to_score(
-                    pb, chart.song.title, chart, chart.song.data.display_version
-                )
-            )
+            PersonalBest.from_score(convert_kt_to_score(pb, chart.song.title, chart))
         )
 
     return records
@@ -158,20 +153,17 @@ def convert_kt_scores_to_records(
     else:
         body = msgspec.convert(raw_body, KTChunithmScoreResponseBody)
 
-    songs_by_id = {s.id: s for s in body.songs}
     charts_by_id = {c.id: c for c in body.charts}
+    scores: list[RecentScore] = []
 
-    return [
-        RecentScore.from_score(
-            convert_kt_to_score(
-                score,
-                songs_by_id[score.song_id].title,
-                charts_by_id[score.chart_id],
-                songs_by_id[score.song_id].data.display_version,
-            )
+    for score in body.scores:
+        chart = charts_by_id[score.chart_id]
+
+        scores.append(
+            RecentScore.from_score(convert_kt_to_score(score, chart.song.title, chart))
         )
-        for score in body.scores
-    ]
+
+    return scores
 
 
 def convert_to_kt_batch_manual(profile: Profile, scores: Sequence[Score]):
