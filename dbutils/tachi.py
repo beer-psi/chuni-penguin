@@ -29,17 +29,29 @@ async def update_tachi(logger: BoundLogger):
         tachi_charts = resp.json()
 
     for tachi_chart in tachi_charts:
-        mapping = charts_by_id_difficulty.get(tachi_chart["data"]["inGameID"])
+        if isinstance(tachi_chart["data"]["inGameID"], int):
+            in_game_ids = [tachi_chart["data"]["inGameID"]]
+        elif isinstance(tachi_chart["data"]["inGameID"], list):
+            in_game_ids = tachi_chart["data"]["inGameID"]
+        else:
+            msg = f"Unknown inGameID list type {type(tachi_chart['data']['inGameID'])}"
+            raise TypeError(msg)
 
-        if mapping is None:
-            continue
+        for in_game_id in in_game_ids:
+            mapping = charts_by_id_difficulty.get(in_game_id)
 
-        chart = mapping.get(tachi_chart["difficulty"][:3])
+            if mapping is None:
+                continue
 
-        if chart is None:
-            continue
+            if in_game_id >= 8000:
+                chart = mapping.get("WE")
+            else:
+                chart = mapping.get(tachi_chart["difficulty"][:3])
 
-        chart["tachi_chart_id"] = tachi_chart["id"]
+            if chart is None:
+                continue
+
+            chart["tachi_chart_id"] = tachi_chart["id"]
 
     with (SEEDS_DIR / "songs.json").open("w") as f:
         json.dump(
