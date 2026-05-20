@@ -162,7 +162,6 @@ class KTChunithmScore(msgspec.Struct, rename="camel"):
 
 
 class KTChunithmSongData(msgspec.Struct, rename="camel"):
-    display_version: str
     genre: str
 
 
@@ -176,6 +175,7 @@ class KTChunithmSong(msgspec.Struct, rename="camel"):
 
 
 class KTChunithmChartData(msgspec.Struct, rename="camel"):
+    display_version: str
     in_game_id: int = msgspec.field(name="inGameID")
 
 
