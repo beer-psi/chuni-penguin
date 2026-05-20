@@ -163,6 +163,60 @@ class KamaitachiAdapter(NetworkAdapter):
             ),
         )
 
+    async def _get_kt_chart_id(self, song_id: int, difficulty: Difficulty) -> str:
+        async with self.database.read_sessionmaker() as session:
+            query = select(DBChart).where(
+                (DBChart.song_id == song_id)
+                & (DBChart.difficulty == difficulty.short())
+                & (DBChart.tachi_chart_id.is_not(None))
+            )
+            results = (await session.execute(query)).scalars().all()
+
+        if len(results) == 1:
+            # SQL query assure that tachi_chart_id cannot be None
+            return results[0].tachi_chart_id  # pyright: ignore[reportReturnType]
+
+        if song_id >= 8000:
+            resolver = {
+                "matchType": "gcmInGameIDSpecialChart",
+                "identifier": str(song_id),
+            }
+        else:
+            resolver = {
+                "matchType": "inGameID",
+                "identifier": str(song_id),
+                "difficulty": str(difficulty),
+            }
+
+        resp = await self._client.post(
+            "/api/v1/games/chunithm/charts/resolve", json=resolver
+        )
+        resolve_data = msgspec.json.decode(
+            resp.content, type=KTResponse[KTChunithmChartResolveResponseBody]
+        )
+
+        if not resolve_data.success or resolve_data.body is None:
+            msg = f"No chart exists in Kamaitachi for song ID {song_id} and difficulty {difficulty}."
+            raise ChartNotFound(msg)
+
+        return resolve_data.body.chart.id
+
+    async def _get_kt_chart_ids(self, song_id: int) -> list[str]:
+        async with self.database.read_sessionmaker() as session:
+            query = select(DBChart).where(
+                (DBChart.song_id == song_id) & (DBChart.tachi_chart_id.is_not(None))
+            )
+            results = (await session.execute(query)).scalars()
+
+        chart_ids = [result.tachi_chart_id for result in results]
+
+        if len(chart_ids) == 0:
+            msg = f"No chart exists in Kamaitachi for song ID {song_id}."
+            raise SongNotFound(msg)
+
+        # SQL query assures that tachi_chart_id cannot be None
+        return chart_ids  # pyright: ignore[reportReturnType]
+
     async def get_minimal_profile(self) -> Profile:
         resp = await self._client.get("/api/v1/users/me")
         data = msgspec.json.decode(resp.content, type=KTResponse[KTUserProfile])
@@ -245,18 +299,7 @@ class KamaitachiAdapter(NetworkAdapter):
         )
 
     async def get_personal_bests_on_song(self, song_id: int) -> list[PersonalBest]:
-        async with self.database.read_sessionmaker() as session:
-            query = select(DBChart).where(
-                (DBChart.song_id == song_id) & (DBChart.tachi_chart_id.is_not(None))
-            )
-            results = (await session.execute(query)).scalars()
-
-        chart_ids = [result.tachi_chart_id for result in results]
-
-        if len(chart_ids) == 0:
-            msg = f"No chart exists in Kamaitachi for song ID {song_id}."
-            raise SongNotFound(msg)
-
+        chart_ids = await self._get_kt_chart_ids(song_id)
         fs = [
             asyncio.create_task(
                 self._client.get(f"/api/v1/users/me/games/chunithm/pbs/{chart_id}")
@@ -387,23 +430,7 @@ class KamaitachiAdapter(NetworkAdapter):
     async def get_chart_leaderboard(
         self, song_id: int, difficulty: Difficulty
     ) -> Leaderboard:
-        resp = await self._client.post(
-            "/api/v1/games/chunithm/charts/resolve",
-            json={
-                "matchType": "inGameID",
-                "identifier": str(song_id),
-                "difficulty": str(difficulty),
-            },
-        )
-        resolve_data = msgspec.json.decode(
-            resp.content, type=KTResponse[KTChunithmChartResolveResponseBody]
-        )
-
-        if not resolve_data.success or resolve_data.body is None:
-            msg = f"No chart exists in Kamaitachi for song ID {song_id} and difficulty {difficulty}."
-            raise ChartNotFound(msg)
-
-        chart_id = resolve_data.body.chart.id
+        chart_id = await self._get_kt_chart_id(song_id, difficulty)
         resp = await self._client.get(f"/api/v1/games/chunithm/charts/{chart_id}/pbs")
         data = msgspec.json.decode(resp.content, type=KTResponse[KTChunithmLeaderboard])
 
