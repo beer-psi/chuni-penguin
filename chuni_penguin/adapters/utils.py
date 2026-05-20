@@ -105,8 +105,7 @@ async def hydrate_records[T: Score](
         if song_id is MISSING:
             record.song.id = song.id
 
-        if record.song.version is None:
-            record.song.version = song.version
+        record.song.version = song.version
 
         if not record.song.title:
             record.song.title = song.title
