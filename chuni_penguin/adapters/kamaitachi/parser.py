@@ -71,7 +71,13 @@ def convert_kt_to_score(
     chart: KTChunithmChart,
 ):
     judgements = score.score_data.judgements
-    song = Song(id=chart.data.in_game_id, title=song_title)
+    # list inGameIDs are used on 2 WE revivals and nothing else
+    song_id = (
+        max(chart.data.in_game_id)
+        if isinstance(chart.data.in_game_id, list)
+        else chart.data.in_game_id
+    )
+    song = Song(id=song_id, title=song_title)
     song_version = chart.data.display_version
 
     if song_version not in ("CHUNITHM", "CHUNITHM PLUS"):
@@ -81,7 +87,7 @@ def convert_kt_to_score(
 
     # WE charts use the difficulty field for storing the level, since difficulty must
     # be unique across all charts of a Tachi song.
-    if chart.data.in_game_id >= 8000:
+    if song_id >= 8000:
         bot_chart = Chart(
             difficulty=Difficulty.worlds_end,
             level=chart.difficulty,
