@@ -811,7 +811,7 @@
         "song_id": 2891,
         "available": true,
         "open_condition": "Finish VERSE ep. PARADISE.",
-        "unlock_condition": "Play one song from each artist of 祈 -我ら神祖と共に歩む者なり-:\n- **光吉猛修**: __怒槌__ / __キュアリアス光吉古牌　－祭－__ / __「四季」より「冬」__\n  - International can also play __Burning Hearts ～炎のANGEL～__ / __マツケンサンバⅡ__\n- **穴山大輔**: __混沌を越えし我らが神聖なる調律主を讃えよ__ / __幻想即興曲__\n- **Kai**: __Rebellion__ / __Candyland Symphony__\n- **水野健治**: __≠彡\"/了→__\n- **大国奏音**: __封焔の135秒__ / __月の光__",
+        "unlock_condition": "Play one song from each artist of 祈 -我ら神祖と共に歩む者なり-:\n- **光吉猛修**: __怒槌__ / __キュアリアス光吉古牌　－祭－__ / __「四季」より「冬」__ / __Burning Hearts ～炎のANGEL～__ / __マツケンサンバⅡ__\n- **穴山大輔**: __混沌を越えし我らが神聖なる調律主を讃えよ__ / __幻想即興曲__\n- **Kai**: __Rebellion__ / __Candyland Symphony__\n- **水野健治**: __≠彡\"/了→__\n- **大国奏音**: __封焔の135秒__ / __月の光__",
         "conditions": [
             {
                 "level": 5,
@@ -1477,7 +1477,7 @@
         "song_id": 2967,
         "available": false,
         "open_condition": "",
-        "unlock_condition": "Play all 11 songs in any order, on any difficulty:\n- PANDORA PARADOXXX\n- μ3\n- †渚の小悪魔ラヴリィ～レイディオ†\n- 聖者の息吹\n- 超MANJIラッシュ\n- Lips XTC -Sorist Remix-\n- Marigold\n- glory MAX -to the MAXimum-\n- DESTRUCTION 3,2,1\n- Ré：Ré\n- ALTER EGO",
+        "unlock_condition": "Clear all previous Linked GATEs (ORIGIN ~ X-VERSE).\nPlay all 11 songs in any order, on any difficulty:\n- PANDORA PARADOXXX\n- μ3\n- †渚の小悪魔ラヴリィ～レイディオ†\n- 聖者の息吹\n- 超MANJIラッシュ\n- Lips XTC -Sorist Remix-\n- Marigold\n- glory MAX -to the MAXimum-\n- DESTRUCTION 3,2,1\n- Ré：Ré\n- ALTER EGO",
         "conditions": [
             {
                 "level": 6,
