@@ -349,7 +349,17 @@ class KamaitachiAdapter(NetworkAdapter):
                 self.NAME,
                 convert_kt_pbs_to_records(data.body),
             )
-            pbs = pbs[:50]
+            filtered_pbs = []
+
+            for pb in pbs:
+                if pb.chart.difficulty == Difficulty.worlds_end:
+                    continue
+
+                filtered_pbs.append(pb)
+
+                if len(filtered_pbs) >= 50:
+                    break
+
             profile = await self.get_profile()
             rating = Decimal(
                 next(
@@ -365,7 +375,7 @@ class KamaitachiAdapter(NetworkAdapter):
                     RatingFrameType.best: RatingFrame(
                         type=RatingFrameType.best,
                         num_scores=50,
-                        scores=pbs,
+                        scores=filtered_pbs,
                     )
                 },
             )
