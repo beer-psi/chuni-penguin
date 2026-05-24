@@ -19,7 +19,6 @@ from chuni_penguin.adapters.utils import (
     calculate_ongeki_rating_breakdown,
     process_records,
 )
-from chuni_penguin.config import config
 from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION, ChunithmVersion
 from chuni_penguin.database import Chart as DBChart
 from chuni_penguin.types import (
@@ -59,7 +58,6 @@ from .parser import (
     convert_kt_pbs_to_records,
     convert_kt_scores_to_records,
     convert_kt_to_score,
-    guess_mime_type,
     update_profile_from_ugpt_data,
 )
 from .types import (
@@ -93,7 +91,7 @@ class KamaitachiAdapter(NetworkAdapter):
         discord_id: int,
         api_key: str,
         *args,
-        base_url: str = "https://kamai.tachi.ac",
+        base_url: str | httpx.URL = "https://kamai.tachi.ac",
         **kwargs,
     ):
         super().__init__(database, discord_id, *args, **kwargs)
@@ -116,49 +114,19 @@ class KamaitachiAdapter(NetworkAdapter):
         custom_banner_location = user.custom_banner_location
         custom_pfp_location = user.custom_pfp_location
 
-        if config.web.is_accessible and custom_banner_location is not None:
-            request = self._client.build_request(
-                "GET",
-                f"https://cdn-kamai.tachi.ac/users/{user_id}/banner-{custom_banner_location}",
-            )
-            _ = request.headers.pop("Authorization", None)
-            response = await self._client.send(request)
-
-            try:
-                mime = await guess_mime_type(response)
-
-                if mime.startswith("image/"):
-                    custom_banner_location += f".{mime[6:]}"
-            finally:
-                await response.aclose()
-
-        if config.web.is_accessible and custom_pfp_location is not None:
-            request = self._client.build_request(
-                "GET",
-                f"https://cdn-kamai.tachi.ac/users/{user_id}/pfp-{custom_pfp_location}",
-            )
-            _ = request.headers.pop("Authorization", None)
-            response = await self._client.send(request)
-
-            try:
-                mime = await guess_mime_type(response)
-
-                if mime.startswith("image/"):
-                    custom_pfp_location += f".{mime[6:]}"
-            finally:
-                await response.aclose()
-
         return Profile(
             username=username,
-            url=f"https://kamai.tachi.ac/users/{user_id}/games/chunithm",
-            profile_picture=(
-                f"{config.web.base_url}/kamaitachi/users/{user_id}/pfp/{custom_pfp_location}"
-                if config.web.is_accessible and custom_pfp_location is not None
+            url=str(
+                self._client.base_url.copy_with(path=f"/users/{user_id}/games/chunithm")
+            ),
+            profile_picture=str(
+                self._client.base_url.copy_with(path=f"/api/v1/users/{user_id}/pfp")
+                if custom_pfp_location is not None
                 else None
             ),
-            banner=(
-                f"{config.web.base_url}/kamaitachi/users/{user_id}/banner/{custom_banner_location}"
-                if config.web.is_accessible and custom_banner_location is not None
+            banner=str(
+                self._client.base_url.copy_with(path=f"/api/v1/users/{user_id}/banner")
+                if custom_banner_location is not None
                 else None
             ),
         )

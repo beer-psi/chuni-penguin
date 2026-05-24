@@ -240,32 +240,3 @@ def update_profile_from_ugpt_data(
         )
 
     return profile
-
-
-async def guess_mime_type(response: httpx.Response) -> str:
-    data = io.BytesIO()
-
-    async for chunk in response.aiter_bytes():
-        if data.tell() == 0:
-            # some simple and common formats can be checked first without
-            # calling into libmagic
-            fourcc = chunk[:4]
-
-            if fourcc == b"GIF8":
-                return "image/gif"
-
-            if fourcc == b"\x89PNG":
-                return "image/png"
-
-            if fourcc[:3] == b"\xff\xd8\xff" and fourcc[3] in (0xDB, 0xE0, 0xE1, 0xEE):
-                return "image/jpeg"
-
-            if fourcc == b"RIFF" and fourcc[8:12] == b"WEBP":
-                return "image/webp"
-
-        data.write(chunk)
-
-        if data.tell() >= 2048:
-            break
-
-    return magic.from_buffer(data.getvalue(), mime=True)
