@@ -114,6 +114,10 @@ class LeaderboardPageSource(ListPageSource):
                     ):
                         lamp_parts.append(record.clear_lamp.short())
 
+                    # if there are no lamp parts then combo_lamp=None clear_lamp=Clear
+                    if len(lamp_parts) == 0:
+                        lamp_parts.append("CLR")
+
                     description += f" ▸ {' / '.join(lamp_parts)}"
 
                 description += f" ▸ {record.score}"
