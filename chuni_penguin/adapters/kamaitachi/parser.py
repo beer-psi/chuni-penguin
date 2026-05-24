@@ -1,11 +1,8 @@
-import io
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
-import httpx
-import magic
 import msgspec
 
 from chuni_penguin.types import (
