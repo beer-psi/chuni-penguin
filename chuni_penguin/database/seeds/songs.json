@@ -190217,7 +190217,7 @@
         "min_bpm": 274,
         "max_bpm": 274,
         "jacket": "ccab57547b68569f.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 145401,
@@ -190237,7 +190237,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337051a0a3e770",
                 "sdvxin": null
             },
@@ -190253,7 +190253,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337051bce5d67a",
                 "sdvxin": null
             },
@@ -190269,7 +190269,7 @@
                 "flick": 0,
                 "charter": "ミストルティン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705101ebf59e",
                 "sdvxin": {
                     "id": "10215",
@@ -190288,7 +190288,7 @@
                 "flick": 139,
                 "charter": "Piercing Blade",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e333370516d7d1c66",
                 "sdvxin": {
                     "id": "10215",
@@ -190318,7 +190318,7 @@
         "min_bpm": 72.5,
         "max_bpm": 290,
         "jacket": "3c8ab9ef6a7782b9.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 127034,
@@ -190339,7 +190339,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337052cd93d758",
                 "sdvxin": null
             },
@@ -190355,7 +190355,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337052385b0792",
                 "sdvxin": null
             },
@@ -190371,7 +190371,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337052b5cc1110",
                 "sdvxin": {
                     "id": "10216",
@@ -190390,7 +190390,7 @@
                 "flick": 259,
                 "charter": "上から見たミニミ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337052556cc012",
                 "sdvxin": {
                     "id": "10216",
@@ -190420,7 +190420,7 @@
         "min_bpm": 144,
         "max_bpm": 144,
         "jacket": "9165f76e6dd66e11.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 137916,
@@ -190438,7 +190438,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337053f6565424",
                 "sdvxin": null
             },
@@ -190454,7 +190454,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337053a57e8c0c",
                 "sdvxin": null
             },
@@ -190470,7 +190470,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337053bf7b28ef",
                 "sdvxin": {
                     "id": "10217",
@@ -190489,7 +190489,7 @@
                 "flick": 71,
                 "charter": "夕凪アロエ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337053d0858f5d",
                 "sdvxin": {
                     "id": "10217",
@@ -195734,7 +195734,7 @@
         "min_bpm": 130,
         "max_bpm": 130,
         "jacket": "b5eff2e5e6e10b15.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 94153,
@@ -195752,7 +195752,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337098820926ec",
                 "sdvxin": null
             },
@@ -195768,7 +195768,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e333370988bf1d637",
                 "sdvxin": null
             },
@@ -195784,7 +195784,7 @@
                 "flick": 0,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e333370988a53efcd",
                 "sdvxin": {
                     "id": "10214",
@@ -195803,7 +195803,7 @@
                 "flick": 53,
                 "charter": "レモン＝憲三郎",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337098a30a8492",
                 "sdvxin": {
                     "id": "10214",
