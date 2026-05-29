@@ -136,6 +136,7 @@ TITLE_MAPPING = {
     "AMARA (大未来電脳)": "ÅMARA (大未来電脳)",
     "ム責任集合体": "㋰責任集合体",
     "ビッグブリッヂの死闘": "ビッグブリッヂの死闘 -シアトリズムFFAC Arrange- from FFV",
+    "[回帰] ～Scherzo": "〚回帰〛 ～Scherzo ~フォルトゥーナの悪戯~",
 }
 
 
