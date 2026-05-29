@@ -195685,7 +195685,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 149302,
-        "aliases": [],
+        "aliases": [
+            "Reverie"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
