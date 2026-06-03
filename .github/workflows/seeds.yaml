@@ -71,12 +71,12 @@ jobs:
 
       - name: "Deploy staging"
         if: "github.ref == 'refs/heads/develop'"
-        run: 'ssh beerpsi@"$SSH_HOST" /mnt/sdb1/chuni-penguin-develop/deploy-seeds.sh'
+        run: 'ssh beerpsi@"$SSH_HOST" /mnt/sda1/chuni-penguin-develop/deploy-seeds.sh'
         env:
           SSH_HOST: "${{ secrets.SSH_HOST }}"
 
       - name: "Deploy production"
         if: "github.ref == 'refs/heads/trunk'"
-        run: 'ssh beerpsi@"$SSH_HOST" /mnt/sdb1/chuninewbot/deploy-seeds.sh'
+        run: 'ssh beerpsi@"$SSH_HOST" /mnt/sda1/chuninewbot/deploy-seeds.sh'
         env:
           SSH_HOST: "${{ secrets.SSH_HOST }}"
