@@ -119,13 +119,19 @@ class KamaitachiAdapter(NetworkAdapter):
             url=str(
                 self._client.base_url.copy_with(path=f"/users/{user_id}/games/chunithm")
             ),
-            profile_picture=str(
-                self._client.base_url.copy_with(path=f"/api/v1/users/{user_id}/pfp")
+            profile_picture=(
+                str(
+                    self._client.base_url.copy_with(path=f"/api/v1/users/{user_id}/pfp")
+                )
                 if custom_pfp_location is not None
                 else None
             ),
-            banner=str(
-                self._client.base_url.copy_with(path=f"/api/v1/users/{user_id}/banner")
+            banner=(
+                str(
+                    self._client.base_url.copy_with(
+                        path=f"/api/v1/users/{user_id}/banner"
+                    )
+                )
                 if custom_banner_location is not None
                 else None
             ),
