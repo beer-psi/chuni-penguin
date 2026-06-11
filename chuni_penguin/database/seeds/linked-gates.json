@@ -1133,7 +1133,7 @@
         "song_id": 2938,
         "available": false,
         "open_condition": "Finish VERSE ep. SUN.",
-        "unlock_condition": "Play all 5 conduction songs in National Matching in any order:\n- I'm so Happy\n- RELOAD\n- U&iVERSE -銀河鸞翔-\n- Mutation\n- Stardust:RAY\n\nDifficulty and score does not matter.",
+        "unlock_condition": "Play all 5 conduction songs in National Matching (**INTL**: in normal mode) in any order:\n- I'm so Happy\n- RELOAD\n- U&iVERSE -銀河鸞翔-\n- Mutation\n- Stardust:RAY\n\nDifficulty and score does not matter.",
         "conditions": [
             {
                 "level": 5,
