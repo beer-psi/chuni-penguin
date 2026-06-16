@@ -77,6 +77,6 @@ jobs:
 
       - name: "Deploy production"
         if: "github.ref == 'refs/heads/trunk'"
-        run: 'ssh chuni-penguin@"$SSH_HOST" /mnt/sda1/chuninewbot/deploy-seeds.sh'
+        run: 'ssh chuni-penguin@"$SSH_HOST" /home/chuni-penguin/chuni-penguin/deploy-seeds.sh'
         env:
           SSH_HOST: "${{ secrets.SSH_HOST_PRODUCTION }}"
