@@ -302,8 +302,8 @@ class KTChunithmRatings(msgspec.Struct, rename="camel"):
 
 class KTChunithmClasses(msgspec.Struct, rename="camel"):
     colour: str | msgspec.UnsetType = msgspec.UNSET
-    dan: str | msgspec.UnsetType = msgspec.UNSET
-    emblem: str | msgspec.UnsetType = msgspec.UNSET
+    dan: str | None | msgspec.UnsetType = msgspec.UNSET
+    emblem: str | None | msgspec.UnsetType = msgspec.UNSET
 
 
 class KTChunithmGameStats(msgspec.Struct, rename="camel"):

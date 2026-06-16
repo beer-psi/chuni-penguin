@@ -224,10 +224,14 @@ def update_profile_from_ugpt_data(
         "Session Playtime": f"{(ugpt_data.playtime) // (60 * 60 * 1000)} hours",
     }
 
-    if (dan := ugpt_data.game_stats.classes.dan) is not msgspec.UNSET:
+    if (
+        dan := ugpt_data.game_stats.classes.dan
+    ) is not msgspec.UNSET and dan is not None:
         profile.medal = getattr(SkillClass, dan.removeprefix("DAN_").lower())
 
-    if (emblem := ugpt_data.game_stats.classes.emblem) is not msgspec.UNSET:
+    if (
+        emblem := ugpt_data.game_stats.classes.emblem
+    ) is not msgspec.UNSET and emblem is not None:
         profile.emblem = getattr(SkillClass, emblem.removeprefix("DAN_").lower())
 
     if (most_recent_score := ugpt_data.most_recent_score) is not None:
