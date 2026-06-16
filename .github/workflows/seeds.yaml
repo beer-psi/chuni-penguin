@@ -52,11 +52,11 @@ jobs:
       - name: "Tailscale"
         uses: "tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8" # v4
         with:
-          oauth-client-id: "${{ secrets.TS_OAUTH_CLIENT_ID }}"
-          oauth-secret: "${{ secrets.TS_OAUTH_SECRET }}"
+          oauth-client-id: "${{ github.ref == 'refs/heads/develop' && secrets.TS_OAUTH_CLIENT_ID || secrets.TS_OAUTH_CLIENT_ID_PRODUCTION }}"
+          oauth-secret: "${{ github.ref == 'refs/heads/develop' && secrets.TS_OAUTH_SECRET || secrets.TS_OAUTH_SECRET_PRODUCTION }}"
           tags: "tag:ci"
           use-cache: "true"
-          ping: "${{ secrets.SSH_HOST }}"
+          ping: "${{ github.ref == 'refs/heads/develop' && secrets.SSH_HOST_DEVELOP || secrets.SSH_HOST_PRODUCTION }}"
 
       - name: "Setup SSH"
         run: |
