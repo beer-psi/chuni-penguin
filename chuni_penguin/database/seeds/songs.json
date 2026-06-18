@@ -196425,7 +196425,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 152516,
-        "aliases": [],
+        "aliases": [
+            "Prism Rhythm"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -196599,7 +196601,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 154628,
-        "aliases": [],
+        "aliases": [
+            "Ichigeki! Theme",
+            "ichigeki"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -196686,7 +196691,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 108857,
-        "aliases": [],
+        "aliases": [
+            "Icing Dream"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
