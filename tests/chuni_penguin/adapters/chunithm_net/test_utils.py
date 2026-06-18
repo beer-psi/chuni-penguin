@@ -128,8 +128,10 @@ from chuni_penguin.types import (
         ),
     ],
 )
-def test_get_rank_and_cleartype(html, expected):
-    soup = LexborHTMLParser(html, is_fragment=True)
+def test_get_rank_and_cleartype(
+    html: str, expected: tuple[Rank, ClearLamp, ComboLamp, ChainLamp]
+):
+    soup = LexborHTMLParser(html.strip(), is_fragment=True)
     assert soup.root is not None
     assert get_rank_and_lamps(soup.root) == expected
 
