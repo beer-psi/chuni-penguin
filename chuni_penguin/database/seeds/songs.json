@@ -191561,7 +191561,7 @@
         "min_bpm": 185,
         "max_bpm": 185,
         "jacket": "786329418aa00b1b.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 136540,
@@ -191581,7 +191581,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705e5168d2ed",
                 "sdvxin": null
             },
@@ -191597,7 +191597,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705e73e84210",
                 "sdvxin": null
             },
@@ -191613,7 +191613,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705e8a4f53b6",
                 "sdvxin": {
                     "id": "10228",
@@ -191632,7 +191632,7 @@
                 "flick": 58,
                 "charter": "世界を大いに盛り上げるためのじゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705e300231d4",
                 "sdvxin": {
                     "id": "10228",
@@ -191667,7 +191667,7 @@
         "min_bpm": 186,
         "max_bpm": 186,
         "jacket": "50e6714eb0b9d1f7.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 167096,
@@ -191685,7 +191685,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705f45e7bc30",
                 "sdvxin": null
             },
@@ -191701,7 +191701,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705fef21ced5",
                 "sdvxin": null
             },
@@ -191717,7 +191717,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705f43b546e4",
                 "sdvxin": {
                     "id": "10229",
@@ -191736,7 +191736,7 @@
                 "flick": 148,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333705fca058b68",
                 "sdvxin": {
                     "id": "10229",
@@ -191771,7 +191771,7 @@
         "min_bpm": 158,
         "max_bpm": 168,
         "jacket": "841a31d8f231cb51.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 163703,
@@ -191789,7 +191789,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e333370604df90538",
                 "sdvxin": null
             },
@@ -191805,7 +191805,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337060aca9fe14",
                 "sdvxin": null
             },
@@ -191821,7 +191821,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337060190ef8cf",
                 "sdvxin": {
                     "id": "10230",
@@ -191840,7 +191840,7 @@
                 "flick": 30,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706044ad708b",
                 "sdvxin": {
                     "id": "10230",
@@ -192589,7 +192589,7 @@
         "min_bpm": 120,
         "max_bpm": 120,
         "jacket": "45e3a32332609caf.jpg",
-        "available": false,
+        "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 170000,
@@ -192607,7 +192607,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337068656dbba7",
                 "sdvxin": null
             },
@@ -192623,7 +192623,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e333370683e78bbf1",
                 "sdvxin": null
             },
@@ -192639,7 +192639,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337068a39547a6",
                 "sdvxin": {
                     "id": "10231",
@@ -192658,7 +192658,7 @@
                 "flick": 128,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337068b143b704",
                 "sdvxin": {
                     "id": "10231",
