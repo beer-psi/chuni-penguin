@@ -331,7 +331,8 @@ async def update_db(logger: BoundLogger):
                         f"{song['title']}【{song['charts'][0]['level'][:1]}】"
                     )
                     == normalize_title(chunirec_song.meta.title)
-                )
+                ),
+                None,
             )
         else:
             song = next(
