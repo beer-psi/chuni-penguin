@@ -1801,6 +1801,10 @@ class RecordsCog(commands.Cog, name="Records"):
                     KamaitachiAdapter.NAME if kamaitachi else ChunithmNetAdapter.NAME
                 )
 
+            if omnimix and client_name == ChunithmNetAdapter.NAME:
+                msg = f"{client_name} does not support omnimix songs."
+                raise commands.CommandError(msg)
+
             async with self.bot.begin_db_read() as session:
                 pb_query = (
                     select(DBPersonalBest)
@@ -1863,7 +1867,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 if difficulty is not None and isinstance(difficulty, Difficulty):
                     cond = Chart.difficulty == difficulty.short()
-                elif difficulty is not None:
+                elif difficulty == "MASTER+ULTIMA":
                     cond = Chart.difficulty.in_(
                         [Difficulty.master.short(), Difficulty.ultima.short()]
                     )
@@ -1903,6 +1907,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
                 # Checking for AJ is probably unnecessary since currently 1009900
                 # guarantees an AJ... until a chart with 5100+ notes is added
+                # 2026-04-23: well fuck me they actually did that
                 if pb.score >= 1009900 and pb_combo_lamp in (
                     ComboLamp.all_justice,
                     ComboLamp.all_justice_critical,
@@ -1970,8 +1975,6 @@ class RecordsCog(commands.Cog, name="Records"):
 
             if any(chart.const is not None for chart in charts):
                 charts_by_id_difficulty: dict[tuple[int, str], Chart] = {}
-                op_by_song: dict[int, Decimal] = {}
-                pb_op_by_song: dict[int, Decimal] = {}
 
                 for chart in charts:
                     if chart.const is None:
@@ -1979,50 +1982,93 @@ class RecordsCog(commands.Cog, name="Records"):
 
                     charts_by_id_difficulty[(chart.song_id, chart.difficulty)] = chart
 
-                    if chart.const is not None:
-                        op_by_song[chart.song_id] = max(
-                            op_by_song.get(chart.song_id, Decimal(0)),
-                            calculate_overpower_max(chart.const),
-                        )
+                op = Decimal(0)
+                max_op = Decimal(0)
+                max_played_op = Decimal(0)
 
-                for pb in pbs:
-                    pb_combo_lamp = ComboLamp(pb.combo_lamp)
-                    chart = charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
+                # if a level filter is active, simply calculate the total OP of all
+                # charts in the level folder to match game behavior
+                # selecting only top diffs will exclude OP from e.g. dreadnought mas (14+),
+                # since ult is also a 14+
+                if level is not None:
+                    played_charts: set[tuple[int, str]] = set()
 
-                    if chart is None or chart.const is None:
-                        continue
+                    for pb in pbs:
+                        played_charts.add((pb.song_id, pb.difficulty))
+                        chart = charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
 
-                    pb_op_by_song[chart.song_id] = max(
-                        pb_op_by_song.get(chart.song_id, Decimal(0)),
-                        (
+                        if chart is None or chart.const is None:
+                            continue
+
+                        op += (
                             Decimal(pb.overpower) / 1000
                             if pb.overpower is not None
                             else calculate_play_overpower(
                                 calculate_overpower_base(pb.score, chart.const),
-                                pb_combo_lamp,
+                                ComboLamp(pb.combo_lamp),
                             )
-                        ),
-                    )
+                        )
 
-                op = floor_to_ndp(sum(pb_op_by_song.values(), Decimal(0)), 2)
-                total_op = floor_to_ndp(sum(op_by_song.values(), Decimal(0)), 2)
-                total_played_op = floor_to_ndp(
-                    sum(
+                    for chart in charts:
+                        if chart.const is None:
+                            continue
+
+                        chart_max_op = calculate_overpower_max(chart.const)
+                        max_op += chart_max_op
+
+                        if (chart.song_id, chart.difficulty) in played_charts:
+                            max_played_op += chart_max_op
+                else:  # level folder not specified, calculate by max difficulty
+                    op_by_song: dict[int, Decimal] = {}
+                    max_op_by_song: dict[int, Decimal] = {}
+
+                    for pb in pbs:
+                        chart = charts_by_id_difficulty.get((pb.song_id, pb.difficulty))
+
+                        if chart is None or chart.const is None:
+                            continue
+
+                        op_by_song[chart.song_id] = max(
+                            op_by_song.get(chart.song_id, Decimal(0)),
+                            (
+                                Decimal(pb.overpower) / 1000
+                                if pb.overpower is not None
+                                else calculate_play_overpower(
+                                    calculate_overpower_base(pb.score, chart.const),
+                                    ComboLamp(pb.combo_lamp),
+                                )
+                            ),
+                        )
+
+                    for chart in charts:
+                        if chart.const is None:
+                            continue
+
+                        max_op_by_song[chart.song_id] = max(
+                            max_op_by_song.get(chart.song_id, Decimal(0)),
+                            calculate_overpower_max(chart.const),
+                        )
+
+                    op = sum(op_by_song.values(), Decimal(0))
+                    max_op = sum(max_op_by_song.values(), Decimal(0))
+                    max_played_op = sum(
                         (
                             max_op
-                            for song_id, max_op in op_by_song.items()
-                            if song_id in pb_op_by_song
+                            for song_id, max_op in max_op_by_song.items()
+                            if song_id in op_by_song
                         ),
                         Decimal(0),
-                    ),
-                    2,
-                )
+                    )
+
+                op = floor_to_ndp(op, 2)
+                max_op = floor_to_ndp(max_op, 2)
+                max_played_op = floor_to_ndp(max_played_op, 2)
                 op_percent = (
-                    floor_to_ndp(op * 100 / total_op, 2) if total_op > 0 else Decimal(0)
+                    floor_to_ndp(op * 100 / max_op, 2) if max_op > 0 else Decimal(0)
                 )
                 op_played_percent = (
-                    floor_to_ndp(op * 100 / total_played_op, 2)
-                    if total_played_op > 0
+                    floor_to_ndp(op * 100 / max_played_op, 2)
+                    if max_played_op > 0
                     else Decimal(0)
                 )
 
@@ -2062,8 +2108,8 @@ class RecordsCog(commands.Cog, name="Records"):
                         embed.color = Possession.none.color
 
                 description_parts.append(
-                    f"▸ **OVER POWER**: {bold_if(op == total_op, f'{op} / {total_op} ({op_percent:.2f}%)')}\n"
-                    f"▸ **OVER POWER (played)**: {bold_if(op == total_played_op, f'{op} / {total_played_op} ({op_played_percent:.2f}%)')}\n"
+                    f"▸ **OVER POWER**: {bold_if(op == max_op, f'{op} / {max_op} ({op_percent:.2f}%)')}\n"
+                    f"▸ **OVER POWER (played)**: {bold_if(op == max_played_op, f'{op} / {max_played_op} ({op_played_percent:.2f}%)')}\n"
                 )
 
             description_parts.append(
