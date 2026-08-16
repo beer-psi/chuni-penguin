@@ -191908,7 +191908,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337061efa961dc",
                 "sdvxin": null
             },
@@ -191924,7 +191924,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706178535a39",
                 "sdvxin": null
             },
@@ -191940,7 +191940,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e333370611f16ae43",
                 "sdvxin": {
                     "id": "10232",
@@ -191959,7 +191959,7 @@
                 "flick": 168,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706171b0dcfd",
                 "sdvxin": {
                     "id": "10232",
@@ -192723,7 +192723,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337069a708510a",
                 "sdvxin": null
             },
@@ -192739,7 +192739,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337069c82c6149",
                 "sdvxin": null
             },
@@ -192755,7 +192755,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337069015f0031",
                 "sdvxin": {
                     "id": "10240",
@@ -192774,7 +192774,7 @@
                 "flick": 143,
                 "charter": "今世最大のペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e33337069ddeabc8a",
                 "sdvxin": {
                     "id": "10240",
@@ -192828,7 +192828,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706a23ec4339",
                 "sdvxin": null
             },
@@ -192844,7 +192844,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706a5590c604",
                 "sdvxin": null
             },
@@ -192860,7 +192860,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706a3931cbe4",
                 "sdvxin": {
                     "id": "10241",
@@ -192879,7 +192879,7 @@
                 "flick": 122,
                 "charter": "Clematis fumbled by じゃこレモン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706a9bdafc7f",
                 "sdvxin": {
                     "id": "10241",
@@ -192929,7 +192929,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706b738760a9",
                 "sdvxin": null
             },
@@ -192945,7 +192945,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706bb78268d0",
                 "sdvxin": null
             },
@@ -192961,7 +192961,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706b4bdf0442",
                 "sdvxin": {
                     "id": "10239",
@@ -192980,7 +192980,7 @@
                 "flick": 83,
                 "charter": "レモンとアロエ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706b64cbe7f8",
                 "sdvxin": {
                     "id": "10239",
@@ -193030,7 +193030,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706c4ec10f1f",
                 "sdvxin": null
             },
@@ -193046,7 +193046,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706c70fd5bf3",
                 "sdvxin": null
             },
@@ -193062,7 +193062,7 @@
                 "flick": 0,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706cd94f2994",
                 "sdvxin": {
                     "id": "10244",
@@ -193081,7 +193081,7 @@
                 "flick": 131,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706c63b1ffc7",
                 "sdvxin": {
                     "id": "10244",
@@ -193129,7 +193129,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706de9115329",
                 "sdvxin": null
             },
@@ -193145,7 +193145,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706de2229a30",
                 "sdvxin": null
             },
@@ -193161,7 +193161,7 @@
                 "flick": 0,
                 "charter": "ミストルティン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706d49315cee",
                 "sdvxin": {
                     "id": "10245",
@@ -193180,7 +193180,7 @@
                 "flick": 164,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706dbcd6134f",
                 "sdvxin": {
                     "id": "10245",
@@ -193228,7 +193228,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706ec2d2a54f",
                 "sdvxin": null
             },
@@ -193244,7 +193244,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706ea159410f",
                 "sdvxin": null
             },
@@ -193260,7 +193260,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706ec6c88cd7",
                 "sdvxin": {
                     "id": "10246",
@@ -193279,7 +193279,7 @@
                 "flick": 38,
                 "charter": "アミノハバキリ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706eb178910c",
                 "sdvxin": {
                     "id": "10246",
@@ -193330,7 +193330,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706fa62e4240",
                 "sdvxin": null
             },
@@ -193346,7 +193346,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706f637b313d",
                 "sdvxin": null
             },
@@ -193362,7 +193362,7 @@
                 "flick": 0,
                 "charter": "ロシェ＠ペンギン",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706faf6369a5",
                 "sdvxin": {
                     "id": "10243",
@@ -193381,7 +193381,7 @@
                 "flick": 61,
                 "charter": "ミニミライト",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e3333706ff7e30e3f",
                 "sdvxin": {
                     "id": "10243",
@@ -211196,7 +211196,7 @@
                 "flick": 231,
                 "charter": "OLIVIER X",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e107c924c29f0f579",
                 "sdvxin": {
                     "id": "10079",
@@ -211243,7 +211243,7 @@
                 "flick": 53,
                 "charter": "お覚悟を",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e107c924cd8131be4",
                 "sdvxin": {
                     "id": "09047",
@@ -211290,7 +211290,7 @@
                 "flick": 26,
                 "charter": "階段割qma",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e107c924d0745a315",
                 "sdvxin": {
                     "id": "01066",
@@ -211480,7 +211480,7 @@
                 "flick": 476,
                 "charter": "小夜ちゃんがぶっ壊れた話",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e107c92691ef5d3ec",
                 "sdvxin": null
             }
@@ -211524,7 +211524,7 @@
                 "flick": 0,
                 "charter": "ユ！",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e107c9269767b488b",
                 "sdvxin": null
             }
@@ -211568,7 +211568,7 @@
                 "flick": 8,
                 "charter": "NYANYANYANYANYANYA",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e107c92695d446b9b",
                 "sdvxin": null
             }
@@ -211612,7 +211612,7 @@
                 "flick": 3,
                 "charter": "SUPERCOLORFUL",
                 "version": null,
-                "available": false,
+                "available": true,
                 "tachi_chart_id": "C19e107c926a4c6f4912",
                 "sdvxin": null
             }
