@@ -1131,7 +1131,7 @@
         "name": "Linked GATE SUN",
         "color": "#3498DB",
         "song_id": 2938,
-        "available": false,
+        "available": true,
         "open_condition": "Finish VERSE ep. SUN.",
         "unlock_condition": "Play all 5 conduction songs in National Matching (**INTL**: in normal mode) in any order:\n- I'm so Happy\n- RELOAD\n- U&iVERSE -銀河鸞翔-\n- Mutation\n- Stardust:RAY\n\nDifficulty and score does not matter.",
         "conditions": [
@@ -1217,7 +1217,7 @@
         "name": "Linked GATE LUMINOUS",
         "color": "#F990DA",
         "song_id": 2954,
-        "available": false,
+        "available": true,
         "open_condition": "Finish VERSE ep. LUMINOUS.",
         "unlock_condition": "Obtain 100 points in カイナン・メルヴィアス's CHUNITHM mission. This will award the \"MISSION still in progress\" title, which unlocks the hidden map Secret Area：LUMINOUS. Finish the hidden map to obtain the access card.",
         "conditions": [
@@ -1303,7 +1303,7 @@
         "name": "Linked GATE VERSE",
         "color": "#40F4A8",
         "song_id": 2966,
-        "available": false,
+        "available": true,
         "open_condition": "Finish VERSE ep. VERSE.",
         "unlock_condition": "Play songs from **within the recommended music folder**:\n- Crossmythos Rhapsodia\n- Theatore Creatore\n- メッちゅう殴打",
         "conditions": [
@@ -1389,7 +1389,7 @@
         "name": "Linked GATE X-VERSE",
         "color": "#40F4A8",
         "song_id": 2967,
-        "available": false,
+        "available": true,
         "open_condition": "",
         "unlock_condition": "Automatically unlocked when all previous Linked GATEs (ORIGIN ~ VERSE) have been cleared.",
         "conditions": [
@@ -1475,7 +1475,7 @@
         "name": "Linked GATE RE:VERSE",
         "color": "#40F4A8",
         "song_id": 2967,
-        "available": false,
+        "available": true,
         "open_condition": "",
         "unlock_condition": "Clear all previous Linked GATEs (ORIGIN ~ X-VERSE).\nPlay all 11 songs in any order, on any difficulty:\n- PANDORA PARADOXXX\n- μ3\n- †渚の小悪魔ラヴリィ～レイディオ†\n- 聖者の息吹\n- 超MANJIラッシュ\n- Lips XTC -Sorist Remix-\n- Marigold\n- glory MAX -to the MAXimum-\n- DESTRUCTION 3,2,1\n- Ré：Ré\n- ALTER EGO",
         "conditions": [
@@ -1561,7 +1561,7 @@
         "name": "Linked GATE UNIVERSE",
         "color": "#000000",
         "song_id": 2999,
-        "available": false,
+        "available": true,
         "open_condition": "",
         "unlock_condition": "Automatically unlocked after clearing Linked GATE RE:VERSE.",
         "conditions": [
