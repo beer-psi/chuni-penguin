@@ -196949,7 +196949,7 @@
         "jacket": "9ed72f77163e7346.jpg",
         "available": true,
         "removed": false,
-        "is_hidden_on_chuninet": false,
+        "is_hidden_on_chuninet": true,
         "duration": 181003,
         "aliases": [],
         "charts": [
@@ -197068,7 +197068,7 @@
         "jacket": "5052ee354585736d.jpg",
         "available": true,
         "removed": false,
-        "is_hidden_on_chuninet": false,
+        "is_hidden_on_chuninet": true,
         "duration": 172500,
         "aliases": [],
         "charts": [
