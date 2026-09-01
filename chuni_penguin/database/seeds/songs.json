@@ -192910,7 +192910,7 @@
         "min_bpm": 112,
         "max_bpm": 112,
         "jacket": "9005b60621dcc779.jpg",
-        "available": true,
+        "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 130714,
@@ -192930,7 +192930,7 @@
                 "flick": 0,
                 "charter": "イノシカ提灯",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19e3333706b738760a9",
                 "sdvxin": null
             },
@@ -192946,7 +192946,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19e3333706bb78268d0",
                 "sdvxin": null
             },
@@ -192962,7 +192962,7 @@
                 "flick": 0,
                 "charter": "そらいろカリン",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19e3333706b4bdf0442",
                 "sdvxin": {
                     "id": "10239",
@@ -192981,7 +192981,7 @@
                 "flick": 83,
                 "charter": "レモンとアロエ",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19e3333706b64cbe7f8",
                 "sdvxin": {
                     "id": "10239",
@@ -194244,8 +194244,8 @@
         "is_hidden_on_chuninet": false,
         "duration": 129333,
         "aliases": [
-            "Seisha no Ibuki",
-            "Breath of the Saint"
+            "Breath of the Saint",
+            "Seija no Ibuki"
         ],
         "charts": [
             {
