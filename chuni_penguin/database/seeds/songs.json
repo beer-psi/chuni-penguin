@@ -1687,7 +1687,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03132",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -22448,7 +22451,13 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/0a3d7b00000922f8.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/242.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/242.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/bc78e39268c1b17a38be7dc06468d3e00042c9f4d64329e7ef5310dade5ff98f.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/0a3d7b00000922f8.jpg"
+        ]
     },
     {
         "id": 243,
@@ -52243,7 +52252,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03122",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -53008,7 +53020,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03133",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -193637,6 +193652,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/e90fc35b817a7a27.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2963.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2963.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/ac2c29eee660fa479d1c085a92dd6d4e673c440246817d15e18643bc1db3d49a.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/e90fc35b817a7a27.jpg"
         ]
@@ -193734,6 +193751,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/66b1fadb306c805e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2964.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2964.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/0e53822b8dfd42fb4450ff75a189a19ac580b7cd9abc7c34d9cdb24f57e695bf.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/66b1fadb306c805e.jpg"
         ]
@@ -193835,6 +193854,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/4c7fc5467cfc5e86.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2965.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2965.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/db651b6004af5cf5a73c00d2b1f901c4c59b8e88ffab76115e306c9c469d85df.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/4c7fc5467cfc5e86.jpg"
         ]
@@ -193934,6 +193955,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/526f2c61c37fb231.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2966.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2966.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/4d05ed6a351119b8cd283fca376e48f6ac29a53246cb0d0e161001ce899cc261.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/526f2c61c37fb231.jpg"
         ]
@@ -194055,6 +194078,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/a83a089481cb3703.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2967.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2967.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/4fabff6762c420f0eb67081a4118f40f7863c414a39e6eee40ede8ccb04080fe.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/a83a089481cb3703.jpg"
         ]
@@ -194159,6 +194184,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/7c0d2bba8c6432e8.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2968.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2968.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/edcdd5f7851119065530a8a530bc97ccbb13dbb7a2db7e775712258f0122d62a.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/658fe4921a6bcfff951cbd362636a6970d5bbb1df0587ac7819dcccb962c9bd6.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/35b2760a42a8eebe.png",
@@ -194265,6 +194292,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/d79a18964b32fadb.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2969.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2969.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/0adfa67ba38be8f9df7fcd2651ef90196f5d728d304d9a6d2aab887b6d5a4fb9.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/09e46dd4c9bbb993989d15cf4272be986ee76c2a2f5a355249931a57df28a5a0.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/d79a18964b32fadb.jpg"
@@ -194367,6 +194396,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/b227a354f158fec6.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2970.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2970.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/f6e98282a252ec1eb8cc27646ea670686a202e3b528601ce76db99123a8bd427.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/b227a354f158fec6.jpg"
         ]
@@ -194467,6 +194498,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/fa67a8f24675ec38.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2971.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2971.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/916b59f5e0d8b78563f59a9e0c5a93a9502c0b07de5d542adefe5e06db8fb2ce.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/fa67a8f24675ec38.jpg"
         ]
@@ -194568,6 +194601,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/f9a6b164418d922e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2972.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2972.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/777314321adc602263cd3bb88d199f663ed700981076cadca8f6a57b5f087ef1.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/f9a6b164418d922e.jpg"
         ]
@@ -194670,6 +194705,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/873ad3e03caedb0d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2973.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2973.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/0ca631d28aed1f613ec1595c3a22f41a42ec6045302ee25b7beff8d251162525.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/873ad3e03caedb0d.jpg"
         ]
@@ -194767,6 +194804,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/7a19b31e47f91fb5.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2974.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2974.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/35589deb61fb846c46d9dfed0c13c934cdff29b17292bab64ec12389a4228a5d.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/7a19b31e47f91fb5.jpg"
         ]
@@ -194866,6 +194905,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/8bd58bb075d55449.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2975.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2975.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a26d39aefee852c0ba1e5d912e15028f50df39c08cf86bd0fb931a33d2ae28f0.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/8bd58bb075d55449.jpg"
         ]
@@ -194968,6 +195009,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/ce21ae87308e7599.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2976.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2976.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/9790a44e730c05b8bbaa0ca8e4da0d8241ed3945633593e7323d3940cae1bf20.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/ce21ae87308e7599.jpg"
         ]
@@ -195068,6 +195111,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/117154b0ebadf063.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2977.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2977.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/e6d54bebc612d80f70b6dcf2560612ed6d7d6314fd931b00ebc8294ca8dc0cac.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/117154b0ebadf063.jpg"
         ]
@@ -195165,6 +195210,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/96dca6406e40c201.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2978.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2978.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/dfbb2726df967cbc2786dd7085564ad5fad3bc0298a98ae05b24dfb5748b2166.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/96dca6406e40c201.jpg"
         ]
@@ -195264,6 +195311,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/70736c900114d732.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2979.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2979.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/b60a9719b34ac03200861a1dcf3055adaddf0024d8fe6a060d3d88d50963c29d.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/3411e61509c17e518a0999c90d7e18ce66ebeb18d20b8d19951d8b9d0eded299.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/9d3004d18c02688a550ac619074c8096abd5e89936c0552921b15cc5475da35e.png",
@@ -195385,6 +195434,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/5cb62363cba66f4b.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2980.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2980.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/997c9cb1ca8d8a3b0930d1ec3b4e984a50fa325ad22a48bbc33668c94bcddbb1.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/2d070018eebd26c7078e72411022912dff843315f727310f48769b0f74ca98a2.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/be8ddc1884bc5cca1efc7ff0fd1ab328d27d19bd6a127d6245222ed987a6a21f.png",
@@ -195491,6 +195542,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/f2c93f26b6568653.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2981.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2981.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a0f280ff2884077113641fe206da2f82141c26e4c76bbdd35a5fdef697fe91f5.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/f2c93f26b6568653.jpg"
         ]
@@ -195592,6 +195645,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/9085fe54856f6bb7.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2982.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2982.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/5ec7631cc2fa1d82f71ba556d5023ab0970d443bc29568870554f0df5f68ffaf.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/ec9d85e42a74a4cb91537592da3e57016d422db33379da2a4c71f1fb4e7f8a4f.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/9085fe54856f6bb7.jpg"
@@ -195690,6 +195745,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/90a54b8193f98424.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2983.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2983.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/82e7559f7348097f103f01b7aa250f3d317645c7affdb6407da3d803eb06d20a.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/b87308ecc52f2e189175347d7dfb59c118f54c9ecb5f2727daccedce4898a347.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/d8d8f023b47ff011.png",
@@ -195791,6 +195848,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/aafad30a3392956e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2984.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2984.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/999a3ec7edcd15bf5681b4907225b4c3fac6bedbdf908be3327ce46968e6f5a8.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/aafad30a3392956e.jpg"
         ]
@@ -195888,6 +195947,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/04df7bc962d5078d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2985.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2985.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/89c5b29b2a34bba110624f842abcd1faf55e28d0091a72a6987db71d84bf3c17.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/04df7bc962d5078d.jpg"
         ]
@@ -195987,6 +196048,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/af86935ed9ff3ae8.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2986.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2986.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/39afbd895dd5e990cf1dd47ee99560423dcf1fd98623f4be1b5be31ba71b5b38.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/af86935ed9ff3ae8.jpg"
         ]
@@ -196084,6 +196147,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/7e446b403499e42c.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2987.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2987.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a7d00e1257b4816a26f63c7e72c07630b93d8d0bf9904f2a910ac4c7333871ef.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/7e446b403499e42c.jpg"
         ]
@@ -196181,6 +196246,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/e438d6eaaf6d96c5.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2988.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2988.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/698c2d82e3e4917b61b41dfc45735709bfe5f2fda987cf6efdbe9a6825131bea.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/e438d6eaaf6d96c5.jpg"
         ]
@@ -196278,6 +196345,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/5ec4de7c738cb87e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2989.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2989.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/02195860bed688ab79a546b0d7d78373fc96e5a3f2442477c20417dfb4dac71e.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/5ec4de7c738cb87e.jpg"
         ]
@@ -196375,6 +196444,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/818cb4ac95f3ae94.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2990.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2990.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/6ce4450cc88eb529f6cd961bcc2aa7f4746edf22fd0e09f03e4bd0e1f2d4d6ec.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/818cb4ac95f3ae94.jpg"
         ]
@@ -196474,6 +196545,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/10bd07e8f753a5ce.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2992.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2992.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/b3e1128d96674db55e543177b32d45541f89a60ea7e695a92c1b556107e05972.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/10bd07e8f753a5ce.jpg"
         ]
@@ -196573,6 +196646,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/44b4e5af3c673738.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2993.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2993.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/adc142fc926d80bd1a381bc0edb24016c5b14af976d4f2abf5ee7bb4c3c9f436.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/44b4e5af3c673738.jpg"
         ]
@@ -196672,6 +196747,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/21a8175a426fe563.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2994.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2994.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/5a3e78ddfce2f05b7a02ceee1172deddd71aa0f242ffe053f85ed0a46cd36c44.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/4a0a2d8dd700e942a21b79030c814a4d4e09f46c5478ae7701cc6b4531a1aad8.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/0357191a14ae5114.png",
@@ -196773,6 +196850,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/30816e48cd846654.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2995.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2995.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/1273b306a4b7f13a3698e8eb218c806b7495c499cd9b676367713f1f33e6f0cc.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/58d17025b3ec3f7597c3938f24db34d4f0d6ef0c6ae8469d8e92938fcd1e5c2c.png",
             "https://maimaidx-eng.com/maimai-mobile/img/Music/63687937bbd3b9f4.png",
@@ -196877,6 +196956,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/316257c59546036c.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2996.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2996.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/302a0b0ad32b70ec44efb9b4378665a6e8f64a7b0304268982f5163d00ed909f.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/e9fa111755b86a61eb6a041f8aad0c53ace9e25d76c77dcc6b3fe74a41708edf.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/847fe368d7ce8bb0de7d77a6f36c9e0284012524d3444c1aabb0e9c98b6d9f91.png",
@@ -196981,6 +197062,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/8c990138062cb75a.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2997.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2997.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/f9be038dd06af1a2d53912b55ffe0c2558fac325fc6ce29580650302106da5b4.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/61e7340385cc923286285857545b105aa976b245e2fe6b187fc716ef82754cc7.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/8c990138062cb75a.jpg"
@@ -197079,6 +197162,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/324dd04a986bf49a.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2998.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2998.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/053d128da0a057558d9cca9e29a3e35f47d974885b5645ad2c32395d34a054af.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/877087190bc84ad8cacb946341fc695b47c06965f5d42115afbe46b1d2ef0f48.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/324dd04a986bf49a.jpg"
@@ -197199,6 +197284,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/9ed72f77163e7346.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/2999.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/2999.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/ff47ee038558cc563db858fc210e5093080558266815188fc59c7e9f8a1d7ced.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/9ed72f77163e7346.jpg"
         ]
@@ -197296,6 +197383,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/5052ee354585736d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3000.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3000.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/4545392ba0bb95d85bfdbdb58abccdaa631c13f249dfce045a9febc53e47c991.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/5052ee354585736d.jpg"
         ]
@@ -197397,6 +197486,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/ef2c22c0f97703cc.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3002.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3002.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/2873bc4695dfcb6f2172b3e6ce47e678c1f014553a0919a15d93593611a01c22.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/cf170e57331a7da631134f4ff5248fb36cac2b0685aa685add3ed65bfb21c61c.png",
             "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/3cd5a218a9d07d8c04344a8aed099db7f8a75c3740928f70a3f58089e533193a.png",
@@ -197601,13 +197692,15 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/0b70031a11871a45.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3004.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3004.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/d80d0c5a2d4dcd946fa583b94dc1067c991c4b14754f74ce91274bf37a511dd0.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/0b70031a11871a45.jpg"
         ]
     },
     {
         "id": 3005,
-        "chunirec_id": null,
+        "chunirec_id": "d5ebbefb20eed006",
         "title": "ハッピーラッキーチャッピー",
         "wikiwiki_title": null,
         "chunithm_catcode": 0,
@@ -197671,7 +197764,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11001",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -197687,14 +197783,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11001",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/618ebb681eb66c2d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3005.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3005.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/610ae1098437410f36a497db3f1e9a03f01f3a97d5de0782f38e345f87ba62d0.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/618ebb681eb66c2d.jpg"
+        ]
     },
     {
         "id": 3006,
-        "chunirec_id": null,
+        "chunirec_id": "bfeb9c0ed9f9deb4",
         "title": "Bling-Bang-Bang-Born",
         "wikiwiki_title": null,
         "chunithm_catcode": 0,
@@ -197758,7 +197863,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11002",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -197774,14 +197882,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11002",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/8923c7b04e976a54.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3006.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3006.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/fe440acd3cc3804f19a036718572a19b5d43d9e1f683f8c155d10407c748f0b5.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/8923c7b04e976a54.jpg"
+        ]
     },
     {
         "id": 3007,
-        "chunirec_id": null,
+        "chunirec_id": "5f12a4c2dcc92a58",
         "title": "明日の私に幸あれ",
         "wikiwiki_title": null,
         "chunithm_catcode": 0,
@@ -197845,7 +197962,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11003",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -197861,14 +197981,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11003",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/0293502f7cf9af2d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3007.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3007.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/7150874841c31bbe0db36efdea243f1fce16eb1006c75f86acd4d01c3d90215c.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/0293502f7cf9af2d.jpg"
+        ]
     },
     {
         "id": 3009,
-        "chunirec_id": null,
+        "chunirec_id": "3110f06120e62e08",
         "title": "ダイダイダイダイダイキライ",
         "wikiwiki_title": null,
         "chunithm_catcode": 2,
@@ -197932,7 +198061,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11005",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -197948,14 +198080,28 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11005",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/44091ee47cfa2e41.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3009.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3009.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/6bbb2faa489dafc612151d108ac32105a5dd9e8b7c6d6fe3b1089e6e415fcb10.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/559635fe21755d15de310b1331aab30faefe539633786af1e1f3023d164d6450.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/0171bfa7667014b0d25cf972a859e9ffbaad23e49cc4f144e67ab8efdd4a4fbe.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/1ee5fb152242e389.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/1ee5fb152242e389.png",
+            "https://mimixd.app/images/render/cover/1ee5fb152242e389.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/44091ee47cfa2e41.jpg"
+        ]
     },
     {
         "id": 3010,
-        "chunirec_id": null,
+        "chunirec_id": "4a761b6aac2f051e",
         "title": "お返事まだカナ？おじさん構文！",
         "wikiwiki_title": null,
         "chunithm_catcode": 2,
@@ -198019,7 +198165,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11006",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198035,7 +198184,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11006",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "ULT",
@@ -198051,14 +198203,28 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11006",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/52356c183d89c680.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3010.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3010.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a50e157b6d921dc03c92a4a1e5b129587f7e66fe2adbc187f4a66d6a375985d8.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/28bcd3ea1d046a2bfba0e7d1dedfb417501747c596a4162f83b259f60d77a449.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/2aac6733a568af5a7f7dcb4aa9c1069ce49e162c45b39c6a128dd90bf9967729.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/2f80772d2f249183.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/2f80772d2f249183.png",
+            "https://mimixd.app/images/render/cover/2f80772d2f249183.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/52356c183d89c680.jpg"
+        ]
     },
     {
         "id": 3011,
-        "chunirec_id": null,
+        "chunirec_id": "c4a7620e36e25063",
         "title": "テレパシ",
         "wikiwiki_title": null,
         "chunithm_catcode": 2,
@@ -198122,7 +198288,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11007",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198138,7 +198307,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11007",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "ULT",
@@ -198154,14 +198326,28 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11007",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/1ed55ea0343fcd75.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3011.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3011.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/df1e01448def9bc68d1ea94cc2e1ae8e430371be0c55d862e98f13770c52839b.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/17f661d3477792b7bd974247e9df4afa467bbebad62597603f11e49407962c6c.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/aa1ae8be8d0e27bf081caba51131b74072060f4d5073d342a8544f4ff9018337.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/72342d9f8e5af7ba.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/72342d9f8e5af7ba.png",
+            "https://mimixd.app/images/render/cover/72342d9f8e5af7ba.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/1ed55ea0343fcd75.jpg"
+        ]
     },
     {
         "id": 3012,
-        "chunirec_id": null,
+        "chunirec_id": "c2d89088584db3b0",
         "title": "最終鬼畜妹フランドール・S (原口沙輔は鬼畜なのか？remix)",
         "wikiwiki_title": null,
         "chunithm_catcode": 3,
@@ -198225,7 +198411,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11008",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198241,14 +198430,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11008",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/c2b32892f2d395f1.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3012.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3012.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/f5af166ec2f09b301afcadcb0f1fccdbfe87e4045eaf3141d689e5f914125fd1.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/c2b32892f2d395f1.jpg"
+        ]
     },
     {
         "id": 3013,
-        "chunirec_id": null,
+        "chunirec_id": "5d03c1f7577029a2",
         "title": "キミとのテトテコネクト",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -198312,7 +198510,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11010",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198328,14 +198529,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11010",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/36dd90d55f6d1866.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3013.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3013.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a0f6eb504ccc8bc8244607b80fbe0a9eecf851d02b81d19ed161ec517dee40cf.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/36dd90d55f6d1866.jpg"
+        ]
     },
     {
         "id": 3014,
-        "chunirec_id": null,
+        "chunirec_id": "2841e8b7e7a66391",
         "title": "零號車輛",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -198399,7 +198609,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11012",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198415,14 +198628,27 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11012",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/649d7d028daba394.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3014.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3014.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/f84fda794e473bf5519d8599bbdf16484c930148f38a7feede6f9f2326cae359.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/395fbb6716c46636e562d9b9ef00841c39b14658c8e3dbd087a96febf731fcba.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/5013b0405bb25bc3.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/5013b0405bb25bc3.png",
+            "https://mimixd.app/images/render/cover/5013b0405bb25bc3.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/649d7d028daba394.jpg"
+        ]
     },
     {
         "id": 3015,
-        "chunirec_id": null,
+        "chunirec_id": "fafc500633f19969",
         "title": "RE:UNION -Duo Blade Against-",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -198486,7 +198712,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11013",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198502,14 +198731,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11013",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/321c134404abbb7d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3015.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3015.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/41d47015520529c1b90bc0f484ef585ddd3f8f6dffe0bb7ab8383b9978c979db.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/321c134404abbb7d.jpg"
+        ]
     },
     {
         "id": 3016,
-        "chunirec_id": null,
+        "chunirec_id": "e0d8427b981b7b4a",
         "title": "英雄の証",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -198573,7 +198811,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11014",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198589,14 +198830,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11014",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/33402ca854a4b91a.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3016.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3016.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/2ad056918aa3ef1ab15560f4e146d7622ec5ebfc1bc764eecf4e975a6ab5e46d.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/33402ca854a4b91a.jpg"
+        ]
     },
     {
         "id": 3017,
-        "chunirec_id": null,
+        "chunirec_id": "5511211b1bb91cf1",
         "title": "白光に響く生命の叫び",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -198660,7 +198910,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11015",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198676,14 +198929,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11015",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/a1ad32ebd52cab36.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3017.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3017.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/2223a961198a65d45afd05bb719ca86eea9cd84fe106dee35139f0cd81a954b4.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/a1ad32ebd52cab36.jpg"
+        ]
     },
     {
         "id": 3019,
-        "chunirec_id": null,
+        "chunirec_id": "5355ea16556795c1",
         "title": "Honey Bear",
         "wikiwiki_title": null,
         "chunithm_catcode": 9,
@@ -198747,7 +199009,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11019",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198763,14 +199028,24 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11019",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/b0188c69a20b67d1.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3019.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3019.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/7bd3c4f6a267c0f99cff62b433b9f540c9ee776f3f8e34f63936b25d0c35186d.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/2efac5620a049cea13f29902cbd3af4ee1daedd66a18da3530e852ea947406bd.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/b0188c69a20b67d1.jpg"
+        ]
     },
     {
         "id": 3020,
-        "chunirec_id": null,
+        "chunirec_id": "9e70ad3a7ed347f8",
         "title": "勦滅",
         "wikiwiki_title": null,
         "chunithm_catcode": 9,
@@ -198834,7 +199109,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11018",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198850,14 +199128,27 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11018",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/1592419d182adb91.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3020.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3020.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/aae244c2aeba452e5ae115cb9fbc71845d8eb4aa976e3e4f2b71b9daba50443a.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/6455d86ab7e1ff9ac193b79c6b793295c7179c1f41e4bd77480db291bd00345d.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/f724f87d64fa40db.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/f724f87d64fa40db.png",
+            "https://mimixd.app/images/render/cover/f724f87d64fa40db.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/1592419d182adb91.jpg"
+        ]
     },
     {
         "id": 3021,
-        "chunirec_id": null,
+        "chunirec_id": "0c76a41390319fc1",
         "title": "ALLNIGHT_DANCER",
         "wikiwiki_title": null,
         "chunithm_catcode": 9,
@@ -198921,7 +199212,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11020",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -198937,14 +199231,24 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11020",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/6f46b3e9777e5c32.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3021.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3021.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/28368154bf1efa20e5b3393c791a85840a5d1334ae335e94fa331b7bb7e9a2cd.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/2491a4623dd3d97681d8af5755ff52e2b2bae143e9b39ac6c85610b9d8ca2fe8.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/6f46b3e9777e5c32.jpg"
+        ]
     },
     {
         "id": 3022,
-        "chunirec_id": null,
+        "chunirec_id": "280d18ada31171ae",
         "title": "私たちは、花になる",
         "wikiwiki_title": null,
         "chunithm_catcode": 7,
@@ -199008,7 +199312,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11017",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199024,14 +199331,28 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11017",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/54865bad01a2f313.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3022.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3022.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/af1a7f7c8d22c50d042d6c00695678b70011ba0534346f80dc3871082e484712.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/b4f58eb1970b216717a6305bc8e7245b5455267bc15f66fcc2fa18b27df5f664.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/799209480c2d689be5205e9822568ec4e56d173bc6359866336e9ec18fa7a13d.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/7ca1e931100a97a7.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/7ca1e931100a97a7.png",
+            "https://mimixd.app/images/render/cover/7ca1e931100a97a7.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/54865bad01a2f313.jpg"
+        ]
     },
     {
         "id": 3023,
-        "chunirec_id": null,
+        "chunirec_id": "b62ca8e8748c84dd",
         "title": "Luminous CANDY",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199095,7 +199416,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11024",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199111,14 +199435,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11024",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/b08408fe85a4d58c.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3023.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3023.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/3e36d7aebe1da6a1c36d5cc2bf2ffa981f0f88d7b6090064b7642076700d9c61.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/b08408fe85a4d58c.jpg"
+        ]
     },
     {
         "id": 3024,
-        "chunirec_id": null,
+        "chunirec_id": "907efa1d439f8040",
         "title": "SOMA TONE",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199182,7 +199515,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11025",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199198,14 +199534,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11025",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/c4ef18f993562cd3.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3024.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3024.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/3b7e90bc5423f6acbaacf66b8ca35cae5499823bbf9d31f8152b987ce78f1a5a.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/c4ef18f993562cd3.jpg"
+        ]
     },
     {
         "id": 3025,
-        "chunirec_id": null,
+        "chunirec_id": "62dbebc4fc0c3862",
         "title": "Tachy∅n",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199288,11 +199633,17 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/21c088191cda00ec.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3025.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3025.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/8ef3a4162671db0afd59ef6809932db7d5c64d1bf15f0fb429d2b46a0013ab59.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/21c088191cda00ec.jpg"
+        ]
     },
     {
         "id": 3026,
-        "chunirec_id": null,
+        "chunirec_id": "b507b9620976b416",
         "title": "ひなたでワチャチャ",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199356,7 +199707,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11021",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199372,14 +199726,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11021",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/36287ed83351b992.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3026.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3026.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/4ae75a3ba25843409f0953e35e1fdb8d663e6fbc6033cc52dc54a9c52222eddc.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/36287ed83351b992.jpg"
+        ]
     },
     {
         "id": 3027,
-        "chunirec_id": null,
+        "chunirec_id": "4f2ff8798f5f31c0",
         "title": "白昼熱演",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199443,7 +199806,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11022",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199459,14 +199825,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11022",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/671216fb93aa3186.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3027.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3027.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/400642fc7c5e1f6b97ebb40e2dab4a367ebf54450ae4b722f58285b883d6b458.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/671216fb93aa3186.jpg"
+        ]
     },
     {
         "id": 3028,
-        "chunirec_id": null,
+        "chunirec_id": "1aa4398bb44a0c2b",
         "title": "絶対一生これで生きていく！",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199530,7 +199905,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11023",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199546,14 +199924,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11023",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/c9143ec7ad5347f8.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3028.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3028.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/e341a26bbaca1b4c00ff3db2cb03edbdde84de8dfbeeec9d4682057f2b91fb71.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/c9143ec7ad5347f8.jpg"
+        ]
     },
     {
         "id": 3029,
-        "chunirec_id": null,
+        "chunirec_id": "cae11b3195567dae",
         "title": "ちゅ、お注射。",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199617,7 +200004,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11027",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199633,14 +200023,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11027",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/b870539a2022d542.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3029.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3029.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/7c285e4fe04967d3de75fa264d7fd9eb5fcc968cf2f91dbf0275a8bdbc17eada.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/b870539a2022d542.jpg"
+        ]
     },
     {
         "id": 3030,
-        "chunirec_id": null,
+        "chunirec_id": "b605bdb712613a6c",
         "title": "チュウニペンギンのテーマ～左下より愛をこめて～",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -199704,7 +200103,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11028",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199720,10 +200122,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11028",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/2b4caed03dccc894.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3030.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3030.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/f758168dd6089d5e0fc95326d7b4dab6f9509d5c5f4997ebd86c9a4efc699547.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/2b4caed03dccc894.jpg"
+        ]
     },
     {
         "id": 3031,
@@ -199791,7 +200202,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11029",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199807,10 +200221,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11029",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/22e49ceacc2f334c.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3031.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3031.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/229518b0bcd899903e25b4cb9aeab7f8ca005c2a9015df2c1e219eb1cd5a3e16.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/22e49ceacc2f334c.jpg"
+        ]
     },
     {
         "id": 3032,
@@ -199878,7 +200301,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11030",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199894,10 +200320,24 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11030",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/3aae93089e19306d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3032.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3032.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/89b355a432f186c0f706987b1e7a30b0f45b02da4eaca9020ab68621dbf697a6.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/fb91e783b73a67d5213d30713b854585f976ff3255233c91ca7a98ba839ddf0a.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/6e2066e04cedaa2295397278817389a6edc40439b2c240619cfde93a0428ca06.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/1a0ffd5bf37e729f.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/1a0ffd5bf37e729f.png",
+            "https://mimixd.app/images/render/cover/1a0ffd5bf37e729f.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/3aae93089e19306d.jpg"
+        ]
     },
     {
         "id": 3033,
@@ -199965,7 +200405,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11031",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199981,10 +200424,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11031",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/4bf33faf916826b0.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3033.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3033.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a19f59bb902c393b0974da692f5d7cfd3817725d545f2b8cb2f5658e6a08a4fc.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/4bf33faf916826b0.jpg"
+        ]
     },
     {
         "id": 3034,
@@ -200071,7 +200523,13 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/cf8515a0679b2c17.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3034.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3034.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/546efa772e2391b7d4100c139e8b853b2478f011d5f832f138e99675c383d74c.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/cf8515a0679b2c17.jpg"
+        ]
     },
     {
         "id": 3035,
@@ -200139,7 +200597,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11033",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200155,10 +200616,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11033",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/0c995f1f790f9666.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3035.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3035.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/f3a2def47194df52b2bb2f34485cdff2f50aeea9b771ccbb9b1652f02f6f1ed3.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/0c995f1f790f9666.jpg"
+        ]
     },
     {
         "id": 3036,
@@ -200226,7 +200696,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11034",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200242,10 +200715,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11034",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/ddedc421d38027f8.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3036.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3036.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/4186d3e059b31446d56e20efbbda72b65bb77aa5f80859ed91c959520e07f6c9.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/ddedc421d38027f8.jpg"
+        ]
     },
     {
         "id": 3037,
@@ -200313,7 +200795,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11035",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200329,10 +200814,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11035",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/df8cd2008fa4ae01.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3037.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3037.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/5556879e1edd3f79ad7ac18fbb5e0688385b18efb9a4f28f68722844bd26a2f4.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/df8cd2008fa4ae01.jpg"
+        ]
     },
     {
         "id": 3038,
@@ -200400,7 +200894,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11038",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200416,10 +200913,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11038",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/6d836ce785ed4dbd.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3038.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3038.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/039f794aae50a341bf1b2d3abbb7dfb4cc060e9137c085aa4fc6bfe88124a1ef.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/6d836ce785ed4dbd.jpg"
+        ]
     },
     {
         "id": 3040,
@@ -200487,7 +200993,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11039",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200503,10 +201012,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11039",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/01d050269e5adaeb.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3040.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3040.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/c18ef7ce355917fae8bec0ce87b9bb7a918bdd219d1068b3783c6edb89a1478c.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/01d050269e5adaeb.jpg"
+        ]
     },
     {
         "id": 3041,
@@ -200574,7 +201092,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11036",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200590,10 +201111,20 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11036",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/b867b55593a36114.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3041.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3041.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a1e623cec490ecfea3ae2c1f171cb3b9c0a5da105add2866b4272c8de507690f.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/dcd193dd1fe90f30acaab3fcdeb2eaf5d2f5444d7a3e336d9dbda2f228f47b0c.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/b867b55593a36114.jpg"
+        ]
     },
     {
         "id": 3042,
@@ -200661,7 +201192,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11037",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200677,10 +201211,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11037",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/917f92079061817f.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3042.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3042.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/ba87ab72752ce724e59d55c3009b16aab8fee55fc3990b344fdbf999e43191ad.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/917f92079061817f.jpg"
+        ]
     },
     {
         "id": 3043,
@@ -200748,7 +201291,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11050",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200764,10 +201310,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11050",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/9c09ad3ceda20c0a.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3043.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3043.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/b1ccb3bbefe2413c1d777061f063721d5e33dd2c03ea7861ca66b055a60b4948.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/9c09ad3ceda20c0a.jpg"
+        ]
     },
     {
         "id": 3044,
@@ -200835,7 +201390,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11051",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200851,10 +201409,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11051",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/83077f4a6a9f0f4e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3044.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3044.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a2466235a9fc84417b07d9804fa64b98b244704765b7fcf25b82acfe7a788e20.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/83077f4a6a9f0f4e.jpg"
+        ]
     },
     {
         "id": 3045,
@@ -200922,7 +201489,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11052",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200938,10 +201508,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11052",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/27ba6e5202aefb62.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3045.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3045.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/bc804082a57e8a64d436e9f2e7676ffcffeb2a73c4645033137a1eca6f5b6760.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/27ba6e5202aefb62.jpg"
+        ]
     },
     {
         "id": 3046,
@@ -201009,7 +201588,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11053",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201025,10 +201607,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11053",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/396226dcdcbdf45d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3046.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3046.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/78f1a40d7bd4857992e208f896a37088773c34394fe0987a07d752b4c76fe5b3.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/396226dcdcbdf45d.jpg"
+        ]
     },
     {
         "id": 3047,
@@ -201096,7 +201687,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11044",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201112,10 +201706,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11044",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/aa2c01242c3faf4e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3047.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3047.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/da500f0011575d5f2742386fc705ffdedc1eff7714df975e2cd21a7c65782963.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/aa2c01242c3faf4e.jpg"
+        ]
     },
     {
         "id": 3048,
@@ -201183,7 +201786,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11045",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201199,10 +201805,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11045",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/4dfb09327c688bb1.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3048.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3048.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/2047198c8b2eecbbe74b02fe674cf9f61ac7c2cc4543afbb3471fa973c6533d9.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/4dfb09327c688bb1.jpg"
+        ]
     },
     {
         "id": 3049,
@@ -201270,7 +201885,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11046",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201286,10 +201904,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11046",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/443e84680d28fb30.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3049.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3049.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/d530c008723d3b0fb7e283e6912cf2b9b443d350fb957c498508aeeb6ab9638a.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/443e84680d28fb30.jpg"
+        ]
     },
     {
         "id": 3050,
@@ -201357,7 +201984,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11047",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201373,10 +202003,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11047",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/79151b018f0d8c7f.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3050.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3050.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/a8eb0952b4b108147430923ce7375035e2b4b901b4510a4ab37d96174ad76948.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/79151b018f0d8c7f.jpg"
+        ]
     },
     {
         "id": 3051,
@@ -201444,7 +202083,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11048",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201460,10 +202102,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11048",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/0b01ce1c72e9defc.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3051.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3051.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/af5f1360c613aa3360582401eb8897042c5aa414952ad00ede5476c0c2e24f5e.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/0b01ce1c72e9defc.jpg"
+        ]
     },
     {
         "id": 3056,
@@ -201531,7 +202182,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11043",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201547,10 +202201,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11043",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/9aca645476a7827a.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3056.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3056.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/0bfda02e221df924b6096e2e9fd4a700860e04838c611235b7a316b8fe96a551.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/9aca645476a7827a.jpg"
+        ]
     },
     {
         "id": 3060,
@@ -201618,7 +202281,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11040",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201634,10 +202300,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11040",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/7a02f0c5cc16c52d.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3060.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3060.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/7d86820b648f994e6b5824c39060bdb8d94c2a632c01f8f66a1d57fe893065cd.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/7a02f0c5cc16c52d.jpg"
+        ]
     },
     {
         "id": 3061,
@@ -201705,7 +202380,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11041",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201721,10 +202399,19 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11041",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/62f64027ead02a9e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3061.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3061.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/aeca298cf0bf6bc94e16a6917ec3114b5282e2100e557605a26a5a82c182c599.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/62f64027ead02a9e.jpg"
+        ]
     },
     {
         "id": 3063,
@@ -201792,7 +202479,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11042",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201808,14 +202498,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11042",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/edd45fa3fc22a59e.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3063.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3063.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/55fac301c98ce1bf141c0132654d48c0afa3490b9cf1ffa22a83c91bdc126b73.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/edd45fa3fc22a59e.jpg"
+        ]
     },
     {
         "id": 3079,
-        "chunirec_id": null,
+        "chunirec_id": "00632935a1c6b89c",
         "title": "Hello! My World!!",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -201879,7 +202578,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11016",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201895,14 +202597,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11016",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/448eb46993a02f15.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3079.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3079.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/c283c9d7990b65bce6c7f360d944cc939135926fa208f07630297a65c50a7cde.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/448eb46993a02f15.jpg"
+        ]
     },
     {
         "id": 3085,
-        "chunirec_id": null,
+        "chunirec_id": "ad966fe984132d5d",
         "title": "OMAKENO Stroke",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -201966,7 +202677,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11009",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -201982,10 +202696,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11009",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/e64512edb02b58d5.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3085.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3085.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/f99374c7fb83758672497d1f14ad7146cf79bfbd888df6e52db64051d25f175c.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/5631939fd9e47752accc3f278a32747a4e9a8d37e52f7bec44a46c0931d2590d.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/d944767a84263966.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/d944767a84263966.png",
+            "https://mimixd.app/images/render/cover/d944767a84263966.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/e64512edb02b58d5.jpg"
+        ]
     },
     {
         "id": 3086,
@@ -202053,7 +202780,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11049",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -202069,14 +202799,23 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11049",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/cea4a5cb576a26d7.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3086.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3086.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/7a30840913c686efa16b2f96f7911fe8ac9337c35cd2cac29191260bd4f5058f.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/cea4a5cb576a26d7.jpg"
+        ]
     },
     {
         "id": 3088,
-        "chunirec_id": null,
+        "chunirec_id": "f3ae178339649f62",
         "title": "愛♡スクリ～ム！",
         "wikiwiki_title": null,
         "chunithm_catcode": 0,
@@ -202140,7 +202879,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11004",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -202156,14 +202898,27 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11004",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/746be3b1dd293756.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3088.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3088.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/1f32862f7d9808a05c60719f65576a443fa7e66a1640206d458bcb767c7489b4.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/3a3a668d1965015a49425df32c35d6af6c294e62b2faf620e5e35d60651bf8a6.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/069d0198272b463e.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/069d0198272b463e.png",
+            "https://mimixd.app/images/render/cover/069d0198272b463e.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/746be3b1dd293756.jpg"
+        ]
     },
     {
         "id": 3089,
-        "chunirec_id": null,
+        "chunirec_id": "7ea438cb1d5b560c",
         "title": "Cryogenic",
         "wikiwiki_title": null,
         "chunithm_catcode": 6,
@@ -202227,7 +202982,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11011",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -202243,10 +203001,24 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11011",
+                    "end_index": ""
+                }
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/1d05d188f75329d3.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3089.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3089.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/69288b372ca0c6ec174620e219d19f218b3880a605a1690d7eb8471923be2ce2.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/maimai/img/cover/e970e78e489671ab3de9772486d51e6a1dec60fdb7d17399490b8ffe90b3b18c.png",
+            "https://dp4p6x0xfi5o9.cloudfront.net/ongeki/img/cover/59d4a2646188f94a833584da112b0686a35cb259f7cce9d4da521493a9e4b99b.png",
+            "https://maimaidx-eng.com/maimai-mobile/img/Music/c4ec76bb151017b2.png",
+            "https://maimaidx.jp/maimai-mobile/img/Music/c4ec76bb151017b2.png",
+            "https://mimixd.app/images/render/cover/c4ec76bb151017b2.png",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/1d05d188f75329d3.jpg"
+        ]
     },
     {
         "id": 8000,
@@ -216423,7 +217195,7 @@
     },
     {
         "id": 8325,
-        "chunirec_id": null,
+        "chunirec_id": "48f95faa9921bce1",
         "title": "Hainuwele",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -216458,11 +217230,14 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm.beerpsi.cc/assets/jackets/8325.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8325.webp"
+        ]
     },
     {
         "id": 8326,
-        "chunirec_id": null,
+        "chunirec_id": "0366b9ecf2f830c0",
         "title": "並行天涯",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -216497,11 +217272,14 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm.beerpsi.cc/assets/jackets/8326.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8326.webp"
+        ]
     },
     {
         "id": 8327,
-        "chunirec_id": null,
+        "chunirec_id": "67d1ea1257894006",
         "title": "luminoid love PART2",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -216536,11 +217314,16 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/ba611d99b1975ca7.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8327.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8327.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/ba611d99b1975ca7.jpg"
+        ]
     },
     {
         "id": 8328,
-        "chunirec_id": null,
+        "chunirec_id": "69ecbe19d76cf7bd",
         "title": "Flap&Clap",
         "wikiwiki_title": null,
         "chunithm_catcode": 5,
@@ -216575,11 +217358,16 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/79d1a8a4e1271969.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8328.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8328.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/79d1a8a4e1271969.jpg"
+        ]
     },
     {
         "id": 8329,
-        "chunirec_id": null,
+        "chunirec_id": "3316a80d7863a77a",
         "title": "エテルニタス・ルドロジー",
         "wikiwiki_title": null,
         "chunithm_catcode": 3,
@@ -216614,7 +217402,12 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/1d01c0f2468739f4.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8329.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8329.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/1d01c0f2468739f4.jpg"
+        ]
     },
     {
         "id": 8330,
@@ -216653,7 +217446,12 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/677a55a9d5c4c8e5.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8330.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8330.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/677a55a9d5c4c8e5.jpg"
+        ]
     },
     {
         "id": 8331,
@@ -216692,7 +217490,12 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/59d095478ede11e7.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8331.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8331.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/59d095478ede11e7.jpg"
+        ]
     },
     {
         "id": 8332,
@@ -216731,6 +217534,11 @@
                 "sdvxin": null
             }
         ],
-        "jackets": []
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/bbc48a008bc4b975.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/8332.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/8332.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/bbc48a008bc4b975.jpg"
+        ]
     }
 ]
