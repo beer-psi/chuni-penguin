@@ -16,7 +16,6 @@ from chuni_penguin.adapters.base import NetworkAdapter
 from chuni_penguin.adapters.errors import AlreadyFriends, InvalidFriendCode
 from chuni_penguin.adapters.utils import (
     calculate_ongeki_rating_breakdown,
-    process_record,
     process_records,
 )
 from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION, ChunithmVersion
@@ -38,6 +37,7 @@ from chuni_penguin.types import (
     RatingFrameType,
     RatingType,
     RecentScore,
+    Score,
 )
 from chuni_penguin.types.ranking import (
     CurrencyRanking,
@@ -140,6 +140,28 @@ class ChunithmNetAdapter(NetworkAdapter):
 
         return LexborHTMLParser(resp.content, is_fragment=False)
 
+    async def _process_records[T: Score](self, records: Sequence[T]) -> list[T]:
+        records = await process_records(
+            self.database, self.discord_id, self.NAME, records
+        )
+        song_ids = [r.song.id for r in records]
+        ult_song_ids = [
+            r.song.id for r in records if r.chart.difficulty == Difficulty.ultima
+        ]
+
+        if len(song_ids) > 0:
+            await self.database.songs.set_available(song_ids, available=True)
+            await self.database.charts.set_available(
+                song_ids, available=True, is_ultima=False
+            )
+
+        if len(ult_song_ids) > 0:
+            await self.database.charts.set_available(
+                ult_song_ids, available=True, is_ultima=True
+            )
+
+        return records
+
     @property
     def _token(self):
         return self._client.cookies.get("_t", domain=_BASE_URL.host)
@@ -180,10 +202,7 @@ class ChunithmNetAdapter(NetworkAdapter):
     async def get_recent_scores(self) -> list[RecentScore]:
         soup = await self._request_as_soup("GET", "/mobile/record/playlog")
 
-        return await process_records(
-            self.database,
-            self.discord_id,
-            self.NAME,
+        return await self._process_records(
             [parse_basic_recent_record(record) for record in soup.css(".frame02.w400")],
         )
 
@@ -198,12 +217,7 @@ class ChunithmNetAdapter(NetworkAdapter):
             data={"idx": idx, "token": self._token},
         )
 
-        return await process_record(
-            self.database,
-            self.discord_id,
-            self.NAME,
-            parse_detailed_recent_record(soup),
-        )
+        return (await self._process_records([parse_detailed_recent_record(soup)]))[0]
 
     async def _get_hidden_personal_bests(
         self, level: str | None = None, difficulty: Difficulty | None = None
@@ -281,9 +295,7 @@ class ChunithmNetAdapter(NetworkAdapter):
 
         return [
             pb
-            for pb in await process_records(
-                self.database, self.discord_id, self.NAME, pbs
-            )
+            for pb in await self._process_records(pbs)
             if (level is None or pb.chart.level == level)
             and (difficulty is None or pb.chart.difficulty == difficulty)
             and (genre is None or pb.song.genre == genre)
@@ -321,7 +333,7 @@ class ChunithmNetAdapter(NetworkAdapter):
             ]
         )
 
-        return await process_records(self.database, self.discord_id, self.NAME, pbs)
+        return await self._process_records(pbs)
 
     async def get_personal_bests_on_song(self, song_id: int) -> list[PersonalBest]:
         if song_id >= 8000:
@@ -343,9 +355,7 @@ class ChunithmNetAdapter(NetworkAdapter):
                 },
             )
 
-        return await process_records(
-            self.database, self.discord_id, self.NAME, parse_music_record(soup, song_id)
-        )
+        return await self._process_records(parse_music_record(soup, song_id))
 
     async def get_best30(self) -> list[PersonalBest]:
         soup = await self._request_as_soup(
@@ -399,11 +409,8 @@ class ChunithmNetAdapter(NetworkAdapter):
                         "token": self._token,
                     },
                 )
-                difficulty_records = await process_records(
-                    self.database,
-                    self.discord_id,
-                    self.NAME,
-                    parse_music_for_rating(soup),
+                difficulty_records = await self._process_records(
+                    parse_music_for_rating(soup)
                 )
 
                 records.extend(

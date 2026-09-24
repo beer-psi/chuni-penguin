@@ -10,7 +10,7 @@ import sqlalchemy.event
 import sqlalchemy.util
 from discord.ext import commands, tasks
 from discord.utils import MISSING
-from sqlalchemy import Executable, Result, case, delete, func, select, text
+from sqlalchemy import Executable, Result, case, delete, func, select, text, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.dialects.sqlite.aiosqlite import AsyncAdapt_aiosqlite_connection
 from sqlalchemy.ext.asyncio import (
@@ -332,6 +332,11 @@ class SongQueries:
         self._writer = writer
         self._read_sessionmaker = read_sessionmaker
 
+    async def set_available(self, song_ids: Sequence[int], *, available: bool):
+        query = update(Song).values(available=available).where(Song.id.in_(song_ids))
+
+        await self._writer.execute(query)
+
     async def get_hidden_on_chuninet(self):
         async with self._read_sessionmaker() as session:
             query = select(Song).where(
@@ -350,6 +355,20 @@ class ChartQueries:
     ):
         self._writer = writer
         self._read_sessionmaker = read_sessionmaker
+
+    async def set_available(
+        self, song_ids: Sequence[int], *, available: bool, is_ultima: bool
+    ):
+        ultima_check = (
+            Chart.difficulty == "ULT" if is_ultima else Chart.difficulty != "ULT"
+        )
+        query = (
+            update(Chart)
+            .values(available=available)
+            .where(Chart.song_id.in_(song_ids) & ultima_check)
+        )
+
+        await self._writer.execute(query)
 
     async def get_hidden_on_chuninet(
         self, level: str | None = None, difficulty: Difficulty | None = None
