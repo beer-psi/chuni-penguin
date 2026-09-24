@@ -32,6 +32,7 @@ ChunithmVersion = Literal[
     "VERSE",
     "X-VERSE",
     "X-VERSE-X",
+    "Mate",
 ]
 # Used to split old records from new records.
 CURRENT_CHUNITHM_VERSION = "X-VERSE-X"

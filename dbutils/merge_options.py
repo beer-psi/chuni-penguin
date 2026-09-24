@@ -42,6 +42,7 @@ VERSIONS = [
     "VERSE",
     "X-VERSE",
     "X-VERSE-X",
+    "Mate",
 ]
 WE_LEVEL_OVERRIDES = {
     8244: "分☆☆☆ (LASTMORN)",
@@ -178,6 +179,7 @@ async def merge_options(
     extract_jackets: bool,
     extract_audios: bool,
     is_international: bool,
+    apply_level_changes: bool,
 ):
     async with httpx.AsyncClient(
         transport=httpx_aiohttp.AIOHTTPTransport(retries=5)
@@ -419,13 +421,19 @@ async def merge_options(
 
                 try:
                     chart = charts_by_difficulty[difficulty_short]
+                    is_new_chart = False
                 except KeyError:
                     charts_by_difficulty[difficulty_short] = chart = {}
+                    is_new_chart = True
+
                     new_song["charts"].append(chart)
 
                 chart["difficulty"] = difficulty_short
-                chart["level"] = displayed_level
-                chart["const"] = const
+
+                if is_new_chart or apply_level_changes:
+                    chart["level"] = displayed_level
+                    chart["const"] = const
+
                 chart["maxcombo"] = chart.get("maxcombo", 0)
                 chart["tap"] = chart.get("tap", 0)
                 chart["hold"] = chart.get("hold", 0)
@@ -434,7 +442,7 @@ async def merge_options(
                 chart["flick"] = chart.get("flick", 0)
                 chart["charter"] = chart.get("charter")
                 chart["version"] = chart.get("version")
-                chart["available"] = chart.get("available", new_song["available"])
+                chart["available"] = chart.get("available", is_international and new_song["available"])
                 chart["tachi_chart_id"] = chart.get("tachi_chart_id")
                 chart["sdvxin"] = chart.get("sdvxin")
 

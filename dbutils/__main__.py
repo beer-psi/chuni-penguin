@@ -88,6 +88,11 @@ async def main():
     update.add_argument(
         "--international", action="store_true", help="Treat as international data"
     )
+    update.add_argument(
+        "--apply-level-changes",
+        action="store_true",
+        help="Apply level/chart constant changes",
+    )
 
     seeds = subparsers.add_parser("seeds", help="Seeds management commands")
 
@@ -154,6 +159,7 @@ async def main():
                 extract_jackets=args.extract_jackets,
                 extract_audios=args.extract_audio,
                 is_international=args.international,
+                apply_level_changes=args.apply_level_changes,
             )
 
     if args.command == "seeds":
