@@ -5522,10 +5522,6 @@
                         "difficulty": "MAS"
                     },
                     {
-                        "song_id": 768,
-                        "difficulty": "MAS"
-                    },
-                    {
                         "song_id": 772,
                         "difficulty": "MAS"
                     },
@@ -5555,6 +5551,10 @@
                     },
                     {
                         "song_id": 2344,
+                        "difficulty": "MAS"
+                    },
+                    {
+                        "song_id": 768,
                         "difficulty": "MAS"
                     },
                     {

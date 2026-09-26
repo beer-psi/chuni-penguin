@@ -202249,7 +202249,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 153513,
-        "aliases": [],
+        "aliases": [
+            "Your Reality"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -202423,7 +202425,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 144324,
-        "aliases": [],
+        "aliases": [
+            "Kikikaitai"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
