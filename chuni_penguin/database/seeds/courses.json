@@ -4508,6 +4508,46 @@
         ]
     },
     {
+        "id": 50002,
+        "cls": "i",
+        "name": "Slow Speed Set",
+        "version": "Mate",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 10,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 365,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 945,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2274,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 50003,
         "cls": "i",
         "name": "クラス認定 - I - Random",
@@ -4613,6 +4653,46 @@
         ]
     },
     {
+        "id": 50006,
+        "cls": "ii",
+        "name": "ずっと、夏！ Set",
+        "version": "Mate",
+        "is_duplicate_track_allowed": true,
+        "life": 30,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2227,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2077,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2451,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 50007,
         "cls": "ii",
         "name": "クラス認定 - Ⅱ - Random",
@@ -4711,6 +4791,46 @@
                 "charts": [
                     {
                         "song_id": 2580,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 50010,
+        "cls": "iii",
+        "name": "パズルゲーム Set",
+        "version": "Mate",
+        "is_duplicate_track_allowed": true,
+        "life": 50,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 0,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 1048,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2308,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2823,
                         "difficulty": "MAS"
                     }
                 ]
@@ -4823,6 +4943,46 @@
         ]
     },
     {
+        "id": 50014,
+        "cls": "iv",
+        "name": "High Speed Set",
+        "version": "Mate",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2515,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 551,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2844,
+                        "difficulty": "MAS"
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "id": 50015,
         "cls": "iv",
         "name": "クラス認定 - Ⅳ - Random",
@@ -4922,6 +5082,46 @@
                     {
                         "song_id": 2044,
                         "difficulty": "EXP"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": 50018,
+        "cls": "v",
+        "name": "みぞれヤナギ Set",
+        "version": "Mate",
+        "is_duplicate_track_allowed": true,
+        "life": 100,
+        "recovery_life": 0,
+        "clear_life": 1,
+        "damage_miss": 1,
+        "damage_attack": 1,
+        "damage_justice": 0,
+        "damage_jcrit": 0,
+        "tracks": [
+            {
+                "charts": [
+                    {
+                        "song_id": 2485,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2600,
+                        "difficulty": "MAS"
+                    }
+                ]
+            },
+            {
+                "charts": [
+                    {
+                        "song_id": 2579,
+                        "difficulty": "MAS"
                     }
                 ]
             }
@@ -5322,6 +5522,10 @@
                         "difficulty": "MAS"
                     },
                     {
+                        "song_id": 768,
+                        "difficulty": "MAS"
+                    },
+                    {
                         "song_id": 772,
                         "difficulty": "MAS"
                     },
@@ -5351,10 +5555,6 @@
                     },
                     {
                         "song_id": 2344,
-                        "difficulty": "MAS"
-                    },
-                    {
-                        "song_id": 768,
                         "difficulty": "MAS"
                     },
                     {
