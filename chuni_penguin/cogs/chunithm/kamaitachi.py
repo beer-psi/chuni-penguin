@@ -26,7 +26,7 @@ from chuni_penguin.config import config
 from chuni_penguin.context import PenguinContext
 from chuni_penguin.database import Cookie
 from chuni_penguin.logging import logged_prefix_command, logger
-from chuni_penguin.types import ComboLamp, PersonalBest, RecentScore
+from chuni_penguin.types import ClearLamp, ComboLamp, PersonalBest, RecentScore
 
 if TYPE_CHECKING:
     from chuni_penguin.bot import ChuniBot
@@ -291,6 +291,43 @@ class KamaitachiCog(commands.Cog, name="Kamaitachi"):
                         or (
                             pb.combo_lamp == ComboLamp.full_combo
                             and pb.judgements.miss > 0
+                        )
+                        or (
+                            pb.clear_lamp == ClearLamp.catastrophy
+                            and (
+                                pb.judgements.miss
+                                + pb.judgements.attack
+                                + pb.judgements.justice
+                            )
+                            >= 10
+                        )
+                        or (
+                            pb.clear_lamp == ClearLamp.absolute
+                            and (
+                                pb.judgements.miss
+                                + pb.judgements.attack
+                                + pb.judgements.justice
+                            )
+                            >= 50
+                        )
+                        or (
+                            pb.clear_lamp == ClearLamp.brave
+                            and (
+                                pb.judgements.miss
+                                + pb.judgements.attack
+                                + pb.judgements.justice
+                            )
+                            >= 150
+                        )
+                        or (
+                            pb.clear_lamp == ClearLamp.hard
+                            and (
+                                pb.judgements.miss
+                                + pb.judgements.attack
+                                + pb.judgements.justice
+                            )
+                            >= 300
+                            and pb.judgements.miss >= 20
                         )
                     ):
                         pb.judgements = None
