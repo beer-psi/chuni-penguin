@@ -27,6 +27,7 @@ from chuni_penguin.calculation import (
     calculate_rating,
     calculate_score_deduction_per_judgement,
     calculate_score_for_rating,
+    calculate_teampoint,
 )
 from chuni_penguin.config import config
 from chuni_penguin.constants import MAX_DIFFICULTY
@@ -340,7 +341,21 @@ class ToolsCog(commands.Cog, name="Tools"):
         score: Range[int, 0, 1010000],
         chart_constant: Optional[float] = None,
     ):
-        """Calculate rating and over power from score and chart constant.
+        """Calculate rating, overpower and team points from score and chart constant.
+
+        The team point formula for a full credit is:
+
+        ```
+        ceil(
+
+            ceil(sum(track_points) * ticket_multiplier)
+
+            * team_boost_multiplier
+
+            * daily_bonus_multiplier
+
+        )
+        ```
 
         Parameters
         ----------
@@ -365,9 +380,11 @@ class ToolsCog(commands.Cog, name="Tools"):
 
         if chart_constant is None:
             rating = calculate_rating(score, 0)
+            teampoint = None
             const_text = ""
         else:
             rating = calculate_rating(score, chart_constant)
+            teampoint = calculate_teampoint(score, chart_constant)
             const_text = f" on a chart with chart constant **{chart_constant}**"
 
         sign = ""
@@ -411,6 +428,9 @@ class ToolsCog(commands.Cog, name="Tools"):
 
                 res += f"\n  - FC: **{overpower_fc} / {overpower_max_floored} ({overpower_fc_percentage}%)**"
                 res += f"\n  - Non-FC: **{overpower_base} / {overpower_max_floored} ({overpower_base_percentage}%)**"
+
+        if teampoint is not None:
+            res += f"\n- Team point: {teampoint} points"
 
         await ctx.reply(res, mention_author=False)
 

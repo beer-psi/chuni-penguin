@@ -10,6 +10,7 @@ from .rating import (
     calculate_rating,
     calculate_score_for_rating,
 )
+from .teampoint import calculate_teampoint
 
 __all__ = (
     "calculate_border",
@@ -21,4 +22,5 @@ __all__ = (
     "calculate_rating",
     "calculate_score_deduction_per_judgement",
     "calculate_score_for_rating",
+    "calculate_teampoint",
 )
