@@ -22384,7 +22384,13 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 150703,
-        "aliases": [],
+        "aliases": [
+            "Garakuta Doll Play remix",
+            "gdp remix",
+            "garakuta remix",
+            "sasakuta",
+            "gdp sasakure"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -22416,7 +22422,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01153",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "EXP",
@@ -22432,7 +22441,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01153",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -22448,7 +22460,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01153",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -204306,13 +204321,7 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 150703,
-        "aliases": [
-            "Garakuta Doll Play remix",
-            "gdp remix",
-            "garakuta remix",
-            "sasakuta",
-            "gdp sasakure"
-        ],
+        "aliases": [],
         "charts": [
             {
                 "difficulty": "WE",
