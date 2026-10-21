@@ -490,7 +490,7 @@ def render_b30(
     current_rating: float | None = None,
     user_config: "UserConfig | None" = None,
     uncross_verse: bool = False,
-    theme: Literal["xverse", "default"] = "default",
+    theme: Literal["xverse", "xversex", "default"] = "default",
     output_format: str = "PNG",
     output_params: dict[str, Any] | None = None,
 ):

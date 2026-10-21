@@ -19,7 +19,7 @@ from chuni_penguin.adapters.utils import (
     calculate_ongeki_rating_breakdown,
     process_records,
 )
-from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION, ChunithmVersion
+from chuni_penguin.constants import CURRENT_CHUNITHM_VERSION_KAMAITACHI, ChunithmVersion
 from chuni_penguin.database import Chart as DBChart
 from chuni_penguin.types import (
     CourseRecord,
@@ -375,7 +375,7 @@ class KamaitachiAdapter(NetworkAdapter):
             new: list[PersonalBest] = []
 
             for pb in pbs:
-                if pb.song.version == CURRENT_CHUNITHM_VERSION:
+                if pb.song.version == CURRENT_CHUNITHM_VERSION_KAMAITACHI:
                     if len(new) < 20:
                         new.append(pb)
                 elif len(best) < 30:
@@ -406,7 +406,9 @@ class KamaitachiAdapter(NetworkAdapter):
             )
 
         if rating_type in (RatingType.ongeki, RatingType.ongeki_naive):
-            return calculate_ongeki_rating_breakdown(rating_type, pbs)
+            return calculate_ongeki_rating_breakdown(
+                rating_type, pbs, CURRENT_CHUNITHM_VERSION_KAMAITACHI
+            )
 
         msg = f"Unknown RatingType variant {rating_type!r}"
         raise RuntimeError(msg)
