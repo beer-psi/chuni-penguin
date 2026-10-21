@@ -266,6 +266,7 @@ async def process_records[T: Score](
 def calculate_ongeki_rating_breakdown(
     rating_type: Literal[RatingType.ongeki, RatingType.ongeki_naive],
     pbs: list[PersonalBest],
+    new_version: str = CURRENT_CHUNITHM_VERSION,
 ) -> RatingBreakdown:
     platinum_pbs = [
         pb
@@ -299,7 +300,7 @@ def calculate_ongeki_rating_breakdown(
         new = []
 
         for pb in pbs:
-            if pb.song.version == CURRENT_CHUNITHM_VERSION:
+            if pb.song.version == new_version:
                 if len(new) < 10:
                     new.append(pb)
             elif len(best) < 50:

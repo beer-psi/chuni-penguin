@@ -918,7 +918,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 record_slots,
                 new_records,
                 new_record_slots,
-                "default",
+                "xversex" if kamaitachi else "default",
                 classic=classic,
             )
 
@@ -932,7 +932,7 @@ class RecordsCog(commands.Cog, name="Records"):
         record_slots: int,
         new_records: list[PersonalBest] | None,
         new_record_slots: int,
-        theme: Literal["default", "xverse"],
+        theme: Literal["default", "xverse", "xversex"],
         *,
         classic: bool,
     ):
@@ -957,7 +957,7 @@ class RecordsCog(commands.Cog, name="Records"):
 
             return
 
-        uncross_verse = self._random.random() <= 0.1
+        uncross_verse = theme in ("xverse", "xversex") and self._random.random() <= 0.1
 
         if uncross_verse:
             await self.bot.database.user_found_easter_egg(

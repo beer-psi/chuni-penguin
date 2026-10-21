@@ -442,7 +442,9 @@ async def merge_options(
                 chart["flick"] = chart.get("flick", 0)
                 chart["charter"] = chart.get("charter")
                 chart["version"] = chart.get("version")
-                chart["available"] = chart.get("available", is_international and new_song["available"])
+                chart["available"] = chart.get(
+                    "available", is_international and new_song["available"]
+                )
                 chart["tachi_chart_id"] = chart.get("tachi_chart_id")
                 chart["sdvxin"] = chart.get("sdvxin")
 
