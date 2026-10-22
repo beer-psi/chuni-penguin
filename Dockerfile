@@ -33,7 +33,7 @@ RUN rm -rf packages/penguin-native/target
 RUN python -m compileall -b -x 'database/alembic/versions' . \
     && find . -type f -not -path "*database/alembic/versions*" -name '*.py' -exec rm {} \;
 
-FROM python:${PYTHON_BUILD_VERSION}-alpine
+FROM ghcr.io/astral-sh/uv:0.13.5-python${PYTHON_BUILD_VERSION}-alpine
 ARG PYTHON_BUILD_VERSION
 
 # Needed for fixing permissions of files created by Docker:
