@@ -918,7 +918,7 @@ class RecordsCog(commands.Cog, name="Records"):
                 record_slots,
                 new_records,
                 new_record_slots,
-                "xversex" if kamaitachi else "default",
+                "xversex" if isinstance(client, KamaitachiAdapter) else "default",
                 classic=classic,
             )
 
