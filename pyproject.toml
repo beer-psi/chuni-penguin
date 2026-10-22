@@ -67,6 +67,11 @@ managed = true
 package = false
 no-sources = false
 # index-url = "https://mirrors.sustech.edu.cn/pypi/web/simple"
+exclude-newer = "14 days"
+
+[tool.uv.exclude-newer-package]
+certifi = false
+discord-ext-songbird = false
 
 [tool.uv.pip]
 universal = true
