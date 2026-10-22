@@ -196309,7 +196309,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 162545,
-        "aliases": [],
+        "aliases": [
+            "Koiseyo Otome"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -196508,7 +196510,8 @@
         "is_hidden_on_chuninet": false,
         "duration": 99890,
         "aliases": [
-            "Kuukirikigaku Shoujo to Shounen no Uta"
+            "Kuukirikigaku Shoujo to Shounen no Uta",
+            "kuuki rikigaku"
         ],
         "charts": [
             {
@@ -197654,8 +197657,8 @@
         "is_hidden_on_chuninet": false,
         "duration": 125142,
         "aliases": [
-            "sakuranbo kisu bakuhatsu da mo~n~",
-            "sakuranbo kiss"
+            "sakuranbo kiss",
+            "Sakuranbo Kiss ~Bakuhatsu da mo~n~"
         ],
         "charts": [
             {
@@ -197755,7 +197758,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 113300,
-        "aliases": [],
+        "aliases": [
+            "Happy Lucky Chappy"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -197854,7 +197859,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 93248,
-        "aliases": [],
+        "aliases": [
+            "bbbb"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -197953,7 +197960,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 93181,
-        "aliases": [],
+        "aliases": [
+            "Ashita no Watashi ni Sachi Are",
+            "Good luck to me tomorrow"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198052,7 +198062,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 160153,
-        "aliases": [],
+        "aliases": [
+            "Daidaidaidaidaikirai"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198156,7 +198168,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 133066,
-        "aliases": [],
+        "aliases": [
+            "Ohenji mada kana? Ojisan koubun!",
+            "STILL WAITING FOR YOUR REPLY-OJISAN STYLE TEXT",
+            "ojisan koubun"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198279,7 +198295,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 139317,
-        "aliases": [],
+        "aliases": [
+            "Telepathy"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198402,7 +198420,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 147600,
-        "aliases": [],
+        "aliases": [
+            "Saishuu Kichiku Imouto Flandre S (Haraguchi Sasuke wa Kichiku nano ka? remix)",
+            "Flandre S Haraguchi Sasuke remix"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198501,7 +198522,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 133138,
-        "aliases": [],
+        "aliases": [
+            "Kimi to no Tetote Connect"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198600,7 +198623,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 145000,
-        "aliases": [],
+        "aliases": [
+            "vehicle zero",
+            "Ling hao cheliang",
+            "Reigou Sharyou"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198704,7 +198731,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 137821,
-        "aliases": [],
+        "aliases": [
+            "RE:UNION"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198803,7 +198832,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 97364,
-        "aliases": [],
+        "aliases": [
+            "Eiyuu no Akashi",
+            "Proof of a Hero"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198902,7 +198934,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 146709,
-        "aliases": [],
+        "aliases": [
+            "Hakkou ni Hibiku Seimei no Sakebi"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199101,7 +199135,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 138400,
-        "aliases": [],
+        "aliases": [
+            "soumetsu"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199304,7 +199340,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 161428,
-        "aliases": [],
+        "aliases": [
+            "Watashitachi wa, Hana ni Naru"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199606,7 +199644,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 154951,
-        "aliases": [],
+        "aliases": [
+            "Tachyon"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199699,7 +199739,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 140903,
-        "aliases": [],
+        "aliases": [
+            "Hinata de Wachacha"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199798,7 +199840,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 145454,
-        "aliases": [],
+        "aliases": [
+            "Hakuchuu Netsuen"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199897,7 +199941,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 146594,
-        "aliases": [],
+        "aliases": [
+            "Zettai Isshou Kore de Ikiteiku!"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199996,7 +200042,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 141000,
-        "aliases": [],
+        "aliases": [
+            "Chu, Ochuusha."
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200095,7 +200143,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 157856,
-        "aliases": [],
+        "aliases": [
+            "Chuni Penguin no Theme ~Hidarishita yori Ai wo Komete~",
+            "Chuni Penguin no Theme"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200194,7 +200245,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 168430,
-        "aliases": [],
+        "aliases": [
+            "Shaoshao Ranran",
+            "Xiaoxiao Lanlan"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200293,7 +200347,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 149538,
-        "aliases": [],
+        "aliases": [
+            "Idai naru Akuma wa Jitsu wa Daitenshi Patora-chan-sama na no da!",
+            "Patra-chan-sama"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200397,7 +200454,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 126451,
-        "aliases": [],
+        "aliases": [
+            "Uni",
+            "Sea Urchin"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200496,7 +200556,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 159840,
-        "aliases": [],
+        "aliases": [
+            "uni no uta remix",
+            "Uni no Uta (Nanoru Naganai Remix)"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200589,7 +200652,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 154500,
-        "aliases": [],
+        "aliases": [
+            "Tokimeki Meteor Strike"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200688,7 +200753,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 163285,
-        "aliases": [],
+        "aliases": [
+            "Maku wo Orosou, Parade e"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -201481,7 +201548,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 154090,
-        "aliases": [],
+        "aliases": [
+            "Ansare Stellar"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -202174,7 +202243,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 160800,
-        "aliases": [],
+        "aliases": [
+            "Kotoba no Haito"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -202470,7 +202541,8 @@
         "is_hidden_on_chuninet": false,
         "duration": 144324,
         "aliases": [
-            "Kikikaitai"
+            "Kikikaitai",
+            "Kiki Kaitai"
         ],
         "charts": [
             {
@@ -202568,7 +202640,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 130875,
-        "aliases": [],
+        "aliases": [
+            "Fuwapachi Seiun PTL-3",
+            "Fuwapachi Nebula PTL-3",
+            "PTL-3"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -202766,7 +202842,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 142285,
-        "aliases": [],
+        "aliases": [
+            "Inochi Script"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -203166,7 +203244,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 164545,
-        "aliases": [],
+        "aliases": [
+            "ai scream",
+            "AISCREAM!"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
