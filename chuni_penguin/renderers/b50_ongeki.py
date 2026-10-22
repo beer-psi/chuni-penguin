@@ -324,7 +324,7 @@ def _render_b30_template(
 
     temp_cached_file = cached_file.with_suffix(f".{secrets.token_urlsafe(16)}")
 
-    b30_image.save(temp_cached_file, lossless=True)
+    b30_image.save(temp_cached_file, format="WEBP", lossless=True)
     temp_cached_file.replace(cached_file)
 
     return row_num, new_row_num, b30_image

@@ -1,4 +1,5 @@
 import binascii
+import secrets
 from contextlib import closing
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -268,7 +269,10 @@ def _render_b30_template(
             font=inter_40_bold,
         )
 
-    b30_image.save(cached_file, lossless=True)
+    temp_cached_file = cached_file.with_suffix(f".{secrets.token_urlsafe(16)}")
+
+    b30_image.save(temp_cached_file, format="WEBP", lossless=True)
+    temp_cached_file.replace(cached_file)
 
     return b30_image
 
