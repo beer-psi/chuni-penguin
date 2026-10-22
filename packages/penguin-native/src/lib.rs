@@ -1,5 +1,6 @@
 use crc::Algorithm;
-use pyo3::{prelude::*, sync::PyOnceLock};
+use pyo3::prelude::*;
+use std::sync::OnceLock;
 
 const CRC_32_OGG: crc::Algorithm<u32> = Algorithm {
     width: 32,
@@ -11,12 +12,12 @@ const CRC_32_OGG: crc::Algorithm<u32> = Algorithm {
     check: 0x89a1897f,
     residue: 0x00000000,
 };
-static CRC: PyOnceLock<crc::Crc<u32>> = PyOnceLock::new();
+static CRC: OnceLock<crc::Crc<u32>> = OnceLock::new();
 
 #[pyfunction]
 #[pyo3(signature = (data, init = 0))]
 fn crc32_ogg(data: &[u8], init: u32) -> u32 {
-    let crc = Python::attach(|py| CRC.get_or_init(py, || crc::Crc::<u32>::new(&CRC_32_OGG)));
+    let crc = CRC.get_or_init(|| crc::Crc::<u32>::new(&CRC_32_OGG));
     let mut digest = crc.digest_with_initial(init);
 
     digest.update(data);

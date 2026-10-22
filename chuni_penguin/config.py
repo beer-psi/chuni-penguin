@@ -168,9 +168,8 @@ def config_dec_hook(ty: type, obj: Any):
     raise NotImplementedError(msg)
 
 
-class Config:
+class ConfigSnapshot:
     __slots__ = (
-        "_path",
         "bot",
         "credentials",
         "dangerous",
@@ -181,13 +180,9 @@ class Config:
     )
 
     def __init__(self, path: "str | Path") -> None:
-        self._path = path
-        self.reload()
-
-    def reload(self):
         cfg = ConfigParser()
 
-        cfg.read(self._path)
+        cfg.read(path)
 
         self.bot = msgspec.convert(
             cfg["bot"], type=BotConfig, strict=False, dec_hook=config_dec_hook
@@ -223,6 +218,32 @@ class Config:
             )
         else:
             self.seeds = LocalSeedsConfig(Path("chuni_penguin/database/seeds"))
+
+
+class Config:
+    if TYPE_CHECKING:
+        bot: BotConfig
+        web: WebConfig
+        credentials: CredentialsConfig
+        icons: IconsConfig
+        legal: LegalConfig
+        dangerous: DangerousConfig
+        seeds: LocalSeedsConfig | GitSeedsConfig
+
+    __slots__ = (
+        "_path",
+        "_snapshot",
+    )
+
+    def __init__(self, path: "str | Path") -> None:
+        self._path = path
+        self._snapshot = ConfigSnapshot(path)
+
+    def reload(self):
+        self._snapshot = ConfigSnapshot(self._path)
+
+    def __getattr__(self, name: str, /) -> Any:
+        return getattr(self._snapshot, name)
 
 
 config = Config(Path(__file__).parent.parent / "bot.ini")

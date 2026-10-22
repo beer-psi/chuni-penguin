@@ -1,4 +1,5 @@
 import binascii
+import secrets
 from contextlib import closing
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -16,29 +17,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from chuni_penguin.database import UserConfig
-
-NOTO_SANS_JP_24 = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 24
-)
-NOTO_SANS_JP_24_BOLD = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 24
-)
-NOTO_SANS_JP_28_MEDIUM = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Medium.ttf", 28
-)
-NOTO_SANS_32_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "NotoSans-Bold.ttf", 32)
-NOTO_SANS_JP_32_BOLD = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 32
-)
-NOTO_SANS_JP_40_BOLD = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 40
-)
-NOTO_SANS_JP_64_BOLD = ImageFont.truetype(
-    ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 64
-)
-INTER_32 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Regular.ttf", 32)
-INTER_40_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 40)
-INTER_44_BOLD = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 44)
 
 B30_IMAGE_WIDTH = 1872
 B30_HEADER_HEIGHT = 220
@@ -250,29 +228,31 @@ def _render_b30_template(
             b30_image = _paste_alpha_composite(b30_image, im, (0, 1870))
 
     b30_draw = ImageDraw.Draw(b30_image)
+    inter_32 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Regular.ttf", 32)
+    inter_40_bold = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 40)
 
     # draw the text "RATING"
     b30_draw.text(
         (790, 22),
         rating_title,
         fill="#DDDDDD",
-        font=INTER_32,
+        font=inter_32,
     )
 
     # draw the credits
     b30_draw.text(
-        (30, b30_image.height - 57), footer_text, fill="#DDDDDD", font=INTER_32
+        (30, b30_image.height - 57), footer_text, fill="#DDDDDD", font=inter_32
     )
 
     # determine the size of invite link to properly right-align it
-    invite_link_text_length = b30_draw.textlength(invite_link, INTER_32)
+    invite_link_text_length = b30_draw.textlength(invite_link, inter_32)
 
     # draw the invite link
     b30_draw.text(
         (b30_image.width - 30 - invite_link_text_length, b30_image.height - 57),
         invite_link,
         fill="#DDDDDD",
-        font=INTER_32,
+        font=inter_32,
     )
 
     if new_record_slots is not None:
@@ -280,16 +260,19 @@ def _render_b30_template(
             (40, 316),
             "OLD CHARTS",
             fill="#FFFFFF",
-            font=INTER_40_BOLD,
+            font=inter_40_bold,
         )
         b30_draw.text(
             (40, 1886),
             "NEW CHARTS",
             fill="#FFFFFF",
-            font=INTER_40_BOLD,
+            font=inter_40_bold,
         )
 
-    b30_image.save(cached_file, lossless=True)
+    temp_cached_file = cached_file.with_suffix(f".{secrets.token_urlsafe(16)}")
+
+    b30_image.save(temp_cached_file, format="WEBP", lossless=True)
+    temp_cached_file.replace(cached_file)
 
     return b30_image
 
@@ -348,14 +331,32 @@ def _render_b30_entry(
             b30_image.paste(jacket, (x + 10, y + 60))
 
     b30_draw = ImageDraw.Draw(b30_image)
+    noto_sans_jp_24 = ImageFont.truetype(
+        ASSETS_DIR / "fonts" / "NotoSansJP-Regular.ttf", 24
+    )
+    noto_sans_jp_24_bold = ImageFont.truetype(
+        ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 24
+    )
+    noto_sans_jp_28_medium = ImageFont.truetype(
+        ASSETS_DIR / "fonts" / "NotoSansJP-Medium.ttf", 28
+    )
+    noto_sans_32_bold = ImageFont.truetype(
+        ASSETS_DIR / "fonts" / "NotoSans-Bold.ttf", 32
+    )
+    noto_sans_jp_32_bold = ImageFont.truetype(
+        ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 32
+    )
+    noto_sans_jp_40_bold = ImageFont.truetype(
+        ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 40
+    )
 
     # if the title doesn't fit the b30 entry rectangle, shorten it until it fits.
     title = record.song.title
-    title_length = b30_draw.textlength(title, NOTO_SANS_JP_32_BOLD)
+    title_length = b30_draw.textlength(title, noto_sans_jp_32_bold)
 
     while title_length > B30_ENTRY_WIDTH - 25:
         title = title[:-1]
-        title_length = b30_draw.textlength(title + "...", NOTO_SANS_JP_32_BOLD)
+        title_length = b30_draw.textlength(title + "...", noto_sans_jp_32_bold)
 
     # draw the title
     b30_draw.text(
@@ -363,9 +364,9 @@ def _render_b30_entry(
         title + ("..." if title != record.song.title else ""),
         fill="#FFFFFF",
         font=(
-            NOTO_SANS_JP_32_BOLD
+            noto_sans_jp_32_bold
             if record.song.id != 2831  # Street - χρόνος
-            else NOTO_SANS_32_BOLD
+            else noto_sans_32_bold
         ),
     )
 
@@ -374,7 +375,7 @@ def _render_b30_entry(
         (x + 132, y + 50),
         f"{record.score:,}",
         fill="#FFFFFF",
-        font=NOTO_SANS_JP_32_BOLD,
+        font=noto_sans_jp_32_bold,
     )
 
     # draw the lamps
@@ -383,11 +384,11 @@ def _render_b30_entry(
         (x + 132, y + 90),
         rank_lamp,
         fill="#DDDDDD",
-        font=NOTO_SANS_JP_24,
+        font=noto_sans_jp_24,
     )
 
     if record.combo_lamp != ComboLamp.none:
-        rank_lamp_width = b30_draw.textlength(rank_lamp + " ", NOTO_SANS_JP_24)
+        rank_lamp_width = b30_draw.textlength(rank_lamp + " ", noto_sans_jp_24)
 
         if record.combo_lamp == ComboLamp.all_justice_critical:
             combo_lamp = "[AJC]"
@@ -406,7 +407,7 @@ def _render_b30_entry(
             (x + 132 + rank_lamp_width, y + 90),
             combo_lamp,
             fill=combo_lamp_color,
-            font=NOTO_SANS_JP_24_BOLD,
+            font=noto_sans_jp_24_bold,
         )
 
     # draw the timestamp and judgements if available
@@ -442,16 +443,16 @@ def _render_b30_entry(
         (x + 10, y + 176),
         extra_info,
         fill="#BBBBBB",
-        font=NOTO_SANS_JP_24,
+        font=noto_sans_jp_24,
     )
 
     # draw the rank of the b30 entry
-    rank_text_length = b30_draw.textlength(f"#{i + 1}", NOTO_SANS_JP_28_MEDIUM)
+    rank_text_length = b30_draw.textlength(f"#{i + 1}", noto_sans_jp_28_medium)
     b30_draw.text(
         (x + B30_ENTRY_WIDTH - 10 - rank_text_length, y + 174),
         f"#{i + 1}",
         fill="#FFFFFF",
-        font=NOTO_SANS_JP_28_MEDIUM,
+        font=noto_sans_jp_28_medium,
     )
 
     # draw the internal level
@@ -459,12 +460,12 @@ def _render_b30_entry(
         (x + 132, y + 128),
         f"{record.chart.internal_level:.1f}",
         fill="#FFFFFF",
-        font=NOTO_SANS_JP_28_MEDIUM,
+        font=noto_sans_jp_28_medium,
     )
 
     # draw the rating value
     rating_text_length = b30_draw.textlength(
-        f"{record.rating:.2f}", NOTO_SANS_JP_40_BOLD
+        f"{record.rating:.2f}", noto_sans_jp_40_bold
     )
     rating_value_color = "#FFFFFF"
 
@@ -475,7 +476,7 @@ def _render_b30_entry(
         (x + B30_ENTRY_WIDTH - 10 - rating_text_length, y + 118),
         f"{record.rating:.2f}",
         fill=rating_value_color,
-        font=NOTO_SANS_JP_40_BOLD,
+        font=noto_sans_jp_40_bold,
     )
 
 
@@ -522,14 +523,20 @@ def render_b30(
         logo_path=logo_path,
     )
     b30_draw = ImageDraw.Draw(b30_image)
+    noto_sans_jp_64_bold = ImageFont.truetype(
+        ASSETS_DIR / "fonts" / "NotoSansJP-Bold.ttf", 64
+    )
+    inter_32 = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Regular.ttf", 32)
+    inter_40_bold = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 40)
+    inter_44_bold = ImageFont.truetype(ASSETS_DIR / "fonts" / "Inter_28pt-Bold.ttf", 44)
 
     # draw player name
-    player_name_length = b30_draw.textlength(player_name, NOTO_SANS_JP_64_BOLD)
+    player_name_length = b30_draw.textlength(player_name, noto_sans_jp_64_bold)
     b30_draw.text(
         (390 - player_name_length / 2, 64),
         player_name,
         fill="#FFFFFF",
-        font=NOTO_SANS_JP_64_BOLD,
+        font=noto_sans_jp_64_bold,
     )
 
     # get rating values
@@ -609,19 +616,19 @@ def render_b30(
     b30_draw = ImageDraw.Draw(b30_image)
 
     # determine the size of raw rating text to properly right-align it
-    raw_rating_text_length = b30_draw.textlength(raw_rating_text, INTER_32)
+    raw_rating_text_length = b30_draw.textlength(raw_rating_text, inter_32)
 
     # draw the raw rating
     b30_draw.text(
         (1090 - raw_rating_text_length, 162),
         raw_rating_text,
         fill="#DDDDDD",
-        font=INTER_32,
+        font=inter_32,
     )
 
     # determine the size of the timestamp to properly right-align it
     updated_text = f"{datetime.now(UTC).strftime('%Y-%m-%d')}"
-    updated_length = b30_draw.textlength(updated_text, INTER_40_BOLD)
+    updated_length = b30_draw.textlength(updated_text, inter_40_bold)
 
     # draw the timestamp
     b30_draw.text(
@@ -631,7 +638,7 @@ def render_b30(
         ),
         updated_text,
         fill="#DDDDDD",
-        font=INTER_40_BOLD,
+        font=inter_40_bold,
     )
 
     # best30
@@ -657,7 +664,7 @@ def render_b30(
             (420, 314),
             f"{average:.4f}",
             fill="#000000",
-            font=INTER_44_BOLD,
+            font=inter_44_bold,
         )
 
         # draw n20 average
@@ -665,7 +672,7 @@ def render_b30(
             (420, 1884),
             f"{new_average:.4f}",
             fill="#000000",
-            font=INTER_44_BOLD,
+            font=inter_44_bold,
         )
 
         for i, record in enumerate(new_records):
