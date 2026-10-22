@@ -12543,8 +12543,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "13+",
-                "const": 13.8,
+                "level": "14",
+                "const": 14.0,
                 "maxcombo": 1904,
                 "tap": 1212,
                 "hold": 253,
@@ -13421,7 +13421,7 @@
             {
                 "difficulty": "ULT",
                 "level": "14+",
-                "const": 14.6,
+                "const": 14.5,
                 "maxcombo": 2250,
                 "tap": 1054,
                 "hold": 38,
@@ -13848,8 +13848,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "12+",
-                "const": 12.6,
+                "level": "13",
+                "const": 13.0,
                 "maxcombo": 1419,
                 "tap": 789,
                 "hold": 180,
@@ -21602,7 +21602,7 @@
             {
                 "difficulty": "ULT",
                 "level": "14+",
-                "const": 14.7,
+                "const": 14.8,
                 "maxcombo": 2035,
                 "tap": 1024,
                 "hold": 137,
@@ -28314,8 +28314,8 @@
             },
             {
                 "difficulty": "ULT",
-                "level": "14+",
-                "const": 14.9,
+                "level": "15",
+                "const": 15.0,
                 "maxcombo": 2079,
                 "tap": 1366,
                 "hold": 145,
@@ -43760,8 +43760,8 @@
             },
             {
                 "difficulty": "ADV",
-                "level": "8",
-                "const": 8.0,
+                "level": "8+",
+                "const": 8.5,
                 "maxcombo": 927,
                 "tap": 582,
                 "hold": 72,
@@ -66965,8 +66965,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "12",
-                "const": 12.3,
+                "level": "12+",
+                "const": 12.5,
                 "maxcombo": 1419,
                 "tap": 713,
                 "hold": 104,
@@ -71459,8 +71459,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "12",
-                "const": 12.1,
+                "level": "12+",
+                "const": 12.5,
                 "maxcombo": 1717,
                 "tap": 815,
                 "hold": 84,
@@ -73997,8 +73997,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "11",
-                "const": 11.2,
+                "level": "11+",
+                "const": 11.5,
                 "maxcombo": 1810,
                 "tap": 876,
                 "hold": 49,
@@ -80713,8 +80713,8 @@
             },
             {
                 "difficulty": "ADV",
-                "level": "6",
-                "const": 6.0,
+                "level": "7",
+                "const": 7.0,
                 "maxcombo": 690,
                 "tap": 281,
                 "hold": 166,
@@ -94430,8 +94430,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "12",
-                "const": 12.4,
+                "level": "12+",
+                "const": 12.5,
                 "maxcombo": 1310,
                 "tap": 725,
                 "hold": 77,
@@ -122376,8 +122376,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14+",
-                "const": 14.9,
+                "level": "15",
+                "const": 15.0,
                 "maxcombo": 2168,
                 "tap": 1203,
                 "hold": 569,
@@ -124535,7 +124535,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.0,
+                "const": 15.1,
                 "maxcombo": 1850,
                 "tap": 1228,
                 "hold": 122,
@@ -129381,8 +129381,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "11",
-                "const": 11.0,
+                "level": "11+",
+                "const": 11.5,
                 "maxcombo": 1515,
                 "tap": 818,
                 "hold": 239,
@@ -137527,8 +137527,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14+",
-                "const": 14.9,
+                "level": "15",
+                "const": 15.0,
                 "maxcombo": 2906,
                 "tap": 1400,
                 "hold": 238,
@@ -158919,7 +158919,7 @@
             {
                 "difficulty": "MAS",
                 "level": "12",
-                "const": 12.2,
+                "const": 12.3,
                 "maxcombo": 1589,
                 "tap": 584,
                 "hold": 179,
@@ -165923,7 +165923,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.2,
+                "const": 15.3,
                 "maxcombo": 2280,
                 "tap": 1351,
                 "hold": 192,
@@ -173385,7 +173385,7 @@
             {
                 "difficulty": "EXP",
                 "level": "14",
-                "const": 14.3,
+                "const": 14.2,
                 "maxcombo": 2466,
                 "tap": 1030,
                 "hold": 372,
@@ -173404,7 +173404,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15+",
-                "const": 15.5,
+                "const": 15.6,
                 "maxcombo": 3000,
                 "tap": 1376,
                 "hold": 256,
@@ -175988,8 +175988,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.5,
                 "maxcombo": 2179,
                 "tap": 1201,
                 "hold": 409,
@@ -179226,7 +179226,7 @@
             {
                 "difficulty": "MAS",
                 "level": "13+",
-                "const": 13.7,
+                "const": 13.9,
                 "maxcombo": 1615,
                 "tap": 850,
                 "hold": 101,
@@ -179804,8 +179804,8 @@
             },
             {
                 "difficulty": "ULT",
-                "level": "14+",
-                "const": 14.5,
+                "level": "14",
+                "const": 14.4,
                 "maxcombo": 2004,
                 "tap": 973,
                 "hold": 228,
@@ -181140,7 +181140,7 @@
             {
                 "difficulty": "MAS",
                 "level": "13",
-                "const": 13.0,
+                "const": 13.1,
                 "maxcombo": 2176,
                 "tap": 752,
                 "hold": 175,
@@ -181239,7 +181239,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.0,
+                "const": 14.1,
                 "maxcombo": 2152,
                 "tap": 1172,
                 "hold": 166,
@@ -181650,8 +181650,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14",
-                "const": 14.3,
+                "level": "14+",
+                "const": 14.5,
                 "maxcombo": 1667,
                 "tap": 813,
                 "hold": 76,
@@ -182061,8 +182061,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.5,
                 "maxcombo": 2137,
                 "tap": 858,
                 "hold": 211,
@@ -182147,7 +182147,7 @@
             {
                 "difficulty": "EXP",
                 "level": "14",
-                "const": 14.4,
+                "const": 14.3,
                 "maxcombo": 2624,
                 "tap": 1077,
                 "hold": 317,
@@ -182166,7 +182166,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15+",
-                "const": 15.6,
+                "const": 15.5,
                 "maxcombo": 3888,
                 "tap": 1582,
                 "hold": 429,
@@ -182577,7 +182577,7 @@
             {
                 "difficulty": "MAS",
                 "level": "13+",
-                "const": 13.7,
+                "const": 13.5,
                 "maxcombo": 2304,
                 "tap": 870,
                 "hold": 97,
@@ -183287,7 +183287,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.0,
+                "const": 14.1,
                 "maxcombo": 1674,
                 "tap": 677,
                 "hold": 124,
@@ -183490,7 +183490,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.1,
+                "const": 14.0,
                 "maxcombo": 1815,
                 "tap": 717,
                 "hold": 61,
@@ -183590,8 +183590,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14+",
-                "const": 14.5,
+                "level": "14",
+                "const": 14.4,
                 "maxcombo": 1276,
                 "tap": 628,
                 "hold": 240,
@@ -184591,7 +184591,7 @@
             {
                 "difficulty": "EXP",
                 "level": "13+",
-                "const": 13.8,
+                "const": 13.9,
                 "maxcombo": 1563,
                 "tap": 1047,
                 "hold": 222,
@@ -184610,7 +184610,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.3,
+                "const": 15.2,
                 "maxcombo": 2414,
                 "tap": 1456,
                 "hold": 214,
@@ -184923,8 +184923,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "15",
-                "const": 15.0,
+                "level": "14+",
+                "const": 14.9,
                 "maxcombo": 2670,
                 "tap": 1100,
                 "hold": 400,
@@ -185127,7 +185127,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.5,
+                "const": 14.7,
                 "maxcombo": 2380,
                 "tap": 1194,
                 "hold": 170,
@@ -185225,8 +185225,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14+",
-                "const": 14.9,
+                "level": "15",
+                "const": 15.0,
                 "maxcombo": 2131,
                 "tap": 853,
                 "hold": 463,
@@ -185312,7 +185312,7 @@
             {
                 "difficulty": "EXP",
                 "level": "14",
-                "const": 14.3,
+                "const": 14.4,
                 "maxcombo": 1982,
                 "tap": 1102,
                 "hold": 209,
@@ -185533,7 +185533,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.7,
+                "const": 14.5,
                 "maxcombo": 2330,
                 "tap": 1167,
                 "hold": 137,
@@ -185742,7 +185742,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.2,
+                "const": 14.3,
                 "maxcombo": 2211,
                 "tap": 1256,
                 "hold": 27,
@@ -185934,8 +185934,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "10+",
-                "const": 10.6,
+                "level": "11",
+                "const": 11.1,
                 "maxcombo": 1159,
                 "tap": 698,
                 "hold": 108,
@@ -186265,7 +186265,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15+",
-                "const": 15.6,
+                "const": 15.5,
                 "maxcombo": 4400,
                 "tap": 1714,
                 "hold": 137,
@@ -186328,8 +186328,8 @@
             },
             {
                 "difficulty": "ADV",
-                "level": "7",
-                "const": 7.0,
+                "level": "7+",
+                "const": 7.5,
                 "maxcombo": 1004,
                 "tap": 341,
                 "hold": 222,
@@ -186451,7 +186451,7 @@
             {
                 "difficulty": "EXP",
                 "level": "14+",
-                "const": 14.8,
+                "const": 14.7,
                 "maxcombo": 3500,
                 "tap": 1967,
                 "hold": 372,
@@ -187610,7 +187610,7 @@
             {
                 "difficulty": "MAS",
                 "level": "13+",
-                "const": 13.5,
+                "const": 13.7,
                 "maxcombo": 1265,
                 "tap": 655,
                 "hold": 30,
@@ -187629,7 +187629,7 @@
             {
                 "difficulty": "ULT",
                 "level": "14+",
-                "const": 14.7,
+                "const": 14.9,
                 "maxcombo": 1525,
                 "tap": 857,
                 "hold": 44,
@@ -188776,7 +188776,7 @@
             {
                 "difficulty": "MAS",
                 "level": "13+",
-                "const": 13.6,
+                "const": 13.8,
                 "maxcombo": 2329,
                 "tap": 1022,
                 "hold": 324,
@@ -188875,7 +188875,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14+",
-                "const": 14.5,
+                "const": 14.7,
                 "maxcombo": 1921,
                 "tap": 1023,
                 "hold": 57,
@@ -189791,8 +189791,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.6,
                 "maxcombo": 2231,
                 "tap": 1122,
                 "hold": 211,
@@ -190206,7 +190206,7 @@
             {
                 "difficulty": "MAS",
                 "level": "15",
-                "const": 15.1,
+                "const": 15.0,
                 "maxcombo": 2018,
                 "tap": 1322,
                 "hold": 86,
@@ -190510,8 +190510,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "15",
-                "const": 15.0,
+                "level": "14+",
+                "const": 14.9,
                 "maxcombo": 2157,
                 "tap": 1249,
                 "hold": 281,
@@ -190813,7 +190813,7 @@
             {
                 "difficulty": "MAS",
                 "level": "13+",
-                "const": 13.8,
+                "const": 13.5,
                 "maxcombo": 2105,
                 "tap": 643,
                 "hold": 131,
@@ -191079,7 +191079,7 @@
             {
                 "difficulty": "ADV",
                 "level": "10",
-                "const": 10.0,
+                "const": 10.2,
                 "maxcombo": 994,
                 "tap": 569,
                 "hold": 138,
@@ -191219,7 +191219,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.0,
+                "const": 14.2,
                 "maxcombo": 1887,
                 "tap": 622,
                 "hold": 99,
@@ -191939,7 +191939,7 @@
             {
                 "difficulty": "MAS",
                 "level": "14",
-                "const": 14.1,
+                "const": 14.0,
                 "maxcombo": 2118,
                 "tap": 942,
                 "hold": 72,
@@ -192146,8 +192146,8 @@
             },
             {
                 "difficulty": "MAS",
-                "level": "15",
-                "const": 15.0,
+                "level": "14+",
+                "const": 14.9,
                 "maxcombo": 2709,
                 "tap": 1515,
                 "hold": 154,
@@ -192234,8 +192234,8 @@
             },
             {
                 "difficulty": "EXP",
-                "level": "14",
-                "const": 14.4,
+                "level": "14+",
+                "const": 14.5,
                 "maxcombo": 2421,
                 "tap": 1234,
                 "hold": 212,
@@ -192320,8 +192320,8 @@
             },
             {
                 "difficulty": "ADV",
-                "level": "10",
-                "const": 10.0,
+                "level": "11",
+                "const": 11.1,
                 "maxcombo": 1315,
                 "tap": 662,
                 "hold": 260,
@@ -192340,7 +192340,7 @@
             {
                 "difficulty": "EXP",
                 "level": "14",
-                "const": 14.4,
+                "const": 14.3,
                 "maxcombo": 2084,
                 "tap": 1170,
                 "hold": 232,
