@@ -4,14 +4,10 @@ import functools
 import itertools
 import json
 import re
-from html import unescape
 
 import aiohttp
 import msgspec
-from selectolax.lexbor import LexborHTMLParser
 from structlog.stdlib import BoundLogger
-
-from chuni_penguin.converters import Level
 
 from .seeds import SEEDS_DIR, SeedsJSONEncoder
 
