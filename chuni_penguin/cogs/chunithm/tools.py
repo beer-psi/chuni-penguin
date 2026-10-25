@@ -1496,38 +1496,38 @@ class ToolsCog(commands.Cog, name="Tools"):
             if chart.difficulty == "WE":
                 end_index = chart.sdvxin_chart_view.end_index
 
-                bg_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bg.png"
-                data_url = f"https://sdvx.in/chunithm/end/obj/{data_key}{sdvxin_id}end{end_index}.png"
-                bar_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bar.png"
+                bg_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bg.webp"
+                data_url = f"https://sdvx.in/chunithm/end/obj/{data_key}{sdvxin_id}end{end_index}.webp"
+                bar_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bar.webp"
             elif chart.difficulty == "ULT":
-                bg_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.png"
+                bg_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.webp"
                 data_url = (
-                    f"https://sdvx.in/chunithm/ult/obj/{data_key}{sdvxin_id}ult.png"
+                    f"https://sdvx.in/chunithm/ult/obj/{data_key}{sdvxin_id}ult.webp"
                 )
-                bar_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.png"
+                bar_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.webp"
             else:
                 sdvxin_difficulty = (
                     chart.difficulty.lower() if chart.difficulty != "MAS" else "mst"
                 )
                 bg_url = (
-                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png"
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.webp"
                 )
-                data_url = f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/obj/{data_key}{sdvxin_id}{sdvxin_difficulty}.png"
+                data_url = f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/obj/{data_key}{sdvxin_id}{sdvxin_difficulty}.webp"
                 bar_url = (
-                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png"
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.webp"
                 )
 
             bg_resp, data_resp, bar_resp = await asyncio.gather(
                 self._fetch_sdvxin_with_fallback(
                     chart,
                     bg_url,
-                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.png",
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.webp",
                 ),
                 self.http_client.get(data_url),
                 self._fetch_sdvxin_with_fallback(
                     chart,
                     bar_url,
-                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.png",
+                    f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bar.webp",
                 ),
             )
 

@@ -1,5 +1,7 @@
 # ruff: noqa: RUF001
 
+import functools
+import itertools
 import json
 import re
 from html import unescape
@@ -8,6 +10,8 @@ import aiohttp
 import msgspec
 from selectolax.lexbor import LexborHTMLParser
 from structlog.stdlib import BoundLogger
+
+from chuni_penguin.converters import Level
 
 from .seeds import SEEDS_DIR, SeedsJSONEncoder
 
@@ -63,7 +67,6 @@ TITLE_MAPPING = {
     "GranFatalite": "GranFatalité",
     "Help,me あーりん!": "Help me, あーりん!",
     "Help,me あーりん！": "Help me, あーりん！",
-    "Help me, ERINNNNNN!!": "Help me, ERINNNNNN!!（Band ver.）",  # The song was renamed by request of the rights holder.
     "In The Blue Sky `01": "In The Blue Sky '01",
     "In The Blue Sky ’01": "In The Blue Sky '01",
     "Jorqer": "Jörqer",
@@ -142,155 +145,117 @@ TITLE_MAPPING = {
 }
 
 
+class SdvxinSong(msgspec.Struct):
+    id: str
+    title: str
+    artist: str
+    levels: dict[str, str] | str
+    youtube: dict[str, str]
+
+
 async def update_sdvxin(logger: BoundLogger):
     # sdvx.in ID, song_id, difficulty
     with (SEEDS_DIR / "songs.json").open("rb") as f:
         songs = msgspec.json.decode(f.read())
 
-    songs_by_id = {s["id"]: s for s in songs}
-
     async with aiohttp.ClientSession(
         timeout=aiohttp.ClientTimeout(total=600)
     ) as client:
-        # standard categories
-        for category in SDVXIN_CATEGORIES:
-            logger.info(f"Processing category {category}")
-            if category == "end":
-                url = "https://sdvx.in/chunithm/end.htm"
-            else:
-                url = f"https://sdvx.in/chunithm/sort/{category}.htm"
-            resp = await client.get(url)
-            soup = LexborHTMLParser(await resp.text(), is_fragment=False)
+        for i in itertools.chain(
+            (f"{i:02}" for i in range(1, 21)),
+            ["_del", "_we", "_wedel", "_wecourse", "_weuso"],
+        ):
+            logger.debug("Fetching category", category=f"songs{i}.json")
 
-            tables = soup.css("table:has(td.tbgl)")
-            if len(tables) == 0:
-                logger.error(f"Could not find table(s) for category {category}")
+            resp = await client.get(
+                f"https://sdvx.in/chunithm/_/json/songs{i}.json", allow_redirects=False
+            )
+
+            if resp.status == 302:
                 continue
 
-            for table in tables:
-                scripts = table.css("script[src]")
+            sdvxin_songs: list[SdvxinSong] = await resp.json(
+                loads=functools.partial(msgspec.json.decode, type=list[SdvxinSong])
+            )
 
-                for script in scripts:
-                    title = None
-                    x = script.next
+            for sdvxin_song in sdvxin_songs:
+                title = TITLE_MAPPING.get(sdvxin_song.title, sdvxin_song.title)
 
-                    while x is not None:
-                        if x.is_comment_node:
-                            title = x.comment_content
-                            break
+                if isinstance(sdvxin_song.levels, str):  # WE entries do this
+                    if sdvxin_song.levels.startswith("_"):
+                        kanji = sdvxin_song.levels[1]
+                        difficulty = sdvxin_song.levels[2]
+                    else:
+                        kanji = sdvxin_song.levels[0]
+                        difficulty = sdvxin_song.levels[1]
 
-                        x = x.next
-
-                    if title is None:
-                        continue
-
-                    title = TITLE_MAPPING.get(title, unescape(title))
-                    sdvx_in_id = str(script.attrs["src"]).split("/")[-1][
-                        :5
-                    ]  # TODO: dont assume the ID is always 5 digits
-
-                    script_data = None
-                    level = None
-
-                    logger.debug(
-                        "Finding chart", title=title, level=level, category=category
+                    level = f"{kanji}{'☆' * int(difficulty)}"
+                    song = next(
+                        (
+                            song
+                            for song in songs
+                            if song["title"] == title
+                            and song["id"] >= 8000
+                            and any(
+                                c["difficulty"] == "WE" and c["level"] == level
+                                for c in song["charts"]
+                            )
+                        ),
+                        None,
                     )
 
-                    if category == "end":
-                        if sdvx_in_id == "01052":
-                            # Invitation WE got revived under a different ID.
-                            song = songs_by_id.get(8306)
-                        elif sdvx_in_id == "01032":
-                            # ナイト・オブ・ナイツ WE got revived under a different ID.
-                            song = songs_by_id.get(8309)
-                        else:
-                            script_resp = await client.get(
-                                f"https://sdvx.in{script.attrs['src']}"
-                            )
-                            script_data = await script_resp.text()
-
-                            if (
-                                match := WORLD_END_SDVXIN_REGEX.search(script_data)
-                            ) is not None and match.group("difficulty").strip():
-                                level = match.group("difficulty").strip()
-                            elif (
-                                match := WORLD_END_DIFFICULTY_REGEX.search(script_data)
-                            ) is not None:
-                                kanji = match.group("kanji")
-                                star_difficulty = match.group("star_difficulty")
-                                level = f"{kanji}{'☆' * int(star_difficulty)}"
-                            else:
-                                logger.warning(
-                                    f"Could not extract difficulty for {title}, {sdvx_in_id}"
-                                )
-                                continue
-
-                            song = next(
-                                (
-                                    song
-                                    for song in songs
-                                    if song["title"] == title
-                                    and song["id"] >= 8000
-                                    and any(
-                                        c["difficulty"] == "WE" and c["level"] == level
-                                        for c in song["charts"]
-                                    )
-                                ),
-                                None,
-                            )
-                    else:
-                        song = next(
-                            (
-                                song
-                                for song in songs
-                                if song["title"] == title and song["id"] < 8000
-                            ),
-                            None,
-                        )
-
                     if song is None:
-                        if category == "end":
-                            logger.warning("Could not find %s [%s]", title, level)
-                        else:
-                            logger.warning("Could not find %s", title)
-
+                        logger.warning(
+                            "Could not find song",
+                            title=sdvxin_song.title,
+                            lv=level,
+                            levels=sdvxin_song.levels,
+                        )
                         continue
 
-                    if script_data is None:
-                        script_resp = await client.get(
-                            f"https://sdvx.in{script.attrs['src']}"
-                        )
-                        script_data = await script_resp.text()
+                    song["charts"][0]["sdvxin"] = {
+                        "id": sdvxin_song.id,
+                        "end_index": "",
+                    }
+                else:
+                    song = next(
+                        (
+                            song
+                            for song in songs
+                            if song["title"] == title and song["id"] < 8000
+                        ),
+                        None,
+                    )
 
-                    for line in script_data.splitlines():
-                        if not line.startswith(f"var LV{sdvx_in_id}"):
+                    if song is None:
+                        logger.warning("Could not find song", title=sdvxin_song.title)
+                        continue
+
+                    charts_by_difficulty = {
+                        chart["difficulty"]: chart for chart in song["charts"]
+                    }
+
+                    for k, v in sdvxin_song.levels.items():
+                        if not v or v.startswith("_"):
                             continue
 
-                        key, value = line.split("=", 1)
-
-                        # var LV00000W
-                        # var LV00000W2
-                        level = SDVXIN_DIFFICULTY_MAPPING[key[11]]
-                        end_index = key[12] if len(key) > 12 else ""
-                        value_soup = LexborHTMLParser(
-                            value.removeprefix('"').removesuffix('";'), is_fragment=True
-                        )
-
-                        if value_soup.css_first("a") is None:
-                            continue
-
-                        chart = next(
-                            (c for c in song["charts"] if c["difficulty"] == level),
-                            None,
-                        )
-
-                        if chart is not None:
-                            chart["sdvxin"] = {"id": sdvx_in_id, "end_index": end_index}
+                        if k == "bsc":
+                            difficulty = "BAS"
+                        elif k == "mst":
+                            difficulty = "MAS"
                         else:
+                            difficulty = k.upper()
+
+                        try:
+                            charts_by_difficulty[difficulty]["sdvxin"] = {
+                                "id": sdvxin_song.id,
+                                "end_index": "",
+                            }
+                        except KeyError:
                             logger.warning(
                                 "Could not find chart",
-                                song_id=song["id"],
-                                difficulty=level,
+                                title=sdvxin_song.title,
+                                difficulty=difficulty,
                             )
 
     with (SEEDS_DIR / "songs.json").open("w") as f:
