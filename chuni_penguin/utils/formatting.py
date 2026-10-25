@@ -81,7 +81,7 @@ def sdvxin_link(view: "SdvxinChartView") -> str:
     else:
         difficulty = difficulty.lower()
 
-    return f"https://sdvx.in/chunithm/_/viewer.php?id={id}&diff{difficulty}"
+    return f"https://sdvx.in/chunithm/_/viewer.php?id={id}&diff={difficulty}"
 
 
 def bold(content: Any) -> str:
