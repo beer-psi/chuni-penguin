@@ -226,10 +226,14 @@ async def update_sdvxin(logger: BoundLogger):
                         )
                         continue
 
-                    song["charts"][0]["sdvxin"] = {
-                        "id": sdvxin_song.id,
-                        "end_index": "",
-                    }
+                    song["charts"][0]["sdvxin"] = (
+                        None
+                        if sdvxin_song.levels.startswith("_")
+                        else {
+                            "id": sdvxin_song.id,
+                            "end_index": "",
+                        }
+                    )
                 else:
                     song = next(
                         (

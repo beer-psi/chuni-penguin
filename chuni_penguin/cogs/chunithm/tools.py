@@ -1499,12 +1499,6 @@ class ToolsCog(commands.Cog, name="Tools"):
                 bg_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bg.webp"
                 data_url = f"https://sdvx.in/chunithm/end/obj/{data_key}{sdvxin_id}end{end_index}.webp"
                 bar_url = f"https://sdvx.in/chunithm/end/bg/{sdvxin_id}bar.webp"
-            elif chart.difficulty == "ULT":
-                bg_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bg.webp"
-                data_url = (
-                    f"https://sdvx.in/chunithm/ult/obj/{data_key}{sdvxin_id}ult.webp"
-                )
-                bar_url = f"https://sdvx.in/chunithm/ult/bg/{sdvxin_id}bar.webp"
             else:
                 sdvxin_difficulty = (
                     chart.difficulty.lower() if chart.difficulty != "MAS" else "mst"

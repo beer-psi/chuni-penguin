@@ -212037,10 +212037,7 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402592a3120",
-                "sdvxin": {
-                    "id": "184",
-                    "end_index": ""
-                }
+                "sdvxin": null
             }
         ],
         "jackets": [
@@ -217971,10 +217968,7 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": {
-                    "id": "312",
-                    "end_index": ""
-                }
+                "sdvxin": null
             }
         ],
         "jackets": [
