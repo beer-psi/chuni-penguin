@@ -217902,7 +217902,7 @@
         "bpm": 175,
         "min_bpm": 175,
         "max_bpm": 175,
-        "jacket": null,
+        "jacket": "830b5f527ad93ac2.jpg",
         "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -217930,8 +217930,10 @@
             }
         ],
         "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/830b5f527ad93ac2.jpg",
             "https://chunithm.beerpsi.cc/assets/jackets/8325.png",
-            "https://chunithm.beerpsi.cc/assets/jackets/8325.webp"
+            "https://chunithm.beerpsi.cc/assets/jackets/8325.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/830b5f527ad93ac2.jpg"
         ]
     },
     {
@@ -217947,7 +217949,7 @@
         "bpm": 333,
         "min_bpm": 287,
         "max_bpm": 333,
-        "jacket": null,
+        "jacket": "71a399bec2dba0e0.jpg",
         "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -217972,8 +217974,10 @@
             }
         ],
         "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/71a399bec2dba0e0.jpg",
             "https://chunithm.beerpsi.cc/assets/jackets/8326.png",
-            "https://chunithm.beerpsi.cc/assets/jackets/8326.webp"
+            "https://chunithm.beerpsi.cc/assets/jackets/8326.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/71a399bec2dba0e0.jpg"
         ]
     },
     {
