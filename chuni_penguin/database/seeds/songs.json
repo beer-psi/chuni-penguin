@@ -202674,6 +202674,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/140d3c0253db6498.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3057.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3057.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/da791e30a6beab5e9e0142767ef197bf88ea5b4690f8a6262cf0c6ae40f2c718.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/140d3c0253db6498.jpg"
         ]
@@ -202771,6 +202773,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/1c4aa68762d08b13.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3058.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3058.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/337510f8203896c68e9abc8cc3396fe637b01141adbd2d031764329a167ce435.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/1c4aa68762d08b13.jpg"
         ]
@@ -202871,6 +202875,8 @@
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/3b7a809d84a6c9b6.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3059.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3059.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/2225f07bf689e768da73741a4d8e90c182e65c2f48cabcff43bd4e28dc732a00.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/3b7a809d84a6c9b6.jpg"
         ]
@@ -203176,6 +203182,98 @@
             "https://chunithm.beerpsi.cc/assets/jackets/3063.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/55fac301c98ce1bf141c0132654d48c0afa3490b9cf1ffa22a83c91bdc126b73.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/edd45fa3fc22a59e.jpg"
+        ]
+    },
+    {
+        "id": 3069,
+        "chunirec_id": null,
+        "title": "狂命",
+        "wikiwiki_title": null,
+        "chunithm_catcode": 5,
+        "genre": "ORIGINAL",
+        "artist": "Capchii feat. ChumuNote",
+        "version": "Mate",
+        "release": "2026-10-29",
+        "bpm": 220,
+        "min_bpm": 170,
+        "max_bpm": 250,
+        "jacket": "5f167154120c68ed.jpg",
+        "available": true,
+        "removed": false,
+        "is_hidden_on_chuninet": false,
+        "duration": 155677,
+        "aliases": [],
+        "charts": [
+            {
+                "difficulty": "BAS",
+                "level": "4",
+                "const": 4.0,
+                "maxcombo": 649,
+                "tap": 276,
+                "hold": 89,
+                "slide": 188,
+                "air": 96,
+                "flick": 0,
+                "charter": "イノシカ提灯",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            },
+            {
+                "difficulty": "ADV",
+                "level": "11",
+                "const": 11.0,
+                "maxcombo": 1234,
+                "tap": 649,
+                "hold": 223,
+                "slide": 314,
+                "air": 48,
+                "flick": 0,
+                "charter": "そらいろカリン",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            },
+            {
+                "difficulty": "EXP",
+                "level": "13+",
+                "const": 13.5,
+                "maxcombo": 1629,
+                "tap": 831,
+                "hold": 188,
+                "slide": 439,
+                "air": 171,
+                "flick": 0,
+                "charter": "そらいろカリン",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            },
+            {
+                "difficulty": "MAS",
+                "level": "15",
+                "const": 15.2,
+                "maxcombo": 2451,
+                "tap": 1296,
+                "hold": 228,
+                "slide": 427,
+                "air": 352,
+                "flick": 148,
+                "charter": "イノシカ提灯",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            }
+        ],
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/5f167154120c68ed.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3069.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3069.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/5f167154120c68ed.jpg"
         ]
     },
     {
