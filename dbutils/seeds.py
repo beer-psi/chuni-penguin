@@ -101,7 +101,7 @@ PositiveFloat = Annotated[float, msgspec.Meta(gt=0)]
 
 
 class SeedsSdvxin(msgspec.Struct):
-    id: Annotated[str, msgspec.Meta(pattern=r"^[0-9]{5}$")]
+    id: Annotated[str, msgspec.Meta(pattern=r"^[0-9]{3,5}$")]
     end_index: Annotated[str, msgspec.Meta(pattern="^[0-9]*$")]
 
 

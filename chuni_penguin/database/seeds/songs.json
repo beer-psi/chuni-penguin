@@ -302,7 +302,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1372f6ca03594",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01019",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -720,7 +723,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13734d1df8eb3",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01049",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -4330,7 +4336,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1376357376320",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01006",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -7325,7 +7334,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1377f049a36cd",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01007",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -14398,7 +14410,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e137c628d3ed72",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01101",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -16898,7 +16913,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e137e20bf21b96",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05159",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -19328,7 +19346,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e137faa3ec6ba8",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01083",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -19519,7 +19540,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e137fc1e302e02",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01138",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -20045,7 +20069,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13801283868dd",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "01149",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -22423,7 +22450,7 @@
                 "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "01153",
+                    "id": "11029",
                     "end_index": ""
                 }
             },
@@ -22442,7 +22469,7 @@
                 "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "01153",
+                    "id": "11029",
                     "end_index": ""
                 }
             },
@@ -22461,7 +22488,7 @@
                 "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "01153",
+                    "id": "11029",
                     "end_index": ""
                 }
             }
@@ -29848,7 +29875,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1386530e07a52",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "02063",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -31996,7 +32026,7 @@
                 "available": true,
                 "tachi_chart_id": "C19d35e138790350cf4e",
                 "sdvxin": {
-                    "id": "02061",
+                    "id": "05177",
                     "end_index": ""
                 }
             },
@@ -32015,7 +32045,7 @@
                 "available": true,
                 "tachi_chart_id": "C19d35e1387939e8f7f0",
                 "sdvxin": {
-                    "id": "02061",
+                    "id": "05177",
                     "end_index": ""
                 }
             },
@@ -32034,7 +32064,7 @@
                 "available": true,
                 "tachi_chart_id": "C19d35e13879df6308d9",
                 "sdvxin": {
-                    "id": "02061",
+                    "id": "05177",
                     "end_index": ""
                 }
             }
@@ -33565,7 +33595,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1388a76b2883c",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "02112",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -33657,7 +33690,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1388b2e434c79",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "02113",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -33749,7 +33785,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1388ce9a90f11",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "02128",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -39404,7 +39443,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e138d0fa184b3f",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03030",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -39498,7 +39540,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e138d1d658f9e9",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03031",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -39698,7 +39743,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e138d33e96410d",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03004",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -39791,7 +39839,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e138d5f6ee2bd3",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03005",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -39807,7 +39858,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e138d5e908fccf",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03005",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -42315,7 +42369,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e138f36e1f7ce8",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03033",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -47382,7 +47439,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1392afdf377f5",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03081",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -48201,7 +48261,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139373a7639a7",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03072",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -48593,7 +48656,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1393be3d40442",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03003",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -48808,7 +48874,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1393e679b2f91",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03051",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -49806,7 +49875,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1394aca5ed149",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03094",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -49915,7 +49987,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1394bdc413cb1",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03095",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -49991,7 +50066,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1394dfe491322",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03098",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -50086,7 +50164,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1394ef0d1d1c8",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03097",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -50179,7 +50260,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1394f752e1e45",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03099",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -53326,7 +53410,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1397171a599ea",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03136",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -53421,7 +53508,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13972e2d30d08",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03137",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -53514,7 +53604,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1397365896d76",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03168",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -53609,7 +53702,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13974b9476c4e",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03169",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -54514,7 +54610,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1397dd14c8593",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03147",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -55957,7 +56056,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1398fca06790a",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03166",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -55973,7 +56075,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1398f45c56a97",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03166",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -56050,7 +56155,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139900291ffe9",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03167",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -56143,7 +56251,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399112f22c23",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03138",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -56159,7 +56270,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139917e24caf1",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03138",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -56326,7 +56440,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399360e84803",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03140",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -57038,7 +57155,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399a06e88258",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03178",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -57054,7 +57174,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399a975179c4",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03178",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -57131,7 +57254,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399b6867b5b0",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03179",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -57224,7 +57350,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399c8ce8a64b",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03180",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -57317,7 +57446,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399d70bf72d3",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03181",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -57412,7 +57544,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399e5f1f6ae6",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03182",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -57428,7 +57563,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e1399e32f945a1",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "03182",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -58874,7 +59012,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139ae2a673b6a",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04002",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -58890,7 +59031,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139ae52ce8fd4",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04002",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -60459,7 +60603,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139c0e3b57a4a",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04063",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -60661,7 +60808,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139c20d9b0b29",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04006",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -61385,7 +61535,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19d35e139ca859ce453",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04009",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -61787,7 +61940,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139ce5a194bf0",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04039",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -61881,7 +62037,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139cfb9628b2f",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04040",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -61977,7 +62136,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139d0f1776843",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04046",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -62075,7 +62237,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e139d11ebfdb43",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04047",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -71770,7 +71935,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13a3a58578ab6",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04145",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -71786,7 +71954,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13a3a96e14224",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "04145",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -79420,7 +79591,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13a8873d635dc",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05049",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -79436,7 +79610,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13a881ec4ed34",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05049",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -83787,7 +83964,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ab5755ed3ce",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05093",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -83883,7 +84063,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ab6fca8a705",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05094",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -83979,7 +84162,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ab7657c0f4e",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05095",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -84081,7 +84267,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ab82ba512ac",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05099",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -84179,7 +84368,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13aba4b66aeca",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05100",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -84273,7 +84465,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13abbbdb84002",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05101",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -85396,7 +85591,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ac7d422d376",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05096",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -85492,7 +85690,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ac8abf60e12",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05097",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -85588,7 +85789,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ac9e56f15f8",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05102",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -85905,7 +86109,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13acce67b71c4",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05116",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -86001,7 +86208,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13acda6de85fc",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05117",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -86095,7 +86305,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13acef058c44e",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05158",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -88655,7 +88868,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ae71f062240",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05126",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -88751,7 +88967,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13ae86feb5684",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05127",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -89150,7 +89369,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13aec2dfd6451",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05165",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -89244,7 +89466,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13aed6ba6d8ee",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05166",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -89852,7 +90077,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13af393c2561b",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05141",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -89948,7 +90176,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13af4b93694df",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05142",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -90044,7 +90275,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13af5bef60387",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05118",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -91269,7 +91503,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13b01d1c64aa6",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05149",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -92097,7 +92334,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19d35e13b0a6176573d",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "05098",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -196309,7 +196549,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 162545,
-        "aliases": [],
+        "aliases": [
+            "Koiseyo Otome"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -196508,7 +196750,8 @@
         "is_hidden_on_chuninet": false,
         "duration": 99890,
         "aliases": [
-            "Kuukirikigaku Shoujo to Shounen no Uta"
+            "Kuukirikigaku Shoujo to Shounen no Uta",
+            "kuuki rikigaku"
         ],
         "charts": [
             {
@@ -197654,8 +197897,8 @@
         "is_hidden_on_chuninet": false,
         "duration": 125142,
         "aliases": [
-            "sakuranbo kisu bakuhatsu da mo~n~",
-            "sakuranbo kiss"
+            "sakuranbo kiss",
+            "Sakuranbo Kiss ~Bakuhatsu da mo~n~"
         ],
         "charts": [
             {
@@ -197755,7 +197998,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 113300,
-        "aliases": [],
+        "aliases": [
+            "Happy Lucky Chappy"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -197854,7 +198099,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 93248,
-        "aliases": [],
+        "aliases": [
+            "bbbb"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -197953,7 +198200,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 93181,
-        "aliases": [],
+        "aliases": [
+            "Ashita no Watashi ni Sachi Are",
+            "Good luck to me tomorrow"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198052,7 +198302,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 160153,
-        "aliases": [],
+        "aliases": [
+            "Daidaidaidaidaikirai"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198156,7 +198408,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 133066,
-        "aliases": [],
+        "aliases": [
+            "Ohenji mada kana? Ojisan koubun!",
+            "STILL WAITING FOR YOUR REPLY-OJISAN STYLE TEXT",
+            "ojisan koubun"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198279,7 +198535,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 139317,
-        "aliases": [],
+        "aliases": [
+            "Telepathy"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198402,7 +198660,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 147600,
-        "aliases": [],
+        "aliases": [
+            "Saishuu Kichiku Imouto Flandre S (Haraguchi Sasuke wa Kichiku nano ka? remix)",
+            "Flandre S Haraguchi Sasuke remix"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198501,7 +198762,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 133138,
-        "aliases": [],
+        "aliases": [
+            "Kimi to no Tetote Connect"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198600,7 +198863,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 145000,
-        "aliases": [],
+        "aliases": [
+            "vehicle zero",
+            "Ling hao cheliang",
+            "Reigou Sharyou"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198704,7 +198971,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 137821,
-        "aliases": [],
+        "aliases": [
+            "RE:UNION"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198803,7 +199072,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 97364,
-        "aliases": [],
+        "aliases": [
+            "Eiyuu no Akashi",
+            "Proof of a Hero"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -198902,7 +199174,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 146709,
-        "aliases": [],
+        "aliases": [
+            "Hakkou ni Hibiku Seimei no Sakebi"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199101,7 +199375,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 138400,
-        "aliases": [],
+        "aliases": [
+            "soumetsu"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199304,7 +199580,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 161428,
-        "aliases": [],
+        "aliases": [
+            "Watashitachi wa, Hana ni Naru"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199606,7 +199884,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 154951,
-        "aliases": [],
+        "aliases": [
+            "Tachyon"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199654,7 +199934,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11026",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -199670,7 +199953,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11026",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -199699,7 +199985,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 140903,
-        "aliases": [],
+        "aliases": [
+            "Hinata de Wachacha"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199798,7 +200086,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 145454,
-        "aliases": [],
+        "aliases": [
+            "Hakuchuu Netsuen"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199897,7 +200187,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 146594,
-        "aliases": [],
+        "aliases": [
+            "Zettai Isshou Kore de Ikiteiku!"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -199996,7 +200288,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 141000,
-        "aliases": [],
+        "aliases": [
+            "Chu, Ochuusha."
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200095,7 +200389,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 157856,
-        "aliases": [],
+        "aliases": [
+            "Chuni Penguin no Theme ~Hidarishita yori Ai wo Komete~",
+            "Chuni Penguin no Theme",
+            "hidarishita"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200194,7 +200492,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 168430,
-        "aliases": [],
+        "aliases": [
+            "Shaoshao Ranran",
+            "Xiaoxiao Lanlan"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200243,7 +200544,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11029",
+                    "id": "11030",
                     "end_index": ""
                 }
             },
@@ -200262,7 +200563,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11029",
+                    "id": "11030",
                     "end_index": ""
                 }
             }
@@ -200293,7 +200594,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 149538,
-        "aliases": [],
+        "aliases": [
+            "Idai naru Akuma wa Jitsu wa Daitenshi Patora-chan-sama na no da!",
+            "Patra-chan-sama"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200342,7 +200646,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11030",
+                    "id": "11031",
                     "end_index": ""
                 }
             },
@@ -200361,7 +200665,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11030",
+                    "id": "11031",
                     "end_index": ""
                 }
             }
@@ -200397,7 +200701,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 126451,
-        "aliases": [],
+        "aliases": [
+            "Uni",
+            "Sea Urchin"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200446,7 +200753,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11031",
+                    "id": "11032",
                     "end_index": ""
                 }
             },
@@ -200465,7 +200772,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11031",
+                    "id": "11032",
                     "end_index": ""
                 }
             }
@@ -200496,7 +200803,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 159840,
-        "aliases": [],
+        "aliases": [
+            "uni no uta remix",
+            "Uni no Uta (Nanoru Naganai Remix)"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200544,7 +200854,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11033",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -200560,7 +200873,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11033",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -200589,7 +200905,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 154500,
-        "aliases": [],
+        "aliases": [
+            "Tokimeki Meteor Strike"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200638,7 +200956,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11033",
+                    "id": "11034",
                     "end_index": ""
                 }
             },
@@ -200657,7 +200975,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11033",
+                    "id": "11034",
                     "end_index": ""
                 }
             }
@@ -200688,7 +201006,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 163285,
-        "aliases": [],
+        "aliases": [
+            "Maku wo Orosou, Parade e"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -200737,7 +201057,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11034",
+                    "id": "11035",
                     "end_index": ""
                 }
             },
@@ -200756,7 +201076,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11034",
+                    "id": "11035",
                     "end_index": ""
                 }
             }
@@ -200836,7 +201156,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11035",
+                    "id": "11036",
                     "end_index": ""
                 }
             },
@@ -200855,7 +201175,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11035",
+                    "id": "11036",
                     "end_index": ""
                 }
             }
@@ -200935,7 +201255,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11038",
+                    "id": "11039",
                     "end_index": ""
                 }
             },
@@ -200954,7 +201274,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11038",
+                    "id": "11039",
                     "end_index": ""
                 }
             }
@@ -201034,7 +201354,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11039",
+                    "id": "11040",
                     "end_index": ""
                 }
             },
@@ -201053,7 +201373,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11039",
+                    "id": "11040",
                     "end_index": ""
                 }
             }
@@ -201133,7 +201453,7 @@
                 "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11036",
+                    "id": "11037",
                     "end_index": ""
                 }
             },
@@ -201152,7 +201472,7 @@
                 "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11036",
+                    "id": "11037",
                     "end_index": ""
                 }
             }
@@ -201233,7 +201553,7 @@
                 "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11037",
+                    "id": "11038",
                     "end_index": ""
                 }
             },
@@ -201252,7 +201572,7 @@
                 "available": true,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11037",
+                    "id": "11038",
                     "end_index": ""
                 }
             }
@@ -201332,7 +201652,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11050",
+                    "id": "11051",
                     "end_index": ""
                 }
             },
@@ -201351,7 +201671,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11050",
+                    "id": "11051",
                     "end_index": ""
                 }
             }
@@ -201431,7 +201751,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11051",
+                    "id": "11052",
                     "end_index": ""
                 }
             },
@@ -201450,7 +201770,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11051",
+                    "id": "11052",
                     "end_index": ""
                 }
             }
@@ -201481,7 +201801,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 154090,
-        "aliases": [],
+        "aliases": [
+            "Ansare Stellar"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -201530,7 +201852,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11052",
+                    "id": "11053",
                     "end_index": ""
                 }
             },
@@ -201549,7 +201871,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11052",
+                    "id": "11053",
                     "end_index": ""
                 }
             }
@@ -201629,7 +201951,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11053",
+                    "id": "11054",
                     "end_index": ""
                 }
             },
@@ -201648,7 +201970,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11053",
+                    "id": "11054",
                     "end_index": ""
                 }
             }
@@ -201728,7 +202050,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11044",
+                    "id": "11045",
                     "end_index": ""
                 }
             },
@@ -201747,7 +202069,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11044",
+                    "id": "11045",
                     "end_index": ""
                 }
             }
@@ -201827,7 +202149,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11045",
+                    "id": "11046",
                     "end_index": ""
                 }
             },
@@ -201846,7 +202168,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11045",
+                    "id": "11046",
                     "end_index": ""
                 }
             }
@@ -201926,7 +202248,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11046",
+                    "id": "11047",
                     "end_index": ""
                 }
             },
@@ -201945,7 +202267,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11046",
+                    "id": "11047",
                     "end_index": ""
                 }
             }
@@ -202025,7 +202347,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11047",
+                    "id": "11048",
                     "end_index": ""
                 }
             },
@@ -202044,7 +202366,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11047",
+                    "id": "11048",
                     "end_index": ""
                 }
             }
@@ -202124,7 +202446,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11048",
+                    "id": "11049",
                     "end_index": ""
                 }
             },
@@ -202143,7 +202465,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11048",
+                    "id": "11049",
                     "end_index": ""
                 }
             }
@@ -202174,7 +202496,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 160800,
-        "aliases": [],
+        "aliases": [
+            "Kotoba no Haito"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -202223,7 +202547,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11043",
+                    "id": "11044",
                     "end_index": ""
                 }
             },
@@ -202242,7 +202566,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11043",
+                    "id": "11044",
                     "end_index": ""
                 }
             }
@@ -202324,7 +202648,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11054",
+                    "id": "11055",
                     "end_index": ""
                 }
             },
@@ -202343,13 +202667,15 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11054",
+                    "id": "11055",
                     "end_index": ""
                 }
             }
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/140d3c0253db6498.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3057.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3057.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/da791e30a6beab5e9e0142767ef197bf88ea5b4690f8a6262cf0c6ae40f2c718.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/140d3c0253db6498.jpg"
         ]
@@ -202421,7 +202747,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11055",
+                    "id": "11056",
                     "end_index": ""
                 }
             },
@@ -202440,13 +202766,15 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11055",
+                    "id": "11056",
                     "end_index": ""
                 }
             }
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/1c4aa68762d08b13.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3058.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3058.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/337510f8203896c68e9abc8cc3396fe637b01141adbd2d031764329a167ce435.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/1c4aa68762d08b13.jpg"
         ]
@@ -202470,7 +202798,8 @@
         "is_hidden_on_chuninet": false,
         "duration": 144324,
         "aliases": [
-            "Kikikaitai"
+            "Kikikaitai",
+            "Kiki Kaitai"
         ],
         "charts": [
             {
@@ -202520,7 +202849,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11056",
+                    "id": "11057",
                     "end_index": ""
                 }
             },
@@ -202539,13 +202868,15 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11056",
+                    "id": "11057",
                     "end_index": ""
                 }
             }
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/3b7a809d84a6c9b6.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3059.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3059.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/2225f07bf689e768da73741a4d8e90c182e65c2f48cabcff43bd4e28dc732a00.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/3b7a809d84a6c9b6.jpg"
         ]
@@ -202568,7 +202899,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 130875,
-        "aliases": [],
+        "aliases": [
+            "Fuwapachi Seiun PTL-3",
+            "Fuwapachi Nebula PTL-3",
+            "PTL-3"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -202617,7 +202952,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11040",
+                    "id": "11041",
                     "end_index": ""
                 }
             },
@@ -202636,7 +202971,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11040",
+                    "id": "11041",
                     "end_index": ""
                 }
             }
@@ -202716,7 +203051,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11041",
+                    "id": "11042",
                     "end_index": ""
                 }
             },
@@ -202735,7 +203070,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11041",
+                    "id": "11042",
                     "end_index": ""
                 }
             }
@@ -202766,7 +203101,9 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 142285,
-        "aliases": [],
+        "aliases": [
+            "Inochi Script"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -202815,7 +203152,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11042",
+                    "id": "11043",
                     "end_index": ""
                 }
             },
@@ -202834,7 +203171,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11042",
+                    "id": "11043",
                     "end_index": ""
                 }
             }
@@ -202845,6 +203182,98 @@
             "https://chunithm.beerpsi.cc/assets/jackets/3063.webp",
             "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/55fac301c98ce1bf141c0132654d48c0afa3490b9cf1ffa22a83c91bdc126b73.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/edd45fa3fc22a59e.jpg"
+        ]
+    },
+    {
+        "id": 3069,
+        "chunirec_id": null,
+        "title": "狂命",
+        "wikiwiki_title": null,
+        "chunithm_catcode": 5,
+        "genre": "ORIGINAL",
+        "artist": "Capchii feat. ChumuNote",
+        "version": "Mate",
+        "release": "2026-10-29",
+        "bpm": 220,
+        "min_bpm": 170,
+        "max_bpm": 250,
+        "jacket": "5f167154120c68ed.jpg",
+        "available": true,
+        "removed": false,
+        "is_hidden_on_chuninet": false,
+        "duration": 155677,
+        "aliases": [],
+        "charts": [
+            {
+                "difficulty": "BAS",
+                "level": "4",
+                "const": 4.0,
+                "maxcombo": 649,
+                "tap": 276,
+                "hold": 89,
+                "slide": 188,
+                "air": 96,
+                "flick": 0,
+                "charter": "イノシカ提灯",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            },
+            {
+                "difficulty": "ADV",
+                "level": "11",
+                "const": 11.0,
+                "maxcombo": 1234,
+                "tap": 649,
+                "hold": 223,
+                "slide": 314,
+                "air": 48,
+                "flick": 0,
+                "charter": "そらいろカリン",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            },
+            {
+                "difficulty": "EXP",
+                "level": "13+",
+                "const": 13.5,
+                "maxcombo": 1629,
+                "tap": 831,
+                "hold": 188,
+                "slide": 439,
+                "air": 171,
+                "flick": 0,
+                "charter": "そらいろカリン",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            },
+            {
+                "difficulty": "MAS",
+                "level": "15",
+                "const": 15.2,
+                "maxcombo": 2451,
+                "tap": 1296,
+                "hold": 228,
+                "slide": 427,
+                "air": 352,
+                "flick": 148,
+                "charter": "イノシカ提灯",
+                "version": null,
+                "available": true,
+                "tachi_chart_id": null,
+                "sdvxin": null
+            }
+        ],
+        "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/5f167154120c68ed.jpg",
+            "https://chunithm.beerpsi.cc/assets/jackets/3069.png",
+            "https://chunithm.beerpsi.cc/assets/jackets/3069.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/5f167154120c68ed.jpg"
         ]
     },
     {
@@ -203116,7 +203545,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11049",
+                    "id": "11050",
                     "end_index": ""
                 }
             },
@@ -203135,7 +203564,7 @@
                 "available": false,
                 "tachi_chart_id": null,
                 "sdvxin": {
-                    "id": "11049",
+                    "id": "11050",
                     "end_index": ""
                 }
             }
@@ -203166,7 +203595,10 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 164545,
-        "aliases": [],
+        "aliases": [
+            "ai scream",
+            "AISCREAM!"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
@@ -203390,7 +203822,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922a7ab2dbbc",
                 "sdvxin": {
-                    "id": "01058",
+                    "id": "008",
                     "end_index": ""
                 }
             }
@@ -203437,8 +203869,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40023ab29d9",
                 "sdvxin": {
-                    "id": "01058",
-                    "end_index": "2"
+                    "id": "013",
+                    "end_index": ""
                 }
             }
         ],
@@ -203482,7 +203914,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40100138af3",
                 "sdvxin": {
-                    "id": "01045",
+                    "id": "002",
                     "end_index": ""
                 }
             }
@@ -203527,7 +203959,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401f2b47156",
                 "sdvxin": {
-                    "id": "01060",
+                    "id": "017",
                     "end_index": ""
                 }
             }
@@ -203572,7 +204004,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401699acc1e",
                 "sdvxin": {
-                    "id": "01048",
+                    "id": "020",
                     "end_index": ""
                 }
             }
@@ -203617,7 +204049,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4011bb06a3d",
                 "sdvxin": {
-                    "id": "01019",
+                    "id": "018",
                     "end_index": ""
                 }
             }
@@ -203662,7 +204094,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4018c949196",
                 "sdvxin": {
-                    "id": "01052",
+                    "id": "005",
                     "end_index": ""
                 }
             }
@@ -203707,7 +204139,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401552b2a49",
                 "sdvxin": {
-                    "id": "01044",
+                    "id": "001",
                     "end_index": ""
                 }
             }
@@ -203752,7 +204184,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c92413abb598c",
                 "sdvxin": {
-                    "id": "01032",
+                    "id": "024",
                     "end_index": ""
                 }
             }
@@ -203797,8 +204229,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c923fe8b76289",
                 "sdvxin": {
-                    "id": "01052",
-                    "end_index": "2"
+                    "id": "012",
+                    "end_index": ""
                 }
             }
         ],
@@ -203842,7 +204274,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401f3c7dbf7",
                 "sdvxin": {
-                    "id": "01061",
+                    "id": "023",
                     "end_index": ""
                 }
             }
@@ -203887,7 +204319,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40141bcf014",
                 "sdvxin": {
-                    "id": "01096",
+                    "id": "022",
                     "end_index": ""
                 }
             }
@@ -203932,7 +204364,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4012b0dc849",
                 "sdvxin": {
-                    "id": "01053",
+                    "id": "004",
                     "end_index": ""
                 }
             }
@@ -203977,7 +204409,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401e121b510",
                 "sdvxin": {
-                    "id": "01076",
+                    "id": "021",
                     "end_index": ""
                 }
             }
@@ -204022,7 +204454,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401eeea89c4",
                 "sdvxin": {
-                    "id": "01075",
+                    "id": "009",
                     "end_index": ""
                 }
             }
@@ -204067,8 +204499,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401aea3d138",
                 "sdvxin": {
-                    "id": "01045",
-                    "end_index": "2"
+                    "id": "011",
+                    "end_index": ""
                 }
             }
         ],
@@ -204112,7 +204544,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4015ace6f23",
                 "sdvxin": {
-                    "id": "01054",
+                    "id": "007",
                     "end_index": ""
                 }
             }
@@ -204157,7 +204589,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401754d397f",
                 "sdvxin": {
-                    "id": "01066",
+                    "id": "019",
                     "end_index": ""
                 }
             }
@@ -204202,8 +204634,8 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922ba05b7766",
                 "sdvxin": {
-                    "id": "01046",
-                    "end_index": "2"
+                    "id": "026",
+                    "end_index": ""
                 }
             }
         ],
@@ -204249,7 +204681,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401e6d2258c",
                 "sdvxin": {
-                    "id": "01046",
+                    "id": "003",
                     "end_index": ""
                 }
             }
@@ -204294,7 +204726,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4019662dfba",
                 "sdvxin": {
-                    "id": "01073",
+                    "id": "029",
                     "end_index": ""
                 }
             }
@@ -204339,7 +204771,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922b3cbed21f",
                 "sdvxin": {
-                    "id": "01153",
+                    "id": "014",
                     "end_index": ""
                 }
             }
@@ -204386,7 +204818,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c925fff579011",
                 "sdvxin": {
-                    "id": "01154",
+                    "id": "015",
                     "end_index": ""
                 }
             }
@@ -204433,7 +204865,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922cc09d8589",
                 "sdvxin": {
-                    "id": "01173",
+                    "id": "027",
                     "end_index": ""
                 }
             }
@@ -204480,7 +204912,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4016019f569",
                 "sdvxin": {
-                    "id": "01049",
+                    "id": "025",
                     "end_index": ""
                 }
             }
@@ -204525,7 +204957,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40139fa8562",
                 "sdvxin": {
-                    "id": "01125",
+                    "id": "016",
                     "end_index": ""
                 }
             }
@@ -204570,7 +205002,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401d53e58e4",
                 "sdvxin": {
-                    "id": "01113",
+                    "id": "010",
                     "end_index": ""
                 }
             }
@@ -204615,7 +205047,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401a6291f16",
                 "sdvxin": {
-                    "id": "01006",
+                    "id": "006",
                     "end_index": ""
                 }
             }
@@ -204660,8 +205092,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401b94f6323",
                 "sdvxin": {
-                    "id": "01053",
-                    "end_index": "2"
+                    "id": "028",
+                    "end_index": ""
                 }
             }
         ],
@@ -204705,7 +205137,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4019cb40a15",
                 "sdvxin": {
-                    "id": "01083",
+                    "id": "037",
                     "end_index": ""
                 }
             }
@@ -204750,7 +205182,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401f3f7d4c2",
                 "sdvxin": {
-                    "id": "01024",
+                    "id": "039",
                     "end_index": ""
                 }
             }
@@ -204795,7 +205227,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40172abe038",
                 "sdvxin": {
-                    "id": "01144",
+                    "id": "034",
                     "end_index": ""
                 }
             }
@@ -204840,7 +205272,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4018462cfd3",
                 "sdvxin": {
-                    "id": "01035",
+                    "id": "035",
                     "end_index": ""
                 }
             }
@@ -204885,7 +205317,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401456b9fa5",
                 "sdvxin": {
-                    "id": "01152",
+                    "id": "032",
                     "end_index": ""
                 }
             }
@@ -204930,7 +205362,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401ae6c59ec",
                 "sdvxin": {
-                    "id": "01068",
+                    "id": "036",
                     "end_index": ""
                 }
             }
@@ -204975,8 +205407,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401ec829789",
                 "sdvxin": {
-                    "id": "01173",
-                    "end_index": "2"
+                    "id": "031",
+                    "end_index": ""
                 }
             }
         ],
@@ -205020,7 +205452,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4013b01dda5",
                 "sdvxin": {
-                    "id": "01120",
+                    "id": "038",
                     "end_index": ""
                 }
             }
@@ -205065,7 +205497,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401a7ddc705",
                 "sdvxin": {
-                    "id": "01137",
+                    "id": "030",
                     "end_index": ""
                 }
             }
@@ -205110,7 +205542,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401476087d4",
                 "sdvxin": {
-                    "id": "01166",
+                    "id": "033",
                     "end_index": ""
                 }
             }
@@ -205155,7 +205587,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401693339b4",
                 "sdvxin": {
-                    "id": "01145",
+                    "id": "042",
                     "end_index": ""
                 }
             }
@@ -205200,7 +205632,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40195bf6dee",
                 "sdvxin": {
-                    "id": "01031",
+                    "id": "040",
                     "end_index": ""
                 }
             }
@@ -205245,7 +205677,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401e6ed81b8",
                 "sdvxin": {
-                    "id": "01127",
+                    "id": "041",
                     "end_index": ""
                 }
             }
@@ -205290,7 +205722,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401281b4df9",
                 "sdvxin": {
-                    "id": "01159",
+                    "id": "043",
                     "end_index": ""
                 }
             }
@@ -205335,7 +205767,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401b7d7e648",
                 "sdvxin": {
-                    "id": "01149",
+                    "id": "044",
                     "end_index": ""
                 }
             }
@@ -205380,7 +205812,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401be926a18",
                 "sdvxin": {
-                    "id": "01088",
+                    "id": "045",
                     "end_index": ""
                 }
             }
@@ -205425,7 +205857,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922c6e197a99",
                 "sdvxin": {
-                    "id": "01036",
+                    "id": "048",
                     "end_index": ""
                 }
             }
@@ -205472,7 +205904,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401d310a07f",
                 "sdvxin": {
-                    "id": "01055",
+                    "id": "046",
                     "end_index": ""
                 }
             }
@@ -205517,7 +205949,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4014c937499",
                 "sdvxin": {
-                    "id": "01132",
+                    "id": "049",
                     "end_index": ""
                 }
             }
@@ -205564,7 +205996,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401ddc8952c",
                 "sdvxin": {
-                    "id": "02021",
+                    "id": "047",
                     "end_index": ""
                 }
             }
@@ -205609,7 +206041,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922c7d1b114e",
                 "sdvxin": {
-                    "id": "02061",
+                    "id": "052",
                     "end_index": ""
                 }
             }
@@ -205656,7 +206088,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4015a28e7db",
                 "sdvxin": {
-                    "id": "01189",
+                    "id": "050",
                     "end_index": ""
                 }
             }
@@ -205701,7 +206133,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401904489be",
                 "sdvxin": {
-                    "id": "01138",
+                    "id": "053",
                     "end_index": ""
                 }
             }
@@ -205746,7 +206178,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401b72e4146",
                 "sdvxin": {
-                    "id": "01126",
+                    "id": "051",
                     "end_index": ""
                 }
             }
@@ -205791,7 +206223,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4019326e084",
                 "sdvxin": {
-                    "id": "01064",
+                    "id": "054",
                     "end_index": ""
                 }
             }
@@ -205836,7 +206268,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40184b6df80",
                 "sdvxin": {
-                    "id": "01115",
+                    "id": "058",
                     "end_index": ""
                 }
             }
@@ -205881,7 +206313,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401d08cffd3",
                 "sdvxin": {
-                    "id": "01114",
+                    "id": "057",
                     "end_index": ""
                 }
             }
@@ -205926,8 +206358,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401ec69f961",
                 "sdvxin": {
-                    "id": "01048",
-                    "end_index": "2"
+                    "id": "056",
+                    "end_index": ""
                 }
             }
         ],
@@ -205971,7 +206403,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4014db1804e",
                 "sdvxin": {
-                    "id": "01135",
+                    "id": "055",
                     "end_index": ""
                 }
             }
@@ -206016,7 +206448,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401bc3b8bb5",
                 "sdvxin": {
-                    "id": "01122",
+                    "id": "059",
                     "end_index": ""
                 }
             }
@@ -206061,7 +206493,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40113e07cad",
                 "sdvxin": {
-                    "id": "01056",
+                    "id": "060",
                     "end_index": ""
                 }
             }
@@ -206106,7 +206538,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401ce4bf9e2",
                 "sdvxin": {
-                    "id": "01187",
+                    "id": "062",
                     "end_index": ""
                 }
             }
@@ -206151,7 +206583,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401801e83c7",
                 "sdvxin": {
-                    "id": "01069",
+                    "id": "064",
                     "end_index": ""
                 }
             }
@@ -206196,8 +206628,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401ff91bd5d",
                 "sdvxin": {
-                    "id": "01068",
-                    "end_index": "2"
+                    "id": "063",
+                    "end_index": ""
                 }
             }
         ],
@@ -206241,7 +206673,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4011c757b39",
                 "sdvxin": {
-                    "id": "01161",
+                    "id": "061",
                     "end_index": ""
                 }
             }
@@ -206286,7 +206718,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401c5bb2832",
                 "sdvxin": {
-                    "id": "01095",
+                    "id": "066",
                     "end_index": ""
                 }
             }
@@ -206331,7 +206763,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401718e6b52",
                 "sdvxin": {
-                    "id": "02083",
+                    "id": "068",
                     "end_index": ""
                 }
             }
@@ -206376,7 +206808,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40131904d2e",
                 "sdvxin": {
-                    "id": "02047",
+                    "id": "069",
                     "end_index": ""
                 }
             }
@@ -206423,7 +206855,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40133f6f988",
                 "sdvxin": {
-                    "id": "01050",
+                    "id": "065",
                     "end_index": ""
                 }
             }
@@ -206468,7 +206900,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401b7ece2b9",
                 "sdvxin": {
-                    "id": "01074",
+                    "id": "067",
                     "end_index": ""
                 }
             }
@@ -206513,8 +206945,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4010e577b12",
                 "sdvxin": {
-                    "id": "01048",
-                    "end_index": "3"
+                    "id": "070",
+                    "end_index": ""
                 }
             }
         ],
@@ -206558,7 +206990,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4014acc3642",
                 "sdvxin": {
-                    "id": "01136",
+                    "id": "073",
                     "end_index": ""
                 }
             }
@@ -206603,7 +207035,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40170eaec6a",
                 "sdvxin": {
-                    "id": "01101",
+                    "id": "075",
                     "end_index": ""
                 }
             }
@@ -206648,7 +207080,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4013572e6eb",
                 "sdvxin": {
-                    "id": "02112",
+                    "id": "072",
                     "end_index": ""
                 }
             }
@@ -206693,7 +207125,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40123e69d15",
                 "sdvxin": {
-                    "id": "02113",
+                    "id": "076",
                     "end_index": ""
                 }
             }
@@ -206738,7 +207170,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9260fcbd1c7d",
                 "sdvxin": {
-                    "id": "02125",
+                    "id": "077",
                     "end_index": ""
                 }
             }
@@ -206785,8 +207217,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401c16163e8",
                 "sdvxin": {
-                    "id": "01076",
-                    "end_index": "2"
+                    "id": "078",
+                    "end_index": ""
                 }
             }
         ],
@@ -206830,7 +207262,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40189fa3dbb",
                 "sdvxin": {
-                    "id": "02023",
+                    "id": "086",
                     "end_index": ""
                 }
             }
@@ -206875,7 +207307,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401dd5cf7f3",
                 "sdvxin": {
-                    "id": "02068",
+                    "id": "079",
                     "end_index": ""
                 }
             }
@@ -206920,7 +207352,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4010454c51f",
                 "sdvxin": {
-                    "id": "02098",
+                    "id": "084",
                     "end_index": ""
                 }
             }
@@ -206965,7 +207397,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4013f3bba61",
                 "sdvxin": {
-                    "id": "01047",
+                    "id": "081",
                     "end_index": ""
                 }
             }
@@ -207010,7 +207442,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922d9189f2b4",
                 "sdvxin": {
-                    "id": "02154",
+                    "id": "083",
                     "end_index": ""
                 }
             }
@@ -207102,7 +207534,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401bda8826b",
                 "sdvxin": {
-                    "id": "01041",
+                    "id": "080",
                     "end_index": ""
                 }
             }
@@ -207147,7 +207579,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40104d21cce",
                 "sdvxin": {
-                    "id": "02012",
+                    "id": "085",
                     "end_index": ""
                 }
             }
@@ -207192,7 +207624,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40198cd70e0",
                 "sdvxin": {
-                    "id": "01051",
+                    "id": "088",
                     "end_index": ""
                 }
             }
@@ -207237,7 +207669,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401860fa65c",
                 "sdvxin": {
-                    "id": "02168",
+                    "id": "087",
                     "end_index": ""
                 }
             }
@@ -207282,7 +207714,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c922d4a3e866d",
                 "sdvxin": {
-                    "id": "02111",
+                    "id": "071",
                     "end_index": ""
                 }
             }
@@ -207329,7 +207761,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922e454e66c3",
                 "sdvxin": {
-                    "id": "02045",
+                    "id": "074",
                     "end_index": ""
                 }
             }
@@ -207376,7 +207808,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40122aa0ebf",
                 "sdvxin": {
-                    "id": "01089",
+                    "id": "089",
                     "end_index": ""
                 }
             }
@@ -207421,7 +207853,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40125569bfd",
                 "sdvxin": {
-                    "id": "02128",
+                    "id": "090",
                     "end_index": ""
                 }
             }
@@ -207466,7 +207898,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40184694c0c",
                 "sdvxin": {
-                    "id": "02107",
+                    "id": "091",
                     "end_index": ""
                 }
             }
@@ -207511,7 +207943,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401bd92b52a",
                 "sdvxin": {
-                    "id": "02063",
+                    "id": "092",
                     "end_index": ""
                 }
             }
@@ -207556,8 +207988,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401c9c0c92d",
                 "sdvxin": {
-                    "id": "01125",
-                    "end_index": "2"
+                    "id": "094",
+                    "end_index": ""
                 }
             }
         ],
@@ -207601,8 +208033,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c922e4cc49858",
                 "sdvxin": {
-                    "id": "01061",
-                    "end_index": "2"
+                    "id": "096",
+                    "end_index": ""
                 }
             }
         ],
@@ -207648,7 +208080,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401f8392e4a",
                 "sdvxin": {
-                    "id": "02049",
+                    "id": "095",
                     "end_index": ""
                 }
             }
@@ -207693,7 +208125,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401b309c965",
                 "sdvxin": {
-                    "id": "01043",
+                    "id": "097",
                     "end_index": ""
                 }
             }
@@ -207738,7 +208170,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40198fb9882",
                 "sdvxin": {
-                    "id": "02101",
+                    "id": "098",
                     "end_index": ""
                 }
             }
@@ -207783,7 +208215,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401f87201c9",
                 "sdvxin": {
-                    "id": "02143",
+                    "id": "099",
                     "end_index": ""
                 }
             }
@@ -207828,7 +208260,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4016add59b3",
                 "sdvxin": {
-                    "id": "02077",
+                    "id": "102",
                     "end_index": ""
                 }
             }
@@ -207873,7 +208305,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a401e7b24bb7",
                 "sdvxin": {
-                    "id": "02015",
+                    "id": "104",
                     "end_index": ""
                 }
             }
@@ -207918,7 +208350,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4015cbd3f98",
                 "sdvxin": {
-                    "id": "02060",
+                    "id": "103",
                     "end_index": ""
                 }
             }
@@ -207963,7 +208395,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40107b4f617",
                 "sdvxin": {
-                    "id": "01147",
+                    "id": "101",
                     "end_index": ""
                 }
             }
@@ -208008,7 +208440,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40169ccfdcb",
                 "sdvxin": {
-                    "id": "03076",
+                    "id": "105",
                     "end_index": ""
                 }
             }
@@ -208053,7 +208485,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c721f84c",
                 "sdvxin": {
-                    "id": "01007",
+                    "id": "100",
                     "end_index": ""
                 }
             }
@@ -208098,7 +208530,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922e06fd7872",
                 "sdvxin": {
-                    "id": "03013",
+                    "id": "093",
                     "end_index": ""
                 }
             }
@@ -208145,7 +208577,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026567795d",
                 "sdvxin": {
-                    "id": "03005",
+                    "id": "108",
                     "end_index": ""
                 }
             }
@@ -208190,7 +208622,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402a9e47172",
                 "sdvxin": {
-                    "id": "01093",
+                    "id": "107",
                     "end_index": ""
                 }
             }
@@ -208235,8 +208667,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40276d766f4",
                 "sdvxin": {
-                    "id": "01054",
-                    "end_index": "2"
+                    "id": "109",
+                    "end_index": ""
                 }
             }
         ],
@@ -208280,7 +208712,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402ed2e4e5e",
                 "sdvxin": {
-                    "id": "03035",
+                    "id": "106",
                     "end_index": ""
                 }
             }
@@ -208325,7 +208757,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4028718fb03",
                 "sdvxin": {
-                    "id": "02130",
+                    "id": "110",
                     "end_index": ""
                 }
             }
@@ -208370,7 +208802,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9260dc570796",
                 "sdvxin": {
-                    "id": "03113",
+                    "id": "111",
                     "end_index": ""
                 }
             }
@@ -208417,7 +208849,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c922f0dbc0d53",
                 "sdvxin": {
-                    "id": "03117",
+                    "id": "115",
                     "end_index": ""
                 }
             }
@@ -208464,7 +208896,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402659b0c34",
                 "sdvxin": {
-                    "id": "02173",
+                    "id": "113",
                     "end_index": ""
                 }
             }
@@ -208509,7 +208941,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c01390c9",
                 "sdvxin": {
-                    "id": "03095",
+                    "id": "112",
                     "end_index": ""
                 }
             }
@@ -208554,7 +208986,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402551011db",
                 "sdvxin": {
-                    "id": "02024",
+                    "id": "114",
                     "end_index": ""
                 }
             }
@@ -208599,7 +209031,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922f353e790a",
                 "sdvxin": {
-                    "id": "02075",
+                    "id": "116",
                     "end_index": ""
                 }
             }
@@ -208646,7 +209078,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c922fbc493770",
                 "sdvxin": {
-                    "id": "03163",
+                    "id": "117",
                     "end_index": ""
                 }
             }
@@ -208693,7 +209125,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923010715afb",
                 "sdvxin": {
-                    "id": "03172",
+                    "id": "118",
                     "end_index": ""
                 }
             }
@@ -208740,7 +209172,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4020022e252",
                 "sdvxin": {
-                    "id": "03091",
+                    "id": "120",
                     "end_index": ""
                 }
             }
@@ -208785,7 +209217,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4028a729a15",
                 "sdvxin": {
-                    "id": "03176",
+                    "id": "121",
                     "end_index": ""
                 }
             }
@@ -208830,7 +209262,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40215c9ea73",
                 "sdvxin": {
-                    "id": "02170",
+                    "id": "119",
                     "end_index": ""
                 }
             }
@@ -208877,7 +209309,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40291b6a6cb",
                 "sdvxin": {
-                    "id": "02010",
+                    "id": "122",
                     "end_index": ""
                 }
             }
@@ -208922,7 +209354,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c92301b517cc1",
                 "sdvxin": {
-                    "id": "03187",
+                    "id": "123",
                     "end_index": ""
                 }
             }
@@ -208969,7 +209401,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4020530d0e8",
                 "sdvxin": {
-                    "id": "03164",
+                    "id": "127",
                     "end_index": ""
                 }
             }
@@ -209014,7 +209446,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026a26ddb4",
                 "sdvxin": {
-                    "id": "03115",
+                    "id": "129",
                     "end_index": ""
                 }
             }
@@ -209059,7 +209491,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4020fe791b4",
                 "sdvxin": {
-                    "id": "03128",
+                    "id": "128",
                     "end_index": ""
                 }
             }
@@ -209104,8 +209536,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402afec2c43",
                 "sdvxin": {
-                    "id": "01145",
-                    "end_index": "2"
+                    "id": "125",
+                    "end_index": ""
                 }
             }
         ],
@@ -209149,7 +209581,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402a75213ae",
                 "sdvxin": {
-                    "id": "03093",
+                    "id": "124",
                     "end_index": ""
                 }
             }
@@ -209194,7 +209626,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4025544971a",
                 "sdvxin": {
-                    "id": "03129",
+                    "id": "126",
                     "end_index": ""
                 }
             }
@@ -209241,7 +209673,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402a99c7e63",
                 "sdvxin": {
-                    "id": "02037",
+                    "id": "130",
                     "end_index": ""
                 }
             }
@@ -209288,8 +209720,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4028ed789be",
                 "sdvxin": {
-                    "id": "03076",
-                    "end_index": "2"
+                    "id": "131",
+                    "end_index": ""
                 }
             }
         ],
@@ -209333,7 +209765,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4025ffd66db",
                 "sdvxin": {
-                    "id": "03182",
+                    "id": "134",
                     "end_index": ""
                 }
             }
@@ -209378,7 +209810,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40240c568c1",
                 "sdvxin": {
-                    "id": "03121",
+                    "id": "132",
                     "end_index": ""
                 }
             }
@@ -209423,7 +209855,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402aa5989dc",
                 "sdvxin": {
-                    "id": "03041",
+                    "id": "133",
                     "end_index": ""
                 }
             }
@@ -209468,7 +209900,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4029d04210d",
                 "sdvxin": {
-                    "id": "04074",
+                    "id": "136",
                     "end_index": ""
                 }
             }
@@ -209515,8 +209947,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402d1b5c468",
                 "sdvxin": {
-                    "id": "03035",
-                    "end_index": "2"
+                    "id": "137",
+                    "end_index": ""
                 }
             }
         ],
@@ -209560,7 +209992,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026d425e3d",
                 "sdvxin": {
-                    "id": "03138",
+                    "id": "138",
                     "end_index": ""
                 }
             }
@@ -209605,8 +210037,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4023980854e",
                 "sdvxin": {
-                    "id": "01122",
-                    "end_index": "2"
+                    "id": "140",
+                    "end_index": ""
                 }
             }
         ],
@@ -209650,7 +210082,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4024ccacb76",
                 "sdvxin": {
-                    "id": "03037",
+                    "id": "139",
                     "end_index": ""
                 }
             }
@@ -209697,7 +210129,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c92619db5a8d5",
                 "sdvxin": {
-                    "id": "04080",
+                    "id": "142",
                     "end_index": ""
                 }
             }
@@ -209746,7 +210178,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402b482081d",
                 "sdvxin": {
-                    "id": "04081",
+                    "id": "141",
                     "end_index": ""
                 }
             }
@@ -209791,7 +210223,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c4fbe8ba",
                 "sdvxin": {
-                    "id": "03003",
+                    "id": "135",
                     "end_index": ""
                 }
             }
@@ -209836,7 +210268,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402f0cc8207",
                 "sdvxin": {
-                    "id": "04002",
+                    "id": "146",
                     "end_index": ""
                 }
             }
@@ -209884,7 +210316,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022f173d13",
                 "sdvxin": {
-                    "id": "04098",
+                    "id": "147",
                     "end_index": ""
                 }
             }
@@ -209929,7 +210361,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40289f78331",
                 "sdvxin": {
-                    "id": "03068",
+                    "id": "143",
                     "end_index": ""
                 }
             }
@@ -209974,7 +210406,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026f586160",
                 "sdvxin": {
-                    "id": "03107",
+                    "id": "144",
                     "end_index": ""
                 }
             }
@@ -210019,8 +210451,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40212b79871",
                 "sdvxin": {
-                    "id": "03121",
-                    "end_index": "2"
+                    "id": "145",
+                    "end_index": ""
                 }
             }
         ],
@@ -210064,7 +210496,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c21c4fea",
                 "sdvxin": {
-                    "id": "03130",
+                    "id": "152",
                     "end_index": ""
                 }
             }
@@ -210109,8 +210541,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402ff964c63",
                 "sdvxin": {
-                    "id": "02107",
-                    "end_index": "2"
+                    "id": "149",
+                    "end_index": ""
                 }
             }
         ],
@@ -210154,7 +210586,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40294c9eb97",
                 "sdvxin": {
-                    "id": "01037",
+                    "id": "148",
                     "end_index": ""
                 }
             }
@@ -210199,8 +210631,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402d1bfd8e3",
                 "sdvxin": {
-                    "id": "01083",
-                    "end_index": "2"
+                    "id": "151",
+                    "end_index": ""
                 }
             }
         ],
@@ -210244,8 +210676,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4029521b6b9",
                 "sdvxin": {
-                    "id": "01068",
-                    "end_index": "3"
+                    "id": "150",
+                    "end_index": ""
                 }
             }
         ],
@@ -210291,7 +210723,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9230cf8cc271",
                 "sdvxin": {
-                    "id": "04129",
+                    "id": "153",
                     "end_index": ""
                 }
             }
@@ -210338,7 +210770,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402124009af",
                 "sdvxin": {
-                    "id": "03152",
+                    "id": "158",
                     "end_index": ""
                 }
             }
@@ -210383,7 +210815,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402468f9599",
                 "sdvxin": {
-                    "id": "03086",
+                    "id": "155",
                     "end_index": ""
                 }
             }
@@ -210428,7 +210860,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40211479781",
                 "sdvxin": {
-                    "id": "03057",
+                    "id": "157",
                     "end_index": ""
                 }
             }
@@ -210473,8 +210905,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402b69e63fe",
                 "sdvxin": {
-                    "id": "01120",
-                    "end_index": "2"
+                    "id": "156",
+                    "end_index": ""
                 }
             }
         ],
@@ -210518,8 +210950,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402ea24bbc4",
                 "sdvxin": {
-                    "id": "01045",
-                    "end_index": "3"
+                    "id": "154",
+                    "end_index": ""
                 }
             }
         ],
@@ -210563,7 +210995,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4029521923f",
                 "sdvxin": {
-                    "id": "03175",
+                    "id": "161",
                     "end_index": ""
                 }
             }
@@ -210608,7 +211040,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c92314e632c5a",
                 "sdvxin": {
-                    "id": "04024",
+                    "id": "159",
                     "end_index": ""
                 }
             }
@@ -210655,8 +211087,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402b04b9d72",
                 "sdvxin": {
-                    "id": "03176",
-                    "end_index": "2"
+                    "id": "160",
+                    "end_index": ""
                 }
             }
         ],
@@ -210700,7 +211132,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c9231759d6a06",
                 "sdvxin": {
-                    "id": "04135",
+                    "id": "163",
                     "end_index": ""
                 }
             }
@@ -210747,7 +211179,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022570f0cc",
                 "sdvxin": {
-                    "id": "03178",
+                    "id": "165",
                     "end_index": ""
                 }
             }
@@ -210792,8 +211224,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4025dab6511",
                 "sdvxin": {
-                    "id": "01126",
-                    "end_index": "2"
+                    "id": "162",
+                    "end_index": ""
                 }
             }
         ],
@@ -210839,8 +211271,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4020791b25f",
                 "sdvxin": {
-                    "id": "03172",
-                    "end_index": "2"
+                    "id": "164",
+                    "end_index": ""
                 }
             }
         ],
@@ -210884,7 +211316,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402dbb2b15f",
                 "sdvxin": {
-                    "id": "04027",
+                    "id": "167",
                     "end_index": ""
                 }
             }
@@ -210929,8 +211361,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402886dae11",
                 "sdvxin": {
-                    "id": "02077",
-                    "end_index": "2"
+                    "id": "169",
+                    "end_index": ""
                 }
             }
         ],
@@ -210974,7 +211406,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402fcf387d3",
                 "sdvxin": {
-                    "id": "04096",
+                    "id": "168",
                     "end_index": ""
                 }
             }
@@ -211019,7 +211451,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026324d9b9",
                 "sdvxin": {
-                    "id": "04089",
+                    "id": "166",
                     "end_index": ""
                 }
             }
@@ -211064,7 +211496,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4025bc821dd",
                 "sdvxin": {
-                    "id": "04159",
+                    "id": "172",
                     "end_index": ""
                 }
             }
@@ -211111,7 +211543,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402e5a253cc",
                 "sdvxin": {
-                    "id": "04108",
+                    "id": "173",
                     "end_index": ""
                 }
             }
@@ -211156,7 +211588,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4024ef436cb",
                 "sdvxin": {
-                    "id": "02042",
+                    "id": "171",
                     "end_index": ""
                 }
             }
@@ -211201,8 +211633,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026c0f04fe",
                 "sdvxin": {
-                    "id": "01037",
-                    "end_index": "2"
+                    "id": "170",
+                    "end_index": ""
                 }
             }
         ],
@@ -211248,7 +211680,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9261352a8046",
                 "sdvxin": {
-                    "id": "05089",
+                    "id": "175",
                     "end_index": ""
                 }
             }
@@ -211295,7 +211727,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9262c1778832",
                 "sdvxin": {
-                    "id": "05090",
+                    "id": "174",
                     "end_index": ""
                 }
             }
@@ -211342,7 +211774,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402f66bcedf",
                 "sdvxin": {
-                    "id": "04066",
+                    "id": "176",
                     "end_index": ""
                 }
             }
@@ -211387,7 +211819,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402cb5a8729",
                 "sdvxin": {
-                    "id": "05056",
+                    "id": "178",
                     "end_index": ""
                 }
             }
@@ -211432,7 +211864,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402df254f46",
                 "sdvxin": {
-                    "id": "03166",
+                    "id": "177",
                     "end_index": ""
                 }
             }
@@ -211477,7 +211909,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9231bdd446c6",
                 "sdvxin": {
-                    "id": "04007",
+                    "id": "179",
                     "end_index": ""
                 }
             }
@@ -211524,8 +211956,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40240acd0ee",
                 "sdvxin": {
-                    "id": "02168",
-                    "end_index": "2"
+                    "id": "182",
+                    "end_index": ""
                 }
             }
         ],
@@ -211569,7 +212001,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c9c5fd42",
                 "sdvxin": {
-                    "id": "04145",
+                    "id": "183",
                     "end_index": ""
                 }
             }
@@ -211614,7 +212046,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026dcf2cda",
                 "sdvxin": {
-                    "id": "04092",
+                    "id": "180",
                     "end_index": ""
                 }
             }
@@ -211659,8 +212091,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4028067fe87",
                 "sdvxin": {
-                    "id": "03068",
-                    "end_index": "2"
+                    "id": "181",
+                    "end_index": ""
                 }
             }
         ],
@@ -211830,7 +212262,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402b909eba5",
                 "sdvxin": {
-                    "id": "01103",
+                    "id": "190",
                     "end_index": ""
                 }
             }
@@ -211872,7 +212304,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402d005613f",
                 "sdvxin": {
-                    "id": "04017",
+                    "id": "187",
                     "end_index": ""
                 }
             }
@@ -211917,8 +212349,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402def02100",
                 "sdvxin": {
-                    "id": "01074",
-                    "end_index": "2"
+                    "id": "188",
+                    "end_index": ""
                 }
             }
         ],
@@ -211962,7 +212394,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40228389e56",
                 "sdvxin": {
-                    "id": "04137",
+                    "id": "189",
                     "end_index": ""
                 }
             }
@@ -212007,7 +212439,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9232bbebdbbc",
                 "sdvxin": {
-                    "id": "05080",
+                    "id": "194",
                     "end_index": ""
                 }
             }
@@ -212054,7 +212486,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402893be36d",
                 "sdvxin": {
-                    "id": "04010",
+                    "id": "193",
                     "end_index": ""
                 }
             }
@@ -212099,7 +212531,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40225fbc426",
                 "sdvxin": {
-                    "id": "02038",
+                    "id": "192",
                     "end_index": ""
                 }
             }
@@ -212144,7 +212576,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402316f520b",
                 "sdvxin": {
-                    "id": "05072",
+                    "id": "191",
                     "end_index": ""
                 }
             }
@@ -212191,7 +212623,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402f9fa2d71",
                 "sdvxin": {
-                    "id": "05049",
+                    "id": "197",
                     "end_index": ""
                 }
             }
@@ -212236,8 +212668,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402a98a8a22",
                 "sdvxin": {
-                    "id": "03076",
-                    "end_index": "3"
+                    "id": "195",
+                    "end_index": ""
                 }
             }
         ],
@@ -212281,7 +212713,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40263deb1d8",
                 "sdvxin": {
-                    "id": "05078",
+                    "id": "196",
                     "end_index": ""
                 }
             }
@@ -212328,7 +212760,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4024ae02b53",
                 "sdvxin": {
-                    "id": "05044",
+                    "id": "198",
                     "end_index": ""
                 }
             }
@@ -212373,7 +212805,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c926390421e98",
                 "sdvxin": {
-                    "id": "06053",
+                    "id": "199",
                     "end_index": ""
                 }
             }
@@ -212422,7 +212854,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022f97beac",
                 "sdvxin": {
-                    "id": "06054",
+                    "id": "200",
                     "end_index": ""
                 }
             }
@@ -212467,7 +212899,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40251e59da4",
                 "sdvxin": {
-                    "id": "06043",
+                    "id": "201",
                     "end_index": ""
                 }
             }
@@ -212512,7 +212944,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40268615427",
                 "sdvxin": {
-                    "id": "05141",
+                    "id": "221",
                     "end_index": ""
                 }
             }
@@ -212557,8 +212989,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c4b1a9ed",
                 "sdvxin": {
-                    "id": "03093",
-                    "end_index": "2"
+                    "id": "218",
+                    "end_index": ""
                 }
             }
         ],
@@ -212602,7 +213034,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4027cc96894",
                 "sdvxin": {
-                    "id": "06017",
+                    "id": "220",
                     "end_index": ""
                 }
             }
@@ -212649,7 +213081,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4027f6df93c",
                 "sdvxin": {
-                    "id": "05125",
+                    "id": "219",
                     "end_index": ""
                 }
             }
@@ -212696,7 +213128,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40269c96e27",
                 "sdvxin": {
-                    "id": "05100",
+                    "id": "216",
                     "end_index": ""
                 }
             }
@@ -212741,7 +213173,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4023d98deec",
                 "sdvxin": {
-                    "id": "07047",
+                    "id": "214",
                     "end_index": ""
                 }
             }
@@ -212786,7 +213218,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402d73795ba",
                 "sdvxin": {
-                    "id": "05108",
+                    "id": "217",
                     "end_index": ""
                 }
             }
@@ -212833,7 +213265,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9232d5da902a",
                 "sdvxin": {
-                    "id": "05024",
+                    "id": "215",
                     "end_index": ""
                 }
             }
@@ -212880,7 +213312,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402f666696d",
                 "sdvxin": {
-                    "id": "06066",
+                    "id": "207",
                     "end_index": ""
                 }
             }
@@ -212925,7 +213357,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40237c52f20",
                 "sdvxin": {
-                    "id": "05095",
+                    "id": "208",
                     "end_index": ""
                 }
             }
@@ -212970,7 +213402,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4027c358d5b",
                 "sdvxin": {
-                    "id": "05154",
+                    "id": "206",
                     "end_index": ""
                 }
             }
@@ -213014,7 +213446,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402b49d5517",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "210",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": []
@@ -213054,7 +213489,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c1d67af2",
                 "sdvxin": {
-                    "id": "05092",
+                    "id": "211",
                     "end_index": ""
                 }
             }
@@ -213099,8 +213534,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402e41ffcdc",
                 "sdvxin": {
-                    "id": "01064",
-                    "end_index": "2"
+                    "id": "209",
+                    "end_index": ""
                 }
             }
         ],
@@ -213144,7 +213579,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9232c46bacbc",
                 "sdvxin": {
-                    "id": "05029",
+                    "id": "212",
                     "end_index": ""
                 }
             }
@@ -213191,7 +213626,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4026730e7cb",
                 "sdvxin": {
-                    "id": "05074",
+                    "id": "213",
                     "end_index": ""
                 }
             }
@@ -213238,7 +213673,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40276849035",
                 "sdvxin": {
-                    "id": "06059",
+                    "id": "202",
                     "end_index": ""
                 }
             }
@@ -213283,7 +213718,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40251c8db85",
                 "sdvxin": {
-                    "id": "06050",
+                    "id": "204",
                     "end_index": ""
                 }
             }
@@ -213330,8 +213765,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402000234b7",
                 "sdvxin": {
-                    "id": "01122",
-                    "end_index": "3"
+                    "id": "205",
+                    "end_index": ""
                 }
             }
         ],
@@ -213377,7 +213812,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40288fbe61f",
                 "sdvxin": {
-                    "id": "05082",
+                    "id": "203",
                     "end_index": ""
                 }
             }
@@ -213422,7 +213857,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40229104189",
                 "sdvxin": {
-                    "id": "06028",
+                    "id": "224",
                     "end_index": ""
                 }
             }
@@ -213469,8 +213904,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40298495d5d",
                 "sdvxin": {
-                    "id": "03128",
-                    "end_index": "2"
+                    "id": "223",
+                    "end_index": ""
                 }
             }
         ],
@@ -213514,7 +213949,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402af3865b8",
                 "sdvxin": {
-                    "id": "07040",
+                    "id": "222",
                     "end_index": ""
                 }
             }
@@ -213559,7 +213994,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402c2d1374c",
                 "sdvxin": {
-                    "id": "06124",
+                    "id": "225",
                     "end_index": ""
                 }
             }
@@ -213604,7 +214039,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402d9a1d393",
                 "sdvxin": {
-                    "id": "01143",
+                    "id": "226",
                     "end_index": ""
                 }
             }
@@ -213651,7 +214086,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9233e433ef26",
                 "sdvxin": {
-                    "id": "06135",
+                    "id": "227",
                     "end_index": ""
                 }
             }
@@ -213698,7 +214133,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40258c5d36f",
                 "sdvxin": {
-                    "id": "05060",
+                    "id": "231",
                     "end_index": ""
                 }
             }
@@ -213743,7 +214178,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022876eb0b",
                 "sdvxin": {
-                    "id": "07044",
+                    "id": "229",
                     "end_index": ""
                 }
             }
@@ -213788,8 +214223,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022be1fb55",
                 "sdvxin": {
-                    "id": "01045",
-                    "end_index": "4"
+                    "id": "228",
+                    "end_index": ""
                 }
             }
         ],
@@ -213835,7 +214270,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40234dee55d",
                 "sdvxin": {
-                    "id": "06128",
+                    "id": "230",
                     "end_index": ""
                 }
             }
@@ -214146,7 +214581,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022d4a85bb",
                 "sdvxin": {
-                    "id": "07003",
+                    "id": "233",
                     "end_index": ""
                 }
             }
@@ -214192,7 +214627,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4025f5e4a91",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "232",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -214236,7 +214674,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c9235a35da3f3",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "234",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -214281,7 +214722,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402f72e96be",
                 "sdvxin": {
-                    "id": "07068",
+                    "id": "243",
                     "end_index": ""
                 }
             }
@@ -214328,7 +214769,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4025ee21a98",
                 "sdvxin": {
-                    "id": "07139",
+                    "id": "242",
                     "end_index": ""
                 }
             }
@@ -214375,7 +214816,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402cebc3b3c",
                 "sdvxin": {
-                    "id": "07158",
+                    "id": "241",
                     "end_index": ""
                 }
             }
@@ -214422,7 +214863,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402df6964ec",
                 "sdvxin": {
-                    "id": "05168",
+                    "id": "245",
                     "end_index": ""
                 }
             }
@@ -214469,7 +214910,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402e89b6094",
                 "sdvxin": {
-                    "id": "07039",
+                    "id": "244",
                     "end_index": ""
                 }
             }
@@ -214516,7 +214957,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022fd03d7d",
                 "sdvxin": {
-                    "id": "07213",
+                    "id": "246",
                     "end_index": ""
                 }
             }
@@ -214565,7 +215006,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9264b0d91187",
                 "sdvxin": {
-                    "id": "08107",
+                    "id": "247",
                     "end_index": ""
                 }
             }
@@ -214612,7 +215053,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9267357241db",
                 "sdvxin": {
-                    "id": "08046",
+                    "id": "248",
                     "end_index": ""
                 }
             }
@@ -214659,7 +215100,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4025fb6a418",
                 "sdvxin": {
-                    "id": "08081",
+                    "id": "251",
                     "end_index": ""
                 }
             }
@@ -214706,7 +215147,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402d8c26bc8",
                 "sdvxin": {
-                    "id": "08006",
+                    "id": "250",
                     "end_index": ""
                 }
             }
@@ -214753,7 +215194,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402baab6c8e",
                 "sdvxin": {
-                    "id": "08015",
+                    "id": "249",
                     "end_index": ""
                 }
             }
@@ -214800,7 +215241,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c92357457f24a",
                 "sdvxin": {
-                    "id": "08033",
+                    "id": "252",
                     "end_index": ""
                 }
             }
@@ -214847,7 +215288,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923608fdb5a1",
                 "sdvxin": {
-                    "id": "07141",
+                    "id": "253",
                     "end_index": ""
                 }
             }
@@ -214894,7 +215335,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402623a4080",
                 "sdvxin": {
-                    "id": "08072",
+                    "id": "254",
                     "end_index": ""
                 }
             }
@@ -214941,7 +215382,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9236134f1b0d",
                 "sdvxin": {
-                    "id": "03079",
+                    "id": "255",
                     "end_index": ""
                 }
             }
@@ -214988,7 +215429,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c9237f4240688",
                 "sdvxin": {
-                    "id": "01028",
+                    "id": "256",
                     "end_index": ""
                 }
             }
@@ -215035,7 +215476,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402144f8d91",
                 "sdvxin": {
-                    "id": "08104",
+                    "id": "257",
                     "end_index": ""
                 }
             }
@@ -215082,7 +215523,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c923702764969",
                 "sdvxin": {
-                    "id": "08179",
+                    "id": "269",
                     "end_index": ""
                 }
             }
@@ -215129,7 +215570,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402490ba59f",
                 "sdvxin": {
-                    "id": "07153",
+                    "id": "270",
                     "end_index": ""
                 }
             }
@@ -215176,7 +215617,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9237bae4214c",
                 "sdvxin": {
-                    "id": "08026",
+                    "id": "268",
                     "end_index": ""
                 }
             }
@@ -215226,7 +215667,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9268ac91a97b",
                 "sdvxin": {
-                    "id": "09067",
+                    "id": "267",
                     "end_index": ""
                 }
             }
@@ -215276,7 +215717,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9268ff4f36ec",
                 "sdvxin": {
-                    "id": "09068",
+                    "id": "266",
                     "end_index": ""
                 }
             }
@@ -215323,7 +215764,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9237b91f462c",
                 "sdvxin": {
-                    "id": "07138",
+                    "id": "264",
                     "end_index": ""
                 }
             }
@@ -215370,7 +215811,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40238da0d3e",
                 "sdvxin": {
-                    "id": "07010",
+                    "id": "265",
                     "end_index": ""
                 }
             }
@@ -215417,7 +215858,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c9238739c0b16",
                 "sdvxin": {
-                    "id": "05022",
+                    "id": "263",
                     "end_index": ""
                 }
             }
@@ -215464,7 +215905,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40217bfb3db",
                 "sdvxin": {
-                    "id": "06007",
+                    "id": "260",
                     "end_index": ""
                 }
             }
@@ -215511,7 +215952,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40252c3100f",
                 "sdvxin": {
-                    "id": "08141",
+                    "id": "258",
                     "end_index": ""
                 }
             }
@@ -215558,7 +215999,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c9238525f76d6",
                 "sdvxin": {
-                    "id": "07064",
+                    "id": "259",
                     "end_index": ""
                 }
             }
@@ -215604,7 +216045,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c9238436aa952",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "262",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -215648,7 +216092,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c9239467844e3",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "261",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -215693,7 +216140,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9239b33e6073",
                 "sdvxin": {
-                    "id": "09008",
+                    "id": "273",
                     "end_index": ""
                 }
             }
@@ -215740,8 +216187,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a4022b0e319b",
                 "sdvxin": {
-                    "id": "09008",
-                    "end_index": "2"
+                    "id": "272",
+                    "end_index": ""
                 }
             }
         ],
@@ -215787,8 +216234,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40276aa68a8",
                 "sdvxin": {
-                    "id": "09008",
-                    "end_index": "3"
+                    "id": "271",
+                    "end_index": ""
                 }
             }
         ],
@@ -215834,7 +216281,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923a9f04381b",
                 "sdvxin": {
-                    "id": "08164",
+                    "id": "275",
                     "end_index": ""
                 }
             }
@@ -215881,7 +216328,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c923a1052555a",
                 "sdvxin": {
-                    "id": "07089",
+                    "id": "276",
                     "end_index": ""
                 }
             }
@@ -215928,8 +216375,8 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a402f7998cba",
                 "sdvxin": {
-                    "id": "01127",
-                    "end_index": "2"
+                    "id": "274",
+                    "end_index": ""
                 }
             }
         ],
@@ -215975,7 +216422,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923a9f6b66df",
                 "sdvxin": {
-                    "id": "09004",
+                    "id": "278",
                     "end_index": ""
                 }
             }
@@ -216022,7 +216469,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c923b46c3df6c",
                 "sdvxin": {
-                    "id": "07181",
+                    "id": "277",
                     "end_index": ""
                 }
             }
@@ -216069,7 +216516,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e10e7a40242247576",
                 "sdvxin": {
-                    "id": "02176",
+                    "id": "279",
                     "end_index": ""
                 }
             }
@@ -216116,8 +216563,8 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923bf3832cb4",
                 "sdvxin": {
-                    "id": "01115",
-                    "end_index": "2"
+                    "id": "282",
+                    "end_index": ""
                 }
             }
         ],
@@ -216163,7 +216610,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923ce9d8bf0b",
                 "sdvxin": {
-                    "id": "07134",
+                    "id": "281",
                     "end_index": ""
                 }
             }
@@ -216210,7 +216657,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923cf214f2d0",
                 "sdvxin": {
-                    "id": "04109",
+                    "id": "280",
                     "end_index": ""
                 }
             }
@@ -216257,7 +216704,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923cff6ed04d",
                 "sdvxin": {
-                    "id": "09093",
+                    "id": "284",
                     "end_index": ""
                 }
             }
@@ -216304,7 +216751,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923d8f2202f0",
                 "sdvxin": {
-                    "id": "09159",
+                    "id": "283",
                     "end_index": ""
                 }
             }
@@ -216351,7 +216798,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923da03ba3a2",
                 "sdvxin": {
-                    "id": "09116",
+                    "id": "285",
                     "end_index": ""
                 }
             }
@@ -216398,7 +216845,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923ecdc68796",
                 "sdvxin": {
-                    "id": "10058",
+                    "id": "288",
                     "end_index": ""
                 }
             }
@@ -216445,8 +216892,8 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923ed25443a1",
                 "sdvxin": {
-                    "id": "01041",
-                    "end_index": "2"
+                    "id": "287",
+                    "end_index": ""
                 }
             }
         ],
@@ -216492,7 +216939,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c923eb0328fd8",
                 "sdvxin": {
-                    "id": "09049",
+                    "id": "289",
                     "end_index": ""
                 }
             }
@@ -216539,7 +216986,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9268632b8c69",
                 "sdvxin": {
-                    "id": "02100",
+                    "id": "286",
                     "end_index": ""
                 }
             }
@@ -216585,7 +217032,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c923fd4b036df",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "291",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -216629,7 +217079,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c923feea4955e",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "290",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -216721,7 +217174,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c92402ce14ea1",
                 "sdvxin": {
-                    "id": "03023",
+                    "id": "292",
                     "end_index": ""
                 }
             }
@@ -216768,7 +217221,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c92404c7fb0db",
                 "sdvxin": {
-                    "id": "09133",
+                    "id": "294",
                     "end_index": ""
                 }
             }
@@ -216862,7 +217315,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c924199b0e76a",
                 "sdvxin": {
-                    "id": "07045",
+                    "id": "295",
                     "end_index": ""
                 }
             }
@@ -216909,7 +217362,7 @@
                 "available": false,
                 "tachi_chart_id": "C19e107c9241bf128f7d",
                 "sdvxin": {
-                    "id": "09002",
+                    "id": "298",
                     "end_index": ""
                 }
             }
@@ -216956,7 +217409,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c924251555e13",
                 "sdvxin": {
-                    "id": "09062",
+                    "id": "296",
                     "end_index": ""
                 }
             }
@@ -217003,8 +217456,8 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9242ad309116",
                 "sdvxin": {
-                    "id": "01047",
-                    "end_index": "2"
+                    "id": "297",
+                    "end_index": ""
                 }
             }
         ],
@@ -217050,7 +217503,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c92420d37ffe4",
                 "sdvxin": {
-                    "id": "08205",
+                    "id": "293",
                     "end_index": ""
                 }
             }
@@ -217097,7 +217550,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c924c29f0f579",
                 "sdvxin": {
-                    "id": "10079",
+                    "id": "300",
                     "end_index": ""
                 }
             }
@@ -217144,7 +217597,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c924cd8131be4",
                 "sdvxin": {
-                    "id": "09047",
+                    "id": "299",
                     "end_index": ""
                 }
             }
@@ -217191,8 +217644,8 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c924d0745a315",
                 "sdvxin": {
-                    "id": "01066",
-                    "end_index": "2"
+                    "id": "301",
+                    "end_index": ""
                 }
             }
         ],
@@ -217238,7 +217691,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9258127a5b3c",
                 "sdvxin": {
-                    "id": "07132",
+                    "id": "303",
                     "end_index": ""
                 }
             }
@@ -217285,8 +217738,8 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c9258b0e5d7c7",
                 "sdvxin": {
-                    "id": "03172",
-                    "end_index": "3"
+                    "id": "304",
+                    "end_index": ""
                 }
             }
         ],
@@ -217332,7 +217785,7 @@
                 "available": true,
                 "tachi_chart_id": "C19e107c925854458b1a",
                 "sdvxin": {
-                    "id": "10002",
+                    "id": "302",
                     "end_index": ""
                 }
             }
@@ -217380,7 +217833,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c92691ef5d3ec",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "308",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217424,7 +217880,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c9269767b488b",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "307",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217468,7 +217927,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c92695d446b9b",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "306",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217512,7 +217974,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": "C19e107c926a4c6f4912",
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "305",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217535,7 +218000,7 @@
         "bpm": 175,
         "min_bpm": 175,
         "max_bpm": 175,
-        "jacket": null,
+        "jacket": "830b5f527ad93ac2.jpg",
         "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -217556,12 +218021,17 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "311",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/830b5f527ad93ac2.jpg",
             "https://chunithm.beerpsi.cc/assets/jackets/8325.png",
-            "https://chunithm.beerpsi.cc/assets/jackets/8325.webp"
+            "https://chunithm.beerpsi.cc/assets/jackets/8325.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/830b5f527ad93ac2.jpg"
         ]
     },
     {
@@ -217577,7 +218047,7 @@
         "bpm": 333,
         "min_bpm": 287,
         "max_bpm": 333,
-        "jacket": null,
+        "jacket": "71a399bec2dba0e0.jpg",
         "available": true,
         "removed": false,
         "is_hidden_on_chuninet": false,
@@ -217602,8 +218072,10 @@
             }
         ],
         "jackets": [
+            "https://chunithm-net-eng.com/mobile/img/71a399bec2dba0e0.jpg",
             "https://chunithm.beerpsi.cc/assets/jackets/8326.png",
-            "https://chunithm.beerpsi.cc/assets/jackets/8326.webp"
+            "https://chunithm.beerpsi.cc/assets/jackets/8326.webp",
+            "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/71a399bec2dba0e0.jpg"
         ]
     },
     {
@@ -217640,7 +218112,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "310",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217684,7 +218159,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "309",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217728,7 +218206,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "082",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217772,7 +218253,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "315",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217816,7 +218300,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "313",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
@@ -217860,7 +218347,10 @@
                 "version": null,
                 "available": false,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "314",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [

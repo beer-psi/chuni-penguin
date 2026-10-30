@@ -98,6 +98,8 @@ async def hydrate_records[T: Score](
                 "Missing song data",
                 tag="missing_song_data",
                 title=record.song.title,
+                song_id=song_id,
+                jacket_url=record.song.jacket_url,
             )
             hydrated_records.append(record)
             continue

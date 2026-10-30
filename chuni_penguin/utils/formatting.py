@@ -74,15 +74,14 @@ def sdvxin_link(view: "SdvxinChartView") -> str:
     id = str(view.id)
     difficulty = view.difficulty
 
-    if "ULT" not in difficulty and "WE" not in difficulty:
-        if difficulty == "MAS":
-            difficulty = "MST"
-        elif difficulty == "BAS":
-            difficulty = "BSC"
-        return f"https://sdvx.in/chunithm/{id[:2]}/{id}{difficulty.lower()}.htm"
+    if difficulty == "MAS":
+        difficulty = "mst"
+    elif difficulty == "BAS":
+        difficulty = "bsc"
+    else:
+        difficulty = difficulty.lower()
 
-    difficulty = difficulty.replace("WE", "end").lower()
-    return f"https://sdvx.in/chunithm/{difficulty[:3]}/{id}{difficulty}{view.end_index or ''}.htm"
+    return f"https://sdvx.in/chunithm/_/viewer.php?id={id}&diff={difficulty}"
 
 
 def bold(content: Any) -> str:
