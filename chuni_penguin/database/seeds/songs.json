@@ -203234,7 +203234,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11073",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "EXP",
@@ -203250,7 +203253,10 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11073",
+                    "end_index": ""
+                }
             },
             {
                 "difficulty": "MAS",
@@ -203266,13 +203272,17 @@
                 "version": null,
                 "available": true,
                 "tachi_chart_id": null,
-                "sdvxin": null
+                "sdvxin": {
+                    "id": "11073",
+                    "end_index": ""
+                }
             }
         ],
         "jackets": [
             "https://chunithm-net-eng.com/mobile/img/5f167154120c68ed.jpg",
             "https://chunithm.beerpsi.cc/assets/jackets/3069.png",
             "https://chunithm.beerpsi.cc/assets/jackets/3069.webp",
+            "https://dp4p6x0xfi5o9.cloudfront.net/chunithm/img/cover/31be6a4d660691b8993540a3f36505e8390d054fb13508599dc490a49e41e6c1.png",
             "https://new.chunithm-net.com/chuni-mobile/html/mobile/img/5f167154120c68ed.jpg"
         ]
     },
