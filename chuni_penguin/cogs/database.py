@@ -98,12 +98,12 @@ class WriteTask[T]:
 
 
 def safe_set_result[T](future: asyncio.Future[T], result: T):
-    if not future.done():
+    with contextlib.suppress(asyncio.InvalidStateError):
         future.set_result(result)
 
 
 def safe_set_exception(future: asyncio.Future, exception: BaseException):
-    if not future.done():
+    with contextlib.suppress(asyncio.InvalidStateError):
         future.set_exception(exception)
 
 

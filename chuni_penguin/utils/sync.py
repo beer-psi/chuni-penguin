@@ -21,6 +21,8 @@ MISSING: Any = object()
 
 
 class AsyncRWLock:
+    """This cannot be shared across event loops."""
+
     __slots__ = ("_cond", "_readers_active", "_writer_active", "_writers_waiting")
 
     def __init__(self) -> None:

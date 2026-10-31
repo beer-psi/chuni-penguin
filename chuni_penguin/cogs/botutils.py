@@ -80,10 +80,9 @@ class UtilsCog(commands.Cog, name="Utils"):
             stmt = select(Song).options(joinedload(Song.aliases))
             songs = (await session.execute(stmt)).scalars().unique().all()
 
-        self.alias_cache.clear()
-
         titles = set()
-        global_aliases = self.alias_cache.setdefault(0, [])
+        new_alias_cache = {}  # atomically replace the existing cache with this new one
+        global_aliases = new_alias_cache.setdefault(0, [])
 
         for song in songs:
             title_lower = song.title.lower()
@@ -96,7 +95,7 @@ class UtilsCog(commands.Cog, name="Utils"):
                 )
 
             for alias in song.aliases:
-                guild_aliases = self.alias_cache.setdefault(alias.guild_id, [])
+                guild_aliases = new_alias_cache.setdefault(alias.guild_id, [])
 
                 guild_aliases.append(
                     CachedAlias(
@@ -117,6 +116,8 @@ class UtilsCog(commands.Cog, name="Utils"):
                 global_aliases.append(
                     CachedAlias(None, artist_lower, song.title, song.id, 0)
                 )
+
+        self.alias_cache = new_alias_cache
 
     async def guild_prefix(self, ctx: Context) -> str:
         default_prefix: str = config.bot.default_prefix

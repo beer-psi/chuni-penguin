@@ -46,23 +46,31 @@ class PermissionsCog(commands.Cog, name="Permissions"):
         self.denylist = {d.object_id: d for d in denylist}
 
     async def _load_permissions(self, guild_id: int | None = None):
+        # atomically replace with new permissions instead of mutating the current
+        # permission cache
         if guild_id is not None:
-            self.permission_cache[guild_id] = []
+            async with self.bot.begin_db_read() as session:
+                query = (
+                    select(CommandPermission)
+                    .order_by(CommandPermission.guild_id, CommandPermission.index)
+                    .where(CommandPermission.guild_id == guild_id)
+                )
+                perms = (await session.execute(query)).scalars().all()
+
+            self.permission_cache[guild_id] = list(perms)
         else:
-            self.permission_cache = {}
+            new_permission_cache = {}
 
-        async with self.bot.begin_db_read() as session:
-            query = select(CommandPermission).order_by(
-                CommandPermission.guild_id, CommandPermission.index
-            )
+            async with self.bot.begin_db_read() as session:
+                query = select(CommandPermission).order_by(
+                    CommandPermission.guild_id, CommandPermission.index
+                )
+                perms = (await session.execute(query)).scalars().all()
 
-            if guild_id is not None:
-                query = query.where(CommandPermission.guild_id == guild_id)
+            for perm in perms:
+                new_permission_cache.setdefault(perm.guild_id, []).append(perm)
 
-            perms = (await session.execute(query)).scalars().all()
-
-        for perm in perms:
-            self.permission_cache.setdefault(perm.guild_id, []).append(perm)
+            self.permission_cache = new_permission_cache
 
     async def _add_permission(
         self,
