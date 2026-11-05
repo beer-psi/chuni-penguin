@@ -73,14 +73,14 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                 return
 
             try:
-                self.user_agents = msgspec.json.decode(
+                user_agents = msgspec.json.decode(
                     resp.content, type=KeiyoushiUserAgents
                 )
                 logger.debug(
                     "updated user agents",
                     tag="update_user_agent_success",
-                    count=len(self.user_agents.desktop)
-                    + len(self.user_agents.mobile)
+                    count=len(user_agents.desktop)
+                    + len(user_agents.mobile)
                     + 1,  # for recommended UA
                 )
             except msgspec.DecodeError as e:
@@ -90,6 +90,12 @@ class NetworksCog(commands.Cog, command_attrs={"hidden": True}):
                     exc_info=e,
                 )
                 return
+
+            if len(user_agents.desktop) == 0:
+                await logger.awarning("no user agents", tag="no_user_agents")
+                return
+
+            self.user_agents = user_agents
 
     @_update_user_agents.error
     async def _update_user_agents_error(self, exc: BaseException):
