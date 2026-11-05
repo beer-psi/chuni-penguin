@@ -152328,7 +152328,7 @@
         "min_bpm": 155,
         "max_bpm": 155,
         "jacket": "9db02942734bd7a7.jpg",
-        "available": true,
+        "available": false,
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 98322,
@@ -152349,7 +152349,7 @@
                 "flick": 0,
                 "charter": "みぞれヤナギ",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19d35e140f5c8b7d2a8",
                 "sdvxin": null
             },
@@ -152365,7 +152365,7 @@
                 "flick": 0,
                 "charter": "ミニミライト",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19d35e140f50599f25b",
                 "sdvxin": null
             },
@@ -152381,7 +152381,7 @@
                 "flick": 0,
                 "charter": "じゃこレモン",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19d35e140f5e4a57a7b",
                 "sdvxin": {
                     "id": "09040",
@@ -152400,7 +152400,7 @@
                 "flick": 32,
                 "charter": "鳩ホルダー",
                 "version": null,
-                "available": true,
+                "available": false,
                 "tachi_chart_id": "C19d35e140f5abb42af9",
                 "sdvxin": {
                     "id": "09040",
