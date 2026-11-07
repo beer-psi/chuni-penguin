@@ -84,6 +84,19 @@ def sdvxin_link(view: "SdvxinChartView") -> str:
     return f"https://sdvx.in/chunithm/_/viewer.php?id={id}&diff={difficulty}"
 
 
+# wikiwiki (PukiWiki) doesn't allow these characters in page names,
+# so the CHUNITHM wiki uses their full-width forms instead,
+# "/" (subpage separator) and spaces are kept as-is.
+_WIKIWIKI_PAGE_NAME_TRANSLATION = str.maketrans(
+    {c: chr(ord(c) + 0xFEE0) for c in '&#[]<>":'}
+)
+
+
+def wikiwiki_link(title: str) -> str:
+    page = title.translate(_WIKIWIKI_PAGE_NAME_TRANSLATION)
+    return "https://wikiwiki.jp/chunithmwiki/" + quote(page, safe="/")
+
+
 def bold(content: Any) -> str:
     return f"**{content}**"
 

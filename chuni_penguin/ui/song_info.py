@@ -1,6 +1,5 @@
 from collections.abc import Sequence
 from typing import override
-from urllib.parse import quote
 
 import discord
 from discord.ext.commands import Context
@@ -11,7 +10,12 @@ from sqlalchemy.orm import joinedload
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
 from chuni_penguin.types import Difficulty
-from chuni_penguin.utils import get_jacket_url, sdvxin_link, yt_search_link
+from chuni_penguin.utils import (
+    get_jacket_url,
+    sdvxin_link,
+    wikiwiki_link,
+    yt_search_link,
+)
 
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
@@ -215,7 +219,7 @@ class SongInfoPageSource(ListPageSource[Song]):
                     discord.ui.Button(
                         style=discord.ButtonStyle.link,
                         label="wikiwiki",
-                        url=f"https://wikiwiki.jp/chunithmwiki/{quote(page[0].wikiwiki_title or page[0].title)}",
+                        url=wikiwiki_link(page[0].wikiwiki_title or page[0].title),
                         row=1,
                     )
                 )
