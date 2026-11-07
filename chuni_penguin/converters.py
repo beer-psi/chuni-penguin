@@ -328,6 +328,9 @@ class VersionConverter(commands.Converter[ChunithmVersion]):
         if argument_upper in ("XVX", "XVRSX", "X-VRS-X"):
             return "X-VERSE-X"
 
+        if argument_upper in ("MAT", "MATE"):
+            return "Mate"
+
         msg = f'Unknown version "{escape_markdown(argument)}"'
         raise commands.CommandError(msg) from None
 

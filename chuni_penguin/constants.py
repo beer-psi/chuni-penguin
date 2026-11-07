@@ -36,7 +36,7 @@ ChunithmVersion = Literal[
 ]
 # Used to split old records from new records.
 CURRENT_CHUNITHM_VERSION = "Mate"
-CURRENT_CHUNITHM_VERSION_KAMAITACHI = "X-VERSE-X"
+CURRENT_CHUNITHM_VERSION_KAMAITACHI = "Mate"
 
 # The version names are just my favorite CHUNITHM songs
 # in no particular order.
