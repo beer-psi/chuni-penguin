@@ -1,6 +1,5 @@
 from collections.abc import Sequence
 from typing import override
-from urllib.parse import quote
 
 import discord
 from discord.ext.commands import Context
@@ -11,7 +10,12 @@ from sqlalchemy.orm import joinedload
 from chuni_penguin.config import config
 from chuni_penguin.database import Chart, Song
 from chuni_penguin.types import Difficulty
-from chuni_penguin.utils import get_jacket_url, sdvxin_link, wikiwiki_link, yt_search_link
+from chuni_penguin.utils import (
+    get_jacket_url,
+    sdvxin_link,
+    wikiwiki_link,
+    yt_search_link,
+)
 
 from ._pagination import FormatPageReturn, ListPageSource, PaginationView
 
