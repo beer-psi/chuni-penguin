@@ -1,5 +1,5 @@
 from .event_loop import get_loop_factory
-from .formatting import did_you_mean_text, get_jacket_url, sdvxin_link, yt_search_link, wikiwiki_link
+from .formatting import did_you_mean_text, get_jacket_url, sdvxin_link, wikiwiki_link, yt_search_link
 from .hishel import HishelMsgspecSerializer
 from .json import json_dumps, json_loads
 from .misc import (
@@ -29,6 +29,6 @@ __all__ = (
     "round_to_nearest",
     "sdvxin_link",
     "shlex_split",
-    "yt_search_link",
     "wikiwiki_link",
+    "yt_search_link",
 )
