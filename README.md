@@ -60,7 +60,5 @@ Thanks to all the [contributors](https://github.com/beer-psi/chuni-penguin/graph
 who took part.
 
 Thanks to all the people who have sponsored my work through
-[Ko-fi](https://ko-fi.com/beerpsi_) and through direct donations:
-
-- [Tukkun](https://github.com/tukkun1995)
-- @tadanahh
+[Ko-fi](https://ko-fi.com/beerpsi_) and through direct donations. You get a little 
+supporter line on your `c>profile` when you do so.
