@@ -49,6 +49,14 @@ def yt_search_link(title: str, difficulty: str) -> str:
 def get_jacket_url(song: "Song") -> str | None:
     from chuni_penguin.config import config
 
+    if config.web.serve_assets and config.web.base_url is not None:
+        url = httpx.URL(config.web.base_url)
+
+        if url.host.startswith("127.") or url.host == "localhost":
+            return song.jacket
+
+        return f"{config.web.base_url}/assets/jackets/{song.id}.webp"
+
     current_time = datetime.now(ZoneInfo("Asia/Tokyo"))
     is_maintenance = 4 <= current_time.hour <= 7
 
@@ -58,14 +66,6 @@ def get_jacket_url(song: "Song") -> str | None:
 
         if not song.removed:
             return f"{JACKET_BASE}/{song.jacket}"
-
-    if config.web.serve_assets and config.web.base_url is not None:
-        url = httpx.URL(config.web.base_url)
-
-        if url.host.startswith("127.") or url.host == "localhost":
-            return song.jacket
-
-        return f"{config.web.base_url}/assets/jackets/{song.id}.webp"
 
     return song.jacket
 
