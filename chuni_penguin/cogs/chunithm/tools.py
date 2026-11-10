@@ -1373,13 +1373,13 @@ class ToolsCog(commands.Cog, name="Tools"):
                 )
 
     async def _fetch_sdvxin_with_fallback(self, chart: Chart, url: str, fallback: str):
-        resp = await self.http_client.get(url)
+        resp = await self.http_client.get(url, follow_redirects=False)
 
         if resp.is_success:
             return resp
 
-        if resp.is_error and chart.difficulty in ("ULT", "WE"):
-            return await self.http_client.get(fallback)
+        if chart.difficulty in ("ULT", "WE"):
+            return await self.http_client.get(fallback, follow_redirects=False)
 
         return resp
 
@@ -1491,7 +1491,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                 return
 
             sdvxin_id = chart.sdvxin_chart_view.id
-            data_key = "mirror" if mirror else "data"
+            data_key = "mrr" if mirror else "data"
 
             if chart.difficulty == "WE":
                 end_index = chart.sdvxin_chart_view.end_index
@@ -1517,7 +1517,7 @@ class ToolsCog(commands.Cog, name="Tools"):
                     bg_url,
                     f"https://sdvx.in/chunithm/{sdvxin_id[:2]}/bg/{sdvxin_id}bg.webp",
                 ),
-                self.http_client.get(data_url),
+                self.http_client.get(data_url, follow_redirects=False),
                 self._fetch_sdvxin_with_fallback(
                     chart,
                     bar_url,
@@ -1525,7 +1525,11 @@ class ToolsCog(commands.Cog, name="Tools"):
                 ),
             )
 
-            if bg_resp.is_error or data_resp.is_error or bar_resp.is_error:
+            # not is_success: not 2xx
+            # is_error: 4xx or 5xx
+            # sdvx.in redirects you to the homepage if a link is not found, so you
+            # never get a 404 => follow_redirects=False and check not is_success
+            if not bg_resp.is_success or not data_resp.is_success or not bar_resp.is_success:
                 msg = f"Failed to fetch chart view for {chart_display_name}. Please try again later."
                 raise commands.CommandError(msg)
 
