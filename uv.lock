@@ -981,7 +981,7 @@ wheels = [
 
 [[package]]
 name = "jishaku"
-version = "2.7.5"
+version = "2.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "braceexpand" },
@@ -991,9 +991,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4d/aa/2ecc7362e2012c102921af3876801c31b73000be70a6bf442c4f141b4b14/jishaku-2.7.5.tar.gz", hash = "sha256:f61f33d4254553a8126bdeca622f995112848fca5ff145dd9a89882d9b852367", size = 76849, upload-time = "2026-04-24T11:18:01.134Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f9/f7/c9d1f5789adfb260e7534f2d047cac031ca78409138552f60c63237551a6/jishaku-2.8.0.tar.gz", hash = "sha256:03023ea85eed6a02412147dd39fec3b1b42a96992bf863a0ce77b36446ecef99", size = 77680, upload-time = "2026-10-29T04:42:57.264Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/1b/1e5a758333c858c70d3f94e7e9cceee7e406ec6227ebea875b7008947165/jishaku-2.7.5-py3-none-any.whl", hash = "sha256:b7276f8c1e36c1acfae29a8bffc460e93d99723b90d75329b5698b65bed9bc3e", size = 82682, upload-time = "2026-04-24T11:17:59.476Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/22/ef202125fd003dced53d9f4d11e6ca99bd67215138e1f3d930a5ac1179e3/jishaku-2.8.0-py3-none-any.whl", hash = "sha256:1ecc82c1e8e6e597f7860b350394bd168a81eb8b403dad4c1edeaf691e65f167", size = 81699, upload-time = "2026-10-29T04:42:55.92Z" },
 ]
 
 [[package]]
