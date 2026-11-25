@@ -203205,7 +203205,11 @@
         "removed": false,
         "is_hidden_on_chuninet": false,
         "duration": 155677,
-        "aliases": [],
+        "aliases": [
+            "kyoumei",
+            "Kyomei",
+            "kuruinochi"
+        ],
         "charts": [
             {
                 "difficulty": "BAS",
